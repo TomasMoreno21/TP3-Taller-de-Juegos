@@ -1,0 +1,72 @@
+[gd_scene format=3 uid="uid://cu0cm01ls0fo3"]
+
+[ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="2_enemy"]
+[ext_resource type="PackedScene" path="res://scenes/console.tscn" id="3_console"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="4_hud"]
+[ext_resource type="PackedScene" path="res://scenes/encounter.tscn" id="5_encounter"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
+size = Vector2(1280, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_platform"]
+size = Vector2(600, 20)
+
+[node name="Main" type="Node2D" unique_id=637685026]
+
+[node name="Player" parent="." unique_id=691026148 instance=ExtResource("1_player")]
+position = Vector2(446, 245)
+
+[node name="Level" type="Node2D" parent="." unique_id=276662083]
+
+[node name="Ground" type="StaticBody2D" parent="Level" unique_id=1332095150]
+position = Vector2(640, 580)
+
+[node name="GroundVisual" type="Polygon2D" parent="Level/Ground" unique_id=413897595]
+color = Color(0.16, 0.32, 0.18, 1)
+polygon = PackedVector2Array(-640, -20, 640, -20, 640, 20, -640, 20)
+
+[node name="GroundCollision" type="CollisionShape2D" parent="Level/Ground" unique_id=1025111445]
+shape = SubResource("RectangleShape2D_ground")
+
+[node name="Platform1" type="StaticBody2D" parent="Level" unique_id=1302792759]
+position = Vector2(400, 420)
+
+[node name="Platform1Visual" type="Polygon2D" parent="Level/Platform1" unique_id=1469120933]
+color = Color(0.34, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-300, -10, 300, -10, 300, 10, -300, 10)
+
+[node name="Platform1Collision" type="CollisionShape2D" parent="Level/Platform1" unique_id=115563496]
+shape = SubResource("RectangleShape2D_platform")
+
+[node name="Platform2" type="StaticBody2D" parent="Level" unique_id=521745891]
+position = Vector2(900, 380)
+
+[node name="Platform2Visual" type="Polygon2D" parent="Level/Platform2" unique_id=980449338]
+color = Color(0.34, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-300, -10, 300, -10, 300, 10, -300, 10)
+
+[node name="Platform2Collision" type="CollisionShape2D" parent="Level/Platform2" unique_id=154477816]
+shape = SubResource("RectangleShape2D_platform")
+
+[node name="Platform3" type="StaticBody2D" parent="Level" unique_id=1535658860]
+position = Vector2(1500, 440)
+
+[node name="Platform3Visual" type="Polygon2D" parent="Level/Platform3" unique_id=1570997088]
+color = Color(0.34, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-300, -10, 300, -10, 300, 10, -300, 10)
+
+[node name="Platform3Collision" type="CollisionShape2D" parent="Level/Platform3" unique_id=2128858283]
+shape = SubResource("RectangleShape2D_platform")
+
+[node name="Enemy" parent="Level" unique_id=973333474 instance=ExtResource("2_enemy")]
+position = Vector2(750, 540)
+
+[node name="Encounter" parent="Level" unique_id=821140096 instance=ExtResource("5_encounter")]
+position = Vector2(1150, 540)
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1323586307]
+
+[node name="Console" parent="UI" unique_id=720271342 instance=ExtResource("3_console")]
+
+[node name="Hud" parent="UI" unique_id=991743002 instance=ExtResource("4_hud")]
