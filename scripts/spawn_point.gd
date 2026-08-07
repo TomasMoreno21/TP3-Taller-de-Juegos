@@ -5,9 +5,9 @@ signal enemy_spawned(enemy: Node2D)
 const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 
 const ENEMY_TYPES := {
-	"cultista": {"health": 500, "color": Color(0.65, 0.22, 0.22), "name": "Cultista"},
-	"arquero": {"health": 500, "color": Color(0.4, 0.55, 0.85), "name": "Arquero"},
-	"chaman": {"health": 500, "color": Color(0.62, 0.35, 0.7), "name": "Chamán"},
+	"cultista": {"health": 100, "color": Color(0.65, 0.22, 0.22), "name": "Cultista"},
+	"arquero": {"health": 100, "color": Color(0.4, 0.55, 0.85), "name": "Arquero"},
+	"chaman": {"health": 100, "color": Color(0.62, 0.35, 0.7), "name": "Chamán"},
 }
 
 var enemy_type := "cultista"

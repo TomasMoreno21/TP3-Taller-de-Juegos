@@ -10,9 +10,15 @@ func _init() -> void:
 	jump_velocity = -400.0
 	gravity_scale = 0.8
 	max_health = 90
-	attack_damage = 15
-	attack_range = 0.0
-	attack_size = Vector2(1, 1)
+	attack_damage = 8
+	attack_range = 22.0
+	attack_size = Vector2(26, 20)
+	light_combo_steps = 3
+	heavy_damage = 14
+	heavy_range = 30.0
+	heavy_size = Vector2(38, 26)
+	heavy_combo_steps = 2
+	special_damage = 15
 	color = Color(0.52, 0.4, 0.62)
 	collider_size = Vector2(28, 30)
 
@@ -33,7 +39,7 @@ func on_floor(_player: CharacterBody2D) -> void:
 	_double_jump_available = true
 
 
-func perform_attack(player: CharacterBody2D) -> void:
+func perform_special(player: CharacterBody2D) -> void:
 	player.fire_projectile()
 
 

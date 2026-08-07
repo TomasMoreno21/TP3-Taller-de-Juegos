@@ -20,7 +20,7 @@ func _init() -> void:
 	await physics_frame
 	await physics_frame
 	Input.action_release("attack")
-	_check(enemy.health == 490, "Enemigo recibió daño: " + str(enemy.health))
+	_check(enemy.health == 90, "Enemigo recibió daño: " + str(enemy.health))
 
 	var vio_rot := false
 	var vio_rojo := false

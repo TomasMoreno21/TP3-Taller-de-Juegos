@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/interactable.gd" id="1_int"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tronco"]
+size = Vector2(40, 60)
+
+[node name="Tronco" type="StaticBody2D"]
+script = ExtResource("1_int")
+
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.45, 0.3, 0.18, 1)
+polygon = PackedVector2Array(-20, 30, -14, -30, 14, -30, 20, 30)
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_tronco")
+
+[node name="Hint" type="Label" parent="."]
+offset_left = -180.0
+offset_top = -80.0
+offset_right = 180.0
+offset_bottom = -48.0
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 13
+text = "Usa el especial con el Oso para romper"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3

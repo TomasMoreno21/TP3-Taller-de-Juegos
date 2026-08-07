@@ -3,13 +3,18 @@ extends CharacterBody2D
 signal died
 
 var enemy_name: String = "Enemigo"
-var health: int = 500
-var max_health: int = 500
+var health: int = 100
+var max_health: int = 100
 var approach_speed := 60.0
 var stop_distance := 70.0
 var edge_walk_in := false
 
 var _flash_tween: Tween
+var _knockback_timer := 0.0
+var _knockback_velocity := Vector2.ZERO
+
+const GRAVITY := 980.0
+const MAX_FALL_SPEED := 950.0
 
 @onready var visual: Polygon2D = $Visual
 @onready var hp_label: Label = $HpLabel
@@ -23,6 +28,12 @@ func _ready() -> void:
 	tween.tween_property(visual, "modulate:a", 1.0, 0.25)
 
 
+func apply_knockback(vec: Vector2) -> void:
+	_knockback_velocity.x = vec.x
+	velocity = vec
+	_knockback_timer = 0.18
+
+
 func configure(hp: int, tint: Color, new_name: String) -> void:
 	health = hp
 	max_health = hp
@@ -33,16 +44,24 @@ func configure(hp: int, tint: Color, new_name: String) -> void:
 		approach_speed = 120.0
 
 
-func _physics_process(_delta: float) -> void:
-	var player := get_tree().get_first_node_in_group("player")
-	if player == null:
-		return
-	var dx: float = player.global_position.x - global_position.x
-	if absf(dx) > stop_distance:
-		velocity.x = signf(dx) * approach_speed
-		visual.scale.x = -1.0 if dx < 0.0 else 1.0
+func _physics_process(delta: float) -> void:
+	if _knockback_timer > 0.0:
+		_knockback_timer -= delta
+		velocity.x = _knockback_velocity.x
+		_knockback_velocity.x *= maxf(1.0 - delta * 8.0, 0.0)
 	else:
-		velocity.x = 0.0
+		var player := get_tree().get_first_node_in_group("player")
+		if player == null:
+			velocity.y = min(velocity.y + GRAVITY * delta, MAX_FALL_SPEED)
+			move_and_slide()
+			return
+		var dx: float = player.global_position.x - global_position.x
+		if absf(dx) > stop_distance:
+			velocity.x = signf(dx) * approach_speed
+			visual.scale.x = -1.0 if dx < 0.0 else 1.0
+		else:
+			velocity.x = 0.0
+	velocity.y = min(velocity.y + GRAVITY * delta, MAX_FALL_SPEED)
 	move_and_slide()
 
 

@@ -11,12 +11,20 @@ var state: int = State.INACTIVE
 var waves := [
 	[
 		{"type": "cultista", "offset": Vector2(-70, 0), "delay": 0.0},
-		{"type": "cultista", "offset": Vector2(70, 0), "delay": 1.0},
+		{"type": "cultista", "offset": Vector2(40, 0), "delay": 0.8},
+		{"type": "cultista", "offset": Vector2(130, 0), "delay": 1.6},
 	],
 	[
-		{"type": "arquero", "offset": Vector2(-30, 0), "delay": 0.0},
-		{"type": "cultista", "offset": Vector2(60, 0), "delay": 1.2},
-		{"type": "cultista", "offset": Vector2(150, 0), "delay": 2.0, "edge": true},
+		{"type": "arquero", "offset": Vector2(-50, 0), "delay": 0.0},
+		{"type": "cultista", "offset": Vector2(40, 0), "delay": 1.0},
+		{"type": "cultista", "offset": Vector2(130, 0), "delay": 1.8},
+		{"type": "cultista", "offset": Vector2(220, 0), "delay": 2.6, "edge": true},
+	],
+	[
+		{"type": "chaman", "offset": Vector2(0, 0), "delay": 0.0},
+		{"type": "arquero", "offset": Vector2(90, 0), "delay": 1.2},
+		{"type": "cultista", "offset": Vector2(-60, 0), "delay": 2.0},
+		{"type": "cultista", "offset": Vector2(200, 0), "delay": 2.8, "edge": true},
 	],
 ]
 
