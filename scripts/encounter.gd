@@ -10,21 +10,27 @@ var state: int = State.INACTIVE
 
 var waves := [
 	[
-		{"type": "cultista", "offset": Vector2(-70, 0), "delay": 0.0},
-		{"type": "cultista", "offset": Vector2(40, 0), "delay": 0.8},
-		{"type": "cultista", "offset": Vector2(130, 0), "delay": 1.6},
+		{"type": "cultista", "offset": Vector2(-90, 0), "delay": 0.0},
+		{"type": "cultista", "offset": Vector2(-20, 0), "delay": 0.7},
+		{"type": "cultista", "offset": Vector2(60, 0), "delay": 1.2},
+		{"type": "cultista", "offset": Vector2(140, 0), "delay": 1.8},
 	],
 	[
-		{"type": "arquero", "offset": Vector2(-50, 0), "delay": 0.0},
-		{"type": "cultista", "offset": Vector2(40, 0), "delay": 1.0},
-		{"type": "cultista", "offset": Vector2(130, 0), "delay": 1.8},
-		{"type": "cultista", "offset": Vector2(220, 0), "delay": 2.6, "edge": true},
+		{"type": "arquero", "offset": Vector2(-90, 0), "delay": 0.0},
+		{"type": "cultista", "offset": Vector2(-10, 0), "delay": 0.8},
+		{"type": "cultista", "offset": Vector2(70, 0), "delay": 1.4},
+		{"type": "arquero", "offset": Vector2(150, 0), "delay": 2.0},
+		{"type": "cultista", "offset": Vector2(-180, 0), "delay": 2.5, "edge": true},
+		{"type": "cultista", "offset": Vector2(210, 0), "delay": 3.0, "edge": true},
 	],
 	[
 		{"type": "chaman", "offset": Vector2(0, 0), "delay": 0.0},
-		{"type": "arquero", "offset": Vector2(90, 0), "delay": 1.2},
-		{"type": "cultista", "offset": Vector2(-60, 0), "delay": 2.0},
-		{"type": "cultista", "offset": Vector2(200, 0), "delay": 2.8, "edge": true},
+		{"type": "arquero", "offset": Vector2(-70, 0), "delay": 1.0},
+		{"type": "cultista", "offset": Vector2(60, 0), "delay": 1.6},
+		{"type": "cultista", "offset": Vector2(-150, 0), "delay": 2.2},
+		{"type": "arquero", "offset": Vector2(160, 0), "delay": 2.6},
+		{"type": "cultista", "offset": Vector2(-190, 0), "delay": 3.2, "edge": true},
+		{"type": "cultista", "offset": Vector2(230, 0), "delay": 3.6, "edge": true},
 	],
 ]
 

@@ -29,6 +29,15 @@ Esto significa que al evaluar cualquier decisión de diseño, primero preguntars
 - **Antagonista:** Secta que corrompe el bosque mediante rituales para despertar un antiguo poder oculto.
 - **Justificación narrativa:** Los espíritus animales ya no pueden intervenir directamente; el guardabosques es su representante.
 - **Transformaciones:** espíritus animales (aún por diseñar desde cero).
+- **Narrativa TEMPORAL (diseñada con la IA, 09/08; inicio corregido por el usuario):**
+  1. La familia pasa un día en el bosque. El hijo ve algo que le da curiosidad: **la secta haciendo algo para atraerlo** (lo "pescan" activamente, no se pierde por azar).
+  2. El padre se da cuenta de que el nene se perdió y sale a buscarlo; ahí ocurre el viaje: **va peleando y obteniendo los poderes de los animales** (los espíritus se le presentan) mientras avanza por la zona mágica.
+  3. En la zona mágica trabaja una **secta**. Concepto: **A. Cosecha de almas** — atrapa espíritus animales y a los "sensibles" (el nene oye/ve espíritus = señal) para alimentar un ritual que vuelve inmortal al líder. Riesgo: la corrupción de los espíritus posee a los sectarios (esos son los enemigos cultista/arquero/chamán) y drena la magia del bosque.
+  4. El jugador supera enemigos de la secta y obstáculos naturales, y llega al **jefe de la secta**, que tenía al nene **para experimentos y sacrificios**. Lo vence y rescata al hijo.
+- **Decisión (09/08):** transformación **ilimitada**, fiel a la mecánica del original. El riesgo temático de "posesión/abuso de la forma" queda solo como lore, NO como gauge de recurso.
+- **Ideas anotadas para futuro:** fragmentos de espíritu (reflavor de los orbes amarillos) que caen de enemigos y desbloquean pasos de combo; checkpoints = santuarios de espíritu; jefe en 3 fases que obligue a alternar formas (síntesis de la pregunta central).
+- **Dirección de combate (decidido):** side-scroller con sensación beat 'em up (OPCIÓN A). Cámara **zoom 2x** (todo más grande/cerca) + **oleadas más numerosas con flanqueo** (ola1 = 4 cultistas, ola2 = 2 arqueros + 4 cultistas con bordes, ola3 = chamán + 2 arqueros + 4 cultistas) — 33/33 PASS.
+- **Belt-scroller:** se probó en rama `gameplay-prueba` (escena aislada con movimiento X+Y, enemigos que rodean, sin salto, Humano+Oso) y **el usuario decidió descartarla** y borrar la rama. Se eliminaron `scenes/belt_{prueba,player,enemy}.tscn`, `scripts/belt/` y los inputs `belt_up`/`belt_down`. La lección técnica quedó registrada (abajo).
 
 ---
 
@@ -48,7 +57,7 @@ Esto significa que al evaluar cualquier decisión de diseño, primero preguntars
 2. **Cada transformación cambia todo el gameplay** — no simples stats; cada forma se siente como un personaje distinto (movilidad, ataques, utilidades, fortalezas y debilidades propias).
 3. **Resolver situaciones con la transformación correcta** — sin transformación superior; cada una resuelve problemas diferentes.
 4. **Cambio constante durante el combate** — enemigos y jefes incentivan transformar varias veces en una misma pelea (decisión estratégica, no animación decorativa).
-5. **Tiempo limitado (OPCIONAL, sin decidir)** — barra de energía que obligue a administrar las transformaciones.
+5. **Tiempo limitado — DESCARTADO (09/08):** la transformación es **ilimitada**, fiel al original; el riesgo de posesión queda como lore.
 
 ## Mecánicas que NO Copiar
 
@@ -331,3 +340,4 @@ tests/
 - **La detección de golpe por sondeo aplica 1 frame después** de `enable_melee` (el Area necesita un physics step para computar solapamientos): en tests medir el HP después de 3 awaits, no 2.
 - **Enemigo que "flota" al recibir knockback (bug K):** el `enemy.gd` no aplicaba gravedad jamás; el impulso vertical del knockback lo dejaba levitando. Fix: aplicar gravedad **siempre** en `_physics_process` del enemigo (`velocity.y += GRAVITY * delta`, cap `MAX_FALL_SPEED`) y tratar el knockback como impulso único (`velocity = vec` una vez + decaimiento de `velocity.x`), no sobrescribir `velocity` cada frame.
 - **Joystick:** cada acción de input necesita su `InputEventJoypadButton`/`InputEventJoypadMotion` en `project.godot`. `Input.get_axis("move_left","move_right")` ya lee el eje del stick automáticamente (axis 0). Mapeo: A=0, B=1, X=2, Y=3, LB=9, RB=10, DPAD=13/14.
+- **`configure()` no puede correr antes de `add_child()`:** los `@onready` de un nodo instanciado recién existen cuando entra al árbol. Orden correcto: `instantiate()` → `position` → `add_child()` → `configure()`. (Aprendido en la prueba belt; aplica al spawner del prototipo si se reutiliza.)
