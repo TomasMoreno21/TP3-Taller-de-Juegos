@@ -11,12 +11,20 @@ var _cola_avisos: Array[String] = []
 @onready var combo_label: RichTextLabel = $ComboLabel
 @onready var hp_bar: ProgressBar = $Bars/Rows/HpRow/HpBar
 @onready var esp_bar: ProgressBar = $Bars/Rows/EspRow/EspBar
+@onready var esp_cap: PanelContainer = $Bars/Rows/EspRow/EspCap
 @onready var prog_label: Label = $ProgLabel
 @onready var aviso: Label = $Aviso
+@onready var racha_box: VBoxContainer = $Racha
+@onready var racha_valor: Label = $Racha/Valor
+
+var _esp_cap_style: StyleBoxFlat
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+
+	_esp_cap_style = esp_cap.get_theme_stylebox("panel").duplicate()
+	esp_cap.add_theme_stylebox_override("panel", _esp_cap_style)
 
 	_idle_timer = Timer.new()
 	_idle_timer.wait_time = 1.5
@@ -49,6 +57,8 @@ func _connectar_player() -> void:
 	_player.health_changed.connect(_on_health_changed)
 	_player.energia_changed.connect(_on_energia_changed)
 	_player.transformacion_agotada.connect(_on_agotada)
+	_player.racha_changed.connect(_on_racha_changed)
+	_actualizar_cap_forma()
 
 
 func _on_fragmentos(_total: int) -> void:
@@ -82,6 +92,22 @@ func _forma_nueva(nuevo_nivel: int) -> String:
 
 func _on_form_changed(form_name: String) -> void:
 	_aviso("Forma: %s" % form_name)
+	_actualizar_cap_forma()
+
+
+func _actualizar_cap_forma() -> void:
+	if _player == null or _esp_cap_style == null:
+		return
+	var data = _player.forms[_player.current_form]
+	_esp_cap_style.bg_color = data.color
+
+
+func _on_racha_changed(cantidad: int) -> void:
+	if cantidad >= 2:
+		racha_valor.text = str(cantidad)
+		racha_box.visible = true
+	else:
+		racha_box.visible = false
 
 
 func _on_attack_performed(_attack_type: String, _step: Variant) -> void:

@@ -1,27 +1,27 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" uid="uid://c1q7pellu6xgj" path="res://scripts/hud.gd" id="1_hud"]
 
 [sub_resource type="StyleBoxFlat" id="bg_bar"]
 bg_color = Color(0.12, 0.12, 0.14, 0.8)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
 
 [sub_resource type="StyleBoxFlat" id="fill_hp"]
 bg_color = Color(0.8, 0.25, 0.25, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
 
 [sub_resource type="StyleBoxFlat" id="fill_esp"]
 bg_color = Color(0.3, 0.55, 0.9, 1)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
 
 [sub_resource type="StyleBoxFlat" id="panel_bar"]
 bg_color = Color(0.06, 0.07, 0.09, 0.85)
@@ -34,6 +34,20 @@ border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.18, 0.22, 0.28, 1)
+
+[sub_resource type="StyleBoxFlat" id="cap_hp"]
+bg_color = Color(0.55, 0.18, 0.18, 1)
+corner_radius_top_left = 11
+corner_radius_top_right = 11
+corner_radius_bottom_right = 11
+corner_radius_bottom_left = 11
+
+[sub_resource type="StyleBoxFlat" id="cap_esp"]
+bg_color = Color(0.42, 0.62, 0.36, 1)
+corner_radius_top_left = 11
+corner_radius_top_right = 11
+corner_radius_bottom_right = 11
+corner_radius_bottom_left = 11
 
 [node name="Hud" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -72,12 +86,10 @@ theme_override_constants/separation = 16
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="HpLabel" type="Label" parent="Bars/Rows/HpRow"]
+[node name="HpCap" type="PanelContainer" parent="Bars/Rows/HpRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.4, 0.4, 1)
-theme_override_font_sizes/font_size = 12
-text = "VIDA"
-horizontal_alignment = 1
+custom_minimum_size = Vector2(42, 22)
+theme_override_styles/panel = SubResource("cap_hp")
 
 [node name="HpBar" type="ProgressBar" parent="Bars/Rows/HpRow"]
 layout_mode = 2
@@ -89,16 +101,21 @@ theme_override_styles/fill = SubResource("fill_hp")
 show_percentage = false
 fill_mode = 3
 
+[node name="HpLabel" type="Label" parent="Bars/Rows/HpRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.4, 0.4, 1)
+theme_override_font_sizes/font_size = 12
+text = "VIDA"
+horizontal_alignment = 1
+
 [node name="EspRow" type="VBoxContainer" parent="Bars/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="EspLabel" type="Label" parent="Bars/Rows/EspRow"]
+[node name="EspCap" type="PanelContainer" parent="Bars/Rows/EspRow"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.7, 1, 1)
-theme_override_font_sizes/font_size = 12
-text = "ESPÍRITU"
-horizontal_alignment = 1
+custom_minimum_size = Vector2(42, 22)
+theme_override_styles/panel = SubResource("cap_esp")
 
 [node name="EspBar" type="ProgressBar" parent="Bars/Rows/EspRow"]
 layout_mode = 2
@@ -110,6 +127,13 @@ theme_override_styles/fill = SubResource("fill_esp")
 show_percentage = false
 fill_mode = 3
 
+[node name="EspLabel" type="Label" parent="Bars/Rows/EspRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.7, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "ESPÍRITU"
+horizontal_alignment = 1
+
 [node name="ProgLabel" type="Label" parent="."]
 offset_left = 12.0
 offset_top = 276.0
@@ -118,6 +142,30 @@ offset_bottom = 296.0
 theme_override_colors/font_color = Color(0.95, 0.85, 0.4, 1)
 theme_override_font_sizes/font_size = 13
 text = "FRAGMENTOS 0/3 · NIVEL 1"
+
+[node name="Racha" type="VBoxContainer" parent="."]
+visible = false
+anchor_left = 0.0
+anchor_right = 0.0
+offset_left = 168.0
+offset_top = 12.0
+offset_right = 268.0
+offset_bottom = 66.0
+theme_override_constants/separation = 0
+
+[node name="Titulo" type="Label" parent="Racha"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+theme_override_font_sizes/font_size = 13
+text = "COMBO"
+horizontal_alignment = 1
+
+[node name="Valor" type="Label" parent="Racha"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+theme_override_font_sizes/font_size = 30
+text = "0"
+horizontal_alignment = 1
 
 [node name="ComboLabel" type="RichTextLabel" parent="."]
 anchor_left = 1.0

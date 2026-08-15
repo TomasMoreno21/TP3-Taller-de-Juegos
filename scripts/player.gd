@@ -5,6 +5,7 @@ signal attack_performed(attack_type: String, step: Variant)
 signal health_changed(health: int, max_health: int)
 signal energia_changed(energia: float)
 signal transformacion_agotada
+signal racha_changed(cantidad: int)
 
 enum Form { HUMAN, LOBO, OSO, MURCIELAGO }
 
@@ -44,6 +45,8 @@ var _light_step := 0
 var _heavy_step := 0
 var _seq: Array[String] = []
 var _combo_timer := 0.0
+var _racha := 0
+var _racha_timer := 0.0
 var _buffered_attack := ""
 var _was_blocking := false
 var _sprite_tween: Tween
@@ -110,10 +113,26 @@ func _physics_process(delta: float) -> void:
 
 	_handle_attack(delta)
 	_check_attack_hits()
+	_handle_racha(delta)
 	_handle_energia(delta)
 	_handle_transform()
 	_handle_death()
 	_update_animacion()
+
+
+func _handle_racha(delta: float) -> void:
+	if _racha_timer <= 0.0:
+		return
+	_racha_timer -= delta
+	if _racha_timer <= 0.0:
+		_racha = 0
+		racha_changed.emit(_racha)
+
+
+func _registrar_golpe_racha() -> void:
+	_racha += 1
+	_racha_timer = COMBO_WINDOW
+	racha_changed.emit(_racha)
 
 
 func _handle_attack(delta: float) -> void:
@@ -327,10 +346,12 @@ func _check_attack_hits() -> void:
 			body.registrar_golpe(_current_attack_damage)
 			_hit_applied = true
 			_aplicar_knockback(body)
+			_registrar_golpe_racha()
 			return
 		if body.has_method("take_damage"):
 			body.take_damage(_current_attack_damage, _current_attack_knockback, facing)
 			_hit_applied = true
+			_registrar_golpe_racha()
 			return
 
 
@@ -472,6 +493,9 @@ func _handle_death() -> void:
 	global_position = _spawn_position
 	velocity = Vector2.ZERO
 	energia = ENERGIA_RESPAWN
+	_racha = 0
+	_racha_timer = 0.0
+	racha_changed.emit(_racha)
 	health_changed.emit(health, VIDA_MAX)
 	energia_changed.emit(energia)
 

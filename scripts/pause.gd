@@ -28,7 +28,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_instance_valid(_controls):
 		return
 	if event.is_action_pressed("pause"):
-		if _consola_abierta():
+		if _consola_abierta() or _dialogo_activo():
 			return
 		toggle()
 		get_viewport().set_input_as_handled()
@@ -49,6 +49,11 @@ func _unhandled_input(event: InputEvent) -> void:
 func _consola_abierta() -> bool:
 	var consola = get_tree().get_first_node_in_group("console")
 	return consola != null and consola.esta_abierta()
+
+
+func _dialogo_activo() -> bool:
+	var dialogo = get_node_or_null("/root/Dialogo")
+	return dialogo != null and dialogo.esta_activo()
 
 
 func toggle() -> void:

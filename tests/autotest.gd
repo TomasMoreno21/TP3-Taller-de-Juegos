@@ -8,6 +8,7 @@ var _scene: Node
 
 func _init() -> void:
 	_scene = load("res://scenes/main.tscn").instantiate()
+	_quitar_dialogos_automaticos(_scene)
 	root.add_child(_scene)
 	_console = load("res://scenes/console.tscn").instantiate()
 	_scene.add_child(_console)
@@ -262,6 +263,17 @@ func _limpiar_dummies() -> void:
 			child.queue_free()
 	await physics_frame
 	await physics_frame
+
+
+func _quitar_dialogos_automaticos(nodo: Node) -> void:
+	# el amuleto pausa el juego y consume input al hablar; interfiere con la
+	# simulación de Input.action_press de las pruebas aisladas
+	for hijo in nodo.get_children():
+		_quitar_dialogos_automaticos(hijo)
+	var script: Script = nodo.get_script()
+	if script != null and script.resource_path == "res://scripts/dialog_trigger.gd":
+		nodo.get_parent().remove_child(nodo)
+		nodo.free()
 
 
 func _limpiar_enemigos() -> void:
