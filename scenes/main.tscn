@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="4_hud"]
+[ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="8_pause"]
 [ext_resource type="PackedScene" uid="uid://bxsawwmlxb7mt" path="res://scenes/enemy.tscn" id="5_enemy"]
 [ext_resource type="PackedScene" uid="uid://c3ewt86jjx5fr" path="res://scenes/tronco.tscn" id="6_tronco"]
 [ext_resource type="PackedScene" uid="uid://cr2s0l8k2s5l4" path="res://scenes/rompible.tscn" id="7_romp"]
@@ -48,6 +49,8 @@ collision_mask = 1
 tipo = "arquero"
 
 [node name="Hud" parent="." unique_id=972088848 instance=ExtResource("4_hud")]
+
+[node name="Pause" parent="." unique_id=423654189 instance=ExtResource("8_pause")]
 
 [node name="Rompible2" parent="." unique_id=1685828451 instance=ExtResource("7_romp")]
 position = Vector2(1301, 961)

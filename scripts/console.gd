@@ -21,6 +21,7 @@ const COMANDOS := {
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	add_to_group("console")
 	panel.visible = false
 	line_edit.text_submitted.connect(_on_submitted)
 	commands_label.text = _lista_comandos()
@@ -41,6 +42,10 @@ func toggle() -> void:
 	else:
 		line_edit.release_focus()
 		imprimir("Consola cerrada")
+
+
+func esta_abierta() -> bool:
+	return _open
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -16,7 +16,7 @@
 - **Energía de transformación:** drena 8/s transformado, a 0 → vuelve a Humano; Humano regenera 5/s; romper rompibles/pickups recargan.
 - **Progresión:** `Progresion` autoload. 3 fragmentos/nivel. `forma_desbloqueada = form_index < nivel` (nivel 2→Lobo, 3→Oso, 4→Murciélago). 1 combo por forma, desbloqueable al subir de nivel.
 - **Comandos consola (`console.gd`):** `help`, `form <humano|lobo|oso|murcielago>`, `god`, `mv`, `frags <n>`, `nivel <n>`, `kill`. (El método de ejecutar es `_ejecutar(PackedStringArray([...]))`; abrir/cerrar es `toggle()`.)
-- **Escenas core:** `scenes/player.tscn`, `scenes/main.tscn`, `scenes/rompible.tscn`, `scenes/tronco.tscn` (+`interactable.gd`), `scenes/pickup.tscn`, `scenes/hud.tscn`, `scenes/console.tscn`, `scenes/levelup.tscn`, `scenes/projectile.tscn`.
+- **Escenas core:** `scenes/main_menu.tscn` (main scene desde 15/08), `scenes/main.tscn`, `scenes/player.tscn`, `scenes/pause.tscn`, `scenes/controls.tscn`, `scenes/rompible.tscn`, `scenes/tronco.tscn` (+`interactable.gd`), `scenes/pickup.tscn`, `scenes/hud.tscn`, `scenes/console.tscn`, `scenes/levelup.tscn`, `scenes/projectile.tscn`.
 - **Scripts:** `scripts/player.gd`, `progresion.gd`, `rompible.gd`, `interactable.gd`, `pickup.gd`, `camera.gd`, `hud.gd`, `console.gd`, `levelup.gd`, `projectile.gd`, `forms/{forma,humano,lobo,oso,murcielago}.gd`.
 - **Tests (todos verdes, FALLOS = 0):** `tests/autotest.gd`, `tests/diag_formas.gd`, `tests/diag_hud.gd`, `tests/diag_feedback.gd` + helper `tests/dummy.gd` (StaticBody2D para medir daño melee).
   - Correr: `godot --headless --path . --script res://tests/autotest.gd` etc.
@@ -33,6 +33,13 @@
 - **Corrección de estado roto preexistente:** `enemy.tscn` tenía un `Sprite2D` estático (de una sesión previa) pero `enemy.gd` referenciaba `$Visual` → error "Node not found: Visual" en smoke. Se resolvió con la estructura Visual/Poly/Animated.
 - **`tests/diag_golpe.gd` actualizado:** ya no busca `Camera2D` (la cámara ya no es hija del player) ni rotación; chequea daño (30 tras golpe ligero al Cultista1, 40−10) y tinte rojo. Ojo: el daño conecta ~2 frames después del `attack` (el overlap tarda en actualizarse tras `monitoring = true`).
 - **Pendiente de verificar visualmente:** alineación de sprites enemigos en el editor (144 px de alto ×3 vs collider 27×60).
+
+### Sesión 15/08 — UIX: Menú principal, Pausa y pantalla de Controles
+- **Menú principal (`scenes/main_menu.tscn` + `scripts/main_menu.gd`, NUEVA main scene):** `run/main_scene` pasó de `main.tscn` a `main_menu.tscn`. Fondo = gradiente verde oscuro (`TextureRect` + `GradientTexture2D`, OJO: **`ColorRect` NO tiene `texture`** en Godot 4 — usar `TextureRect` con `stretch_mode`), título "SPIRIT KEEPER" dorado, botones JUGAR / CONTROLES / SALIR con StyleBoxFlat (focus = borde dorado). Navegación `↑↓` + `J`/Enter + mouse; "Jugar" hace `Progresion.reset()` y cambia a `main.tscn`.
+- **Pausa (`scenes/pause.tscn` + `scripts/pause.gd`):** instanciada en `main.tscn`. Nueva acción `pause` en `project.godot` (Esc 4194305 + Start joypad 7). CanvasLayer layer 90, `process_mode=ALWAYS`; abre/cierra con `get_tree().paused`. Opciones: REANUDAR / CONTROLES / VOLVER AL MENÚ / SALIR. No se abre si la consola dev está abierta (`_consola_abierta` → grupo `console` + método nuevo `esta_abierta()` en `console.gd`).
+- **Controles (`scenes/controls.tscn` + `scripts/controls.gd`):** overlay reutilizable (CanvasLayer layer 100, ALWAYS) instanciado por menú y pausa; se cierra con Esc o el botón VOLVER (`queue_free`). Dos columnas TECLADO/MANDO con las acciones reales del proyecto.
+- **Verificación:** import limpio, smoke limpio, autotest **FALLOS = 0** + diag_hud/feedback/formas verdes. Capturas de verificación en `tests/cap_menu.png`, `tests/cap_controles.png`, `tests/cap_pausa.png` (generadas con un script temporal, ya borrado).
+- **Pendiente UX (probarlo a mano en el editor):** flujo menú→jugar→pausa→controles→volver, y que el foco del teclado se sienta bien con mando y mouse.
 
 ### Build/Run y verificación
 ```powershell
