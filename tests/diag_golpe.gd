@@ -9,9 +9,7 @@ func _init() -> void:
 	await process_frame
 	await process_frame
 	var player = scene.get_node("Player")
-	var enemy = scene.get_node("Level/Enemy")
-	var cam = player.get_node("Camera2D")
-	_check(cam != null, "Player tiene Camera2D")
+	var enemy = scene.get_node("Cultista1")
 
 	player.global_position = enemy.global_position - Vector2(30, 0)
 	player.facing = 1
@@ -20,22 +18,17 @@ func _init() -> void:
 	await physics_frame
 	await physics_frame
 	Input.action_release("attack")
-	_check(enemy.health == 90, "Enemigo recibió daño: " + str(enemy.health))
 
-	var vio_rot := false
+	var vio_danio := false
 	var vio_rojo := false
-	var vio_shake := false
 	for i in range(12):
 		await process_frame
-		if enemy.visual.rotation != 0.0:
-			vio_rot = true
-		if enemy.visual.color.r > 0.9:
+		if enemy.health < 40:
+			vio_danio = true
+		if enemy.visual.modulate != Color(1, 1, 1):
 			vio_rojo = true
-		if cam.offset != Vector2.ZERO:
-			vio_shake = true
-	_check(vio_rot, "Enemigo rota al ser golpeado")
-	_check(vio_rojo, "Enemigo se tiñe de rojo")
-	_check(vio_shake, "Cámara se sacude")
+	_check(vio_danio, "Enemigo recibió daño: " + str(enemy.health))
+	_check(vio_rojo, "Enemigo se tiñe de rojo al ser golpeado")
 
 	print("DIAG GOLPE: FALLOS = " + str(_failures))
 	if _failures == 0:

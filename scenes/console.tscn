@@ -1,6 +1,6 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/console.gd" id="1_console"]
+[ext_resource type="Script" uid="uid://fxq8hwtpelh0" path="res://scripts/console.gd" id="1_console"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.07, 0.09, 0.11, 0.94)

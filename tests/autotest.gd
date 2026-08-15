@@ -2,246 +2,236 @@ extends SceneTree
 
 var _failures := 0
 var _console: Node
+var _player: Node2D
+var _scene: Node
 
 
 func _init() -> void:
-	var scene = load("res://scenes/main.tscn").instantiate()
-	root.add_child(scene)
+	_scene = load("res://scenes/main.tscn").instantiate()
+	root.add_child(_scene)
+	_console = load("res://scenes/console.tscn").instantiate()
+	_scene.add_child(_console)
 	await process_frame
 	await process_frame
 
-	var player = scene.get_node("Player")
-	var enemy = scene.get_node("Level/Enemy")
-	var console = scene.get_node("UI/Console")
-	_console = console
+	_player = _scene.get_node("Player")
+	# los enemigos del nivel inicial interfieren con las pruebas aisladas
+	_limpiar_enemigos()
+	await process_frame
 
-	_check(player.current_form == 0, "Forma inicial = Guardabosques (0). Es: " + str(player.current_form))
+	# --- Formas cargadas y stats del concepto ---
+	_check(_player.forms.size() == 4, "4 formas cargadas. Es: " + str(_player.forms.size()))
+	_check(_player.current_form == 0, "Forma inicial = Humano (0). Es: " + str(_player.current_form))
+	_check(_player.forms[0].form_name == "Humano", "Forma 0 es Humano")
+	_check(_player.forms[1].form_name == "Lobo", "Forma 1 es Lobo")
+	_check(_player.forms[2].form_name == "Oso", "Forma 2 es Oso")
+	_check(_player.forms[3].form_name == "Murciélago", "Forma 3 es Murciélago")
+	_check(_player.forms[1].speed > _player.forms[2].speed, "Lobo es más rápido que el Oso")
+	_check(_player.forms[2].attack_damage > _player.forms[1].attack_damage, "Oso pega más fuerte que el Lobo")
+	_check(_player.forms[1].jump_velocity < _player.forms[2].jump_velocity, "Lobo salta más alto que el Oso")
 
+	# --- Vida compartida: transformar NO resetea la vida ---
+	_player.take_damage(30)
+	await process_frame
+	var hp_antes: int = _player.health
+	_console._ejecutar(PackedStringArray(["form", "lobo"]))
+	await process_frame
+	_check(_player.current_form == 1, "Consola 'form lobo' -> 1")
+	_check(_player.health == hp_antes, "Vida compartida: transformar no resetea la vida")
+	_console._ejecutar(PackedStringArray(["form", "oso"]))
+	await process_frame
+	_check(_player.current_form == 2, "Consola 'form oso' -> 2")
+	_check(_player.health == hp_antes, "Vida compartida: Oso hereda la vida del Lobo")
+	_console._ejecutar(PackedStringArray(["form", "murcielago"]))
+	await process_frame
+	_check(_player.current_form == 3, "Consola 'form murcielago' -> 3")
+
+	# --- Progresión: nivel 1 solo Humano; nivel 2 desbloquea Lobo ---
+	_progresion().reset()
+	_check(_progresion().forma_desbloqueada(1) == false, "Nivel 1: Lobo bloqueado")
 	Input.action_press("transform")
 	await physics_frame
 	await physics_frame
 	Input.action_release("transform")
-	_check(player.current_form == 1, "Transformar cicla a Oso (1). Es: " + str(player.current_form))
+	_check(_player.current_form == 0, "Nivel 1: transformar no cambia (sigue Humano)")
+	_progresion().add_fragmentos(3)
+	_check(int(_progresion().nivel) == 2, "3 fragmentos suben a nivel 2")
+	_check(_progresion().forma_desbloqueada(1) == true, "Nivel 2: Lobo desbloqueado")
+	_progresion().add_fragmentos(3)
+	_progresion().add_fragmentos(3)
+	_check(_progresion().forma_desbloqueada(3) == true, "Nivel 4: Murciélago desbloqueado")
 
-	console._execute("form", PackedStringArray(["buho"]))
-	_check(player.current_form == 3, "Consola 'form buho' -> (3). Es: " + str(player.current_form))
-
-	console._execute("god", PackedStringArray())
-	_check(player.god_mode == true, "Consola 'god' activa invencibilidad")
-
-	console._execute("form", PackedStringArray(["humano"]))
-	player.global_position = enemy.global_position - Vector2(30, 0)
-	player.facing = 1
+	# --- Melee: el humano daña al dummy ---
+	_progresion().set_nivel(4)
+	_console._ejecutar(PackedStringArray(["form", "humano"]))
+	await process_frame
+	var dummy := _spawn_dummy(Vector2(40, 0))
+	_player.facing = 1
+	_player.velocity = Vector2.ZERO
 	await physics_frame
-	var hp_before: int = enemy.health
+	var hp_dummy: int = dummy.health
+	Input.action_press("attack")
+	await physics_frame
+	await physics_frame
+	Input.action_release("attack")
+	await _esperar_recuperacion("light")
+	_check(dummy.health < hp_dummy, "Melee humano daña al dummy (%d -> %d)" % [hp_dummy, dummy.health])
+	_limpiar_dummies()
+
+	# --- Combo por secuencia J→K = Remate (42) ---
+	_progresion().elegir_mejora(0)
+	_check(_progresion().combos_desbloqueados_forma(0) == 1, "elegir_mejora(0) desbloquea el combo del humano")
+	var e_combo := _spawn_dummy(Vector2(40, 0))
+	_player.facing = 1
+	await physics_frame
 	Input.action_press("attack")
 	await physics_frame
 	await physics_frame
 	await physics_frame
 	Input.action_release("attack")
-	_check(enemy.health < hp_before, "Ataque melee daña al enemigo (%d -> %d)" % [hp_before, enemy.health])
-
-	var enemies_before: int = get_nodes_in_group("enemy").size()
-	console._execute("spawn_enemy", PackedStringArray())
-	await physics_frame
-	_check(get_nodes_in_group("enemy").size() == enemies_before + 1, "spawn_enemy suma un enemigo")
-
-	console._execute("kill_enemies", PackedStringArray())
-	await physics_frame
-	_check(get_nodes_in_group("enemy").size() == 0, "kill_enemies elimina todos los enemigos")
-
-	# --- Lote 1: combate fiel al original ---
-	console._execute("form", PackedStringArray(["humano"]))
-	await _wait_frames(3)
-
-	# Light combo: la repetición de J escala el daño (humano: 10 -> 15)
-	var e_light: Node2D = await _spawn_enemy_near(player)
-	var full_hp: int = e_light.health
-	Input.action_press("attack")
-	await physics_frame
-	await physics_frame
-	Input.action_release("attack")
-	await physics_frame
-	var dmg_one: int = full_hp - e_light.health
-	await _wait_frames(24)
-	Input.action_press("attack")
-	await physics_frame
-	await physics_frame
-	Input.action_release("attack")
-	await physics_frame
-	Input.action_press("attack")
-	await physics_frame
-	await physics_frame
-	Input.action_release("attack")
-	await physics_frame
-	await physics_frame
-	var dmg_two: int = (full_hp - e_light.health) - dmg_one
-	_check(dmg_one == 10, "Light combo: golpe 1 hace 10 dmg (es %d)" % dmg_one)
-	_check(dmg_two == 25, "Light combo: J J rápidos hacen 25 dmg (es %d)" % dmg_two)
-	_check(dmg_two > dmg_one * 2, "Light combo: la repetición escala el daño")
-
-	# Heavy combo: K daña y aplica knockback
-	var e_heavy: Node2D = await _spawn_enemy_near(player)
-	var heavy_before: int = e_heavy.health
+	await _esperar_recuperacion("light")
+	var hp_tras_j: int = e_combo.health
 	Input.action_press("heavy")
 	await physics_frame
 	await physics_frame
+	await physics_frame
 	Input.action_release("heavy")
-	await _wait_frames(3)
-	_check(e_heavy.health < heavy_before, "Heavy combo: K daña al enemigo")
-
-	# Especial: L hace el ataque especial de la forma (barrido del humano)
-	var e_special: Node2D = await _spawn_enemy_near(player)
-	var spec_before: int = e_special.health
-	Input.action_press("special")
 	await physics_frame
-	await physics_frame
-	Input.action_release("special")
-	await _wait_frames(3)
-	_check(e_special.health < spec_before, "Especial: L daña al enemigo")
+	var remate_dmg: int = hp_tras_j - e_combo.health
+	_check(remate_dmg == 42, "J→K ejecuta el Remate (42 dmg, fue %d)" % remate_dmg)
+	await _esperar_recuperacion("combo")
+	_limpiar_dummies()
 
-	# Block: reduce el daño al 25%
-	var hp_block: int = player.health
+	# --- Block: reduce el daño (take_damage ignora en bloqueo) ---
+	var hp_block: int = _player.health
 	Input.action_press("block")
 	await physics_frame
+	_player.take_damage(20)
 	await physics_frame
-	player.take_damage(20)
-	await physics_frame
-	_check(hp_block - player.health <= 5, "Block: reduce el daño al 25%%")
+	_check(_player.health == hp_block, "Block: bloquea el daño")
 	Input.action_release("block")
 	await physics_frame
-	player.heal_full()
 
-	# Jump attack: golpe en el aire
-	var e_jump: Node2D = await _spawn_enemy_near(player)
-	var jump_before: int = e_jump.health
-	player.global_position = e_jump.global_position - Vector2(30, 10)
-	player.facing = 1
-	player.velocity = Vector2.ZERO
-	await physics_frame
-	Input.action_press("attack")
-	await physics_frame
-	await physics_frame
-	Input.action_release("attack")
-	await _wait_frames(3)
-	_check(e_jump.health < jump_before, "Jump attack: golpe en el aire daña")
-	await _wait_frames(25)
-
-	# Lobo: light = dash (asegurarse de estar en el suelo)
-	console._execute("form", PackedStringArray(["lobo"]))
-	player.global_position = Vector2(400, 540)
-	player.velocity = Vector2.ZERO
-	await _wait_frames(10)
-	_check(player.forms[2].is_dashing() == false, "Lobo: en reposo no dash")
-	Input.action_press("attack")
-	await physics_frame
-	await physics_frame
-	Input.action_release("attack")
-	await physics_frame
-	_check(player.forms[2].is_dashing(), "Lobo: light activa el dash")
-	await _wait_frames(30)
-
-	# Búho: special dispara proyectil
-	console._execute("kill_enemies", PackedStringArray())
-	await _wait_frames(5)
-	console._execute("form", PackedStringArray(["buho"]))
-	await _wait_frames(3)
-	var proj_before := _count_projectiles(scene)
+	# --- Murciélago: special dispara proyectil sónico ---
+	_console._ejecutar(PackedStringArray(["form", "murcielago"]))
+	await process_frame
+	var proj_before := _count_projectiles()
 	Input.action_press("special")
 	await physics_frame
 	await physics_frame
+	_check(_count_projectiles() > proj_before, "Murciélago: special dispara proyectil sónico")
 	Input.action_release("special")
-	await physics_frame
-	_check(_count_projectiles(scene) > proj_before, "Búho: special dispara proyectil")
-	await _wait_frames(20)
+	await _esperar_recuperacion("special")
+	_limpiar_dummies()
 
-	# Feedback visual: el efecto de ataque aparece al golpear
-	console._execute("form", PackedStringArray(["humano"]))
+	# --- Planeo del Murciélago en el aire ---
+	_player.global_position = Vector2(200, 100)
+	_player.velocity = Vector2(0, 50)
+	await physics_frame
+	Input.action_press("jump")
+	await physics_frame
+	_check(_player.forms[3].is_gliding(_player), "Murciélago: planea en el aire con J sostenido")
+	Input.action_release("jump")
+
+	# --- Enemigos: el melee daña y mueren; tipos cargan ---
+	_console._ejecutar(PackedStringArray(["form", "humano"]))
+	await process_frame
+	var enemy_script := preload("res://scripts/enemy.gd")
+	var cult: Enemigo = enemy_script.config_por_tipo("cultista")
+	var ark: Enemigo = enemy_script.config_por_tipo("arquero")
+	var cham: Enemigo = enemy_script.config_por_tipo("chaman")
+	_check(cult != null and ark != null and cham != null, "Enemigos: config de los 3 tipos")
+	_check(ark.projectile == true, "Enemigos: arquero dispara proyectil")
+	_check(cham.max_health > cult.max_health, "Enemigos: chamán resistente tiene más vida que el cultista")
+
+	var en := preload("res://scenes/enemy.tscn").instantiate()
+	en.tipo = "cultista"
+	_scene.add_child(en)
+	en.global_position = _player.global_position + Vector2(60, 40)
 	await _wait_frames(3)
-	var e_fx: Node2D = await _spawn_enemy_near(player)
-	var fx: Polygon2D = player.get_node("AttackEffect")
-	var av: Polygon2D = player.get_node("AttackAreaVisual")
-	_check(fx.visible == false, "Feedback: efecto oculto en reposo")
-	_check(av.visible == false, "Feedback: área oculta en reposo")
+	_player.facing = 1
+	_player.velocity = Vector2.ZERO
+	await physics_frame
+	var hp_en: int = en.health
 	Input.action_press("attack")
 	await physics_frame
 	await physics_frame
 	Input.action_release("attack")
+	await _esperar_recuperacion("light")
+	_check(en.health < hp_en, "Enemigos: el melee del humano daña al sectario (%d -> %d)" % [hp_en, en.health])
+	_limpiar_enemigos()
+
+	# --- Enemigos: muerte recarga energía (Documento: golpes en combate) ---
+	_player.energia = 40.0
+	await process_frame
+	var en2 := preload("res://scenes/enemy.tscn").instantiate()
+	en2.tipo = "cultista"
+	_scene.add_child(en2)
+	en2.global_position = _player.global_position + Vector2(60, 40)
+	await _wait_frames(3)
+	_player.facing = 1
+	_player.velocity = Vector2.ZERO
 	await physics_frame
-	_check(fx.visible == true, "Feedback: slash visible al atacar")
-	_check(av.visible == true, "Feedback: área visible al atacar")
-	_check(av.polygon.size() == 4, "Feedback: el área refleja el hitbox rectangular")
-	await _wait_frames(25)
-	_check(av.visible == false, "Feedback: el área se oculta tras el ataque")
-
-	# Interact: el tronco solo lo rompe el Oso
-	var tronco: Node2D = scene.get_node_or_null("Level/Tronco")
-	_check(tronco != null, "Tronco presente en el nivel")
-	if tronco != null:
-		console._execute("form", PackedStringArray(["humano"]))
-		await _wait_frames(3)
-		player.global_position = tronco.global_position + Vector2(-30, 10)
-		player.facing = 1
-		player.velocity = Vector2.ZERO
-		await physics_frame
-		Input.action_press("special")
-		await physics_frame
-		await physics_frame
-		Input.action_release("special")
-		await _wait_frames(3)
-		_check(is_instance_valid(tronco), "Interact: humano NO rompe el tronco")
-
-		console._execute("form", PackedStringArray(["oso"]))
-		await _wait_frames(3)
-		player.global_position = tronco.global_position + Vector2(-30, 10)
-		player.facing = 1
-		player.velocity = Vector2.ZERO
-		await physics_frame
-		Input.action_press("special")
-		await physics_frame
-		await physics_frame
-		Input.action_release("special")
-		await _wait_frames(20)
-		_check(not is_instance_valid(tronco), "Interact: oso rompe el tronco")
-
-	# La base de formas expone el combo por repetición
-	_check(player.forms[0].has_method("perform_light"), "Forma base: perform_light")
-	_check(player.forms[0].has_method("perform_heavy"), "Forma base: perform_heavy")
-	_check(player.forms[0].has_method("perform_special"), "Forma base: perform_special")
-	_check(player.forms[0].light_combo_steps >= 2, "Forma base: light_combo_steps configurado")
-	_check(player.forms[3].has_method("perform_special"), "Búho: perform_special")
-
-	console._execute("kill_enemies", PackedStringArray())
-	await physics_frame
-
-	console._toggle()
-	_check(paused == true, "Abrir consola pausa el juego")
-	console._toggle()
-	_check(paused == false, "Cerrar consola reanuda el juego")
-
-	var encounter = scene.get_node("Level/Encounter")
-	encounter.debug_activate()
-	await physics_frame
-	await physics_frame
-	_check(encounter.state == 1, "Encuentro: activado (RUNNING)")
-	_check(encounter.gate.get_node("Collision").disabled == false, "Encuentro: portón cerrado durante pelea")
-
-	for i in range(60):
-		await physics_frame
-		if get_nodes_in_group("enemy").size() >= 1:
-			break
-	_check(get_nodes_in_group("enemy").size() >= 1, "Encuentro: spawnea enemigos tras telegrafiado")
-
+	var energia_antes: float = _player.energia
 	for i in range(10):
-		if encounter.state == 2:
+		if not is_instance_valid(en2):
 			break
-		console._execute("kill_enemies", PackedStringArray())
-		for j in range(30):
-			await physics_frame
-			if encounter.state == 2:
-				break
-	_check(encounter.state == 2, "Encuentro: completado tras eliminar todas las olas")
-	_check(encounter.gate.get_node("Collision").disabled == true, "Encuentro: portón abierto al completar")
+		_player.global_position = en2.global_position - Vector2(20, 0)
+		_player.facing = 1
+		_player.velocity = Vector2.ZERO
+		await physics_frame
+		Input.action_press("attack")
+		await physics_frame
+		await physics_frame
+		Input.action_release("attack")
+		await _esperar_recuperacion("light")
+	_check(not is_instance_valid(en2), "Enemigos: muere al recibir daño")
+	_check(_player.energia > energia_antes, "Enemigos: matar recarga energía (%.1f -> %.1f)" % [energia_antes, _player.energia])
+	_limpiar_enemigos()
+
+	# --- Interact: el tronco solo lo rompe el Oso ---
+	await _funcion_tronco()
+
+	# --- Rompibles: 3 golpes + fragmento ---
+	_console._ejecutar(PackedStringArray(["form", "humano"]))
+	await process_frame
+	var crate: Node2D = preload("res://scenes/rompible.tscn").instantiate()
+	_scene.add_child(crate)
+	crate.global_position = _player.global_position + Vector2(40, 0)
+	await _wait_frames(3)
+	_player.facing = 1
+	var frag_antes: int = int(_progresion().fragmentos)
+	for i in range(3):
+		Input.action_press("attack")
+		await physics_frame
+		await physics_frame
+		Input.action_release("attack")
+		await _wait_frames(3)
+		await _esperar_recuperacion("light")
+	_check(not is_instance_valid(crate), "Rompible: se rompe al 3er golpe")
+	_check(int(_progresion().fragmentos) > frag_antes, "Rompible: otorga un fragmento al romperse")
+
+	# --- Pickup: recarga la energía ---
+	_player.energia = 20.0
+	await process_frame
+	var pickup: Node2D = preload("res://scenes/pickup.tscn").instantiate()
+	_scene.add_child(pickup)
+	pickup.global_position = _player.global_position
+	await _wait_frames(6)
+	_check(_player.energia > 20.0, "Pickup: recarga la energía del espíritu")
+
+	# --- Consola: god y mv ---
+	_console._ejecutar(PackedStringArray(["god"]))
+	_check(_player.god_mode == true, "Consola 'god' activa invencibilidad")
+	_console._ejecutar(PackedStringArray(["god"]))
+	_check(_player.god_mode == false, "Consola 'god' desactiva invencibilidad")
+	_player.take_damage(50)
+	_console._ejecutar(PackedStringArray(["mv"]))
+	_check(_player.health == 100, "Consola 'mv' restaura la vida")
+
+	# --- Consola: toggle alterna la visibilidad (sin pausa en este diseño) ---
+	_console.toggle()
+	_check(_console.panel.visible == true, "Consola: toggle abre el panel")
 
 	print("AUTOTEST: FALLOS = " + str(_failures))
 	if _failures == 0:
@@ -250,6 +240,36 @@ func _init() -> void:
 	else:
 		print("AUTOTEST: " + str(_failures) + " TEST(S) FALLARON")
 		quit(1)
+
+
+func _spawn_dummy(offset: Vector2 = Vector2.ZERO) -> Node2D:
+	var dummy := StaticBody2D.new()
+	var col := CollisionShape2D.new()
+	var shape := RectangleShape2D.new()
+	shape.size = Vector2(36, 36)
+	col.shape = shape
+	dummy.add_child(col)
+	dummy.set_script(load("res://tests/dummy.gd"))
+	_scene.add_child(dummy)
+	dummy.global_position = _player.global_position + offset
+	return dummy
+
+
+func _limpiar_dummies() -> void:
+	var dummy_script := load("res://tests/dummy.gd")
+	for child in _scene.get_children():
+		if child.get_script() == dummy_script:
+			child.queue_free()
+	await physics_frame
+	await physics_frame
+
+
+func _limpiar_enemigos() -> void:
+	for child in _scene.get_children():
+		if child.is_in_group("enemy"):
+			child.queue_free()
+	await physics_frame
+	await physics_frame
 
 
 func _check(cond: bool, msg: String) -> void:
@@ -265,21 +285,80 @@ func _wait_frames(n: int) -> void:
 		await physics_frame
 
 
-func _spawn_enemy_near(player: Node2D) -> Node2D:
-	_console._execute("spawn_enemy", PackedStringArray())
-	await physics_frame
-	await physics_frame
-	var enemy := get_nodes_in_group("enemy")[0]
-	player.global_position = enemy.global_position - Vector2(30, 0)
-	player.facing = 1
-	player.velocity = Vector2.ZERO
-	await physics_frame
-	return enemy
+func _esperar_recuperacion(ataque: String) -> void:
+	var frames := 32
+	match ataque:
+		"light":
+			frames = 32
+		"heavy":
+			frames = 50
+		"special":
+			frames = 74
+		"combo":
+			frames = 92
+	await _wait_frames(frames)
 
 
-func _count_projectiles(scene: Node) -> int:
+func _funcion_tronco() -> void:
+	# Plataforma de test: suelo plano a una altura fija para el player
+	var plataforma := StaticBody2D.new()
+	var pcol := CollisionShape2D.new()
+	var pshape := RectangleShape2D.new()
+	pshape.size = Vector2(1200, 40)
+	pcol.shape = pshape
+	plataforma.add_child(pcol)
+	_scene.add_child(plataforma)
+	plataforma.global_position = Vector2(600, 1000)
+
+	# Tronco fresco sobre la plataforma, a la derecha del player
+	_console._ejecutar(PackedStringArray(["form", "humano"]))
+	_player.global_position = Vector2(480, 900)
+	_player.velocity = Vector2.ZERO
+	await _wait_frames(60)
+	_check(_player.is_on_floor(), "Interact: el player reposa en el suelo")
+
+	var tronco: Node2D = preload("res://scenes/tronco.tscn").instantiate()
+	_scene.add_child(tronco)
+	tronco.global_position = _player.global_position + Vector2(130, 0)
+	await _wait_frames(3)
+	_check(is_instance_valid(tronco), "Tronco presente para la prueba")
+
+	_player.velocity = Vector2.ZERO
+	_player.facing = 1
+	await physics_frame
+	# Humano: el special NO rompe el tronco (requiere Oso)
+	Input.action_press("special")
+	await physics_frame
+	await physics_frame
+	Input.action_release("special")
+	await _esperar_recuperacion("special")
+	_check(is_instance_valid(tronco), "Interact: humano NO rompe el tronco")
+
+	# Oso: el special sí lo rompe
+	_console._ejecutar(PackedStringArray(["form", "oso"]))
+	_player.velocity = Vector2.ZERO
+	_player.facing = 1
+	await physics_frame
+	Input.action_press("special")
+	await physics_frame
+	await physics_frame
+	Input.action_release("special")
+	await _wait_frames(20)
+	_check(not is_instance_valid(tronco), "Interact: oso rompe el tronco")
+
+	_console._ejecutar(PackedStringArray(["form", "humano"]))
+	await process_frame
+	plataforma.queue_free()
+
+
+func _progresion() -> Node:
+	return root.get_node("Progresion")
+
+
+func _count_projectiles() -> int:
 	var count := 0
-	for child in scene.get_children():
+	for child in _scene.get_children():
 		if child.name.begins_with("Projectile"):
 			count += 1
 	return count
+

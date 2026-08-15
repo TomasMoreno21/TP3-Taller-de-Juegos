@@ -1,30 +1,29 @@
 extends Area2D
 
-var direction := 1
-var damage := 10
-var speed := 480.0
-
-var _life := 0.0
+var direction := Vector2.RIGHT
+var speed := 700.0
+var damage := 15
+var enemy_shot := false
+var _life := 2.5
 
 @onready var visual: Polygon2D = $Visual
 @onready var hitbox: CollisionShape2D = $Hitbox
 
 
-func setup(dir: int, dmg: int) -> void:
-	direction = dir
-	damage = dmg
+func _ready() -> void:
+	collision_mask = 4 if enemy_shot else 3
+	body_entered.connect(_on_body_entered)
+	monitoring = true
 
 
 func _physics_process(delta: float) -> void:
-	_life += delta
-	position.x += direction * speed * delta
-	for body in get_overlapping_bodies():
-		if body.is_in_group("enemy"):
-			body.take_damage(damage)
-			queue_free()
-			return
-		elif body is StaticBody2D:
-			queue_free()
-			return
-	if _life > 3.0:
+	global_position += direction * speed * delta
+	_life -= delta
+	if _life <= 0.0:
 		queue_free()
+
+
+func _on_body_entered(body: Node2D) -> void:
+	if body.has_method("take_damage"):
+		body.take_damage(damage, 120.0, int(direction.x))
+	queue_free()

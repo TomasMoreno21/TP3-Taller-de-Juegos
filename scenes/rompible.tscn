@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://cr2s0l8k2s5l4"]
+
+[ext_resource type="Texture2D" uid="uid://c6kj3iqiglora" path="res://Sprites/Elementos/3 Objects/Boxes/4.png" id="1_u4k4r"]
+[ext_resource type="Script" uid="uid://stf3lv8jw4hg" path="res://scripts/rompible.gd" id="2_romp"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_romp"]
+size = Vector2(94.75, 89.5)
+
+[node name="Rompible" type="StaticBody2D" unique_id=1685828451]
+collision_mask = 0
+script = ExtResource("2_romp")
+
+[node name="Collision" type="CollisionShape2D" parent="." unique_id=370147773]
+position = Vector2(0.625, 10.75)
+shape = SubResource("RectangleShape2D_romp")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=555398554]
+position = Vector2(0.4999957, 10.000007)
+scale = Vector2(2.939394, 3.4615386)
+texture = ExtResource("1_u4k4r")

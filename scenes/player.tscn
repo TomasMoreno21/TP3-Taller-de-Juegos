@@ -1,56 +1,35 @@
 [gd_scene format=3 uid="uid://ca7folks1s5l4"]
 
-[ext_resource type="Script" uid="uid://dmg2eypwncjxp" path="res://scripts/player.gd" id="1_player"]
-[ext_resource type="Texture2D" uid="uid://c1252aoshty2c" path="res://icon.svg" id="2_g2els"]
-[ext_resource type="Script" path="res://scripts/camera.gd" id="3_camera"]
+[ext_resource type="Script" uid="uid://dfckwvhjipli2" path="res://scripts/player.gd" id="1_player"]
+[ext_resource type="SpriteFrames" uid="uid://bhqpshwxoqn22" path="res://resources/jugador_frames.tres" id="2_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(16, 40)
+size = Vector2(74, 89)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
-size = Vector2(30, 24)
+size = Vector2(90, 72)
 
-[node name="Player" type="CharacterBody2D" unique_id=686514264]
+[node name="Player" type="CharacterBody2D" unique_id=780925585]
 collision_layer = 4
 collision_mask = 3
 script = ExtResource("1_player")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=482167183]
-position = Vector2(-1.1920929e-07, -4.7683716e-07)
-scale = Vector2(0.125, 0.3125)
-texture = ExtResource("2_g2els")
+[node name="Sprite2D" type="AnimatedSprite2D" parent="." unique_id=1857419060]
+position = Vector2(21, -20)
+scale = Vector2(2.9804687, 3)
+sprite_frames = ExtResource("2_frames")
+animation = &"idle"
+autoplay = "idle"
 
-[node name="Tint" type="Sprite2D" parent="Sprite2D"]
-texture = ExtResource("2_g2els")
-self_modulate = Color(0.42, 0.62, 0.36, 0.45)
-
-[node name="Collision" type="CollisionShape2D" parent="." unique_id=114693602]
+[node name="Collision" type="CollisionShape2D" parent="." unique_id=1655450779]
+position = Vector2(-5, 3.5)
 shape = SubResource("RectangleShape2D_body")
 
-[node name="AttackArea" type="Area2D" parent="." unique_id=226473579]
-collision_mask = 2
+[node name="AttackArea" type="Area2D" parent="." unique_id=1368461241]
+collision_mask = 3
 monitoring = false
 
-[node name="AttackHitbox" type="CollisionShape2D" parent="AttackArea" unique_id=1279769649]
+[node name="AttackHitbox" type="CollisionShape2D" parent="AttackArea" unique_id=846182347]
+position = Vector2(-4, 7)
 shape = SubResource("RectangleShape2D_attack")
 disabled = true
-
-[node name="AttackEffect" type="Polygon2D" parent="." unique_id=1700000001]
-visible = false
-color = Color(1, 1, 1, 1)
-polygon = PackedVector2Array(-26, -5, 8, -12, 28, 0, 8, 12, -26, 5)
-
-[node name="AttackAreaVisual" type="Polygon2D" parent="." unique_id=1700000002]
-visible = false
-color = Color(1, 1, 1, 0.22)
-polygon = PackedVector2Array(-15, -12, 15, -12, 15, 12, -15, 12)
-
-[node name="Camera2D" type="Camera2D" parent="."]
-position_smoothing_enabled = true
-position_smoothing_speed = 8.0
-zoom = Vector2(2, 2)
-limit_left = 0
-limit_top = -800
-limit_right = 2200
-limit_bottom = 640
-script = ExtResource("3_camera")
