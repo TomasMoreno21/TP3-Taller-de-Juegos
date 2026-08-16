@@ -7,6 +7,9 @@ const MAX_FALL_SPEED := 950.0
 
 @export var tipo: String = "cultista"
 @export var enemy_data: Enemigo
+@export var ola_asignada: int = 0          # a qué ola pertenece (enemigo manual del Encounter)
+@export var spawn_telegrafiado: bool = false  # aparece con el círculo ritual antes de actuar
+@export var ritual_duracion: float = 0.7  # tiempo del círculo ritual antes de que el enemigo actúe
 
 const FRAMES_POR_TIPO := {
 	"cultista": preload("res://resources/enemigo1_frames.tres"),
@@ -15,6 +18,9 @@ const FRAMES_POR_TIPO := {
 }
 
 var health: int = 40
+var _activo := true
+var _telegraph_timer := 0.0
+var _ritual: Polygon2D
 var _attack_timer := 0.0
 var _dir := -1
 var _attack_anim := ""
@@ -33,9 +39,9 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.tipo_nombre = "Cultista"
 			d.max_health = 40
 			d.speed = 75.0
-			d.stop_distance = 50.0
+			d.stop_distance = 30.0
 			d.attack_damage = 8
-			d.attack_range = 42.0
+			d.attack_range = 62.0
 			d.attack_cooldown = 1.6
 			d.color = Color(0.55, 0.38, 0.3)
 		"arquero":
@@ -65,7 +71,7 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 
 func _ready() -> void:
 	add_to_group("enemy")
-	if enemy_data == null:
+	if enemy_data == null or enemy_data.tipo_nombre.is_empty() or enemy_data.tipo_nombre == "Sectario":
 		enemy_data = config_por_tipo(tipo)
 	if enemy_data != null:
 		health = enemy_data.max_health
@@ -85,7 +91,69 @@ func _ready() -> void:
 		health = 40
 
 
+# --- API para el sistema de oleadas (Encounter) ---
+
+func preparar_ola() -> void:
+	_activo = false
+	visual.visible = false
+	_colision(false)
+
+
+func activar() -> void:
+	if spawn_telegrafiado:
+		_telegraph_timer = maxf(ritual_duracion, 0.05)
+		_mostrar_circulo_ritual()
+	else:
+		visual.visible = true
+		_activo = true
+		_colision(true)
+
+
+func _colision(on: bool) -> void:
+	if collide_shape != null:
+		collide_shape.set_deferred("disabled", not on)
+
+
+func _mostrar_circulo_ritual() -> void:
+	_ritual = Polygon2D.new()
+	if enemy_data != null:
+		_ritual.color = Color(enemy_data.color.r, enemy_data.color.g, enemy_data.color.b, 0.7)
+	else:
+		_ritual.color = Color(0.8, 0.4, 0.4, 0.7)
+	_ritual.polygon = _circulo_poligono(24)
+	_ritual.position = Vector2(0, 20)
+	add_child(_ritual)
+	var tw := create_tween()
+	tw.tween_property(_ritual, "scale", Vector2(1.5, 1.5), 0.6)
+	tw.parallel().tween_property(_ritual, "modulate:a", 0.0, 0.6)
+
+
+func _circulo_poligono(puntos: int) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in range(puntos):
+		var ang := TAU * float(i) / float(puntos)
+		pts.append(Vector2(cos(ang), sin(ang)) * 22.0)
+	return pts
+
+
 func _physics_process(delta: float) -> void:
+	if _telegraph_timer > 0.0:
+		_telegraph_timer -= delta
+		velocity.x = 0.0
+		_update_animacion()
+		move_and_slide()
+		if _telegraph_timer <= 0.0:
+			visual.visible = true
+			_activo = true
+			_colision(true)
+			if is_instance_valid(_ritual):
+				_ritual.queue_free()
+		return
+	if not _activo:
+		velocity.x = 0.0
+		_update_animacion()
+		move_and_slide()
+		return
 	var player := get_tree().get_first_node_in_group("player")
 	if _attack_timer > 0.0:
 		_attack_timer -= delta
@@ -109,11 +177,11 @@ func _physics_process(delta: float) -> void:
 			_disparar(player)
 			_attack_timer = enemy_data.attack_cooldown
 		velocity.x = 0.0 if dist <= enemy_data.shoot_range else _dir * enemy_data.speed
-	elif dist > enemy_data.stop_distance:
+	elif dist > enemy_data.attack_range:
 		velocity.x = _dir * enemy_data.speed
 	else:
 		velocity.x = 0.0
-		if dist <= enemy_data.attack_range and _attack_timer <= 0.0:
+		if _attack_timer <= 0.0:
 			_ataque_melee(player)
 			_attack_timer = enemy_data.attack_cooldown
 

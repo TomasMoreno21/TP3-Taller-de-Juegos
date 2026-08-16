@@ -1,0 +1,103 @@
+[gd_scene format=3 uid="uid://bfv0uxeq5fywr"]
+
+[ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="2_hud"]
+[ext_resource type="PackedScene" path="res://scenes/encounter.tscn" id="3_enc"]
+[ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="4_cam"]
+[ext_resource type="PackedScene" uid="uid://bxsawwmlxb7mt" path="res://scenes/enemy.tscn" id="5_hcws0"]
+[ext_resource type="Script" uid="uid://cui53h2x6gwlf" path="res://scripts/enemigos/enemigo.gd" id="6_36fxm"]
+
+[sub_resource type="RectangleShape2D" id="rect_ground"]
+size = Vector2(3000, 57)
+
+[sub_resource type="Resource" id="Resource_7dsvk"]
+script = ExtResource("6_36fxm")
+metadata/_custom_type_script = "uid://cui53h2x6gwlf"
+
+[sub_resource type="Resource" id="Resource_glrgd"]
+script = ExtResource("6_36fxm")
+metadata/_custom_type_script = "uid://cui53h2x6gwlf"
+
+[sub_resource type="Resource" id="Resource_qi4dq"]
+script = ExtResource("6_36fxm")
+metadata/_custom_type_script = "uid://cui53h2x6gwlf"
+
+[node name="Main" type="Node2D" unique_id=978428722]
+
+[node name="Player" parent="." unique_id=364113704 instance=ExtResource("1_player")]
+position = Vector2(300, 947)
+
+[node name="Camara" type="Camera2D" parent="." unique_id=1685015717]
+script = ExtResource("4_cam")
+
+[node name="Level" type="Node2D" parent="." unique_id=931544789]
+
+[node name="Ground" type="StaticBody2D" parent="Level" unique_id=1691030356]
+position = Vector2(1000, 580)
+
+[node name="GroundVisual" type="Polygon2D" parent="Level/Ground" unique_id=2062583514]
+position = Vector2(-26, 456)
+color = Color(0.16, 0.32, 0.18, 1)
+polygon = PackedVector2Array(-1500, -20, 1500, -20, 1500, 20, -1500, 20)
+
+[node name="GroundCollision" type="CollisionShape2D" parent="Level/Ground" unique_id=1470033627]
+position = Vector2(-37, 451.5)
+shape = SubResource("rect_ground")
+
+[node name="Encounter" parent="." unique_id=329358310 instance=ExtResource("3_enc")]
+position = Vector2(1700, 940)
+camara = NodePath("../Camara")
+arena_center = Vector2(1700, 940)
+arena_medio_ancho = 350.0
+
+[node name="Enemy" parent="Encounter" unique_id=87872202 instance=ExtResource("5_hcws0")]
+position = Vector2(-260, 32)
+enemy_data = SubResource("Resource_7dsvk")
+spawn_telegrafiado = true
+
+[node name="Enemy2" parent="Encounter" unique_id=783593681 instance=ExtResource("5_hcws0")]
+position = Vector2(209, 28)
+enemy_data = SubResource("Resource_glrgd")
+spawn_telegrafiado = true
+
+[node name="Enemy3" parent="Encounter" unique_id=1280429536 instance=ExtResource("5_hcws0")]
+position = Vector2(-495, 32)
+tipo = "arquero"
+enemy_data = SubResource("Resource_qi4dq")
+spawn_telegrafiado = true
+
+[node name="Hud" parent="." unique_id=666502707 instance=ExtResource("2_hud")]
+
+[node name="Titulo" type="Label" parent="." unique_id=449725662]
+offset_left = 640.0
+offset_top = 15.0
+offset_right = 1280.0
+offset_bottom = 60.0
+theme_override_font_sizes/font_size = 28
+text = "DEMO OLEADAS  —  movete hacia la derecha (T + flechas)"
+
+[node name="Guia" type="Label" parent="." unique_id=1041782450]
+offset_left = 1280.0
+offset_top = 15.0
+offset_right = 1910.0
+offset_bottom = 620.0
+theme_override_colors/font_color = Color(0.65, 0.9, 0.8, 1)
+theme_override_font_sizes/font_size = 17
+text = "CÓMO PONER ENEMIGOS A MANO
+(la demo ya no trae enemigos: agregalos vos)
+
+1. Arrastrá una instancia de
+   res://scenes/enemy.tscn
+   DENTRO del nodo Encounter
+   (o dentro de Encounter > Enemies).
+2. Ubicala donde quieras moviéndola
+   en la vista 2D.
+3. En el INSPECTOR de ese enemigo poné:
+   - ola_asignada: número de ola
+     (0 = 1ra, 1 = 2da, 2 = 3ra...).
+   - spawn_telegrafiado: sí para
+     aparecer con el círculo ritual.
+4. Guardá (Ctrl+S) y probá con Play.
+
+Al cruzar la zona se activan los enemigos
+de cada ola; la arena se libera al morir todos."

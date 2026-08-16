@@ -24,7 +24,6 @@ func abrir() -> void:
 	_indice = 0
 	_open = true
 	panel.visible = true
-	get_tree().paused = true
 	_render()
 
 
@@ -33,7 +32,6 @@ func cerrar() -> void:
 		return
 	_open = false
 	panel.visible = false
-	get_tree().paused = false
 
 
 func _input(event: InputEvent) -> void:
@@ -71,7 +69,7 @@ func _render() -> void:
 	title.text = "¡NIVEL %d!" % get_node("/root/Progresion").nivel
 	var txt := ""
 	for i in range(_opciones.size()):
-		var op := _opciones[i]
+		var op: Dictionary = _opciones[i]
 		var marca := "▶" if i == _indice else "  "
 		txt += "%s [color=%s]%s[/color]\n" % [marca, "gold" if i == _indice else "white", op["nombre"]]
 	options_label.text = txt
@@ -81,6 +79,6 @@ func _confirmar() -> void:
 	if _opciones.is_empty():
 		cerrar()
 		return
-	var op := _opciones[_indice]
+	var op: Dictionary = _opciones[_indice]
 	get_node("/root/Progresion").elegir_mejora(op["form_index"])
 	cerrar()
