@@ -11,11 +11,11 @@ const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 @export var arena_center := Vector2.ZERO
 @export var arena_medio_ancho := 300.0
 
-# Límites de la arena generados automáticamente según arena_center/arena_medio_ancho.
-@export var paredes_auto := true    # generar 2 paredes laterales muy altas
+# Cerco de la arena: 2 paredes laterales generadas según el nodo "Arena" (o los @export).
+@export var paredes_auto := true    # generar las 2 paredes que contienen al jugador
 @export var ancho_pared := 30.0     # grosor de cada pared
 @export var altura_pared := 9000.0  # tan alto que no se puede saltar por arriba
-@export var separacion_pared := 60.0  # espacio extra fuera de arena_medio_ancho
+@export var separacion_pared := 60.0  # holgura fuera de arena_medio_ancho
 
 var estado: int = Estado.INACTIVE
 var _ola_idx := -1
@@ -23,12 +23,12 @@ var _vivos_ola := 0
 var _manuales: Array[Array] = []
 var _spawned: Array[Node] = []
 var _bounds: Array[CollisionShape2D] = []
+var _arena_base_y := 0.0  # borde inferior del rect Arena (ancla el piso de las paredes)
 
 
 func _ready() -> void:
 	if camara == null:
 		camara = get_viewport().get_camera_2d()
-	_recolectar_bounds()
 	_generar_paredes()
 	_agrupar_manuales()
 	body_entered.connect(_on_body_entered)
@@ -178,15 +178,13 @@ func _completar() -> void:
 	completado.emit()
 
 
-# --- Bounds (paredes invisibles de la arena) ---
+# --- Cerco de la arena (paredes laterales) ---
 
 func _generar_paredes() -> void:
 	_derivar_arena_desde_nodo()
-	if not paredes_auto or not _bounds.is_empty():
+	if not paredes_auto:
 		return
-	var contenedor := get_node_or_null("Bounds")
-	if contenedor == null:
-		return
+	_bounds.clear()
 	var rect := RectangleShape2D.new()
 	rect.size = Vector2(ancho_pared, altura_pared)
 	for lado in [-1.0, 1.0]:
@@ -194,34 +192,29 @@ func _generar_paredes() -> void:
 		var shape := CollisionShape2D.new()
 		shape.shape = rect
 		pared.add_child(shape)
-		contenedor.add_child(pared)
-		pared.position = Vector2(
+		add_child(pared)
+		pared.global_position = Vector2(
 			arena_center.x + lado * (arena_medio_ancho + separacion_pared),
-			arena_center.y - altura_pared * 0.5
+			_arena_base_y - altura_pared * 0.5
 		)
 		_bounds.append(shape)
 
 
 func _derivar_arena_desde_nodo() -> void:
-	# Si existe el nodo visual "Arena" (con su "ArenaShape" rectángulo), usá su
-	# centro y ancho en vez de los @export. Así mover/estirar Arena en el editor
-	# redefine la arena automáticamente.
+	# La zona de pelea se define con el nodo visual "Arena" (rectángulo editable),
+	# SEPARADO del trigger de inicio: así estirar la zona no agranda cuándo arranca.
+	# arena_center/arena_medio_ancho se deducen de ArenaShape (incluida su escala)
+	# para que estirar/escalar la hitbox en el editor reubique las paredes y la cámara.
 	var shape := get_node_or_null("Arena/ArenaShape")
 	if shape is CollisionShape2D and shape.shape is RectangleShape2D:
-		var rect: RectangleShape2D = shape.shape
-		arena_center = (shape as CollisionShape2D).global_position
-		arena_medio_ancho = rect.size.x * 0.5
-
-
-func _recolectar_bounds() -> void:
-	_bounds.clear()
-	var contenedor := get_node_or_null("Bounds")
-	if contenedor == null:
-		return
-	for pared in contenedor.get_children():
-		for hijo in pared.get_children():
-			if hijo is CollisionShape2D:
-				_bounds.append(hijo)
+		var shape_node := shape as CollisionShape2D
+		var rect: RectangleShape2D = shape_node.shape
+		var esc: Vector2 = shape_node.global_scale
+		arena_center = shape_node.global_position
+		arena_medio_ancho = rect.size.x * 0.5 * absf(esc.x)
+		_arena_base_y = arena_center.y + rect.size.y * 0.5 * absf(esc.y)
+	else:
+		_arena_base_y = arena_center.y
 
 
 func _mostrar_bounds() -> void:

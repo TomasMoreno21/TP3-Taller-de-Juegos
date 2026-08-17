@@ -9,6 +9,7 @@ var _scene: Node
 func _init() -> void:
 	_scene = load("res://scenes/main.tscn").instantiate()
 	root.add_child(_scene)
+	_scene.get_node("LevelUp").set("pausar_al_abrir", false)  # no congelar el árbol durante los tests
 	_console = load("res://scenes/console.tscn").instantiate()
 	_scene.add_child(_console)
 	await process_frame

@@ -17,14 +17,11 @@ shape = SubResource("RectangleShape2D_trig")
 
 [node name="Enemies" type="Node2D" parent="." unique_id=223207692]
 
-[node name="Bounds" type="Node2D" parent="." unique_id=483710383]
+[node name="Arena" type="Area2D" parent="."]
 
-[node name="Arena" type="Node2D" parent="." unique_id=1587899474]
-
-[node name="ArenaShape" type="CollisionShape2D" parent="Arena" unique_id=1606573482]
-scale = Vector2(1.6027334, 1)
+[node name="ArenaShape" type="CollisionShape2D" parent="Arena"]
 shape = SubResource("RectangleShape2D_arena")
 
-[node name="ArenaVisual" type="Polygon2D" parent="Arena" unique_id=1137500523]
+[node name="ArenaVisual" type="Polygon2D" parent="Arena"]
 color = Color(0.2, 0.45, 1, 0.18)
 polygon = PackedVector2Array(-360, -250, 360, -250, 360, 250, -360, 250)

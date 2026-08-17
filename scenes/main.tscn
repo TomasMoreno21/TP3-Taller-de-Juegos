@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" uid="uid://dkyk8avpptlls" path="res://scenes/hud.tscn" id="4_hud"]
 [ext_resource type="PackedScene" uid="uid://bxsawwmlxb7mt" path="res://scenes/enemy.tscn" id="5_enemy"]
-[ext_resource type="PackedScene" path="res://scenes/encounter.tscn" id="6_tipki"]
+[ext_resource type="PackedScene" uid="uid://x0o25yeqfgsm" path="res://scenes/encounter.tscn" id="6_tipki"]
 [ext_resource type="PackedScene" uid="uid://c3ewt86jjx5fr" path="res://scenes/tronco.tscn" id="6_tronco"]
 [ext_resource type="PackedScene" uid="uid://cr2s0l8k2s5l4" path="res://scenes/rompible.tscn" id="7_romp"]
 [ext_resource type="Script" uid="uid://cui53h2x6gwlf" path="res://scripts/enemigos/enemigo.gd" id="8_85g3d"]
@@ -68,23 +68,34 @@ T para transformarse
 
 Romper las cajas larga energia para subir de nivel"
 
-[node name="Encounter" parent="." unique_id=1268034837 node_paths=PackedStringArray("camara") instance=ExtResource("6_tipki")]
-position = Vector2(803, 751)
-camara = NodePath("../Camara")
+[node name="Encounter2" parent="." unique_id=2088881285 instance=ExtResource("6_tipki")]
+position = Vector2(801, 750)
+separacion_pared = 0.0
 
-[node name="Enemy" parent="Encounter" unique_id=87872202 instance=ExtResource("5_enemy")]
-position = Vector2(-281, 220)
+[node name="ArenaShape" parent="Encounter2/Arena" index="0"]
+scale = Vector2(2.233344, 0.9814125)
+
+[node name="ArenaVisual" parent="Encounter2/Arena" index="1"]
+visible = false
+position = Vector2(3.0000305, 0)
+scale = Vector2(1.7472223, 1)
+polygon = PackedVector2Array(-360, -250, 360, -250, 360.00003, -4, 360, 250, -360, 250)
+
+[node name="Enemy3" parent="Encounter2" unique_id=1404226063 instance=ExtResource("5_enemy")]
+position = Vector2(151, 224)
 spawn_telegrafiado = true
-ritual_duracion = 0.3
+ritual_duracion = 0.9
 
-[node name="Enemy2" parent="Encounter" unique_id=1850236008 instance=ExtResource("5_enemy")]
-position = Vector2(305, 142)
+[node name="Enemy2" parent="Encounter2" unique_id=1850236008 instance=ExtResource("5_enemy")]
+position = Vector2(307, 143)
 tipo = "arquero"
 enemy_data = SubResource("Resource_o6xl0")
 spawn_telegrafiado = true
 ritual_duracion = 1.2
 
-[node name="Enemy3" parent="Encounter" unique_id=1404226063 instance=ExtResource("5_enemy")]
-position = Vector2(149, 223)
+[node name="Enemy" parent="Encounter2" unique_id=87872202 instance=ExtResource("5_enemy")]
+position = Vector2(-279, 221)
 spawn_telegrafiado = true
-ritual_duracion = 0.9
+ritual_duracion = 0.3
+
+[editable path="Encounter2"]
