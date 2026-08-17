@@ -4,7 +4,7 @@
 [ext_resource type="SpriteFrames" uid="uid://bhqpshwxoqn22" path="res://resources/jugador_frames.tres" id="2_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(74, 89)
+size = Vector2(74, 84)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
 size = Vector2(90, 72)
@@ -14,15 +14,17 @@ collision_layer = 4
 collision_mask = 3
 script = ExtResource("1_player")
 
-[node name="Sprite2D" type="AnimatedSprite2D" parent="." unique_id=1857419060]
+[node name="VisualRoot" type="Node2D" parent="." unique_id=941212345]
+
+[node name="Sprite2D" type="AnimatedSprite2D" parent="VisualRoot" unique_id=1857419060]
 position = Vector2(21, -20)
-scale = Vector2(2.9804687, 3)
+scale = Vector2(2.9804688, 3)
 sprite_frames = ExtResource("2_frames")
 animation = &"idle"
 autoplay = "idle"
 
 [node name="Collision" type="CollisionShape2D" parent="." unique_id=1655450779]
-position = Vector2(-5, 3.5)
+position = Vector2(-5, 1)
 shape = SubResource("RectangleShape2D_body")
 
 [node name="AttackArea" type="Area2D" parent="." unique_id=1368461241]

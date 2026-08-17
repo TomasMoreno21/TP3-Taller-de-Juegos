@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 signal form_changed(form_name: String)
+signal forma_selectada_cambiada(forma_index: int)
 signal attack_performed(attack_type: String, step: Variant)
 signal health_changed(health: int, max_health: int)
 signal energia_changed(energia: float)
@@ -14,6 +15,7 @@ const MAX_FALL_SPEED := 950.0
 const GLIDE_FALL_MULTIPLIER := 0.35
 const TINT_ALPHA := 0.45
 const COMBO_WINDOW := 1.1
+const LINEA_ESPESOR := 40.0
 const ENERGIA_MAX := 100.0
 const ENERGIA_DRAIN := 8.0
 const ENERGIA_REGEN := 5.0
@@ -28,6 +30,7 @@ const VIDA_MAX := 100
 
 var forms: Array[Forma] = []
 var current_form: int = Form.HUMAN
+var forma_seleccionada: int = Form.HUMAN
 var health: int = 100
 var energia: float = ENERGIA_MAX
 var god_mode := false
@@ -53,8 +56,9 @@ var _sprite_tween: Tween
 var _base_sprite_scale := Vector2.ONE
 var _spawn_position := Vector2.ZERO
 
-@onready var visual: AnimatedSprite2D = $Sprite2D
-@onready var tint: Sprite2D = get_node_or_null("Sprite2D/Tint")
+@onready var visual: AnimatedSprite2D = $VisualRoot/Sprite2D
+@onready var visual_root: Node2D = $VisualRoot
+@onready var tint: Sprite2D = get_node_or_null("VisualRoot/Sprite2D/Tint")
 @onready var collision_shape: CollisionShape2D = $Collision
 @onready var attack_area: Area2D = $AttackArea
 @onready var attack_hitbox: CollisionShape2D = $AttackArea/AttackHitbox
@@ -76,6 +80,7 @@ func _ready() -> void:
 	health = VIDA_MAX
 	_spawn_position = global_position
 	_base_sprite_scale = visual.scale
+	visual_root.scale.x = absf(visual_root.scale.x)
 	_apply_form()
 
 
@@ -115,6 +120,7 @@ func _physics_process(delta: float) -> void:
 	_check_attack_hits()
 	_handle_racha(delta)
 	_handle_energia(delta)
+	_handle_seleccion_forma()
 	_handle_transform()
 	_handle_death()
 	_update_animacion()
@@ -178,20 +184,7 @@ func _lanzar_buffered(data: Forma, airborne: bool) -> void:
 		return
 	var tipo := _buffered_attack
 	_buffered_attack = ""
-	if not _sigue_apretado(tipo):
-		return
 	_procesar_ataque(tipo, data, airborne)
-
-
-func _sigue_apretado(tipo: String) -> bool:
-	match tipo:
-		"light":
-			return Input.is_action_pressed("attack")
-		"heavy":
-			return Input.is_action_pressed("heavy")
-		"special":
-			return Input.is_action_pressed("special")
-	return false
 
 
 func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
@@ -294,15 +287,17 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	_hit_applied = false
 	_current_attack_damage = forms[current_form].attack_damage if damage < 0 else damage
 	_current_attack_knockback = knockback
+	var coll: RectangleShape2D = collision_shape.shape
+	var banda := Vector2(LINEA_ESPESOR, coll.size.y)
 	var shape: RectangleShape2D = attack_hitbox.shape
-	shape.size = size
+	shape.size = banda
 	attack_hitbox.shape = shape
 	attack_hitbox.disabled = false
-	attack_area.position = Vector2(facing * range, 0.0)
+	attack_area.position = Vector2(facing * (coll.size.x * 0.5 + LINEA_ESPESOR * 0.5), 0.0)
 	attack_area.monitoring = true
 	if attack_area_visual != null:
 		attack_area_visual.position = attack_area.position
-		attack_area_visual.polygon = _make_rect_polygon(size)
+		attack_area_visual.polygon = _make_rect_polygon(banda)
 		attack_area_visual.visible = true
 
 
@@ -412,15 +407,31 @@ func _handle_energia(delta: float) -> void:
 	energia_changed.emit(energia)
 
 
+func _handle_seleccion_forma() -> void:
+	var dir := 0
+	if Input.is_action_just_pressed("move_up"):
+		dir = -1
+	elif Input.is_action_just_pressed("move_down"):
+		dir = 1
+	if dir == 0:
+		return
+	var candidata := forma_seleccionada + dir
+	for _i in range(forms.size()):
+		candidata = posmod(candidata, forms.size())
+		if _progresion().forma_desbloqueada(candidata):
+			if candidata != forma_seleccionada:
+				forma_seleccionada = candidata
+				forma_selectada_cambiada.emit(candidata)
+			return
+		candidata += dir
+
+
 func _handle_transform() -> void:
 	if not Input.is_action_just_pressed("transform"):
 		return
-	var siguiente: int = current_form + 1
-	if siguiente >= forms.size():
-		siguiente = Form.HUMAN
-	if not _progresion().forma_desbloqueada(siguiente):
+	if not _progresion().forma_desbloqueada(forma_seleccionada):
 		return
-	_transformar(siguiente)
+	_transformar(forma_seleccionada)
 
 
 func _transformar(nueva: int) -> void:
@@ -428,16 +439,18 @@ func _transformar(nueva: int) -> void:
 		return
 	forms[current_form].reset_form_state()
 	current_form = nueva
+	forma_seleccionada = nueva
 	var data: Forma = forms[current_form]
 	data.reset_form_state()
 	_apply_form()
 	form_changed.emit(data.form_name)
+	forma_selectada_cambiada.emit(nueva)
 	health_changed.emit(health, VIDA_MAX)
 
 
 func _apply_form() -> void:
 	var data: Forma = forms[current_form]
-	visual.flip_h = facing < 0
+	_aplicar_facing()
 	if tint != null:
 		tint.visible = true
 		tint.modulate = Color(data.color.r, data.color.g, data.color.b, TINT_ALPHA)
@@ -454,6 +467,10 @@ func _tinte_forma(color: Color) -> Color:
 	return color.lerp(Color.WHITE, 0.55)
 
 
+func _aplicar_facing() -> void:
+	visual_root.scale.x = -absf(visual_root.scale.x) if facing < 0 else absf(visual_root.scale.x)
+
+
 func _update_tint() -> void:
 	if tint != null:
 		tint.modulate.a = 1.0 if blocking else TINT_ALPHA
@@ -463,7 +480,7 @@ func _update_tint() -> void:
 
 
 func _update_animacion() -> void:
-	visual.flip_h = facing < 0
+	_aplicar_facing()
 	var data: Forma = forms[current_form]
 	var nombre: String = ""
 	if _attacking:
@@ -477,7 +494,7 @@ func _update_animacion() -> void:
 			_:
 				nombre = "attack1"
 	elif not is_on_floor():
-		nombre = "fly"
+		nombre = "jump"
 	elif absf(velocity.x) > 10.0:
 		nombre = "walk" if data.speed < 200.0 else "run"
 	else:

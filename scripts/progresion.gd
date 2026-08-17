@@ -69,7 +69,8 @@ func _nombre_combo(form_index: int, indice: int) -> String:
 
 
 func forma_desbloqueada(form_index: int) -> bool:
-	return form_index < nivel
+	# 16/08: todas las transformaciones desbloqueadas desde el inicio (rama prototipo)
+	return true
 
 
 func pasos_luz() -> int:

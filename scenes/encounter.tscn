@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://x0o25yeqfgsm"]
+
+[ext_resource type="Script" uid="uid://cf1pmnwmyxhrd" path="res://scripts/encounters/encounter.gd" id="1_enc"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_trig"]
+size = Vector2(320, 500)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_arena"]
+size = Vector2(720, 500)
+
+[node name="Encounter" type="Area2D" unique_id=2088881285]
+collision_mask = 4
+script = ExtResource("1_enc")
+
+[node name="Collision" type="CollisionShape2D" parent="." unique_id=2122048151]
+shape = SubResource("RectangleShape2D_trig")
+
+[node name="Enemies" type="Node2D" parent="." unique_id=223207692]
+
+[node name="Arena" type="Area2D" parent="."]
+
+[node name="ArenaShape" type="CollisionShape2D" parent="Arena"]
+shape = SubResource("RectangleShape2D_arena")
+
+[node name="ArenaVisual" type="Polygon2D" parent="Arena"]
+color = Color(0.2, 0.45, 1, 0.18)
+polygon = PackedVector2Array(-360, -250, 360, -250, 360, 250, -360, 250)

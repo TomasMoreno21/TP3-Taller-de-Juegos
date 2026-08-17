@@ -10,6 +10,7 @@ func _init() -> void:
 	_scene = load("res://scenes/main.tscn").instantiate()
 	_quitar_dialogos_automaticos(_scene)
 	root.add_child(_scene)
+	_scene.get_node("LevelUp").set("pausar_al_abrir", false)  # no congelar el árbol durante los tests
 	_console = load("res://scenes/console.tscn").instantiate()
 	_scene.add_child(_console)
 	await process_frame
@@ -47,9 +48,9 @@ func _init() -> void:
 	await process_frame
 	_check(_player.current_form == 3, "Consola 'form murcielago' -> 3")
 
-	# --- Progresión: nivel 1 solo Humano; nivel 2 desbloquea Lobo ---
+	# --- Progresión: todas las formas desbloqueadas desde el inicio (16/08) ---
 	_progresion().reset()
-	_check(_progresion().forma_desbloqueada(1) == false, "Nivel 1: Lobo bloqueado")
+	_check(_progresion().forma_desbloqueada(1) == true, "Inicio: Lobo desbloqueado")
 	Input.action_press("transform")
 	await physics_frame
 	await physics_frame
@@ -66,7 +67,7 @@ func _init() -> void:
 	_progresion().set_nivel(4)
 	_console._ejecutar(PackedStringArray(["form", "humano"]))
 	await process_frame
-	var dummy := _spawn_dummy(Vector2(40, 0))
+	var dummy := _spawn_dummy(Vector2(60, 0))
 	_player.facing = 1
 	_player.velocity = Vector2.ZERO
 	await physics_frame
@@ -136,7 +137,8 @@ func _init() -> void:
 
 	# --- Enemigos: el melee daña y mueren; tipos cargan ---
 	_console._ejecutar(PackedStringArray(["form", "humano"]))
-	await process_frame
+	await _wait_frames(40)
+	_player.velocity = Vector2.ZERO
 	var enemy_script := preload("res://scripts/enemy.gd")
 	var cult: Enemigo = enemy_script.config_por_tipo("cultista")
 	var ark: Enemigo = enemy_script.config_por_tipo("arquero")
@@ -148,8 +150,8 @@ func _init() -> void:
 	var en := preload("res://scenes/enemy.tscn").instantiate()
 	en.tipo = "cultista"
 	_scene.add_child(en)
-	en.global_position = _player.global_position + Vector2(60, 40)
-	await _wait_frames(3)
+	en.global_position = _player.global_position + Vector2(60, 0)
+	await _wait_frames(30)
 	_player.facing = 1
 	_player.velocity = Vector2.ZERO
 	await physics_frame
@@ -233,6 +235,27 @@ func _init() -> void:
 	# --- Consola: toggle alterna la visibilidad (sin pausa en este diseño) ---
 	_console.toggle()
 	_check(_console.panel.visible == true, "Consola: toggle abre el panel")
+
+	# --- LevelUp: subir nivel abre el menú y elegir desbloquea el combo (J+K) ---
+	_console.toggle()
+	_progresion().reset()
+	var lvl: CanvasLayer = _scene.get_node("LevelUp")
+	lvl.call("cerrar")
+	await process_frame
+	var desbloqueos: Array[String] = []
+	_progresion().combo_desbloqueado.connect(func(_f: int, nombre: String) -> void:
+		desbloqueos.append(nombre)
+	)
+	_check(lvl.get("panel").visible == false, "LevelUp: menú cerrado al inicio")
+	_progresion().add_fragmentos(3)
+	await process_frame
+	_check(lvl.get("panel").visible == true, "LevelUp: subir nivel abre el menú")
+	_check(int(lvl.get("_opciones").size()) == 4, "LevelUp: ofrece las 4 transformaciones desbloqueadas")
+	lvl.call("_confirmar")
+	await process_frame
+	_check(lvl.get("panel").visible == false, "LevelUp: confirmar cierra el menú")
+	_check(desbloqueos.size() == 1 and desbloqueos[0] == "Remate", "LevelUp: elegir desbloquea el combo del humano (%s)" % (desbloqueos[0] if not desbloqueos.is_empty() else "-"))
+	_check(_progresion().combos_desbloqueados_forma(0) == 1, "LevelUp: combo del humano desbloqueado tras elegir")
 
 	print("AUTOTEST: FALLOS = " + str(_failures))
 	if _failures == 0:
