@@ -377,6 +377,10 @@ tests/
   - Búho: el check del proyectil se mide justo tras 2 frames de la pulsación (el proyectil se despawna al chocar con el terreno).
 - **Verificación:** import limpio, autotest **FALLOS = 0**, smoke limpio.
 
+### Puzzles + plataformeo — documento de concepto (16/08, futuro)
+- **`docs/puzzles_diseno.md`** guarda el diseño conceptual (solo referencia, se tocará más adelante): desbloqueo de formas como "despertar espíritus guardianes"; bosque enseña / guarida de la secta aplica; principios de Ben 10:AF (enseñar-antes-de-exigir, transformarse para abrir camino, variedad combate↔plataformeo↔puzzle).
+- **Decisión de diseño (toma por el usuario):** modelo de 3 fases por forma (Descubrimiento → Tutoría natural → Aplicación/reto ligero); **símbolo/ícono de la forma requerida** sobre cada sello/puerta; **límite de transformación en tramos largos** (vuelve a Humano y re-reintentás) y **sin límite en tutoriales**. Cuando toque implementar: `forma_desbloqueada()` debe dejar de devolver siempre `true`.
+
 ### Plan pendiente — Pseudo-2.5D por capas (RECHAZADO por el usuario en build, 13/08)
 - **Decisión (13/08, usuario):** NO convence. Feedback textual: *"No es el enfoque visual, siento que terminaría siendo lo mismo que lo que hay ahora."* Se descartó la "pseudo-2.5D por capas" (escalar `z` + offset sobre suelo plano).
 - **Por qué falla (lección):** escalar y levantar siluetas sobre un **suelo plano** no comunica profundidad; el jugador lo lee como el mismo side-scroller 2D de siempre. La profundidad real en el original viene de **geometría que retrocede** (piso/paredes en perspectiva) o de una **cámara/escena 3D**, no de variar el tamaño de los sprites.
