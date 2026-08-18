@@ -5,7 +5,7 @@ extends Forma
 func _init() -> void:
 	form_name = "Humano"
 	speed = 200.0
-	jump_velocity = -420.0
+	jump_velocity = -465.0
 	gravity_scale = 1.0
 	max_health = 100
 	attack_damage = 10

@@ -62,6 +62,10 @@ func try_jump(player: CharacterBody2D) -> void:
 	_jumps_usados += 1
 
 
+func can_jump() -> bool:
+	return _jumps_usados < jumps
+
+
 func on_floor(_player: CharacterBody2D) -> void:
 	_jumps_usados = 0
 

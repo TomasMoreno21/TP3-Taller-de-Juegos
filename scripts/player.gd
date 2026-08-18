@@ -12,6 +12,9 @@ enum Form { HUMAN, LOBO, OSO, MURCIELAGO }
 const GRAVITY := 980.0
 const MAX_FALL_SPEED := 950.0
 const GLIDE_FALL_MULTIPLIER := 0.35
+const COYOTE_TIME := 0.1
+const JUMP_BUFFER_TIME := 0.12
+const JUMP_CUT_MULTIPLIER := 0.5
 const TINT_ALPHA := 0.45
 const COMBO_WINDOW := 1.1
 const LINEA_ESPESOR := 40.0
@@ -43,6 +46,8 @@ var _current_attack_damage := 0
 var _current_attack_knockback := 0.0
 var _current_attack_type := "light"
 var _gravity_override: float = -1.0
+var _coyote_time := 0.0
+var _jump_buffer := 0.0
 var _light_step := 0
 var _heavy_step := 0
 var _seq: Array[String] = []
@@ -99,7 +104,12 @@ func _physics_process(delta: float) -> void:
 			facing = 1 if dir > 0 else -1
 
 	if Input.is_action_just_pressed("jump"):
-		data.try_jump(self)
+		if _coyote_time > 0.0 or data.can_jump():
+			data.try_jump(self)
+		else:
+			_jump_buffer = JUMP_BUFFER_TIME
+	if Input.is_action_just_released("jump") and velocity.y < 0.0:
+		velocity.y *= JUMP_CUT_MULTIPLIER
 
 	var g: float = GRAVITY * data.gravity_scale
 	if _gravity_override >= 0.0:
@@ -112,6 +122,15 @@ func _physics_process(delta: float) -> void:
 
 	if is_on_floor():
 		data.on_floor(self)
+		_coyote_time = COYOTE_TIME
+	else:
+		_coyote_time = maxf(_coyote_time - delta, 0.0)
+
+	if _jump_buffer > 0.0:
+		_jump_buffer -= delta
+		if is_on_floor():
+			data.try_jump(self)
+			_jump_buffer = 0.0
 
 	_handle_attack(delta)
 	_check_attack_hits()
