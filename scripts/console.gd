@@ -15,6 +15,7 @@ const COMANDOS := {
 	"mv": "Restablece vida y energía al máximo.",
 	"frags <n>": "Agrega n fragmentos (sube de nivel).",
 	"nivel <n>": "Fija el nivel del jugador.",
+	"formas": "Desbloquea todas las transformaciones.",
 	"kill": "Vuelve al humano (recorre las formas).",
 }
 
@@ -104,6 +105,9 @@ func _ejecutar(tokens: PackedStringArray) -> void:
 			var n := parseInt(tokens, 1, 1)
 			get_node("/root/Progresion").set_nivel(n)
 			imprimir("Nivel fijado en %d" % n)
+		"formas":
+			get_node("/root/Progresion").set_nivel(4)
+			imprimir("Todas las transformaciones desbloqueadas")
 		"kill":
 			_player.current_form = 0
 			imprimir("Vuelto a Humano")

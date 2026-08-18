@@ -359,11 +359,11 @@ scripts/
 ├── levelup.gd         # Menú de elección de combo (pausa) al subir de nivel
 ├── gate.gd            # set_closed() alterna visual + colisión + label "SECTOR CERRADO"
 └── forms/             # OOP: base abstracta + 4 formas
-    ├── forma.gd       # class_name Forma (RefCounted): atributos + métodos virtuales
-    ├── humano.gd      # Solo atributos (melee por default)
-    ├── oso.gd         # Solo atributos (stats pesados)
-    ├── lobo.gd        # Override: dash (tick/is_dashing/dash_speed/perform_attack)
-    └── buho.gd        # Override: doble salto + planeo + proyectil
+	├── forma.gd       # class_name Forma (RefCounted): atributos + métodos virtuales
+	├── humano.gd      # Solo atributos (melee por default)
+	├── oso.gd         # Solo atributos (stats pesados)
+	├── lobo.gd        # Override: dash (tick/is_dashing/dash_speed/perform_attack)
+	└── buho.gd        # Override: doble salto + planeo + proyectil
 tests/
 └── autotest.gd        # Simula gameplay (13 checks). Correr: godot --headless --script res://tests/autotest.gd
 ```

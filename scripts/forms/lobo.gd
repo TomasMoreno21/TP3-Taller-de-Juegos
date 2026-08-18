@@ -19,12 +19,23 @@ func _init() -> void:
 	heavy_combo_steps = 2
 	special_damage = 12
 	color = Color(0.58, 0.64, 0.75)
-	collider_size = Vector2(102, 84)
+	collider_size = Vector2(175, 300)
 	shake_strength = 4.0
 	transform_duration = 8.0
+	turn_tilt = 9.0
 	combos = [
 		{"nombre": "Mordida", "secuencia": ["light", "heavy"], "dano": 22, "knockback": 240.0, "tamano": Vector2(180, 102), "rango": 102.0},
 	]
+
+
+const DOUBLE_JUMP_ZIP := 320.0
+const DOUBLE_JUMP_STRETCH := 0.28
+const DOUBLE_JUMP_STRETCH_DURATION := 0.35
+
+
+func on_second_jump(player: CharacterBody2D) -> void:
+	player.apply_zip(DOUBLE_JUMP_ZIP)
+	player.stretch_y(DOUBLE_JUMP_STRETCH, DOUBLE_JUMP_STRETCH_DURATION)
 
 
 func perform_light(player: CharacterBody2D, step: int) -> void:

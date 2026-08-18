@@ -13,6 +13,7 @@ var _controls: CanvasLayer
 	$Panel/Margin/VBox/Menu,
 	$Panel/Margin/VBox/Salir,
 ]
+@onready var dim: ColorRect = $Dim
 
 
 func _ready() -> void:
@@ -22,6 +23,7 @@ func _ready() -> void:
 		botones[i].pressed.connect(_on_boton_pressed.bind(i))
 		botones[i].focus_entered.connect(_on_focus.bind(i))
 	$Panel.visible = false
+	dim.visible = false
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -74,6 +76,7 @@ func abrir() -> void:
 	_open = true
 	_indice = 0
 	$Panel.visible = true
+	dim.visible = true
 	get_tree().paused = true
 	botones[0].grab_focus.call_deferred()
 
@@ -83,6 +86,7 @@ func cerrar() -> void:
 		return
 	_open = false
 	$Panel.visible = false
+	dim.visible = false
 	get_tree().paused = false
 
 

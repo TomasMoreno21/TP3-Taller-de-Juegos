@@ -8,6 +8,7 @@ var _modo := "seguir"
 var _fija_pos := Vector2.ZERO
 
 @export var suavizado := 6.0
+@export var desplazamiento := Vector2(0, -210)
 @export var limite_min := Vector2(-400, -800)
 @export var limite_max := Vector2(3400, 1080)
 
@@ -30,7 +31,7 @@ func _process(delta: float) -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if player == null:
 		return
-	var destino := (player as Node2D).global_position
+	var destino := (player as Node2D).global_position + desplazamiento
 	destino.x = clampf(destino.x, limite_min.x, limite_max.x)
 	destino.y = clampf(destino.y, limite_min.y, limite_max.y)
 	global_position = global_position.lerp(destino, minf(suavizado * delta, 1.0))

@@ -37,6 +37,7 @@ var _jumps_usados := 0
 @export var hit_rotation: float = 14.0
 @export var hit_zoom: float = 1.02
 @export var transform_duration: float = 14.0
+@export var turn_tilt: float = 0.0
 
 
 func tick(_player: CharacterBody2D, _delta: float) -> void:
@@ -60,6 +61,12 @@ func try_jump(player: CharacterBody2D) -> void:
 		return
 	player.velocity.y = jump_velocity
 	_jumps_usados += 1
+	if _jumps_usados >= 2:
+		on_second_jump(player)
+
+
+func on_second_jump(_player: CharacterBody2D) -> void:
+	pass
 
 
 func can_jump() -> bool:
@@ -68,6 +75,10 @@ func can_jump() -> bool:
 
 func on_floor(_player: CharacterBody2D) -> void:
 	_jumps_usados = 0
+
+
+func on_landing(_player: CharacterBody2D, _fall_impact: float) -> void:
+	pass
 
 
 func light_damage_at(step: int) -> int:

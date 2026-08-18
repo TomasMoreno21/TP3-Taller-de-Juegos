@@ -5,7 +5,7 @@ extends Forma
 func _init() -> void:
 	form_name = "Murciélago"
 	speed = 215.0
-	jump_velocity = -420.0
+	jump_velocity = -560.0
 	gravity_scale = 0.8
 	max_health = 100
 	attack_damage = 8
@@ -18,8 +18,9 @@ func _init() -> void:
 	heavy_combo_steps = 2
 	special_damage = 15
 	color = Color(0.52, 0.4, 0.62)
-	collider_size = Vector2(84, 90)
+	collider_size = Vector2(175, 300)
 	transform_duration = 9.0
+	turn_tilt = 9.0
 	combos = [
 		{"nombre": "Ala Cortante", "secuencia": ["light", "heavy"], "dano": 28, "knockback": 240.0, "tamano": Vector2(192, 102), "rango": 114.0},
 	]

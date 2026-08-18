@@ -57,18 +57,17 @@ var _racha := 0
 var _racha_timer := 0.0
 var _buffered_attack := ""
 var _was_blocking := false
+var _was_on_floor := false
+var _fall_impact := 0.0
 var _sprite_tween: Tween
+var _turn_prev_facing := 0
 var _base_sprite_scale := Vector2.ONE
 var _spawn_position := Vector2.ZERO
 
-@onready var visual: AnimatedSprite2D = $VisualRoot/Sprite2D
-@onready var visual_root: Node2D = $VisualRoot
-@onready var tint: Sprite2D = get_node_or_null("VisualRoot/Sprite2D/Tint")
+@onready var visual: AnimatedSprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $Collision
 @onready var attack_area: Area2D = $AttackArea
 @onready var attack_hitbox: CollisionShape2D = $AttackArea/AttackHitbox
-@onready var attack_effect: Polygon2D = get_node_or_null("AttackEffect")
-@onready var attack_area_visual: Polygon2D = get_node_or_null("AttackAreaVisual")
 
 const FORM_SCRIPTS := [
 	preload("res://scripts/forms/humano.gd"),
@@ -84,8 +83,7 @@ func _ready() -> void:
 		forms.append(script.new())
 	health = VIDA_MAX
 	_spawn_position = global_position
-	_base_sprite_scale = visual.scale
-	visual_root.scale.x = absf(visual_root.scale.x)
+	_base_sprite_scale = Vector2(absf(visual.scale.x), visual.scale.y)
 	_apply_form()
 
 
@@ -126,7 +124,16 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor():
 		data.on_floor(self)
 		_coyote_time = COYOTE_TIME
+		if not _was_on_floor:
+			data.on_landing(self, _fall_impact)
+		_fall_impact = 0.0
+		_was_on_floor = true
 	else:
+		if _was_on_floor:
+			_fall_impact = 0.0
+		else:
+			_fall_impact = velocity.y
+		_was_on_floor = false
 		_coyote_time = maxf(_coyote_time - delta, 0.0)
 
 	if _jump_buffer > 0.0:
@@ -143,6 +150,7 @@ func _physics_process(delta: float) -> void:
 	_handle_transform()
 	_handle_death()
 	_update_animacion()
+	_handle_vertical_tilt()
 
 
 func _handle_racha(delta: float) -> void:
@@ -314,10 +322,6 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	attack_hitbox.disabled = false
 	attack_area.position = Vector2(facing * (coll.size.x * 0.5 + LINEA_ESPESOR * 0.5), 0.0)
 	attack_area.monitoring = true
-	if attack_area_visual != null:
-		attack_area_visual.position = attack_area.position
-		attack_area_visual.polygon = _make_rect_polygon(banda)
-		attack_area_visual.visible = true
 
 
 func _recovery_for(attack_type: String) -> float:
@@ -339,8 +343,6 @@ func end_attack() -> void:
 	_hit_applied = false
 	attack_area.monitoring = false
 	attack_hitbox.disabled = true
-	if attack_area_visual != null:
-		attack_area_visual.visible = false
 
 
 func _make_rect_polygon(size: Vector2) -> PackedVector2Array:
@@ -376,42 +378,63 @@ func _aplicar_knockback(body: Node2D) -> void:
 
 
 func _play_attack_fx(tipo: String, _step: int) -> void:
-	if attack_effect == null:
-		return
-	var slash := _slash_poligono(tipo)
-	if slash.size() == 0:
-		return
-	attack_effect.polygon = slash
-	attack_effect.scale.x = facing
-	attack_effect.visible = true
-	var tween := create_tween()
-	tween.tween_property(attack_effect, "modulate:a", 0.0, 0.15)
-	tween.tween_callback(func() -> void:
-		if is_instance_valid(attack_effect):
-			attack_effect.visible = false
-			attack_effect.modulate.a = 1.0
-	)
+	# El feedback visual del golpe (Polygon2D) se quitó en el rebuild; sin nodo, no hay FX.
+	pass
 
 
-func _slash_poligono(tipo: String) -> PackedVector2Array:
-	match tipo:
-		"light":
-			return PackedVector2Array([-78, -15, 24, -36, 84, 0, 24, 36, -78, 15])
-		"heavy":
-			return PackedVector2Array([-108, -27, 30, -51, 120, 0, 30, 51, -108, 27])
-		"combo":
-			return PackedVector2Array([-132, -36, 36, -66, 156, 0, 36, 66, -132, 36])
-		_:
-			return PackedVector2Array()
+func squash_y(amount: float, duration: float) -> void:
+	if _sprite_tween != null and _sprite_tween.is_valid():
+		_sprite_tween.kill()
+	var base := Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1)
+	visual.scale = base
+	visual.position.y = 0.0
+	_sprite_tween = create_tween()
+	_sprite_tween.tween_property(visual, "scale:y", base.y * (1.0 - amount), duration * 0.4)
+	_sprite_tween.tween_property(visual, "scale:y", base.y, duration * 0.6)
+
+
+func stretch_y(amount: float, duration: float) -> void:
+	if _sprite_tween != null and _sprite_tween.is_valid():
+		_sprite_tween.kill()
+	var base := Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1)
+	visual.scale = base
+	visual.position.y = 0.0
+	_sprite_tween = create_tween()
+	_sprite_tween.tween_property(visual, "scale:y", base.y * (1.0 + amount), duration * 0.4)
+	_sprite_tween.tween_property(visual, "scale:y", base.y, duration * 0.6)
+
+
+func apply_zip(impulso: float) -> void:
+	velocity.x = facing * absf(impulso)
+
+
+func _snap_turn(tilt: float) -> void:
+	if tilt <= 0.0:
+		return
+	visual.rotation = deg_to_rad(-tilt) * facing
+	var tw := create_tween()
+	tw.tween_property(visual, "rotation", 0.0, 0.18).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+
+func _handle_vertical_tilt() -> void:
+	if current_form != Form.MURCIELAGO or is_on_floor():
+		return
+	# Al planear (caída sostenida) se atenúa: solo una leve inclinación baja.
+	if velocity.y > 0.0:
+		visual.rotation = lerpf(visual.rotation, deg_to_rad(6.0), 0.1)
+		return
+	var incl := clampf(velocity.y / 300.0, -1.0, 0.0) * deg_to_rad(20.0)
+	visual.rotation = lerpf(visual.rotation, incl, 0.2)
 
 
 func _punch_sprite(amount: float) -> void:
 	if _sprite_tween != null and _sprite_tween.is_valid():
 		_sprite_tween.kill()
-	visual.scale = _base_sprite_scale
+	var base := Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1)
+	visual.scale = base
 	_sprite_tween = create_tween()
-	_sprite_tween.tween_property(visual, "scale", _base_sprite_scale * (1.0 + amount), 0.05).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_sprite_tween.tween_property(visual, "scale", _base_sprite_scale, 0.1)
+	_sprite_tween.tween_property(visual, "scale", base * (1.0 + amount), 0.05).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_sprite_tween.tween_property(visual, "scale", base, 0.1)
 
 
 func _handle_energia(delta: float) -> void:
@@ -427,11 +450,28 @@ func _handle_energia(delta: float) -> void:
 
 
 func _handle_seleccion_forma() -> void:
-	# botón dedicado (Q / Select), distinto de mover/atacar/bloquear, para que
-	# no se cambie la preselección sin querer en medio del combate
-	if not Input.is_action_just_pressed("form_next"):
-		return
-	_avanzar_seleccion()
+	# Flechas arriba/abajo (o W/S) y el botón dedicado (Q / Select) cambian la
+	# preselección de forma, sin transformar. Q avanza; arriba avanza, abajo retrocede.
+	if Input.is_action_just_pressed("form_next"):
+		_avanzar_seleccion()
+	elif Input.is_action_just_pressed("move_up"):
+		_avanzar_seleccion()
+	elif Input.is_action_just_pressed("move_down"):
+		_retroceder_seleccion()
+
+
+func _retroceder_seleccion() -> bool:
+	var candidata := forma_seleccionada - 1
+	for _i in range(forms.size()):
+		candidata = posmod(candidata, forms.size())
+		if _progresion().forma_desbloqueada(candidata):
+			if candidata != forma_seleccionada:
+				forma_seleccionada = candidata
+				forma_selectada_cambiada.emit(candidata)
+				return true
+			return false
+		candidata -= 1
+	return false
 
 
 func _avanzar_seleccion() -> bool:
@@ -482,12 +522,8 @@ func _transformar(nueva: int) -> void:
 func _apply_form() -> void:
 	var data: Forma = forms[current_form]
 	_aplicar_facing()
-	if tint != null:
-		tint.visible = true
-		tint.modulate = Color(data.color.r, data.color.g, data.color.b, TINT_ALPHA)
-	else:
-		visual.modulate = Color.WHITE
-		visual.self_modulate = _tinte_forma(data.color)
+	visual.modulate = Color.WHITE
+	visual.self_modulate = _tinte_forma(data.color)
 	collision_shape.shape.size = data.collider_size
 	_gravity_override = -1.0
 	blocking = false
@@ -499,39 +535,23 @@ func _tinte_forma(color: Color) -> Color:
 
 
 func _aplicar_facing() -> void:
-	visual_root.scale.x = -absf(visual_root.scale.x) if facing < 0 else absf(visual_root.scale.x)
+	visual.scale.x = -absf(_base_sprite_scale.x) if facing < 0 else absf(_base_sprite_scale.x)
+	var data: Forma = forms[current_form]
+	if facing != _turn_prev_facing:
+		_turn_prev_facing = facing
+		_snap_turn(data.turn_tilt)
 
 
 func _update_tint() -> void:
-	if tint != null:
-		tint.modulate.a = 1.0 if blocking else TINT_ALPHA
-		return
 	var data: Forma = forms[current_form]
+	visual.modulate.a = 1.0 if blocking else TINT_ALPHA
 	visual.self_modulate = _tinte_forma(data.color)
 
 
 func _update_animacion() -> void:
 	_aplicar_facing()
-	var data: Forma = forms[current_form]
-	var nombre: String = ""
-	if _attacking:
-		match _current_attack_type:
-			"light":
-				nombre = "attack%d" % (_light_step % 3 + 1)
-			"heavy":
-				nombre = "attack2"
-			"combo", "special":
-				nombre = "attack3"
-			_:
-				nombre = "attack1"
-	elif not is_on_floor():
-		nombre = "jump"
-	elif absf(velocity.x) > 10.0:
-		nombre = "walk" if data.speed < 200.0 else "run"
-	else:
-		nombre = "idle"
-	if visual.animation != nombre:
-		visual.play(nombre)
+	if visual.animation != "run":
+		visual.play("run")
 
 
 func _handle_death() -> void:
@@ -579,6 +599,9 @@ func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 70
 	proj.set("damage", forms[current_form].special_damage)
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	destino.add_child(proj)
+	if current_form == Form.MURCIELAGO:
+		velocity.x -= facing * 120.0
+		squash_y(0.18, 0.25)
 
 
 func _try_interact() -> bool:

@@ -4,27 +4,23 @@
 [ext_resource type="SpriteFrames" uid="uid://bhqpshwxoqn22" path="res://resources/jugador_frames.tres" id="2_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(74, 84)
+size = Vector2(175, 283)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
-size = Vector2(90, 72)
+size = Vector2(60, 180)
 
 [node name="Player" type="CharacterBody2D" unique_id=780925585]
 collision_layer = 4
 collision_mask = 3
 script = ExtResource("1_player")
 
-[node name="VisualRoot" type="Node2D" parent="." unique_id=941212345]
-
-[node name="Sprite2D" type="AnimatedSprite2D" parent="VisualRoot" unique_id=1857419060]
-position = Vector2(21, -20)
-scale = Vector2(2.9804688, 3)
+[node name="Sprite2D" type="AnimatedSprite2D" parent="." unique_id=1857419060]
 sprite_frames = ExtResource("2_frames")
-animation = &"idle"
-autoplay = "idle"
+animation = &"run"
+autoplay = "run"
 
 [node name="Collision" type="CollisionShape2D" parent="." unique_id=1655450779]
-position = Vector2(-5, 1)
+position = Vector2(0, -7.5)
 shape = SubResource("RectangleShape2D_body")
 
 [node name="AttackArea" type="Area2D" parent="." unique_id=1368461241]
@@ -32,6 +28,5 @@ collision_mask = 3
 monitoring = false
 
 [node name="AttackHitbox" type="CollisionShape2D" parent="AttackArea" unique_id=846182347]
-position = Vector2(-4, 7)
 shape = SubResource("RectangleShape2D_attack")
 disabled = true
