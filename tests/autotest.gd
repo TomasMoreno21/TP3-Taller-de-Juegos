@@ -48,9 +48,9 @@ func _init() -> void:
 	await process_frame
 	_check(_player.current_form == 3, "Consola 'form murcielago' -> 3")
 
-	# --- Progresión: todas las formas desbloqueadas desde el inicio (16/08) ---
+	# --- Progresión: desbloqueo progresivo por nivel (17/08) ---
 	_progresion().reset()
-	_check(_progresion().forma_desbloqueada(1) == true, "Inicio: Lobo desbloqueado")
+	_check(_progresion().forma_desbloqueada(1) == false, "Nivel 1: Lobo bloqueado")
 	Input.action_press("transform")
 	await physics_frame
 	await physics_frame
@@ -250,10 +250,35 @@ func _init() -> void:
 	_progresion().add_fragmentos(3)
 	await process_frame
 	_check(lvl.get("panel").visible == true, "LevelUp: subir nivel abre el menú")
-	_check(int(lvl.get("_opciones").size()) == 4, "LevelUp: ofrece las 4 transformaciones desbloqueadas")
-	lvl.call("_confirmar")
-	await process_frame
-	_check(lvl.get("panel").visible == false, "LevelUp: confirmar cierra el menú")
+	var op_lvl2: Array = lvl.get("_opciones")
+	_check(op_lvl2.size() == 4, "LevelUp: siempre muestra las 4 formas (bloqueadas incluidas)")
+	var bloqueadas_lvl2 := 0
+	for op in op_lvl2:
+		if op["bloqueada"]:
+			bloqueadas_lvl2 += 1
+	_check(bloqueadas_lvl2 == 2, "LevelUp nivel 2: Oso y Murciélago se muestran bloqueados (%d bloqueadas)" % bloqueadas_lvl2)
+	_check(op_lvl2[0]["bloqueada"] == false and op_lvl2[1]["bloqueada"] == false, "LevelUp nivel 2: Humano y Lobo desbloqueados")
+	_check(op_lvl2[2]["bloqueada"] == true and op_lvl2[3]["bloqueada"] == true, "LevelUp nivel 2: Oso y Murciélago bloqueados")
+
+	# --- LevelUp: navegar con ↓ salta las formas bloqueadas ---
+	await _simular_accion("move_down")
+	_check(int(lvl.get("_indice")) == 1, "LevelUp: ↓ desde Humano va a Lobo (índice 1)")
+	await _simular_accion("move_down")
+	_check(int(lvl.get("_indice")) == 0, "LevelUp: ↓ de nuevo salta Oso/Murciélago bloqueados y vuelve a Humano")
+
+	# --- LevelUp: la pausa no debe poder sacarte del menú sin elegir forma ---
+	var pausa: CanvasLayer = _scene.get_node("Pause")
+	await _simular_accion("pause")
+	_check((pausa.get_node("Panel") as Control).visible == false, "LevelUp: Pausa no se abre encima del menú de nivel")
+	_check(lvl.get("panel").visible == true, "LevelUp: el menú de nivel sigue abierto tras intentar pausar")
+
+	# --- LevelUp: J (attack) ya NO confirma, solo Enter (menu_confirm) ---
+	await _simular_accion("attack")
+	_check(lvl.get("panel").visible == true, "LevelUp: J no confirma la elección")
+	_check(desbloqueos.is_empty(), "LevelUp: J no desbloqueó ningún combo")
+
+	await _simular_accion("menu_confirm")
+	_check(lvl.get("panel").visible == false, "LevelUp: Enter (menu_confirm) confirma y cierra el menú")
 	_check(desbloqueos.size() == 1 and desbloqueos[0] == "Remate", "LevelUp: elegir desbloquea el combo del humano (%s)" % (desbloqueos[0] if not desbloqueos.is_empty() else "-"))
 	_check(_progresion().combos_desbloqueados_forma(0) == 1, "LevelUp: combo del humano desbloqueado tras elegir")
 
@@ -264,6 +289,20 @@ func _init() -> void:
 	else:
 		print("AUTOTEST: " + str(_failures) + " TEST(S) FALLARON")
 		quit(1)
+
+
+func _simular_accion(action: String) -> void:
+	# Input.action_press() NO dispara _input()/_unhandled_input() (solo el polling
+	# de Input.is_action_*), así que los sistemas basados en _input (LevelUp, Pause,
+	# Console) necesitan un InputEventAction real vía parse_input_event.
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	Input.parse_input_event(ev)
+	await process_frame
+	ev.pressed = false
+	Input.parse_input_event(ev)
+	await process_frame
 
 
 func _spawn_dummy(offset: Vector2 = Vector2.ZERO) -> Node2D:

@@ -408,27 +408,39 @@ func _handle_energia(delta: float) -> void:
 
 
 func _handle_seleccion_forma() -> void:
-	var dir := 0
-	if Input.is_action_just_pressed("move_up"):
-		dir = -1
-	elif Input.is_action_just_pressed("move_down"):
-		dir = 1
-	if dir == 0:
+	# botón dedicado (Q / Select), distinto de mover/atacar/bloquear, para que
+	# no se cambie la preselección sin querer en medio del combate
+	if not Input.is_action_just_pressed("form_next"):
 		return
-	var candidata := forma_seleccionada + dir
+	_avanzar_seleccion()
+
+
+func _avanzar_seleccion() -> bool:
+	var candidata := forma_seleccionada + 1
 	for _i in range(forms.size()):
 		candidata = posmod(candidata, forms.size())
 		if _progresion().forma_desbloqueada(candidata):
 			if candidata != forma_seleccionada:
 				forma_seleccionada = candidata
 				forma_selectada_cambiada.emit(candidata)
-			return
-		candidata += dir
+				return true
+			return false
+		candidata += 1
+	return false
 
 
 func _handle_transform() -> void:
 	if not Input.is_action_just_pressed("transform"):
 		return
+	# T ya transformado en la forma preseleccionada = revertir a Humano al toque,
+	# si no T no hacía nada (se sentía como que no respondía)
+	if current_form != Form.HUMAN and forma_seleccionada == current_form:
+		_transformar(Form.HUMAN)
+		return
+	if forma_seleccionada == current_form:
+		# nada preseleccionado todavía con Q: T solo avanza a la próxima forma
+		# desbloqueada y transforma directo, no se queda sin hacer nada
+		_avanzar_seleccion()
 	if not _progresion().forma_desbloqueada(forma_seleccionada):
 		return
 	_transformar(forma_seleccionada)

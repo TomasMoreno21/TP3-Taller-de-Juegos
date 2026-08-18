@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=8 format=3 uid="uid://dkyk8avpptlls"]
 
 [ext_resource type="Script" uid="uid://c1q7pellu6xgj" path="res://scripts/hud.gd" id="1_hud"]
 

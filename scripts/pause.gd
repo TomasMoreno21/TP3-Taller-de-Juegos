@@ -28,7 +28,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_instance_valid(_controls):
 		return
 	if event.is_action_pressed("pause"):
-		if _consola_abierta() or _dialogo_activo():
+		if _consola_abierta() or _dialogo_activo() or _levelup_abierto():
 			return
 		toggle()
 		get_viewport().set_input_as_handled()
@@ -54,6 +54,11 @@ func _consola_abierta() -> bool:
 func _dialogo_activo() -> bool:
 	var dialogo = get_node_or_null("/root/Dialogo")
 	return dialogo != null and dialogo.esta_activo()
+
+
+func _levelup_abierto() -> bool:
+	var levelup = get_tree().get_first_node_in_group("levelup")
+	return levelup != null and levelup.esta_abierto()
 
 
 func toggle() -> void:
