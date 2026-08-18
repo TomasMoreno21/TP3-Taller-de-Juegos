@@ -1,0 +1,37 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/form_icon.tscn" id="1_icon"]
+
+[sub_resource type="StyleBoxFlat" id="panel_normal"]
+bg_color = Color(0.09, 0.1, 0.13, 0.85)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.22, 0.26, 0.32, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 10
+content_margin_top = 8
+content_margin_right = 10
+content_margin_bottom = 8
+
+[node name="Option" type="PanelContainer"]
+theme_override_styles/panel = SubResource("panel_normal")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 4
+alignment = 1
+
+[node name="Icon" parent="VBox" instance=ExtResource("1_icon")]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="Nombre" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Forma"
+horizontal_alignment = 1
