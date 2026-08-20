@@ -23,6 +23,13 @@ func _init() -> void:
 	shake_strength = 4.0
 	transform_duration = 8.0
 	turn_tilt = 9.0
+	accel = 3200.0
+	friction = 2800.0
+	camera_zoom = Vector2(0.94, 0.94)
+	sprint_zoom_out = 0.04
+	sprint_min_speed = 260.0
+	turn_tilt_cam = 0.06
+	landing_squash = 0.08
 	combos = [
 		{"nombre": "Mordida", "secuencia": ["light", "heavy"], "dano": 22, "knockback": 240.0, "tamano": Vector2(180, 102), "rango": 102.0},
 	]

@@ -25,6 +25,7 @@ var _attack_timer := 0.0
 var _dir := -1
 var _attack_anim := ""
 var _attack_anim_timer := 0.0
+var _stun_timer := 0.0
 
 @onready var visual: Node2D = $Visual
 @onready var poly: Polygon2D = $Visual/Poly
@@ -154,6 +155,14 @@ func _physics_process(delta: float) -> void:
 		_update_animacion()
 		move_and_slide()
 		return
+	if _stun_timer > 0.0:
+		# Hitstun: el enemigo no persigue ni ataca; el knockback se frena solo.
+		_stun_timer -= delta
+		velocity.x = move_toward(velocity.x, 0.0, 180.0 * delta)
+		velocity.y = minf(velocity.y + GRAVITY * delta, MAX_FALL_SPEED)
+		_update_animacion()
+		move_and_slide()
+		return
 	var player := get_tree().get_first_node_in_group("player")
 	if _attack_timer > 0.0:
 		_attack_timer -= delta
@@ -230,10 +239,14 @@ func _disparar(player: Node2D) -> void:
 	destino.add_child(proj)
 
 
-func take_damage(cantidad: int, _knockback: float = 0.0, _dir: int = 1) -> void:
+func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
 	if health <= 0:
 		return
 	health -= cantidad
+	if knockback > 0.0:
+		var resist: float = enemy_data.knockback_resist if enemy_data != null else 1.0
+		velocity.x = dir * knockback * (1.0 - resist)
+		_stun_timer = enemy_data.stun_duracion if enemy_data != null else 0.15
 	if visual != null:
 		visual.modulate = Color(1, 0.6, 0.6)
 		await get_tree().create_timer(0.08).timeout
@@ -248,4 +261,28 @@ func _morir() -> void:
 	if player != null and player.has_method("on_enemy_killed"):
 		(player as Node2D).on_enemy_killed()
 	died.emit()
-	queue_free()
+	_liberar_only()
+	set_physics_process(false)
+	_colision(false)
+	_burst_particulas()
+	var tw := create_tween()
+	tw.tween_property(visual, "modulate:a", 0.0, 0.3)
+	tw.parallel().tween_property(visual, "rotation", visual.rotation + deg_to_rad(8) * _dir, 0.3)
+	tw.tween_interval(0.1)
+	tw.tween_callback(queue_free)
+
+
+func _liberar_only() -> void:
+	_activo = false
+	velocity = Vector2.ZERO
+
+
+func _burst_particulas() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+	p.global_position = global_position
+	p.self_modulate = enemy_data.color if enemy_data != null else Color(0.6, 0.3, 0.3)
+	get_tree().root.add_child(p)
+	p.restart()
+	p.emitting = true

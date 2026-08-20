@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://c1w7l3sant0r4"]
+
+[ext_resource type="Script" path="res://scripts/santuario.gd" id="1_sant"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_sant"]
+radius = 90.0
+
+[node name="Santuario" type="Area2D"]
+script = ExtResource("1_sant")
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_sant")
+
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.35, 0.8, 0.65, 1)
+polygon = PackedVector2Array(0, -40, 44, -24, 44, 24, 0, 40, -44, 24, -44, -24)
+
+[node name="Label" type="Label" parent="Visual"]
+offset_left = -80.0
+offset_top = -72.0
+offset_right = 80.0
+offset_bottom = -44.0
+text = "SANTUARIO"
+horizontal_alignment = 1

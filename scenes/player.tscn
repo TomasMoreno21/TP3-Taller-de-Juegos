@@ -9,6 +9,20 @@ size = Vector2(175, 283)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
 size = Vector2(60, 180)
 
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_polvo"]
+emission_shape = 1
+emission_sphere_radius = 18.0
+particle_flag_disable_z = true
+spread = 40.0
+gravity = Vector3(0, -140, 0)
+initial_velocity_min = 40.0
+initial_velocity_max = 110.0
+damping_min = 60.0
+damping_max = 140.0
+scale_min = 0.6
+scale_max = 1.2
+color = Color(0.5, 0.45, 0.4, 0.45)
+
 [node name="Player" type="CharacterBody2D" unique_id=780925585]
 collision_layer = 4
 collision_mask = 3
@@ -30,3 +44,12 @@ monitoring = false
 [node name="AttackHitbox" type="CollisionShape2D" parent="AttackArea" unique_id=846182347]
 shape = SubResource("RectangleShape2D_attack")
 disabled = true
+
+[node name="Polvo" type="CPUParticles2D" parent="." unique_id=777000001]
+position = Vector2(0, 75)
+emitting = false
+amount = 6
+lifetime = 0.35
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_polvo")

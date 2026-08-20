@@ -68,6 +68,10 @@ var _spawn_position := Vector2.ZERO
 @onready var collision_shape: CollisionShape2D = $Collision
 @onready var attack_area: Area2D = $AttackArea
 @onready var attack_hitbox: CollisionShape2D = $AttackArea/AttackHitbox
+@onready var polvo: CPUParticles2D = $Polvo
+
+const PASOS_INTERVALO := 0.18
+var _pasos_timer := 0.0
 
 const FORM_SCRIPTS := [
 	preload("res://scripts/forms/humano.gd"),
@@ -100,9 +104,11 @@ func _physics_process(delta: float) -> void:
 	if data.is_dashing():
 		velocity.x = facing * data.dash_speed()
 	else:
-		velocity.x = dir * data.speed
 		if dir != 0.0:
 			facing = 1 if dir > 0 else -1
+			velocity.x = move_toward(velocity.x, dir * data.speed, data.accel * delta)
+		else:
+			velocity.x = move_toward(velocity.x, 0.0, data.friction * delta)
 
 	if Input.is_action_just_pressed("jump"):
 		if _coyote_time > 0.0 or data.can_jump():
@@ -120,12 +126,15 @@ func _physics_process(delta: float) -> void:
 
 	velocity.y = min(velocity.y + g * delta, MAX_FALL_SPEED)
 	move_and_slide()
+	_sprint_zoom(data)
 
 	if is_on_floor():
 		data.on_floor(self)
 		_coyote_time = COYOTE_TIME
 		if not _was_on_floor:
 			data.on_landing(self, _fall_impact)
+			_squash_landing(data, _fall_impact)
+			_emitir_polvo(0.5)
 		_fall_impact = 0.0
 		_was_on_floor = true
 	else:
@@ -141,6 +150,11 @@ func _physics_process(delta: float) -> void:
 		if is_on_floor():
 			data.try_jump(self)
 			_jump_buffer = 0.0
+
+	_pasos_timer -= delta
+	if is_on_floor() and absf(velocity.x) > 0.5 and _pasos_timer <= 0.0:
+		_pasos_timer = PASOS_INTERVALO
+		_emitir_polvo(0.8)
 
 	_handle_attack(delta)
 	_check_attack_hits()
@@ -363,12 +377,34 @@ func _check_attack_hits() -> void:
 			_hit_applied = true
 			_aplicar_knockback(body)
 			_registrar_golpe_racha()
+			_hitstop_por_tipo()
 			return
 		if body.has_method("take_damage"):
 			body.take_damage(_current_attack_damage, _current_attack_knockback, facing)
 			_hit_applied = true
 			_registrar_golpe_racha()
+			_hitstop_por_tipo()
+			_zoom_punch_por_tipo()
 			return
+
+
+func _hitstop_por_tipo() -> void:
+	# Hit-stop (freeze frames) en golpes con "peso": heavy y combo.
+	if _current_attack_type != "heavy" and _current_attack_type != "combo":
+		return
+	Engine.time_scale = 0.0
+	await get_tree().create_timer(0.06, true, false, true).timeout
+	Engine.time_scale = 1.0
+
+
+func _zoom_punch_por_tipo() -> void:
+	var cam := get_viewport().get_camera_2d()
+	if cam == null or not cam.has_method("punch"):
+		return
+	var escala := 1.02
+	if current_form >= 0 and current_form < forms.size():
+		escala = forms[current_form].hit_zoom
+	cam.punch(escala)
 
 
 func _aplicar_knockback(body: Node2D) -> void:
@@ -391,6 +427,31 @@ func squash_y(amount: float, duration: float) -> void:
 	_sprite_tween = create_tween()
 	_sprite_tween.tween_property(visual, "scale:y", base.y * (1.0 - amount), duration * 0.4)
 	_sprite_tween.tween_property(visual, "scale:y", base.y, duration * 0.6)
+
+
+func _emitir_polvo(_escala: float) -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	polvo.emitting = true
+
+
+func _squash_landing(data: Forma, impacto: float) -> void:
+	var amt := data.landing_squash
+	if amt <= 0.0 or impacto <= 0.0:
+		return
+	var factor := clampf(impacto / 600.0, 0.3, 1.0)
+	squash_y(amt * factor, 0.18)
+
+
+func _sprint_zoom(data: Forma) -> void:
+	var cam := get_viewport().get_camera_2d()
+	if cam == null:
+		return
+	var vel := absf(velocity.x)
+	var objetivo: Vector2 = data.camera_zoom
+	if data.sprint_zoom_out > 0.0 and vel >= data.sprint_min_speed:
+		objetivo = data.camera_zoom * (1.0 - data.sprint_zoom_out)
+	cam.fijar_zoom(objetivo)
 
 
 func stretch_y(amount: float, duration: float) -> void:
@@ -514,9 +575,48 @@ func _transformar(nueva: int) -> void:
 	var data: Forma = forms[current_form]
 	data.reset_form_state()
 	_apply_form()
+	_zoom_transform(data)
+	if nueva == Form.HUMAN:
+		_particulas_regreso()
 	form_changed.emit(data.form_name)
 	forma_selectada_cambiada.emit(nueva)
 	health_changed.emit(health, VIDA_MAX)
+
+
+func _particulas_regreso() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+	p.global_position = global_position + Vector2(0, 20)
+	p.self_modulate = Color(0.4, 0.8, 0.9)
+	get_tree().root.add_child(p)
+	p.restart()
+	p.emitting = true
+
+
+func _zoom_transform(data: Forma) -> void:
+	var cam := get_viewport().get_camera_2d()
+	if cam != null:
+		cam.fijar_zoom(data.camera_zoom)
+	_flash_transformacion()
+
+
+func _flash_transformacion() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var overlay := ColorRect.new()
+	overlay.color = Color(1, 1, 1, 0.9)
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var layer := CanvasLayer.new()
+	layer.layer = 100
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_tree().root
+	destino.add_child(layer)
+	layer.add_child(overlay)
+	var tw := overlay.create_tween()
+	tw.tween_property(overlay, "color:a", 0.0, 0.12)
+	tw.tween_callback(func() -> void:
+		layer.queue_free()
+	)
 
 
 func _apply_form() -> void:
@@ -540,6 +640,10 @@ func _aplicar_facing() -> void:
 	if facing != _turn_prev_facing:
 		_turn_prev_facing = facing
 		_snap_turn(data.turn_tilt)
+		if data.turn_tilt_cam > 0.0:
+			var cam := get_viewport().get_camera_2d()
+			if cam != null and cam.has_method("tilt"):
+				cam.tilt(-deg_to_rad(1.5) * facing)
 
 
 func _update_tint() -> void:
@@ -579,6 +683,10 @@ func take_damage(cantidad: int, _knockback: float = 0.0, _dir: int = 1) -> void:
 func heal_full() -> void:
 	health = VIDA_MAX
 	health_changed.emit(health, VIDA_MAX)
+
+
+func actualizar_checkpoint(pos: Vector2) -> void:
+	_spawn_position = pos
 
 
 func recoger_energia() -> void:

@@ -22,6 +22,10 @@ func _init() -> void:
 	shake_strength = 5.0
 	turn_tilt = 9.0
 	hit_rotation = 7.0
+	landing_squash = 0.12
+	camera_zoom = Vector2.ONE
+	accel = 1800.0
+	friction = 1500.0
 	combos = [
 		{"nombre": "Remate", "secuencia": ["light", "heavy"], "dano": 42, "knockback": 260.0, "tamano": Vector2(162, 114), "rango": 126.0},
 	]

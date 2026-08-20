@@ -11,6 +11,10 @@ const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 @export var arena_center := Vector2.ZERO
 @export var arena_medio_ancho := 300.0
 
+# Diálogo opcional al completar la arena (post-combate). Vacío = no habla.
+@export var lineas_post_combate: PackedStringArray = []
+@export var hablante_post_combate := "Amuleto"
+
 # Cerco de la arena: 2 paredes laterales generadas según el nodo "Arena" (o los @export).
 @export var paredes_auto := true    # generar las 2 paredes que contienen al jugador
 @export var ancho_pared := 30.0     # grosor de cada pared
@@ -175,6 +179,8 @@ func _completar() -> void:
 	_ocultar_bounds()
 	if camara != null and camara.has_method("modo_normal"):
 		camara.modo_normal()
+	if not lineas_post_combate.is_empty():
+		get_node("/root/Dialogo").mostrar(Array(lineas_post_combate), hablante_post_combate)
 	completado.emit()
 
 

@@ -11,22 +11,25 @@
 [ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="8_pause"]
 [ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="9_cam"]
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="9_dialog"]
-[ext_resource type="Texture2D" uid="uid://7lur17bwxoak" path="res://Sprites/Elementos/1 Tiles/Tile_12.png" id="12_eb6dy"]
+[ext_resource type="PackedScene" uid="uid://c1w7l3sant0r4" path="res://scenes/santuario.tscn" id="13_sant"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(3000, 57)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_plat"]
+size = Vector2(280, 30)
 
 [sub_resource type="Resource" id="Resource_o6xl0"]
 script = ExtResource("8_85g3d")
 metadata/_custom_type_script = "uid://cui53h2x6gwlf"
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_8w0r3"]
-size = Vector2(1305, 37)
-
 [node name="Main" type="Node2D" unique_id=1244689183]
 
 [node name="Player" parent="." unique_id=780925585 instance=ExtResource("1_player")]
-position = Vector2(2177, 848)
+position = Vector2(-443, 787)
+
+[node name="Camara" type="Camera2D" parent="." unique_id=805542455]
+script = ExtResource("9_cam")
 
 [node name="Level" type="Node2D" parent="." unique_id=908805619]
 
@@ -42,35 +45,77 @@ polygon = PackedVector2Array(-1500, -20, 1500, -20, 1500, 20, -1500, 20)
 position = Vector2(-37, 451.5)
 shape = SubResource("RectangleShape2D_ground")
 
+[node name="Plat1" type="StaticBody2D" parent="Level" unique_id=901000001]
+position = Vector2(2910, 880)
+
+[node name="Plat1Visual" type="Polygon2D" parent="Level/Plat1" unique_id=901000002]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plat1Collision" type="CollisionShape2D" parent="Level/Plat1" unique_id=901000003]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="Plat2" type="StaticBody2D" parent="Level" unique_id=901000004]
+position = Vector2(3405, 760)
+
+[node name="Plat2Visual" type="Polygon2D" parent="Level/Plat2" unique_id=901000005]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plat2Collision" type="CollisionShape2D" parent="Level/Plat2" unique_id=901000006]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="Plat3" type="StaticBody2D" parent="Level" unique_id=901000007]
+position = Vector2(3854, 632)
+
+[node name="Plat3Visual" type="Polygon2D" parent="Level/Plat3" unique_id=901000008]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plat3Collision" type="CollisionShape2D" parent="Level/Plat3" unique_id=901000009]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="Plat4" type="StaticBody2D" parent="Level" unique_id=901000010]
+position = Vector2(4399, 520)
+
+[node name="Plat4Visual" type="Polygon2D" parent="Level/Plat4" unique_id=901000011]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plat4Collision" type="CollisionShape2D" parent="Level/Plat4" unique_id=901000012]
+shape = SubResource("RectangleShape2D_plat")
+
 [node name="Tronco" parent="Level" unique_id=822609678 instance=ExtResource("6_tronco")]
-position = Vector2(1660, 867)
+position = Vector2(2367, 853)
 
 [node name="DialogoTronco" parent="Level" unique_id=2033732964 instance=ExtResource("9_dialog")]
-position = Vector2(1350, 867)
+position = Vector2(2185, 834)
 lineas = []
-
-[node name="Rompible" parent="." unique_id=1731684402 instance=ExtResource("7_romp")]
-position = Vector2(1144, 958)
 
 [node name="Hud" parent="." unique_id=972088848 instance=ExtResource("4_hud")]
 
 [node name="DialogoIntro" parent="." unique_id=860836594 instance=ExtResource("9_dialog")]
-position = Vector2(300, 947)
+position = Vector2(184, 801)
 lineas = []
 modo = "Automatico"
 
 [node name="Pause" parent="." unique_id=423654189 instance=ExtResource("8_pause")]
+visible = false
 
 [node name="LevelUp" parent="." unique_id=1298784535 instance=ExtResource("8_levelup")]
 
-[node name="Camara" type="Camera2D" parent="." unique_id=805542455]
-script = ExtResource("9_cam")
+[node name="Rompible" parent="." unique_id=1731684402 instance=ExtResource("7_romp")]
+position = Vector2(359, 947)
 
 [node name="Rompible2" parent="." unique_id=1685828451 instance=ExtResource("7_romp")]
-position = Vector2(1301, 961)
+position = Vector2(597, 950)
 
 [node name="Rompible3" parent="." unique_id=872321991 instance=ExtResource("7_romp")]
-position = Vector2(1492, 961)
+position = Vector2(849, 949)
+
+[node name="Santuario" parent="." unique_id=209000001 instance=ExtResource("13_sant")]
+position = Vector2(4391, 405)
+activar_victoria = true
 
 [node name="Label" type="Label" parent="." unique_id=170643924]
 visible = false
@@ -87,7 +132,7 @@ T para transformarse
 Romper las cajas larga energia para subir de nivel"
 
 [node name="Encounter2" parent="." unique_id=2088881285 instance=ExtResource("6_tipki")]
-position = Vector2(801, 750)
+position = Vector2(1298, 755)
 separacion_pared = 0.0
 
 [node name="ArenaShape" parent="Encounter2/Arena" index="0"]
@@ -105,7 +150,7 @@ spawn_telegrafiado = true
 ritual_duracion = 0.9
 
 [node name="Enemy2" parent="Encounter2" unique_id=1850236008 instance=ExtResource("5_enemy")]
-position = Vector2(307, 143)
+position = Vector2(592, 214)
 tipo = "arquero"
 enemy_data = SubResource("Resource_o6xl0")
 spawn_telegrafiado = true
@@ -116,16 +161,16 @@ position = Vector2(-279, 221)
 spawn_telegrafiado = true
 ritual_duracion = 0.3
 
-[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=1667443346]
-position = Vector2(2605, 923)
+[node name="Ground" type="StaticBody2D" parent="." unique_id=1789407642]
+position = Vector2(1036, 1438)
 
-[node name="Sprite2D" type="Sprite2D" parent="StaticBody2D" unique_id=933550097]
-position = Vector2(635.50006, 0)
-scale = Vector2(40.718754, 1)
-texture = ExtResource("12_eb6dy")
+[node name="GroundVisual" type="Polygon2D" parent="Ground" unique_id=1357982540]
+position = Vector2(-26, 456)
+color = Color(0.16, 0.32, 0.18, 1)
+polygon = PackedVector2Array(-1500, -20, 1500, -20, 1500, 20, -1500, 20)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=1882248902]
-position = Vector2(636.5, -2.5)
-shape = SubResource("RectangleShape2D_8w0r3")
+[node name="GroundCollision" type="CollisionShape2D" parent="Ground" unique_id=1255186768]
+position = Vector2(-37, 451.5)
+shape = SubResource("RectangleShape2D_ground")
 
 [editable path="Encounter2"]

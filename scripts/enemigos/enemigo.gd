@@ -12,4 +12,5 @@ extends Resource
 @export var shoot_range: float = 420.0
 @export var color: Color = Color(0.55, 0.38, 0.3)
 @export var collider_size: Vector2 = Vector2(30, 60)
-@export var knockback_resist: float = 1.0
+@export var knockback_resist: float = 0.3
+@export var stun_duracion: float = 0.15

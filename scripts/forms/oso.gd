@@ -27,6 +27,10 @@ func _init() -> void:
 	shake_strength = 14.0
 	turn_tilt = 9.0
 	transform_duration = 10.0
+	accel = 900.0
+	friction = 700.0
+	camera_zoom = Vector2(0.9, 0.9)
+	turn_tilt_cam = 0.05
 	combos = [
 		{"nombre": "Garra", "secuencia": ["light", "heavy"], "dano": 84, "knockback": 360.0, "tamano": Vector2(288, 186), "rango": 198.0},
 	]

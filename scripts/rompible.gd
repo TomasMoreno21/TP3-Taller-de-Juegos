@@ -31,9 +31,21 @@ func registrar_golpe(_dano: int) -> void:
 
 func _romper() -> void:
 	broken = true
+	_burst_particulas()
 	_soltar_pickup()
 	get_node("/root/Progresion").add_fragmentos(1)
 	queue_free()
+
+
+func _burst_particulas() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+	p.global_position = global_position
+	p.self_modulate = box_color
+	get_tree().root.add_child(p)
+	p.restart()
+	p.emitting = true
 
 
 func _soltar_pickup() -> void:

@@ -15,7 +15,7 @@ var _jumps_usados := 0
 @export var attack_range: float = 26.0
 @export var attack_size: Vector2 = Vector2(30, 24)
 @export var light_combo_steps: int = 3
-@export var light_knockback: float = 80.0
+@export var light_knockback: float = 150.0
 
 # Combo fuerte (repetición de K)
 @export var heavy_damage: int = 20
@@ -38,6 +38,18 @@ var _jumps_usados := 0
 @export var hit_zoom: float = 1.02
 @export var transform_duration: float = 14.0
 @export var turn_tilt: float = 0.0
+
+# Inercia de movimiento (Ítem 5): aceleración al arrancar (más alto = más ágil)
+# y rozamiento al soltar el input (más alto = frena más seco, bajo = derrapa).
+@export var accel: float = 1600.0
+@export var friction: float = 1400.0
+
+# Game feel de cámara por forma.
+@export var camera_zoom: Vector2 = Vector2.ONE        # zoom objetivo al estar transformado
+@export var sprint_zoom_out: float = 0.0              # zoom-out extra al correr (Lobo)
+@export var sprint_min_speed: float = 99999.0         # velocidad para activar el zoom de sprint
+@export var landing_squash: float = 0.0               # squash al aterrizar (proporcional a impacto)
+@export var turn_tilt_cam: float = 0.0                # inclinación de cámara transitoria al girar
 
 
 func tick(_player: CharacterBody2D, _delta: float) -> void:

@@ -21,6 +21,10 @@ func _init() -> void:
 	collider_size = Vector2(175, 300)
 	transform_duration = 9.0
 	turn_tilt = 9.0
+	accel = 1600.0
+	friction = 1300.0
+	camera_zoom = Vector2(0.95, 0.95)
+	landing_squash = 0.1
 	combos = [
 		{"nombre": "Ala Cortante", "secuencia": ["light", "heavy"], "dano": 28, "knockback": 240.0, "tamano": Vector2(192, 102), "rango": 114.0},
 	]
