@@ -17,6 +17,9 @@ const COMANDOS := {
 	"nivel <n>": "Fija el nivel del jugador.",
 	"formas": "Desbloquea todas las transformaciones.",
 	"kill": "Vuelve al humano (recorre las formas).",
+	"dummy": "Crea un muñeco de entrenamiento delante del jugador.",
+	"zona1": "Viaja a la Zona 1.",
+	"zona2": "Viaja a la Zona 2 (nivel largo).",
 }
 
 
@@ -111,6 +114,18 @@ func _ejecutar(tokens: PackedStringArray) -> void:
 		"kill":
 			_player.current_form = 0
 			imprimir("Vuelto a Humano")
+		"dummy":
+			var d: Node2D = (load("res://scenes/dummy_entrenamiento.tscn") as PackedScene).instantiate()
+			d.global_position = _player.global_position + Vector2(_player.facing * 140, 60)
+			var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+			destino.add_child(d)
+			imprimir("Muñeco de entrenamiento creado")
+		"zona1":
+			get_tree().change_scene_to_file("res://scenes/main.tscn")
+			imprimir("Viajando a la Zona 1")
+		"zona2":
+			get_tree().change_scene_to_file("res://scenes/nivel_2.tscn")
+			imprimir("Viajando a la Zona 2")
 		_:
 			imprimir("Comando desconocido. Escribí 'help'.")
 

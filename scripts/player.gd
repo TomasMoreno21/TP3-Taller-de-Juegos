@@ -4,6 +4,7 @@ signal form_changed(form_name: String)
 signal forma_selectada_cambiada(forma_index: int)
 signal attack_performed(attack_type: String, step: Variant)
 signal health_changed(health: int, max_health: int)
+signal dano_recibido(cantidad: int)
 signal energia_changed(energia: float)
 signal transformacion_agotada
 signal racha_changed(cantidad: int)
@@ -13,9 +14,14 @@ enum Form { HUMAN, LOBO, OSO, MURCIELAGO }
 const GRAVITY := 980.0
 const MAX_FALL_SPEED := 950.0
 const GLIDE_FALL_MULTIPLIER := 0.35
-const COYOTE_TIME := 0.1
-const JUMP_BUFFER_TIME := 0.12
+const COYOTE_TIME := 0.12
+const JUMP_BUFFER_TIME := 0.15
 const JUMP_CUT_MULTIPLIER := 0.5
+const TURN_BOOST := 2.2
+const APEX_THRESHOLD := 70.0
+const APEX_GRAVITY_MULT := 0.7
+const APEX_CORE_THRESHOLD := 35.0
+const APEX_CORE_MULT := 0.45
 const TINT_ALPHA := 0.45
 const COMBO_WINDOW := 1.1
 const LINEA_ESPESOR := 40.0
@@ -25,10 +31,10 @@ const ENERGIA_REGEN := 5.0
 const ENERGIA_KILL := 20.0
 const ENERGIA_PICKUP := 30.0
 const ENERGIA_RESPAWN := 50.0
-const RECOVERY_LIGHT := 0.3
-const RECOVERY_HEAVY := 0.5
-const RECOVERY_SPECIAL := 0.8
-const RECOVERY_COMBO := 1.0
+const RECOVERY_LIGHT := 0.22
+const RECOVERY_HEAVY := 0.4
+const RECOVERY_SPECIAL := 0.6
+const RECOVERY_COMBO := 0.7
 const VIDA_MAX := 100
 
 var forms: Array[Forma] = []
@@ -63,6 +69,8 @@ var _sprite_tween: Tween
 var _turn_prev_facing := 0
 var _base_sprite_scale := Vector2.ONE
 var _spawn_position := Vector2.ZERO
+var _derrota_activa := false
+@export var limite_caida := 3000.0
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $Collision
@@ -106,7 +114,8 @@ func _physics_process(delta: float) -> void:
 	else:
 		if dir != 0.0:
 			facing = 1 if dir > 0 else -1
-			velocity.x = move_toward(velocity.x, dir * data.speed, data.accel * delta)
+			var boost := TURN_BOOST if dir * velocity.x < 0.0 else 1.0
+			velocity.x = move_toward(velocity.x, dir * data.speed, data.accel * boost * delta)
 		else:
 			velocity.x = move_toward(velocity.x, 0.0, data.friction * delta)
 
@@ -123,6 +132,11 @@ func _physics_process(delta: float) -> void:
 		g = _gravity_override
 	if data.is_gliding(self):
 		g *= GLIDE_FALL_MULTIPLIER
+	# Apex hang escalonado: núcleo del ápice muy flotante, banda cercana suave.
+	if absf(velocity.y) < APEX_CORE_THRESHOLD:
+		g *= APEX_CORE_MULT
+	elif absf(velocity.y) < APEX_THRESHOLD:
+		g *= APEX_GRAVITY_MULT
 
 	velocity.y = min(velocity.y + g * delta, MAX_FALL_SPEED)
 	move_and_slide()
@@ -161,7 +175,11 @@ func _physics_process(delta: float) -> void:
 	_handle_racha(delta)
 	_handle_energia(delta)
 	_handle_seleccion_forma()
+	_handle_formas_cruceta()
+	_handle_forma_ciclo()
 	_handle_transform()
+	if global_position.y > limite_caida:
+		health = 0
 	_handle_death()
 	_update_animacion()
 	_handle_vertical_tilt()
@@ -324,7 +342,12 @@ func _ejecutar_finisher(data: Forma, combo: Dictionary) -> void:
 
 func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: float = 0.0) -> void:
 	_attacking = true
-	_attack_timer = _recovery_for(_current_attack_type)
+	var data: Forma = forms[current_form]
+	_attack_timer = _recovery_for(_current_attack_type) * data.mult_recuperacion
+	if _current_attack_type == "light":
+		velocity.x += facing * data.lunge_light
+	elif _current_attack_type == "heavy" or _current_attack_type == "combo":
+		velocity.x += facing * data.lunge_heavy
 	_hit_applied = false
 	_current_attack_damage = forms[current_form].attack_damage if damage < 0 else damage
 	_current_attack_knockback = knockback
@@ -378,6 +401,8 @@ func _check_attack_hits() -> void:
 			_aplicar_knockback(body)
 			_registrar_golpe_racha()
 			_hitstop_por_tipo()
+			_zoom_punch_por_tipo()
+			_shake_por_tipo()
 			return
 		if body.has_method("take_damage"):
 			body.take_damage(_current_attack_damage, _current_attack_knockback, facing)
@@ -385,6 +410,7 @@ func _check_attack_hits() -> void:
 			_registrar_golpe_racha()
 			_hitstop_por_tipo()
 			_zoom_punch_por_tipo()
+			_shake_por_tipo()
 			return
 
 
@@ -405,6 +431,25 @@ func _zoom_punch_por_tipo() -> void:
 	if current_form >= 0 and current_form < forms.size():
 		escala = forms[current_form].hit_zoom
 	cam.punch(escala)
+
+
+func _shake_por_tipo() -> void:
+	if _current_attack_type != "light" and _current_attack_type != "heavy" and _current_attack_type != "combo":
+		return
+	var cam := get_viewport().get_camera_2d()
+	if cam == null or not cam.has_method("shake"):
+		return
+	var fuerza := 2.5
+	if current_form >= 0 and current_form < forms.size():
+		var forma: Forma = forms[current_form]
+		match _current_attack_type:
+			"light":
+				fuerza = forma.shake_golpe_ligero
+			"heavy":
+				fuerza = forma.shake_golpe_pesado
+			"combo":
+				fuerza = forma.shake_golpe_combo
+	cam.shake(fuerza, 0.08)
 
 
 func _aplicar_knockback(body: Node2D) -> void:
@@ -511,14 +556,10 @@ func _handle_energia(delta: float) -> void:
 
 
 func _handle_seleccion_forma() -> void:
-	# Flechas arriba/abajo (o W/S) y el botón dedicado (Q / Select) cambian la
-	# preselección de forma, sin transformar. Q avanza; arriba avanza, abajo retrocede.
+	# Solo Q (form_next) cicla la preselección del flujo viejo.
+	# W/S/↑↓ ya no tocan la selección: causaban transformaciones accidentales.
 	if Input.is_action_just_pressed("form_next"):
 		_avanzar_seleccion()
-	elif Input.is_action_just_pressed("move_up"):
-		_avanzar_seleccion()
-	elif Input.is_action_just_pressed("move_down"):
-		_retroceder_seleccion()
 
 
 func _retroceder_seleccion() -> bool:
@@ -547,6 +588,33 @@ func _avanzar_seleccion() -> bool:
 			return false
 		candidata += 1
 	return false
+
+
+func _handle_formas_cruceta() -> void:
+	# La cruceta transforma directo: ↑ Murciélago, → Lobo, ← Oso, ↓ Humano.
+	var objetivo := -1
+	if Input.is_action_just_pressed("forma_arriba"):
+		objetivo = Form.MURCIELAGO
+	elif Input.is_action_just_pressed("forma_derecha"):
+		objetivo = Form.LOBO
+	elif Input.is_action_just_pressed("forma_izquierda"):
+		objetivo = Form.OSO
+	elif Input.is_action_just_pressed("forma_abajo"):
+		objetivo = Form.HUMAN
+	if objetivo < 0:
+		return
+	if not _progresion().forma_desbloqueada(objetivo):
+		return
+	_transformar(objetivo)
+
+
+func _handle_forma_ciclo() -> void:
+	# RT/E: cicla la preselección hacia adelante; LT: hacia atrás.
+	# RB/T es quien confirma y transforma en la preseleccionada.
+	if Input.is_action_just_pressed("forma_swap"):
+		_avanzar_seleccion()
+	elif Input.is_action_just_pressed("forma_prev"):
+		_retroceder_seleccion()
 
 
 func _handle_transform() -> void:
@@ -624,6 +692,7 @@ func _apply_form() -> void:
 	_aplicar_facing()
 	visual.modulate = Color.WHITE
 	visual.self_modulate = _tinte_forma(data.color)
+	visual.skew = 0.0
 	collision_shape.shape.size = data.collider_size
 	_gravity_override = -1.0
 	blocking = false
@@ -656,20 +725,27 @@ func _update_animacion() -> void:
 	_aplicar_facing()
 	if visual.animation != "run":
 		visual.play("run")
+	var data: Forma = forms[current_form]
+	# Quieto = animación congelada (evita piernas ciclando lentas en el lugar).
+	if absf(velocity.x) < 10.0:
+		visual.speed_scale = 0.0
+	else:
+		visual.speed_scale = clampf(absf(velocity.x) / maxf(data.speed, 1.0), 0.4, 1.6)
+	# Lean leve: el cuerpo se inclina hacia adelante según velocidad (skew, no
+	# toca rotation para no pisar el snap de giro ni el tilt del Murciélago).
+	var lean := clampf(velocity.x / maxf(data.speed, 1.0), -1.0, 1.0) * deg_to_rad(data.lean_angulo)
+	visual.skew = lerpf(visual.skew, -lean, minf(8.0 * get_physics_process_delta_time(), 1.0))
 
 
 func _handle_death() -> void:
-	if health > 0 or god_mode:
+	if health > 0 or god_mode or _derrota_activa:
 		return
-	_transformar(Form.HUMAN)
-	global_position = _spawn_position
-	velocity = Vector2.ZERO
-	energia = ENERGIA_RESPAWN
-	_racha = 0
-	_racha_timer = 0.0
-	racha_changed.emit(_racha)
-	health_changed.emit(health, VIDA_MAX)
-	energia_changed.emit(energia)
+	_derrota_activa = true
+	var escena: PackedScene = load("res://scenes/derrota.tscn")
+	var derrota: CanvasLayer = escena.instantiate()
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	destino.add_child(derrota)
+	get_tree().paused = true
 
 
 func take_damage(cantidad: int, _knockback: float = 0.0, _dir: int = 1) -> void:
@@ -677,7 +753,16 @@ func take_damage(cantidad: int, _knockback: float = 0.0, _dir: int = 1) -> void:
 		return
 	health -= cantidad
 	health_changed.emit(health, VIDA_MAX)
+	dano_recibido.emit(cantidad)
+	_shake_dano_recibido()
 	_handle_death()
+
+
+func _shake_dano_recibido() -> void:
+	var cam := get_viewport().get_camera_2d()
+	if cam == null or not cam.has_method("shake"):
+		return
+	cam.shake(3.5, 0.12)
 
 
 func heal_full() -> void:

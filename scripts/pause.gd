@@ -44,8 +44,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_navegar(1)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("attack"):
-		_on_boton_pressed(_indice)
 		get_viewport().set_input_as_handled()
+		_on_boton_pressed(_indice)
 
 
 func _consola_abierta() -> bool:

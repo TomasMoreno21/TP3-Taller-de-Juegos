@@ -9,7 +9,7 @@ var _landing_tween: Tween
 
 func _init() -> void:
 	form_name = "Oso"
-	speed = 140.0
+	speed = 160.0
 	jump_velocity = -420.0
 	gravity_scale = 1.45
 	max_health = 100
@@ -26,11 +26,14 @@ func _init() -> void:
 	collider_size = Vector2(175, 300)
 	shake_strength = 14.0
 	turn_tilt = 9.0
+	lean_angulo = 1.5
 	transform_duration = 10.0
-	accel = 900.0
-	friction = 700.0
+	accel = 1300.0
+	friction = 1000.0
 	camera_zoom = Vector2(0.9, 0.9)
 	turn_tilt_cam = 0.05
+	mult_recuperacion = 1.15
+	lunge_heavy = 220.0
 	combos = [
 		{"nombre": "Garra", "secuencia": ["light", "heavy"], "dano": 84, "knockback": 360.0, "tamano": Vector2(288, 186), "rango": 198.0},
 	]

@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://caoegelci88qm"]
+
+[ext_resource type="Script" uid="uid://cjr8k53wvc2me" path="res://scripts/dummy_entrenamiento.gd" id="1_dummy"]
+[ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="2_fcjnm"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_dummy"]
+size = Vector2(64, 220)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8w0r3"]
+size = Vector2(2084, 91)
+
+[node name="DummyEntrenamiento" type="StaticBody2D" unique_id=459897659]
+position = Vector2(1001, 945)
+collision_mask = 0
+script = ExtResource("1_dummy")
+
+[node name="Visual" type="Node2D" parent="." unique_id=553173991]
+
+[node name="Base" type="Polygon2D" parent="Visual" unique_id=1302120720]
+color = Color(0.28, 0.19, 0.12, 1)
+polygon = PackedVector2Array(-22, 0, -22, -14, 22, -14, 22, 0)
+
+[node name="Poste" type="Polygon2D" parent="Visual" unique_id=1581592294]
+color = Color(0.35, 0.24, 0.15, 1)
+polygon = PackedVector2Array(-9, -5, -9, -95, 9, -95, 9, -5)
+
+[node name="Cuerpo" type="Polygon2D" parent="Visual" unique_id=892479384]
+color = Color(0.82, 0.68, 0.42, 1)
+polygon = PackedVector2Array(-32, -85, -32, -165, 32, -165, 32, -85)
+
+[node name="Cabeza" type="Polygon2D" parent="Visual" unique_id=1075267734]
+color = Color(0.88, 0.76, 0.52, 1)
+polygon = PackedVector2Array(20, -195, 17.3, -185, 10, -178, 0, -175, -10, -178, -17.3, -185, -20, -195, -17.3, -205, -10, -212, 0, -215, 10, -212, 17.3, -205)
+
+[node name="Diana" type="Polygon2D" parent="Visual" unique_id=2069376137]
+color = Color(0.75, 0.25, 0.2, 1)
+polygon = PackedVector2Array(11, -125, 9.5, -119.5, 5.5, -115.5, 0, -114, -5.5, -115.5, -9.5, -119.5, -11, -125, -9.5, -130.5, -5.5, -134.5, 0, -136, 5.5, -134.5, 9.5, -130.5)
+
+[node name="Collision" type="CollisionShape2D" parent="." unique_id=139521145]
+position = Vector2(0, -110)
+shape = SubResource("RectangleShape2D_dummy")
+
+[node name="Contador" type="Label" parent="." unique_id=203518220]
+offset_left = -80.0
+offset_top = -252.0
+offset_right = 80.0
+offset_bottom = -224.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "0 golpes · 0 daño"
+horizontal_alignment = 1
+
+[node name="Player" parent="." unique_id=780925585 instance=ExtResource("2_fcjnm")]
+position = Vector2(-204, -152)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1106639151]
+position = Vector2(6, 35.5)
+shape = SubResource("RectangleShape2D_8w0r3")

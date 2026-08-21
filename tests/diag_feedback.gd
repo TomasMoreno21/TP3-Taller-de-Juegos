@@ -67,8 +67,8 @@ func _wait_frames(n: int) -> void:
 
 
 func _esperar_recuperacion(ataque: String) -> void:
-	var frames := 32
+	var frames := 20
 	match ataque:
 		"light":
-			frames = 32
+			frames = 20
 	await _wait_frames(frames)

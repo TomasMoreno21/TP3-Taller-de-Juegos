@@ -170,8 +170,12 @@ func _init() -> void:
 	var en2 := preload("res://scenes/enemy.tscn").instantiate()
 	en2.tipo = "cultista"
 	_scene.add_child(en2)
-	en2.global_position = _player.global_position + Vector2(60, 40)
-	await _wait_frames(3)
+	# Colocar a ambos en piso abierto y esperar que reposen: si el loop arranca
+	# con la pareja en plena caída, el knockback los separa en X y aterrizan en
+	# niveles distintos (plataforma vs suelo) → el golpe deja de conectar.
+	_player.global_position = Vector2(-520, 780)
+	en2.global_position = _player.global_position + Vector2(60, 0)
+	await _wait_frames(40)
 	_player.facing = 1
 	_player.velocity = Vector2.ZERO
 	await physics_frame
@@ -188,6 +192,7 @@ func _init() -> void:
 		await physics_frame
 		Input.action_release("attack")
 		await _esperar_recuperacion("light")
+	await _wait_frames(50)  # la muerte tiene tween (fade 0.3s + intervalo) antes del queue_free
 	_check(not is_instance_valid(en2), "Enemigos: muere al recibir daño")
 	_check(_player.energia > energia_antes, "Enemigos: matar recarga energía (%.1f -> %.1f)" % [energia_antes, _player.energia])
 	_limpiar_enemigos()
@@ -231,6 +236,20 @@ func _init() -> void:
 	_player.take_damage(50)
 	_console._ejecutar(PackedStringArray(["mv"]))
 	_check(_player.health == 100, "Consola 'mv' restaura la vida")
+
+	# --- Consola: dummy de entrenamiento ---
+	_console._ejecutar(PackedStringArray(["dummy"]))
+	await _wait_frames(3)
+	var dummys := get_nodes_in_group("dummy_entrenamiento")
+	_check(dummys.size() > 0, "Consola 'dummy' crea el muñeco de entrenamiento")
+	if dummys.size() > 0:
+		var maniqui: Node2D = dummys[0]
+		maniqui.registrar_golpe(10)
+		_check(maniqui.golpes == 1 and maniqui.dano_total == 10, "Dummy: registra golpe y daño")
+		maniqui.registrar_golpe(999)
+		_check(is_instance_valid(maniqui), "Dummy: invencible, no muere")
+		maniqui.queue_free()
+		await physics_frame
 
 	# --- Consola: toggle alterna la visibilidad (sin pausa en este diseño) ---
 	_console.toggle()
@@ -360,33 +379,23 @@ func _wait_frames(n: int) -> void:
 
 
 func _esperar_recuperacion(ataque: String) -> void:
-	var frames := 32
+	var frames := 20
 	match ataque:
 		"light":
-			frames = 32
+			frames = 20
 		"heavy":
-			frames = 50
+			frames = 30
 		"special":
-			frames = 74
+			frames = 44
 		"combo":
-			frames = 92
+			frames = 52
 	await _wait_frames(frames)
 
 
 func _funcion_tronco() -> void:
-	# Plataforma de test: suelo plano a una altura fija para el player
-	var plataforma := StaticBody2D.new()
-	var pcol := CollisionShape2D.new()
-	var pshape := RectangleShape2D.new()
-	pshape.size = Vector2(1200, 40)
-	pcol.shape = pshape
-	plataforma.add_child(pcol)
-	_scene.add_child(plataforma)
-	plataforma.global_position = Vector2(600, 1000)
-
-	# Tronco fresco sobre la plataforma, a la derecha del player
+	# Piso real del nivel (Level/Ground, tope y=1003) lejos de rompibles y triggers
 	_console._ejecutar(PackedStringArray(["form", "humano"]))
-	_player.global_position = Vector2(480, 900)
+	_player.global_position = Vector2(-350, 900)
 	_player.velocity = Vector2.ZERO
 	await _wait_frames(60)
 	_check(_player.is_on_floor(), "Interact: el player reposa en el suelo")
@@ -422,7 +431,6 @@ func _funcion_tronco() -> void:
 
 	_console._ejecutar(PackedStringArray(["form", "humano"]))
 	await process_frame
-	plataforma.queue_free()
 
 
 func _progresion() -> Node:

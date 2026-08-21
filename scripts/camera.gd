@@ -9,11 +9,14 @@ var _fija_pos := Vector2.ZERO
 var _zoom_objetivo := Vector2.ONE
 var _punch_scale := 1.0
 var _tilt := 0.0
+var _lookahead_actual := 0.0
 
 @export var suavizado := 6.0
 @export var desplazamiento := Vector2(0, -210)
 @export var suavizado_zoom := 5.0
-@export var lookahead := 0.006   # anticipación de cámara según velocidad horizontal
+@export var lookahead := 0.28    # anticipación de cámara según velocidad horizontal
+@export var lookahead_umbral := 80.0    # velocidad (px/s) recién pasada la cual empieza el adelanto
+@export var suavizado_lookahead := 3.0  # qué tan suave entra y sale el adelanto
 
 
 func _ready() -> void:
@@ -54,8 +57,11 @@ func _process(delta: float) -> void:
 	if player == null:
 		return
 	var destino := (player as Node2D).global_position + desplazamiento
-	# Lookahead: anticipa hacia dónde se mueve el player (solo horizontal, clampado).
-	destino.x += clampf((player as Node2D).velocity.x * lookahead, -120.0, 120.0)
+	# Lookahead progresivo: bajo el umbral no hay adelanto; arriba entra y sale suave.
+	var vel_x: float = (player as Node2D).velocity.x
+	var objetivo_la := clampf(maxf(absf(vel_x) - lookahead_umbral, 0.0) * lookahead * signf(vel_x), -160.0, 160.0)
+	_lookahead_actual = lerpf(_lookahead_actual, objetivo_la, minf(suavizado_lookahead * delta, 1.0))
+	destino.x += _lookahead_actual
 	global_position = global_position.lerp(destino, minf(suavizado * delta, 1.0))
 
 

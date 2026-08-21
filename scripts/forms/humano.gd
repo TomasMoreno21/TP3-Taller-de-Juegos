@@ -4,7 +4,7 @@ extends Forma
 
 func _init() -> void:
 	form_name = "Humano"
-	speed = 400.0
+	speed = 520.0
 	jump_velocity = -465.0
 	gravity_scale = 1.0
 	max_health = 100
@@ -24,8 +24,8 @@ func _init() -> void:
 	hit_rotation = 7.0
 	landing_squash = 0.12
 	camera_zoom = Vector2.ONE
-	accel = 1800.0
-	friction = 1500.0
+	accel = 2600.0
+	friction = 2200.0
 	combos = [
 		{"nombre": "Remate", "secuencia": ["light", "heavy"], "dano": 42, "knockback": 260.0, "tamano": Vector2(162, 114), "rango": 126.0},
 	]

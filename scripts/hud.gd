@@ -23,8 +23,10 @@ var _combo_base_pos: Vector2
 @onready var aviso: Label = $Aviso
 @onready var racha_box: VBoxContainer = $Racha
 @onready var racha_valor: Label = $Racha/Valor
+@onready var flash_dano: ColorRect = $FlashDano
 
 var _esp_cap_style: StyleBoxFlat
+var _flash_tween: Tween
 
 
 func _ready() -> void:
@@ -66,6 +68,7 @@ func _connectar_player() -> void:
 	_player.forma_selectada_cambiada.connect(_on_forma_selectada)
 	_player.attack_performed.connect(_on_attack_performed)
 	_player.health_changed.connect(_on_health_changed)
+	_player.dano_recibido.connect(_on_dano_recibido)
 	_player.energia_changed.connect(_on_energia_changed)
 	_player.transformacion_agotada.connect(_on_agotada)
 	_player.racha_changed.connect(_on_racha_changed)
@@ -212,6 +215,14 @@ func _texto_ataque(_attack_type: String, _step: Variant) -> String:
 func _on_health_changed(hp: int, max_hp: int) -> void:
 	hp_bar.max_value = max_hp
 	hp_bar.value = hp
+
+
+func _on_dano_recibido(_cantidad: int) -> void:
+	if _flash_tween != null and _flash_tween.is_valid():
+		_flash_tween.kill()
+	flash_dano.color.a = 0.3
+	_flash_tween = create_tween()
+	_flash_tween.tween_property(flash_dano, "color:a", 0.0, 0.35)
 
 
 func _on_energia_changed(energia: float) -> void:

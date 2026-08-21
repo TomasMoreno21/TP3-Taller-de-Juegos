@@ -12,6 +12,7 @@
 [ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="9_cam"]
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="9_dialog"]
 [ext_resource type="PackedScene" uid="uid://c1w7l3sant0r4" path="res://scenes/santuario.tscn" id="13_sant"]
+[ext_resource type="PackedScene" path="res://scenes/console.tscn" id="15_cons"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(3000, 57)
@@ -103,6 +104,8 @@ modo = "Automatico"
 visible = false
 
 [node name="LevelUp" parent="." unique_id=1298784535 instance=ExtResource("8_levelup")]
+
+[node name="Consola" parent="." instance=ExtResource("15_cons")]
 
 [node name="Rompible" parent="." unique_id=1731684402 instance=ExtResource("7_romp")]
 position = Vector2(359, 947)

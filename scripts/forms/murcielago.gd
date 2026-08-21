@@ -4,7 +4,7 @@ extends Forma
 
 func _init() -> void:
 	form_name = "Murciélago"
-	speed = 215.0
+	speed = 330.0
 	jump_velocity = -560.0
 	gravity_scale = 0.8
 	max_health = 100
@@ -21,8 +21,9 @@ func _init() -> void:
 	collider_size = Vector2(175, 300)
 	transform_duration = 9.0
 	turn_tilt = 9.0
-	accel = 1600.0
-	friction = 1300.0
+	lean_angulo = 2.0
+	accel = 2400.0
+	friction = 2000.0
 	camera_zoom = Vector2(0.95, 0.95)
 	landing_squash = 0.1
 	combos = [

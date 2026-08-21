@@ -1,0 +1,76 @@
+[gd_scene format=3 load_steps=8]
+
+[ext_resource type="Script" path="res://scripts/derrota.gd" id="1_derr"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_panel"]
+bg_color = Color(0.16, 0.09, 0.09, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.8, 0.3, 0.25, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_btn"]
+bg_color = Color(0.35, 0.2, 0.2, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_btn_hover"]
+bg_color = Color(0.5, 0.3, 0.28, 1)
+
+[node name="Derrota" type="CanvasLayer"]
+layer = 95
+script = ExtResource("1_derr")
+
+[node name="UIRoot" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="UIRoot"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Center" type="CenterContainer" parent="UIRoot"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="UIRoot/Center"]
+custom_minimum_size = Vector2(420, 0)
+theme_override_constants/separation = 18
+
+[node name="Titulo" type="Label" parent="UIRoot/Center/VBox"]
+theme_override_font_sizes/font_size = 44
+text = "HAS CAÍDO"
+horizontal_alignment = 1
+
+[node name="Subtitulo" type="Label" parent="UIRoot/Center/VBox"]
+theme_override_font_sizes/font_size = 22
+text = "Los sectarios celebran... por ahora."
+horizontal_alignment = 1
+
+[node name="Panel" type="PanelContainer" parent="UIRoot/Center/VBox"]
+theme_override_styles/panel = SubResource("StyleBox_panel")
+
+[node name="Opciones" type="VBoxContainer" parent="UIRoot/Center/VBox/Panel"]
+custom_minimum_size = Vector2(400, 0)
+theme_override_constants/separation = 10
+
+[node name="BotonReintentar" type="Button" parent="UIRoot/Center/VBox/Panel/Opciones"]
+theme_override_styles/normal = SubResource("StyleBox_btn")
+theme_override_styles/hover = SubResource("StyleBox_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBox_btn_hover")
+text = "Reintentar"
+
+[node name="BotonMenu" type="Button" parent="UIRoot/Center/VBox/Panel/Opciones"]
+theme_override_styles/normal = SubResource("StyleBox_btn")
+theme_override_styles/hover = SubResource("StyleBox_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBox_btn_hover")
+text = "Volver al menú"
