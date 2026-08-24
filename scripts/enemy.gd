@@ -42,8 +42,8 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.speed = 75.0
 			d.stop_distance = 30.0
 			d.attack_damage = 8
-			d.attack_range = 62.0
-			d.attack_cooldown = 1.6
+			d.attack_range = 110.0
+			d.attack_cooldown = 1.2
 			d.color = Color(0.55, 0.38, 0.3)
 		"arquero":
 			d.tipo_nombre = "Arquero"
@@ -186,16 +186,20 @@ func _physics_process(delta: float) -> void:
 			_disparar(player)
 			_attack_timer = enemy_data.attack_cooldown
 		velocity.x = 0.0 if dist <= enemy_data.shoot_range else _dir * enemy_data.speed
-	elif dist > enemy_data.attack_range:
-		velocity.x = _dir * enemy_data.speed
 	else:
-		velocity.x = 0.0
-		if _attack_timer <= 0.0:
-			_ataque_melee(player)
-			_attack_timer = enemy_data.attack_cooldown
+		var dist_h := absf(player.global_position.x - global_position.x)
+		if dist_h > enemy_data.attack_range:
+			velocity.x = _dir * enemy_data.speed
+		else:
+			velocity.x = 0.0
+			if _attack_timer <= 0.0:
+				_ataque_melee(player)
+				_attack_timer = enemy_data.attack_cooldown
 
 	_update_animacion()
 	move_and_slide()
+	if is_on_floor() and velocity.y > 0:
+		velocity.y = 0
 
 
 func _update_animacion() -> void:
@@ -246,9 +250,28 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
 	if knockback > 0.0:
 		var resist: float = enemy_data.knockback_resist if enemy_data != null else 1.0
 		velocity.x = dir * knockback * (1.0 - resist)
-		_stun_timer = enemy_data.stun_duracion if enemy_data != null else 0.15
+		_stun_timer = 0.22
 	if visual != null:
 		visual.modulate = Color(1, 0.6, 0.6)
+		var base_scale := visual.scale
+		var sx := absf(base_scale.x)
+		var sy := base_scale.y
+		var tw2 := create_tween()
+		tw2.tween_property(visual, "scale", Vector2(sx * 1.15 * _dir, sy * 0.85), 0.07)
+		tw2.tween_property(visual, "scale", Vector2(sx * _dir, sy), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		if DisplayServer.get_name() != "headless":
+			var lbl := Label.new()
+			lbl.text = str(cantidad)
+			lbl.add_theme_font_size_override("font_size", 22)
+			lbl.add_theme_color_override("font_color", Color(1, 0.85, 0.3))
+			lbl.z_index = 10
+			var scn: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+			scn.add_child(lbl)
+			lbl.global_position = global_position + Vector2(randf_range(-12, 12), -50)
+			var tw3 := lbl.create_tween()
+			tw3.tween_property(lbl, "global_position:y", lbl.global_position.y - 32, 0.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+			tw3.parallel().tween_property(lbl, "modulate:a", 0.0, 0.6)
+			tw3.tween_callback(lbl.queue_free)
 		await get_tree().create_timer(0.08).timeout
 		if is_instance_valid(visual):
 			visual.modulate = Color(1, 1, 1)

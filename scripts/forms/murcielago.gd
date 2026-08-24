@@ -4,17 +4,17 @@ extends Forma
 
 func _init() -> void:
 	form_name = "Murciélago"
-	speed = 330.0
+	speed = 380.0
 	jump_velocity = -560.0
 	gravity_scale = 0.8
 	max_health = 100
 	attack_damage = 8
-	attack_range = 66.0
-	attack_size = Vector2(78, 60)
+	attack_range = 90.0
+	attack_size = Vector2(110, 70)
 	light_combo_steps = 3
 	heavy_damage = 14
-	heavy_range = 90.0
-	heavy_size = Vector2(114, 78)
+	heavy_range = 110.0
+	heavy_size = Vector2(130, 85)
 	heavy_combo_steps = 2
 	special_damage = 15
 	color = Color(0.52, 0.4, 0.62)

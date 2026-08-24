@@ -15,7 +15,8 @@ var _combo_base_pos: Vector2
 
 @onready var info: RichTextLabel = $Margin/Info
 @onready var combo_label: RichTextLabel = $ComboLabel
-@onready var hp_bar: ProgressBar = $Bars/Rows/HpRow/HpBar
+@onready var hp_bar: ProgressBar = $Bars/Rows/HpRow/HpBarStack/HpBar
+@onready var hp_bar_delayed: ProgressBar = $Bars/Rows/HpRow/HpBarStack/HpBarDelayed
 @onready var esp_bar: ProgressBar = $Bars/Rows/EspRow/EspBar
 @onready var esp_cap: PanelContainer = $Bars/Rows/EspRow/EspCap
 @onready var prog_label: Label = $ProgLabel
@@ -27,7 +28,19 @@ var _combo_base_pos: Vector2
 
 var _esp_cap_style: StyleBoxFlat
 var _flash_tween: Tween
+var _energia_pulse: Tween
+var _energia_aviso_dado := false
+var _hp_delayed_tween: Tween
 
+
+var _selector_refresh := 0.0
+
+func _process(delta: float) -> void:
+	if _player != null and not _player._cooldown_formas.is_empty():
+		_selector_refresh -= delta
+		if _selector_refresh <= 0.0:
+			_selector_refresh = 0.15
+			_actualizar_selector()
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -56,6 +69,11 @@ func _ready() -> void:
 	prog.nivel_subio.connect(_on_nivel_subio)
 	prog.combo_desbloqueado.connect(_on_combo)
 
+	hp_bar.max_value = 100
+	if hp_bar_delayed != null:
+		hp_bar_delayed.max_value = 100
+		hp_bar_delayed.value = 100
+	hp_bar.value = 100
 	_prog_refresh()
 	_connectar_player.call_deferred()
 
@@ -139,7 +157,11 @@ func _actualizar_selector() -> void:
 		if not prog.forma_desbloqueada(i):
 			continue
 		var nombre := str(_player.forms[i].form_name).to_upper()
-		if i == _player.current_form and i == _player.forma_seleccionada:
+		if _player.has_method("_forma_en_cooldown") and _player._forma_en_cooldown(i):
+			var t: float = _player._cooldown_formas.get(i, 0.0)
+			nombre += " (%ds)" % int(ceil(t))
+			partes.append(nombre)
+		elif i == _player.current_form and i == _player.forma_seleccionada:
 			partes.append("◈ " + nombre)
 		elif i == _player.forma_seleccionada:
 			partes.append("[" + nombre + "]")
@@ -215,6 +237,18 @@ func _texto_ataque(_attack_type: String, _step: Variant) -> String:
 func _on_health_changed(hp: int, max_hp: int) -> void:
 	hp_bar.max_value = max_hp
 	hp_bar.value = hp
+	if hp_bar_delayed != null:
+		hp_bar_delayed.max_value = max_hp
+		if hp < hp_bar_delayed.value:
+			if _hp_delayed_tween != null and _hp_delayed_tween.is_valid():
+				_hp_delayed_tween.kill()
+			_hp_delayed_tween = create_tween()
+			_hp_delayed_tween.tween_interval(0.35)
+			_hp_delayed_tween.tween_property(hp_bar_delayed, "value", hp, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		else:
+			if _hp_delayed_tween != null and _hp_delayed_tween.is_valid():
+				_hp_delayed_tween.kill()
+			hp_bar_delayed.value = hp
 
 
 func _on_dano_recibido(_cantidad: int) -> void:
@@ -228,6 +262,21 @@ func _on_dano_recibido(_cantidad: int) -> void:
 func _on_energia_changed(energia: float) -> void:
 	esp_bar.max_value = 100.0
 	esp_bar.value = energia
+	if energia < 25.0 and _player != null and _player.current_form != 0:
+		if not _energia_aviso_dado:
+			_aviso("¡Energía baja!")
+			_energia_aviso_dado = true
+		if _energia_pulse == null or not _energia_pulse.is_valid():
+			_energia_pulse = esp_bar.create_tween()
+			_energia_pulse.set_loops()
+			_energia_pulse.tween_property(esp_bar, "modulate:a", 0.45, 0.35)
+			_energia_pulse.tween_property(esp_bar, "modulate:a", 1.0, 0.35)
+	else:
+		_energia_aviso_dado = false
+		if _energia_pulse != null and _energia_pulse.is_valid():
+			_energia_pulse.kill()
+			_energia_pulse = null
+		esp_bar.modulate.a = 1.0
 
 
 func _on_agotada() -> void:

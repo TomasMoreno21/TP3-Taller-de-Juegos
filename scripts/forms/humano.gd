@@ -4,17 +4,17 @@ extends Forma
 
 func _init() -> void:
 	form_name = "Humano"
-	speed = 520.0
+	speed = 600.0
 	jump_velocity = -465.0
 	gravity_scale = 1.0
 	max_health = 100
 	attack_damage = 10
-	attack_range = 78.0
-	attack_size = Vector2(90, 72)
+	attack_range = 100.0
+	attack_size = Vector2(110, 80)
 	light_combo_steps = 3
 	heavy_damage = 18
-	heavy_range = 102.0
-	heavy_size = Vector2(126, 96)
+	heavy_range = 120.0
+	heavy_size = Vector2(140, 100)
 	heavy_combo_steps = 2
 	special_damage = 22
 	color = Color(0.42, 0.62, 0.36)

@@ -4,18 +4,18 @@ extends Forma
 
 func _init() -> void:
 	form_name = "Lobo"
-	speed = 560.0
+	speed = 650.0
 	jump_velocity = -500.0
 	gravity_scale = 0.9
 	jumps = 2
 	max_health = 100
 	attack_damage = 5
-	attack_range = 60.0
-	attack_size = Vector2(126, 78)
+	attack_range = 90.0
+	attack_size = Vector2(140, 85)
 	light_combo_steps = 3
 	heavy_damage = 8
-	heavy_range = 78.0
-	heavy_size = Vector2(138, 90)
+	heavy_range = 105.0
+	heavy_size = Vector2(150, 95)
 	heavy_combo_steps = 2
 	special_damage = 12
 	color = Color(0.58, 0.64, 0.75)
@@ -24,6 +24,7 @@ func _init() -> void:
 	transform_duration = 8.0
 	turn_tilt = 9.0
 	lean_angulo = 4.5
+	hit_zoom = 1.015
 	accel = 4200.0
 	friction = 3600.0
 	camera_zoom = Vector2(0.94, 0.94)

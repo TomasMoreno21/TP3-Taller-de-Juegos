@@ -12,11 +12,15 @@ var _tilt := 0.0
 var _lookahead_actual := 0.0
 
 @export var suavizado := 6.0
-@export var desplazamiento := Vector2(0, -210)
+@export var desplazamiento := Vector2(0, -310)
 @export var suavizado_zoom := 5.0
 @export var lookahead := 0.28    # anticipación de cámara según velocidad horizontal
 @export var lookahead_umbral := 80.0    # velocidad (px/s) recién pasada la cual empieza el adelanto
 @export var suavizado_lookahead := 3.0  # qué tan suave entra y sale el adelanto
+@export var deadzone_vertical := 150.0  # salto dentro de este rango casi no mueve la cámara al subir
+@export var seguimiento_vertical_leve := 0.15  # cuánto sí se mueve dentro de la deadzone al subir
+@export var suavizado_subida := 1.8  # al subir: lento
+@export var suavizado_bajada := 7.0  # al bajar: brusco y rápido
 
 
 func _ready() -> void:
@@ -49,6 +53,8 @@ func _process(delta: float) -> void:
 			_tilt = 0.0
 			rotation = 0.0
 
+
+func _physics_process(delta: float) -> void:
 	if _modo == "fija":
 		global_position = global_position.lerp(_fija_pos, minf(suavizado * delta, 1.0))
 		return
@@ -62,7 +68,17 @@ func _process(delta: float) -> void:
 	var objetivo_la := clampf(maxf(absf(vel_x) - lookahead_umbral, 0.0) * lookahead * signf(vel_x), -160.0, 160.0)
 	_lookahead_actual = lerpf(_lookahead_actual, objetivo_la, minf(suavizado_lookahead * delta, 1.0))
 	destino.x += _lookahead_actual
-	global_position = global_position.lerp(destino, minf(suavizado * delta, 1.0))
+	# Vertical asimétrico: subir lento (deadzone + suavizado bajo), bajar brusco.
+	var dy = destino.y - global_position.y
+	var suavizado_y: float
+	if dy < 0:
+		if absf(dy) < deadzone_vertical:
+			destino.y = global_position.y + dy * seguimiento_vertical_leve
+		suavizado_y = suavizado_subida
+	else:
+		suavizado_y = suavizado_bajada
+	global_position.x = lerpf(global_position.x, destino.x, minf(suavizado * delta, 1.0))
+	global_position.y = lerpf(global_position.y, destino.y, minf(suavizado_y * delta, 1.0))
 
 
 func fijar_zoom(objetivo: Vector2) -> void:

@@ -28,6 +28,13 @@ corner_radius_top_right = 16
 corner_radius_bottom_right = 16
 corner_radius_bottom_left = 16
 
+[sub_resource type="StyleBoxFlat" id="fill_hp_delayed"]
+bg_color = Color(0.55, 0.18, 0.18, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
 [sub_resource type="StyleBoxFlat" id="fill_esp"]
 bg_color = Color(0.3, 0.55, 0.9, 1)
 corner_radius_top_left = 16
@@ -87,11 +94,29 @@ layout_mode = 2
 custom_minimum_size = Vector2(42, 22)
 theme_override_styles/panel = SubResource("cap_hp")
 
-[node name="HpBar" type="ProgressBar" parent="Bars/Rows/HpRow"]
-custom_minimum_size = Vector2(42, 0)
+[node name="HpBarStack" type="Control" parent="Bars/Rows/HpRow"]
+custom_minimum_size = Vector2(42, 18)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+
+[node name="HpBarDelayed" type="ProgressBar" parent="Bars/Rows/HpRow/HpBarStack"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/background = SubResource("bg_bar")
+theme_override_styles/fill = SubResource("fill_hp_delayed")
+fill_mode = 3
+show_percentage = false
+
+[node name="HpBar" type="ProgressBar" parent="Bars/Rows/HpRow/HpBarStack"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_styles/background = SubResource("bg_bar")
 theme_override_styles/fill = SubResource("fill_hp")
 fill_mode = 3

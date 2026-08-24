@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="9_dialog"]
 [ext_resource type="PackedScene" uid="uid://c1w7l3sant0r4" path="res://scenes/santuario.tscn" id="13_sant"]
 [ext_resource type="PackedScene" path="res://scenes/console.tscn" id="15_cons"]
+[ext_resource type="PackedScene" uid="uid://ssvmlcpooygw" path="res://scenes/fondo_bosque.tscn" id="16_fondo"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(3000, 57)
@@ -27,10 +28,12 @@ metadata/_custom_type_script = "uid://cui53h2x6gwlf"
 [node name="Main" type="Node2D" unique_id=1244689183]
 
 [node name="Player" parent="." unique_id=780925585 instance=ExtResource("1_player")]
-position = Vector2(-443, 787)
+position = Vector2(-323, 869)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=805542455]
 script = ExtResource("9_cam")
+
+[node name="FondoBosque" parent="." unique_id=2133710227 instance=ExtResource("16_fondo")]
 
 [node name="Level" type="Node2D" parent="." unique_id=908805619]
 
@@ -105,7 +108,7 @@ visible = false
 
 [node name="LevelUp" parent="." unique_id=1298784535 instance=ExtResource("8_levelup")]
 
-[node name="Consola" parent="." instance=ExtResource("15_cons")]
+[node name="Consola" parent="." unique_id=1037125790 instance=ExtResource("15_cons")]
 
 [node name="Rompible" parent="." unique_id=1731684402 instance=ExtResource("7_romp")]
 position = Vector2(359, 947)
@@ -148,19 +151,19 @@ scale = Vector2(1.7472223, 1)
 polygon = PackedVector2Array(-360, -250, 360, -250, 360.00003, -4, 360, 250, -360, 250)
 
 [node name="Enemy3" parent="Encounter2" unique_id=1404226063 instance=ExtResource("5_enemy")]
-position = Vector2(151, 224)
+position = Vector2(185, 101)
 spawn_telegrafiado = true
 ritual_duracion = 0.9
 
 [node name="Enemy2" parent="Encounter2" unique_id=1850236008 instance=ExtResource("5_enemy")]
-position = Vector2(592, 214)
+position = Vector2(598, 103)
 tipo = "arquero"
 enemy_data = SubResource("Resource_o6xl0")
 spawn_telegrafiado = true
 ritual_duracion = 1.2
 
 [node name="Enemy" parent="Encounter2" unique_id=87872202 instance=ExtResource("5_enemy")]
-position = Vector2(-279, 221)
+position = Vector2(-279, 100)
 spawn_telegrafiado = true
 ritual_duracion = 0.3
 

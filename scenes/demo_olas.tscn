@@ -1,8 +1,8 @@
-[gd_scene format=3 uid="uid://bfv0uxeq5fywr"]
+[gd_scene format=3 uid="uid://b6p7ab787k55f"]
 
 [ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="1_player"]
-[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="2_hud"]
-[ext_resource type="PackedScene" path="res://scenes/encounter.tscn" id="3_enc"]
+[ext_resource type="PackedScene" uid="uid://dkyk8avpptlls" path="res://scenes/hud.tscn" id="2_hud"]
+[ext_resource type="PackedScene" uid="uid://x0o25yeqfgsm" path="res://scenes/encounter.tscn" id="3_enc"]
 [ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="4_cam"]
 [ext_resource type="PackedScene" uid="uid://bxsawwmlxb7mt" path="res://scenes/enemy.tscn" id="5_hcws0"]
 [ext_resource type="Script" uid="uid://cui53h2x6gwlf" path="res://scripts/enemigos/enemigo.gd" id="6_36fxm"]

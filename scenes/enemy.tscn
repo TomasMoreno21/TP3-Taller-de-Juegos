@@ -1,11 +1,10 @@
 [gd_scene format=3 uid="uid://bxsawwmlxb7mt"]
 
 [ext_resource type="Script" uid="uid://nwmht8huha1i" path="res://scripts/enemy.gd" id="1_enemy"]
-[ext_resource type="SpriteFrames" path="res://resources/enemigo1_frames.tres" id="2_frames1"]
-[ext_resource type="SpriteFrames" path="res://resources/enemigo2_frames.tres" id="3_frames2"]
+[ext_resource type="SpriteFrames" uid="uid://bkfv821bksv2h" path="res://resources/enemigo1_frames.tres" id="2_frames1"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(27, 60)
+size = Vector2(175, 319)
 
 [node name="Enemy" type="CharacterBody2D" unique_id=87872202]
 collision_layer = 2
@@ -13,18 +12,20 @@ collision_mask = 3
 script = ExtResource("1_enemy")
 
 [node name="Visual" type="Node2D" parent="." unique_id=1260952583]
+position = Vector2(0, -111.5)
+scale = Vector2(3.64583, 5.89583)
 
-[node name="Poly" type="Polygon2D" parent="Visual"]
+[node name="Poly" type="Polygon2D" parent="Visual" unique_id=902255092]
 color = Color(0.55, 0.38, 0.3, 1)
 polygon = PackedVector2Array(-14, 30, -8, -26, 8, -26, 14, 30)
 
-[node name="Animated" type="AnimatedSprite2D" parent="Visual"]
+[node name="Animated" type="AnimatedSprite2D" parent="Visual" unique_id=150926757]
 visible = false
-position = Vector2(0, -42)
-scale = Vector2(3, 3)
+position = Vector2(0, -1.27)
 sprite_frames = ExtResource("2_frames1")
 animation = &"idle"
 autoplay = "idle"
 
 [node name="Collision" type="CollisionShape2D" parent="." unique_id=446829624]
+position = Vector2(0, -111.5)
 shape = SubResource("RectangleShape2D_body")

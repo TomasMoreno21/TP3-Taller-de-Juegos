@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://ssvmlcpooygw"]
+
+[ext_resource type="Texture2D" uid="uid://bnhhmxysiw0q0" path="res://Sprites/Fondos/Bosque/1par. bosque.png" id="1_tex1"]
+[ext_resource type="Texture2D" uid="uid://6qq0ocumeym0" path="res://Sprites/Fondos/Bosque/2par. bosque.png" id="2_tex2"]
+[ext_resource type="Texture2D" uid="uid://ix6iwirxtxtd" path="res://Sprites/Fondos/Bosque/3par. bosque.png" id="3_tex3"]
+[ext_resource type="Texture2D" uid="uid://5hjhtydfk54s" path="res://Sprites/Fondos/Bosque/4par. bosque.png" id="4_tex4"]
+[ext_resource type="Texture2D" uid="uid://dinfspdev8p01" path="res://Sprites/Fondos/Bosque/5par. bosque.png" id="5_tex5"]
+
+[node name="FondoBosque" type="ParallaxBackground" unique_id=427149208]
+layer = -10
+
+[node name="Capa1" type="ParallaxLayer" parent="." unique_id=1660360400]
+motion_scale = Vector2(0.02, 1)
+motion_mirroring = Vector2(2162, 0)
+
+[node name="Sprite" type="Sprite2D" parent="Capa1" unique_id=780649687]
+position = Vector2(960, 540)
+scale = Vector2(0.27, 0.27)
+texture = ExtResource("1_tex1")
+
+[node name="Capa2" type="ParallaxLayer" parent="." unique_id=1611309703]
+motion_scale = Vector2(0.12, 1)
+motion_mirroring = Vector2(6165, 0)
+
+[node name="Sprite" type="Sprite2D" parent="Capa2" unique_id=447901622]
+position = Vector2(960, 540)
+scale = Vector2(0.68, 0.68)
+texture = ExtResource("2_tex2")
+
+[node name="Capa3" type="ParallaxLayer" parent="." unique_id=1361476132]
+motion_scale = Vector2(0.22, 1)
+motion_mirroring = Vector2(2460, 0)
+
+[node name="Sprite" type="Sprite2D" parent="Capa3" unique_id=32818560]
+position = Vector2(960, 540)
+scale = Vector2(0.32, 0.32)
+texture = ExtResource("3_tex3")
+
+[node name="Capa4" type="ParallaxLayer" parent="." unique_id=1959794254]
+motion_scale = Vector2(0.4, 1)
+motion_mirroring = Vector2(1995, 0)
+
+[node name="Sprite" type="Sprite2D" parent="Capa4" unique_id=1840883901]
+position = Vector2(960, 540)
+scale = Vector2(0.23, 0.23)
+texture = ExtResource("4_tex4")
+
+[node name="5Par_Bosque" type="Sprite2D" parent="Capa4" unique_id=1458377549]
+position = Vector2(1219, 1205)
+texture = ExtResource("5_tex5")

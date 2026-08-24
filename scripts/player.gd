@@ -26,7 +26,7 @@ const TINT_ALPHA := 0.45
 const COMBO_WINDOW := 1.1
 const LINEA_ESPESOR := 40.0
 const ENERGIA_MAX := 100.0
-const ENERGIA_DRAIN := 8.0
+const ENERGIA_DRAIN := 5.0
 const ENERGIA_REGEN := 5.0
 const ENERGIA_KILL := 20.0
 const ENERGIA_PICKUP := 30.0
@@ -55,6 +55,9 @@ var _current_attack_type := "light"
 var _gravity_override: float = -1.0
 var _coyote_time := 0.0
 var _jump_buffer := 0.0
+var _attack_air_buffer := 0.0
+var _attack_air_buffer_type := ""
+const ATTACK_AIR_BUFFER_TIME := 0.12
 var _light_step := 0
 var _heavy_step := 0
 var _seq: Array[String] = []
@@ -70,6 +73,9 @@ var _turn_prev_facing := 0
 var _base_sprite_scale := Vector2.ONE
 var _spawn_position := Vector2.ZERO
 var _derrota_activa := false
+var _invuln_timer := 0.0
+var _cooldown_formas: Dictionary = {}
+const COOLDOWN_AGOTADA := 3.0
 @export var limite_caida := 3000.0
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
@@ -77,6 +83,7 @@ var _derrota_activa := false
 @onready var attack_area: Area2D = $AttackArea
 @onready var attack_hitbox: CollisionShape2D = $AttackArea/AttackHitbox
 @onready var polvo: CPUParticles2D = $Polvo
+@onready var sombra: Polygon2D = $Sombra
 
 const PASOS_INTERVALO := 0.18
 var _pasos_timer := 0.0
@@ -107,6 +114,10 @@ func _physics_process(delta: float) -> void:
 
 	var data: Forma = forms[current_form]
 	data.tick(self, delta)
+	if _attack_air_buffer > 0.0:
+		_attack_air_buffer -= delta
+		if _attack_air_buffer <= 0.0:
+			_attack_air_buffer_type = ""
 
 	var dir := Input.get_axis("move_left", "move_right")
 	if data.is_dashing():
@@ -115,8 +126,12 @@ func _physics_process(delta: float) -> void:
 		if dir != 0.0:
 			facing = 1 if dir > 0 else -1
 			var boost := TURN_BOOST if dir * velocity.x < 0.0 else 1.0
+			if boost > 1.0 and absf(velocity.x) > 120.0 and is_on_floor():
+				_emitir_polvo(0.4)
 			velocity.x = move_toward(velocity.x, dir * data.speed, data.accel * boost * delta)
 		else:
+			if absf(velocity.x) > 250.0 and is_on_floor():
+				squash_y(0.12, 0.15)
 			velocity.x = move_toward(velocity.x, 0.0, data.friction * delta)
 
 	if Input.is_action_just_pressed("jump"):
@@ -125,7 +140,8 @@ func _physics_process(delta: float) -> void:
 		else:
 			_jump_buffer = JUMP_BUFFER_TIME
 	if Input.is_action_just_released("jump") and velocity.y < 0.0:
-		velocity.y *= JUMP_CUT_MULTIPLIER
+		var t := clampf(velocity.y / -320.0, 0.0, 1.0)
+		velocity.y *= lerpf(0.85, JUMP_CUT_MULTIPLIER, t)
 
 	var g: float = GRAVITY * data.gravity_scale
 	if _gravity_override >= 0.0:
@@ -137,9 +153,15 @@ func _physics_process(delta: float) -> void:
 		g *= APEX_CORE_MULT
 	elif absf(velocity.y) < APEX_THRESHOLD:
 		g *= APEX_GRAVITY_MULT
+	if velocity.y > 0:
+		g *= 1.18
 
+	if is_on_floor() and velocity.y > 0:
+		velocity.y = 0
 	velocity.y = min(velocity.y + g * delta, MAX_FALL_SPEED)
 	move_and_slide()
+	if is_on_floor() and velocity.y > 0:
+		velocity.y = 0
 	_sprint_zoom(data)
 
 	if is_on_floor():
@@ -149,6 +171,11 @@ func _physics_process(delta: float) -> void:
 			data.on_landing(self, _fall_impact)
 			_squash_landing(data, _fall_impact)
 			_emitir_polvo(0.5)
+			if _fall_impact > 600.0:
+				var cam := get_viewport().get_camera_2d()
+				if cam != null and cam.has_method("shake"):
+					var fuerza := clampf((_fall_impact - 600.0) / 400.0, 0.0, 1.0) * 3.0 + 2.0
+					cam.shake(fuerza, 0.12)
 		_fall_impact = 0.0
 		_was_on_floor = true
 	else:
@@ -158,6 +185,38 @@ func _physics_process(delta: float) -> void:
 			_fall_impact = velocity.y
 		_was_on_floor = false
 		_coyote_time = maxf(_coyote_time - delta, 0.0)
+	if is_on_floor() and _attack_air_buffer_type != "" and _attack_air_buffer > 0.0 and not _attacking:
+		var buffered := _attack_air_buffer_type
+		_attack_air_buffer_type = ""
+		_attack_air_buffer = 0.0
+		_procesar_ataque(buffered, data, false)
+	if sombra != null:
+		if is_on_floor():
+			sombra.visible = true
+			sombra.position = Vector2(0, 85)
+			sombra.scale = Vector2(1, 1)
+			sombra.modulate.a = 0.22
+		else:
+			var space_state := get_world_2d().direct_space_state
+			var params := PhysicsRayQueryParameters2D.create(global_position, global_position + Vector2(0, 600))
+			params.collision_mask = 1
+			var hit := space_state.intersect_ray(params)
+			if hit.is_empty():
+				sombra.visible = false
+			else:
+				var dist: float = hit.position.y - global_position.y
+				var t := clampf(1.0 - dist / 500.0, 0.25, 1.0)
+				sombra.visible = true
+				sombra.global_position = hit.position + Vector2(0, -1)
+				sombra.scale = Vector2(t, t)
+				sombra.modulate.a = t * 0.22
+
+	if _invuln_timer > 0.0:
+		_invuln_timer -= delta
+		visual.visible = fmod(_invuln_timer, 0.16) < 0.08
+		if _invuln_timer <= 0.0:
+			visual.visible = true
+			_invuln_timer = 0.0
 
 	if _jump_buffer > 0.0:
 		_jump_buffer -= delta
@@ -182,7 +241,6 @@ func _physics_process(delta: float) -> void:
 		health = 0
 	_handle_death()
 	_update_animacion()
-	_handle_vertical_tilt()
 
 
 func _handle_racha(delta: float) -> void:
@@ -221,10 +279,19 @@ func _handle_attack(delta: float) -> void:
 
 	if Input.is_action_just_pressed("attack"):
 		_procesar_ataque("light", data, airborne)
+		if airborne:
+			_attack_air_buffer_type = "light"
+			_attack_air_buffer = ATTACK_AIR_BUFFER_TIME
 	if Input.is_action_just_pressed("heavy"):
 		_procesar_ataque("heavy", data, airborne)
+		if airborne:
+			_attack_air_buffer_type = "heavy"
+			_attack_air_buffer = ATTACK_AIR_BUFFER_TIME
 	if Input.is_action_just_pressed("special"):
 		_procesar_ataque("special", data, airborne)
+		if airborne:
+			_attack_air_buffer_type = "special"
+			_attack_air_buffer = ATTACK_AIR_BUFFER_TIME
 
 
 func _buffer_durante_recuperacion() -> void:
@@ -344,6 +411,22 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	_attacking = true
 	var data: Forma = forms[current_form]
 	_attack_timer = _recovery_for(_current_attack_type) * data.mult_recuperacion
+	# Imán suave al enemigo más cercano si estás un poco lejos
+	var objetivo := _buscar_enemigo_homing(200.0)
+	if objetivo != null:
+		var dist := global_position.distance_to(objetivo.global_position)
+		var alcance_real := range + size.x * 0.5
+		var faltante := dist - alcance_real
+		var dir_enemigo := signf(objetivo.global_position.x - global_position.x)
+		if dir_enemigo != 0 and absf(faltante) < 80.0 and faltante > 8.0:
+			if dir_enemigo != facing:
+				facing = int(dir_enemigo)
+				_aplicar_facing()
+			var empuje := clampf(faltante * 0.55, 18.0, 65.0)
+			velocity.x += dir_enemigo * empuje
+		elif dir_enemigo != 0 and faltante <= 8.0 and dir_enemigo != facing:
+			facing = int(dir_enemigo)
+			_aplicar_facing()
 	if _current_attack_type == "light":
 		velocity.x += facing * data.lunge_light
 	elif _current_attack_type == "heavy" or _current_attack_type == "combo":
@@ -352,12 +435,12 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	_current_attack_damage = forms[current_form].attack_damage if damage < 0 else damage
 	_current_attack_knockback = knockback
 	var coll: RectangleShape2D = collision_shape.shape
-	var banda := Vector2(LINEA_ESPESOR, coll.size.y)
 	var shape: RectangleShape2D = attack_hitbox.shape
-	shape.size = banda
+	var total_range := range + size.x * 0.5
+	shape.size = Vector2(total_range, coll.size.y)
 	attack_hitbox.shape = shape
 	attack_hitbox.disabled = false
-	attack_area.position = Vector2(facing * (coll.size.x * 0.5 + LINEA_ESPESOR * 0.5), 0.0)
+	attack_area.position = Vector2(facing * total_range * 0.5, 0.0)
 	attack_area.monitoring = true
 
 
@@ -392,6 +475,12 @@ func _check_attack_hits() -> void:
 	if not _attacking or _hit_applied:
 		return
 	var bodies := attack_area.get_overlapping_bodies()
+	if bodies.size() > 1:
+		print("DEBUG _check: ", bodies.size(), " bodies, hitbox at ", attack_area.global_position, " size ", attack_hitbox.shape.size, " player at ", global_position, " facing ", facing)
+		for b in bodies:
+			print("  ", b.name, " at ", b.global_position, " has_reg ", b.has_method("registrar_golpe"), " has_take ", b.has_method("take_damage"))
+	if bodies.size() > 0 and OS.has_feature("editor"):
+		pass
 	for body in bodies:
 		if body == self:
 			continue
@@ -415,11 +504,22 @@ func _check_attack_hits() -> void:
 
 
 func _hitstop_por_tipo() -> void:
-	# Hit-stop (freeze frames) en golpes con "peso": heavy y combo.
-	if _current_attack_type != "heavy" and _current_attack_type != "combo":
+	var dur := 0.0
+	match _current_attack_type:
+		"light":
+			dur = 0.025
+		"heavy":
+			dur = 0.05
+		"special":
+			dur = 0.065
+		"combo":
+			dur = 0.075
+		_:
+			return
+	if dur <= 0.0:
 		return
 	Engine.time_scale = 0.0
-	await get_tree().create_timer(0.06, true, false, true).timeout
+	await get_tree().create_timer(dur, true, false, true).timeout
 	Engine.time_scale = 1.0
 
 
@@ -522,15 +622,23 @@ func _snap_turn(tilt: float) -> void:
 	tw.tween_property(visual, "rotation", 0.0, 0.18).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
-func _handle_vertical_tilt() -> void:
-	if current_form != Form.MURCIELAGO or is_on_floor():
+func _mostrar_fantasma_forma(idx: int) -> void:
+	if idx < 0 or idx >= forms.size() or DisplayServer.get_name() == "headless":
 		return
-	# Al planear (caída sostenida) se atenúa: solo una leve inclinación baja.
-	if velocity.y > 0.0:
-		visual.rotation = lerpf(visual.rotation, deg_to_rad(6.0), 0.1)
-		return
-	var incl := clampf(velocity.y / 300.0, -1.0, 0.0) * deg_to_rad(20.0)
-	visual.rotation = lerpf(visual.rotation, incl, 0.2)
+	var data: Forma = forms[idx]
+	var fantasma := AnimatedSprite2D.new()
+	fantasma.sprite_frames = visual.sprite_frames
+	fantasma.animation = visual.animation
+	fantasma.frame = visual.frame
+	fantasma.global_position = global_position
+	fantasma.scale = visual.scale
+	fantasma.modulate = Color(data.color.r, data.color.g, data.color.b, 0.35)
+	fantasma.z_index = -1
+	get_tree().current_scene.add_child(fantasma)
+	var tw := fantasma.create_tween()
+	tw.tween_property(fantasma, "modulate:a", 0.0, 0.32)
+	tw.parallel().tween_property(fantasma, "scale", fantasma.scale * 1.12, 0.32)
+	tw.tween_callback(fantasma.queue_free)
 
 
 func _punch_sprite(amount: float) -> void:
@@ -544,13 +652,19 @@ func _punch_sprite(amount: float) -> void:
 
 
 func _handle_energia(delta: float) -> void:
+	for k in _cooldown_formas.keys():
+		_cooldown_formas[k] -= delta
+		if _cooldown_formas[k] <= 0.0:
+			_cooldown_formas.erase(k)
 	if current_form == Form.HUMAN:
 		energia = minf(energia + ENERGIA_REGEN * delta, ENERGIA_MAX)
 	else:
 		energia -= ENERGIA_DRAIN * delta
 		if energia <= 0.0:
 			energia = 0.0
+			var agotada := current_form
 			_transformar(Form.HUMAN)
+			_cooldown_formas[agotada] = COOLDOWN_AGOTADA
 			transformacion_agotada.emit()
 	energia_changed.emit(energia)
 
@@ -566,7 +680,7 @@ func _retroceder_seleccion() -> bool:
 	var candidata := forma_seleccionada - 1
 	for _i in range(forms.size()):
 		candidata = posmod(candidata, forms.size())
-		if _progresion().forma_desbloqueada(candidata):
+		if _progresion().forma_desbloqueada(candidata) and not _forma_en_cooldown(candidata):
 			if candidata != forma_seleccionada:
 				forma_seleccionada = candidata
 				forma_selectada_cambiada.emit(candidata)
@@ -576,11 +690,14 @@ func _retroceder_seleccion() -> bool:
 	return false
 
 
+func _forma_en_cooldown(idx: int) -> bool:
+	return _cooldown_formas.has(idx) and _cooldown_formas[idx] > 0.0
+
 func _avanzar_seleccion() -> bool:
 	var candidata := forma_seleccionada + 1
 	for _i in range(forms.size()):
 		candidata = posmod(candidata, forms.size())
-		if _progresion().forma_desbloqueada(candidata):
+		if _progresion().forma_desbloqueada(candidata) and not _forma_en_cooldown(candidata):
 			if candidata != forma_seleccionada:
 				forma_seleccionada = candidata
 				forma_selectada_cambiada.emit(candidata)
@@ -603,7 +720,7 @@ func _handle_formas_cruceta() -> void:
 		objetivo = Form.HUMAN
 	if objetivo < 0:
 		return
-	if not _progresion().forma_desbloqueada(objetivo):
+	if not _progresion().forma_desbloqueada(objetivo) or _forma_en_cooldown(objetivo):
 		return
 	_transformar(objetivo)
 
@@ -612,9 +729,11 @@ func _handle_forma_ciclo() -> void:
 	# RT/E: cicla la preselección hacia adelante; LT: hacia atrás.
 	# RB/T es quien confirma y transforma en la preseleccionada.
 	if Input.is_action_just_pressed("forma_swap"):
-		_avanzar_seleccion()
+		if _avanzar_seleccion():
+			_mostrar_fantasma_forma(forma_seleccionada)
 	elif Input.is_action_just_pressed("forma_prev"):
-		_retroceder_seleccion()
+		if _retroceder_seleccion():
+			_mostrar_fantasma_forma(forma_seleccionada)
 
 
 func _handle_transform() -> void:
@@ -629,13 +748,13 @@ func _handle_transform() -> void:
 		# nada preseleccionado todavía con Q: T solo avanza a la próxima forma
 		# desbloqueada y transforma directo, no se queda sin hacer nada
 		_avanzar_seleccion()
-	if not _progresion().forma_desbloqueada(forma_seleccionada):
+	if not _progresion().forma_desbloqueada(forma_seleccionada) or _forma_en_cooldown(forma_seleccionada):
 		return
 	_transformar(forma_seleccionada)
 
 
 func _transformar(nueva: int) -> void:
-	if nueva == current_form:
+	if nueva == current_form or _forma_en_cooldown(nueva):
 		return
 	forms[current_form].reset_form_state()
 	current_form = nueva
@@ -726,13 +845,10 @@ func _update_animacion() -> void:
 	if visual.animation != "run":
 		visual.play("run")
 	var data: Forma = forms[current_form]
-	# Quieto = animación congelada (evita piernas ciclando lentas en el lugar).
 	if absf(velocity.x) < 10.0:
 		visual.speed_scale = 0.0
 	else:
 		visual.speed_scale = clampf(absf(velocity.x) / maxf(data.speed, 1.0), 0.4, 1.6)
-	# Lean leve: el cuerpo se inclina hacia adelante según velocidad (skew, no
-	# toca rotation para no pisar el snap de giro ni el tilt del Murciélago).
 	var lean := clampf(velocity.x / maxf(data.speed, 1.0), -1.0, 1.0) * deg_to_rad(data.lean_angulo)
 	visual.skew = lerpf(visual.skew, -lean, minf(8.0 * get_physics_process_delta_time(), 1.0))
 
@@ -749,12 +865,13 @@ func _handle_death() -> void:
 
 
 func take_damage(cantidad: int, _knockback: float = 0.0, _dir: int = 1) -> void:
-	if god_mode or blocking:
+	if god_mode or blocking or _invuln_timer > 0.0:
 		return
 	health -= cantidad
 	health_changed.emit(health, VIDA_MAX)
 	dano_recibido.emit(cantidad)
 	_shake_dano_recibido()
+	_invuln_timer = 0.8
 	_handle_death()
 
 
@@ -787,7 +904,15 @@ func on_enemy_killed() -> void:
 func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 700.0) -> void:
 	var proj: Area2D = preload("res://scenes/projectile.tscn").instantiate()
 	proj.global_position = global_position + Vector2(facing * 90.0, -60.0) + pos_referencia
-	proj.set("direction", Vector2(facing, 0.0))
+	var dir_inicial := Vector2(facing, 0.0)
+	if current_form == Form.MURCIELAGO:
+		var objetivo := _buscar_enemigo_homing(500.0)
+		if objetivo != null:
+			dir_inicial = (objetivo.global_position - proj.global_position).normalized()
+		proj.set("homing", true)
+		proj.set("homing_range", 500.0)
+		proj.set("homing_strength", 4.0)
+	proj.set("direction", dir_inicial)
 	proj.set("speed", alcance)
 	proj.set("damage", forms[current_form].special_damage)
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
@@ -795,6 +920,21 @@ func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 70
 	if current_form == Form.MURCIELAGO:
 		velocity.x -= facing * 120.0
 		squash_y(0.18, 0.25)
+
+
+func _buscar_enemigo_homing(rango: float) -> Node2D:
+	var mejor: Node2D = null
+	var mejor_dist := rango
+	for n in get_tree().get_nodes_in_group("enemy"):
+		if not is_instance_valid(n) or not n.has_method("take_damage"):
+			continue
+		if "health" in n and n.health <= 0:
+			continue
+		var d := global_position.distance_to(n.global_position)
+		if d < mejor_dist:
+			mejor_dist = d
+			mejor = n
+	return mejor
 
 
 func _try_interact() -> bool:
