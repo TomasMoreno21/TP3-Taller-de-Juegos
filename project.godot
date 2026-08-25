@@ -26,8 +26,6 @@ window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/size/mode=3
 window/stretch/mode="viewport"
-window/stretch/aspect="keep"
-window/vsync/vsync_mode=1
 
 [input]
 
@@ -152,8 +150,6 @@ forma_prev={
 [physics]
 
 3d/physics_engine="Jolt Physics"
-common/physics_ticks_per_second=60
-common/physics_jitter_fix=0.5
 
 [rendering]
 
