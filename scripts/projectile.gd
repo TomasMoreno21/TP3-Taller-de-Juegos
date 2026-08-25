@@ -14,7 +14,7 @@ var _life := 2.5
 
 
 func _ready() -> void:
-	collision_mask = 4 if enemy_shot else 3
+	collision_mask = 4 if enemy_shot else 2
 	body_entered.connect(_on_body_entered)
 	monitoring = true
 
@@ -26,9 +26,22 @@ func _physics_process(delta: float) -> void:
 			var dir_deseada := (target.global_position - global_position).normalized()
 			direction = direction.lerp(dir_deseada, homing_strength * delta).normalized()
 	global_position += direction * speed * delta
+	if _fuera_de_camara():
+		queue_free()
+		return
 	_life -= delta
 	if _life <= 0.0:
 		queue_free()
+
+
+func _fuera_de_camara() -> bool:
+	var cam := get_viewport().get_camera_2d()
+	if cam == null:
+		return false
+	var view_size: Vector2 = get_viewport_rect().size / cam.zoom
+	var cam_pos: Vector2 = cam.global_position
+	var half: Vector2 = view_size * 0.5 + Vector2(80, 80)
+	return global_position.x < cam_pos.x - half.x or global_position.x > cam_pos.x + half.x or global_position.y < cam_pos.y - half.y or global_position.y > cam_pos.y + half.y
 
 
 func _buscar_enemigo_cercano() -> Node2D:
@@ -38,6 +51,13 @@ func _buscar_enemigo_cercano() -> Node2D:
 		if not is_instance_valid(n) or not n.has_method("take_damage"):
 			continue
 		if "health" in n and n.health <= 0:
+			continue
+		var d := global_position.distance_to(n.global_position)
+		if d < mejor_dist:
+			mejor_dist = d
+			mejor = n
+	for n in get_tree().get_nodes_in_group("cristal"):
+		if not is_instance_valid(n) or not n.has_method("take_damage"):
 			continue
 		var d := global_position.distance_to(n.global_position)
 		if d < mejor_dist:

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c3ewt86jjx5fr"]
 
-[ext_resource type="Script" uid="uid://dfexib4hv2haq" path="res://scripts/interactable.gd" id="1_int"]
+[ext_resource type="Script" path="res://scripts/tronco.gd" id="1_int"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tronco"]
 size = Vector2(200, 300)
@@ -8,9 +8,14 @@ size = Vector2(200, 300)
 [node name="Tronco" type="StaticBody2D"]
 script = ExtResource("1_int")
 
-[node name="Visual" type="Polygon2D" parent="."]
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="Poly" type="Polygon2D" parent="Visual"]
 color = Color(0.45, 0.3, 0.18, 1)
 polygon = PackedVector2Array(-100, 150, -70, -150, 70, -150, 100, 150)
+
+[node name="Sprite" type="Sprite2D" parent="Visual"]
+visible = false
 
 [node name="Collision" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_tronco")

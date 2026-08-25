@@ -14,6 +14,8 @@
 [ext_resource type="PackedScene" uid="uid://c1w7l3sant0r4" path="res://scenes/santuario.tscn" id="13_sant"]
 [ext_resource type="PackedScene" path="res://scenes/console.tscn" id="15_cons"]
 [ext_resource type="PackedScene" uid="uid://ssvmlcpooygw" path="res://scenes/fondo_bosque.tscn" id="16_fondo"]
+[ext_resource type="PackedScene" path="res://scenes/muro_lobo.tscn" id="17_muro"]
+[ext_resource type="PackedScene" path="res://scenes/barrera_bosque.tscn" id="18_barrera"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(3000, 57)
@@ -28,7 +30,7 @@ metadata/_custom_type_script = "uid://cui53h2x6gwlf"
 [node name="Main" type="Node2D" unique_id=1244689183]
 
 [node name="Player" parent="." unique_id=780925585 instance=ExtResource("1_player")]
-position = Vector2(-323, 869)
+position = Vector2(4507, 849)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=805542455]
 script = ExtResource("9_cam")
@@ -36,9 +38,10 @@ script = ExtResource("9_cam")
 [node name="FondoBosque" parent="." unique_id=2133710227 instance=ExtResource("16_fondo")]
 
 [node name="Level" type="Node2D" parent="." unique_id=908805619]
+position = Vector2(3013, -36)
 
 [node name="Ground" type="StaticBody2D" parent="Level" unique_id=711824337]
-position = Vector2(1000, 580)
+position = Vector2(-2008, 617)
 
 [node name="GroundVisual" type="Polygon2D" parent="Level/Ground" unique_id=1363619679]
 position = Vector2(-26, 456)
@@ -90,11 +93,18 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="Tronco" parent="Level" unique_id=822609678 instance=ExtResource("6_tronco")]
-position = Vector2(2367, 853)
+position = Vector2(-447, 881)
 
 [node name="DialogoTronco" parent="Level" unique_id=2033732964 instance=ExtResource("9_dialog")]
-position = Vector2(2185, 834)
+position = Vector2(-690, 834)
 lineas = []
+
+[node name="BarreraBosque" parent="Level" unique_id=910000001 instance=ExtResource("18_barrera")]
+position = Vector2(2331, 879)
+barrera_id = "main_barrera_1"
+
+[node name="MuroLobo" parent="Level" unique_id=650528909 instance=ExtResource("17_muro")]
+position = Vector2(-3127, 915)
 
 [node name="Hud" parent="." unique_id=972088848 instance=ExtResource("4_hud")]
 
@@ -120,7 +130,7 @@ position = Vector2(597, 950)
 position = Vector2(849, 949)
 
 [node name="Santuario" parent="." unique_id=209000001 instance=ExtResource("13_sant")]
-position = Vector2(4391, 405)
+position = Vector2(7424, 352)
 activar_victoria = true
 
 [node name="Label" type="Label" parent="." unique_id=170643924]
@@ -168,7 +178,7 @@ spawn_telegrafiado = true
 ritual_duracion = 0.3
 
 [node name="Ground" type="StaticBody2D" parent="." unique_id=1789407642]
-position = Vector2(1036, 1438)
+position = Vector2(4002, 582)
 
 [node name="GroundVisual" type="Polygon2D" parent="Ground" unique_id=1357982540]
 position = Vector2(-26, 456)

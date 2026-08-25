@@ -6,7 +6,7 @@ func _init() -> void:
 	form_name = "Murciélago"
 	speed = 380.0
 	jump_velocity = -560.0
-	gravity_scale = 0.8
+	gravity_scale = 0.72
 	max_health = 100
 	attack_damage = 8
 	attack_range = 90.0
@@ -26,6 +26,7 @@ func _init() -> void:
 	friction = 2000.0
 	camera_zoom = Vector2(0.95, 0.95)
 	landing_squash = 0.1
+	mult_recuperacion = 1.35
 	combos = [
 		{"nombre": "Ala Cortante", "secuencia": ["light", "heavy"], "dano": 28, "knockback": 240.0, "tamano": Vector2(192, 102), "rango": 114.0},
 	]

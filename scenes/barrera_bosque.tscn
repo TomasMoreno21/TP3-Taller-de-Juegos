@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://byj8hsa3b1hpe"]
+
+[ext_resource type="PackedScene" uid="uid://dyafrqkd1mjjc" path="res://scenes/cristal.tscn" id="1_cristal"]
+[ext_resource type="Script" uid="uid://bhps5fx7cd7dx" path="res://scripts/barrera_bosque.gd" id="2_barrera"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_barrera"]
+size = Vector2(220, 677)
+
+[node name="BarreraBosque" type="Node2D" unique_id=1383386149]
+script = ExtResource("2_barrera")
+
+[node name="Barrera" type="StaticBody2D" parent="." unique_id=794268538]
+collision_mask = 0
+
+[node name="Visual" type="Node2D" parent="Barrera" unique_id=1305733353]
+
+[node name="Poly" type="Polygon2D" parent="Barrera/Visual" unique_id=1248111599]
+position = Vector2(0, -178)
+scale = Vector2(1, 2.1125)
+color = Color(0.45, 0.3, 0.65, 0.55)
+polygon = PackedVector2Array(-110, -160, 110, -160, 110, 160, -110, 160)
+
+[node name="Sprite" type="Sprite2D" parent="Barrera/Visual" unique_id=1580003956]
+visible = false
+
+[node name="Collision" type="CollisionShape2D" parent="Barrera" unique_id=1826640640]
+position = Vector2(0, -178.5)
+shape = SubResource("RectangleShape2D_barrera")
+
+[node name="Ray" type="Line2D" parent="." unique_id=315004108]
+visible = false
+width = 2.0
+default_color = Color(0.62, 0.42, 0.92, 0.22)
+
+[node name="Cristal1" parent="." unique_id=1293127906 instance=ExtResource("1_cristal")]
+position = Vector2(2, 67)
+
+[node name="Cristal2" parent="." unique_id=149914419 instance=ExtResource("1_cristal")]
+position = Vector2(1, -380)
+
+[node name="Cristal3" parent="." unique_id=1348684894 instance=ExtResource("1_cristal")]
+position = Vector2(0, -152)

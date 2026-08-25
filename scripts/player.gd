@@ -13,7 +13,7 @@ enum Form { HUMAN, LOBO, OSO, MURCIELAGO }
 
 const GRAVITY := 980.0
 const MAX_FALL_SPEED := 950.0
-const GLIDE_FALL_MULTIPLIER := 0.35
+const GLIDE_FALL_MULTIPLIER := 0.22
 const COYOTE_TIME := 0.12
 const JUMP_BUFFER_TIME := 0.15
 const JUMP_CUT_MULTIPLIER := 0.5
@@ -31,10 +31,10 @@ const ENERGIA_REGEN := 5.0
 const ENERGIA_KILL := 20.0
 const ENERGIA_PICKUP := 30.0
 const ENERGIA_RESPAWN := 50.0
-const RECOVERY_LIGHT := 0.22
-const RECOVERY_HEAVY := 0.4
-const RECOVERY_SPECIAL := 0.6
-const RECOVERY_COMBO := 0.7
+const RECOVERY_LIGHT := 0.275
+const RECOVERY_HEAVY := 0.5
+const RECOVERY_SPECIAL := 0.75
+const RECOVERY_COMBO := 0.875
 const VIDA_MAX := 100
 
 var forms: Array[Forma] = []
@@ -160,6 +160,10 @@ func _physics_process(delta: float) -> void:
 		velocity.y = 0
 	velocity.y = min(velocity.y + g * delta, MAX_FALL_SPEED)
 	move_and_slide()
+	if is_on_wall() and not is_on_floor():
+		_try_ledge_assist()
+	elif is_on_wall() and is_on_floor() and absf(velocity.x) > 10.0:
+		_try_step_up()
 	if is_on_floor() and velocity.y > 0:
 		velocity.y = 0
 	_sprint_zoom(data)
@@ -659,7 +663,8 @@ func _handle_energia(delta: float) -> void:
 	if current_form == Form.HUMAN:
 		energia = minf(energia + ENERGIA_REGEN * delta, ENERGIA_MAX)
 	else:
-		energia -= ENERGIA_DRAIN * delta
+		var drain := ENERGIA_DRAIN * (0.45 if not _en_combate() else 1.0)
+		energia -= drain * delta
 		if energia <= 0.0:
 			energia = 0.0
 			var agotada := current_form
@@ -940,6 +945,40 @@ func _buscar_enemigo_homing(rango: float) -> Node2D:
 func _try_interact() -> bool:
 	for nodo in get_tree().get_nodes_in_group("interactable"):
 		if nodo.has_method("try_interact") and nodo.try_interact(self):
+			return true
+	return false
+
+
+func _try_ledge_assist() -> void:
+	if absf(velocity.x) < 10.0:
+		return
+	for h in [16.0, 20.0, 12.0]:
+		var up := Transform2D(0, Vector2.ZERO).translated(Vector2(0, -h))
+		if test_move(up, Vector2(facing * 6, 0)):
+			continue
+		if test_move(up, Vector2(0, 0)):
+			continue
+		global_position.y -= h
+		velocity.y = minf(velocity.y, -90.0)
+		return
+
+
+func _try_step_up() -> void:
+	if absf(velocity.x) < 10.0:
+		return
+	for h in [14.0, 18.0, 10.0]:
+		var up := Transform2D(0, Vector2.ZERO).translated(Vector2(0, -h))
+		if test_move(up, Vector2(facing * 8, 0)):
+			continue
+		if test_move(up, Vector2(0, 0)):
+			continue
+		global_position.y -= h
+		return
+
+
+func _en_combate() -> bool:
+	for n in get_tree().get_nodes_in_group("encounter"):
+		if int(n.get("estado")) == 1:
 			return true
 	return false
 

@@ -31,6 +31,7 @@ var _arena_base_y := 0.0  # borde inferior del rect Arena (ancla el piso de las 
 
 
 func _ready() -> void:
+	add_to_group("encounter")
 	if camara == null:
 		camara = get_viewport().get_camera_2d()
 	_generar_paredes()

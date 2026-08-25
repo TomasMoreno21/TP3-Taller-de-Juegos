@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://dh27841gveaud"]
+[gd_scene format=3 uid="uid://d2cfxhvarc3yl"]
 
 [ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" uid="uid://dkyk8avpptlls" path="res://scenes/hud.tscn" id="4_hud"]
@@ -12,8 +12,8 @@
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="9_dialog"]
 [ext_resource type="PackedScene" uid="uid://c1w7l3sant0r4" path="res://scenes/santuario.tscn" id="13_sant"]
 [ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="14_pick"]
-[ext_resource type="PackedScene" uid="uid://c4f0nd0b0sque1" path="res://scenes/fondo_bosque.tscn" id="16_fondo"]
 [ext_resource type="PackedScene" path="res://scenes/console.tscn" id="15_cons"]
+[ext_resource type="PackedScene" uid="uid://ssvmlcpooygw" path="res://scenes/fondo_bosque.tscn" id="16_fondo"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(3000, 57)
@@ -35,7 +35,7 @@ position = Vector2(-450, 900)
 [node name="Camara" type="Camera2D" parent="." unique_id=262117866]
 script = ExtResource("9_cam")
 
-[node name="FondoBosque" parent="." instance=ExtResource("16_fondo")]
+[node name="FondoBosque" parent="." unique_id=1703658510 instance=ExtResource("16_fondo")]
 
 [node name="Level" type="Node2D" parent="." unique_id=1571451517]
 

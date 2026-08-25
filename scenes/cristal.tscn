@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://dyafrqkd1mjjc"]
+
+[ext_resource type="Script" path="res://scripts/cristal.gd" id="1_cristal"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cristal"]
+size = Vector2(28, 44)
+
+[node name="Cristal" type="StaticBody2D"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_cristal")
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="Halo" type="Polygon2D" parent="Visual"]
+color = Color(0.62, 0.42, 0.92, 0.18)
+polygon = PackedVector2Array(0, -30, 22, 0, 0, 30, -22, 0)
+
+[node name="Poly" type="Polygon2D" parent="Visual"]
+color = Color(0.62, 0.42, 0.92, 1)
+polygon = PackedVector2Array(0, -22, 16, 0, 0, 22, -16, 0)
+
+[node name="Sprite" type="Sprite2D" parent="Visual"]
+visible = false
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_cristal")

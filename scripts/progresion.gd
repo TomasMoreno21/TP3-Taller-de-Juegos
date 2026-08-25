@@ -10,6 +10,7 @@ const FRAGMENTOS_POR_NIVEL := 3
 var fragmentos := 0
 var nivel := 1
 var combos_desbloqueados: Dictionary = {}
+var barreras_abiertas: Dictionary = {}
 
 
 func _ready() -> void:
@@ -39,6 +40,7 @@ func reset() -> void:
 	fragmentos = 0
 	nivel = 1
 	combos_desbloqueados = {}
+	barreras_abiertas = {}
 	fragmentos_cambiado.emit(0)
 	nivel_cambiado.emit(1)
 
