@@ -421,6 +421,14 @@ func _ejecutar_finisher(data: Forma, combo: Dictionary) -> void:
 	_play_attack_fx("combo", 1)
 	_punch_sprite(0.45)
 	attack_performed.emit("combo", combo.get("nombre", "Combo"))
+	if DisplayServer.get_name() != "headless":
+		var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+		p.global_position = global_position + Vector2(facing * 30, -20)
+		p.self_modulate = Color(1, 0.85, 0.3, 0.9)
+		p.amount = 8
+		get_tree().root.add_child(p)
+		p.restart()
+		p.emitting = true
 
 
 func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: float = 0.0) -> void:
@@ -491,32 +499,38 @@ func _check_attack_hits() -> void:
 	if not _attacking or _hit_applied:
 		return
 	var bodies := attack_area.get_overlapping_bodies()
-	if bodies.size() > 1:
-		print("DEBUG _check: ", bodies.size(), " bodies, hitbox at ", attack_area.global_position, " size ", attack_hitbox.shape.size, " player at ", global_position, " facing ", facing)
-		for b in bodies:
-			print("  ", b.name, " at ", b.global_position, " has_reg ", b.has_method("registrar_golpe"), " has_take ", b.has_method("take_damage"))
-	if bodies.size() > 0 and OS.has_feature("editor"):
-		pass
-	for body in bodies:
-		if body == self:
+	var objetivos: Array[Node2D] = []
+	for b in bodies:
+		if b == self:
 			continue
+		if b.has_method("registrar_golpe") or b.has_method("take_damage"):
+			objetivos.append(b as Node2D)
+			if objetivos.size() >= 2:
+				break
+	if objetivos.is_empty():
+		return
+	var mult_tercer := 1.0
+	if _current_attack_type == "light" and _light_step == forms[current_form].light_combo_steps:
+		mult_tercer = 1.5
+	elif _current_attack_type == "heavy" and _heavy_step == forms[current_form].heavy_combo_steps:
+		mult_tercer = 1.5
+	for idx in range(mini(objetivos.size(), 2)):
+		var body: Node2D = objetivos[idx]
+		var dmg := _current_attack_damage
+		var kb := _current_attack_knockback * mult_tercer
+		if idx == 1:
+			dmg = int(dmg * 0.6)
+			kb *= 0.6
 		if body.has_method("registrar_golpe"):
-			body.registrar_golpe(_current_attack_damage)
-			_hit_applied = true
+			body.registrar_golpe(dmg)
 			_aplicar_knockback(body)
-			_registrar_golpe_racha()
-			_hitstop_por_tipo()
-			_zoom_punch_por_tipo()
-			_shake_por_tipo()
-			return
-		if body.has_method("take_damage"):
-			body.take_damage(_current_attack_damage, _current_attack_knockback, facing)
-			_hit_applied = true
-			_registrar_golpe_racha()
-			_hitstop_por_tipo()
-			_zoom_punch_por_tipo()
-			_shake_por_tipo()
-			return
+		elif body.has_method("take_damage"):
+			body.take_damage(dmg, kb, facing)
+	_hit_applied = true
+	_registrar_golpe_racha()
+	_hitstop_por_tipo()
+	_zoom_punch_por_tipo()
+	_shake_por_tipo()
 
 
 func _hitstop_por_tipo() -> void:
@@ -795,6 +809,9 @@ func _transformar(nueva: int) -> void:
 	data.reset_form_state()
 	_apply_form()
 	_zoom_transform(data)
+	var cam := get_viewport().get_camera_2d()
+	if cam != null and cam.has_method("punch"):
+		cam.punch(1.07)
 	if nueva == Form.HUMAN:
 		_particulas_regreso()
 	form_changed.emit(data.form_name)

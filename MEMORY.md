@@ -171,6 +171,13 @@
 - **Ejemplos en `main.tscn`:** `MuroLobo` (Level, 2700,883) y `BarreraBosque` (3900,843, id `main_barrera_1`) colocados como ejemplo editable; `muro_lobo.tscn` dual listo para sprite.
 - **Verificación:** import OK, smoke OK, autotest FALLOS=6 esperados (desbloqueo `true` temporal).
 
+### Sesión 27/08 — Lobo bajo y agachado, grieta, diálogos restaurados y cámara pulida (commits `7971a95` y `45d238a` en main)
+- **Lobo bajo y alargado (`scripts/forms/lobo.gd`):** `collider_size` 150×280→**210×160** para pasar por huecos bajos donde Humano/Oso/Murci (175×300 / 200×280 / 160×286) no entran. `player.gd::_apply_form()` ahora centra la hitbox con `collision_shape.position.y = 142.5 - h*0.5` y ajusta `visual.position.y` para que los pies queden a ras de suelo; `_transformar()` bloquea el cambio si el nuevo tamaño colisionaría (`test_move` con tamaño destino, retorna sin transformar).
+- **Grieta de agachado (`scenes/grieta_lobo.tscn`):** `Node2D` con `Techo` `StaticBody2D` 600×40 + `Visual` Poly + `Sombra`, hueco libre 160px (techo a 160px sobre suelo) — solo Lobo pasa; editable estirando el `CollisionShape` del techo. Ejemplo colocado en `main.tscn` `Level/GrietaLobo` (1215,822) como raíces/tronco hueco. Persistencia no necesaria (no es barrera).
+- **Cámara pulida (`scripts/camera.gd`):** shake con decaimiento cuadrático `t*t` + punch con `lerpf(..., 4*delta)` (antes lineal `3*delta` y shake sin atenuación). Mucho más suave al encadenar golpes. `lookahead` ya por forma (Lobo 1.15 / Oso 0.65 / Murci 0.86 + Humano 1.0) y `deadzone_horizontal 12` siguen.
+- **Diálogos restaurados (`scenes/main.tscn`):** `DialogoIntro` (automático, 5 líneas del amuleto + tutorial J/K/T) y `DialogoTronco` (zona, 2 líneas del tronco Oso) habían quedado en `lineas = []` tras merges (commit `b281ebe` tenía el texto correcto) → restaurados a `PackedStringArray` originales, editables en inspector.
+- **Verificación:** import OK, smoke OK, autotest FALLOS=6 esperados.
+
 ### Build/Run y verificación
 ```powershell
 # import (regenera UIDs, registra class_name)

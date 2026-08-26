@@ -69,4 +69,10 @@ func _buscar_enemigo_cercano() -> Node2D:
 func _on_body_entered(body: Node2D) -> void:
 	if body.has_method("take_damage"):
 		body.take_damage(damage, 120.0, int(direction.x))
+		if homing and not enemy_shot and body.is_in_group("enemy"):
+			var v := body.get_node_or_null("Visual")
+			if v != null:
+				v.modulate = Color(0.78, 0.55, 1.0)
+				var tw := v.create_tween()
+				tw.tween_property(v, "modulate", Color(1, 1, 1), 0.12)
 	queue_free()

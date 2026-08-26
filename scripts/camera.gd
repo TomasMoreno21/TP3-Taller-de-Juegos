@@ -10,6 +10,7 @@ var _zoom_objetivo := Vector2.ONE
 var _punch_scale := 1.0
 var _tilt := 0.0
 var _lookahead_actual := 0.0
+var _zoom_velocidad := 1.0
 
 @export var suavizado := 6.0
 @export var desplazamiento := Vector2(0, -310)
@@ -38,8 +39,8 @@ func _process(delta: float) -> void:
 		if _shake_timer <= 0.0:
 			offset = Vector2.ZERO
 
-	# Zoom suave hacia el objetivo (por transformación / sprint de forma).
-	var objetivo := _zoom_objetivo * _punch_scale
+	# Zoom por velocidad (1) + punch
+	var objetivo := _zoom_objetivo * _punch_scale * _zoom_velocidad
 	if zoom.distance_to(objetivo) > 0.0001:
 		zoom = zoom.lerp(objetivo, minf(suavizado_zoom * delta, 1.0))
 	else:
@@ -66,7 +67,15 @@ func _physics_process(delta: float) -> void:
 	if player == null:
 		return
 	var destino := (player as Node2D).global_position + desplazamiento
-	# Lookahead progresivo por forma: cada transformación ve más/menos adelante
+	# (2) Ver 40px más arriba si saltas alto (vy < -300)
+	var vel_y: float = (player as Node2D).velocity.y
+	if vel_y < -300.0:
+		destino.y -= 40.0
+	# (3) Bajar 20px antes de caer fuerte (anticipa impacto)
+	var p_body := player as CharacterBody2D
+	if vel_y > 550.0 and not p_body.is_on_floor():
+		destino.y += 20.0
+	# (1) Zoom por velocidad + (7) suavizado de bajada si planea
 	var vel_x: float = (player as Node2D).velocity.x
 	var look_mult := 1.0
 	if "forms" in player and "current_form" in player:
@@ -78,7 +87,10 @@ func _physics_process(delta: float) -> void:
 	destino.x += _lookahead_actual
 	if absf(destino.x - global_position.x) < deadzone_horizontal:
 		destino.x = global_position.x
-	# Vertical asimétrico: subir lento (deadzone + suavizado bajo), bajar brusco.
+	# (1) Zoom por velocidad: 200→0, 650→0.08 (0.92)
+	var extra_zoom := clampf((absf(vel_x) - 200.0) / 450.0, 0.0, 1.0) * 0.08
+	_zoom_velocidad = 1.0 - extra_zoom
+	# Vertical asimétrico: subir lento (deadzone + suavizado bajo), bajar brusco (7) o suave si planea (4)
 	var dy = destino.y - global_position.y
 	var suavizado_y: float
 	if dy < 0:
@@ -86,7 +98,12 @@ func _physics_process(delta: float) -> void:
 			destino.y = global_position.y + dy * seguimiento_vertical_leve
 		suavizado_y = suavizado_subida
 	else:
-		suavizado_y = suavizado_bajada
+		var gliding := false
+		if "forms" in player and "current_form" in player:
+			var fg = (player as Node).get("forms")[(player as Node).get("current_form")]
+			if fg != null and fg.has_method("is_gliding"):
+				gliding = fg.call("is_gliding", player)
+		suavizado_y = 4.0 if gliding else suavizado_bajada
 	global_position.x = lerpf(global_position.x, destino.x, minf(suavizado * delta, 1.0))
 	global_position.y = lerpf(global_position.y, destino.y, minf(suavizado_y * delta, 1.0))
 
@@ -114,6 +131,11 @@ func modo_arena(centro: Vector2) -> void:
 func modo_normal() -> void:
 	_modo = "seguir"
 	modo_cambio.emit("seguir")
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player != null:
+		var dest := player.global_position + desplazamiento
+		var tw := create_tween()
+		tw.tween_property(self, "global_position", dest, 0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 func shake(strength: float = 8.0, duration: float = 0.15) -> void:
