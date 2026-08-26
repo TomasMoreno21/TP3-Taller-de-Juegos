@@ -98,7 +98,7 @@ position = Vector2(-448, 890)
 
 [node name="DialogoTronco" parent="Level" unique_id=2033732964 instance=ExtResource("9_dialog")]
 position = Vector2(-690, 834)
-lineas = PackedStringArray("Ese tronco corrompido bloquea el paso... hace falta fuerza bruta para romperlo.", "Cuando despiertes al espíritu del Oso, acércate y usa L para aplastarlo.")
+lineas = PackedStringArray("Hace falta que nos abramos paso por el bosque, lo que se interponga en nuestro camino puedes destruirlo.", "Cuando despiertes al espíritu del Oso, acércate y usa L para aplastarlo.")
 
 [node name="BarreraBosque" parent="Level" unique_id=910000001 instance=ExtResource("18_barrera")]
 position = Vector2(2331, 879)
@@ -114,7 +114,7 @@ position = Vector2(1215, 822)
 
 [node name="DialogoIntro" parent="." unique_id=860836594 instance=ExtResource("9_dialog")]
 position = Vector2(184, 801)
-lineas = PackedStringArray("...¿Guardabosques? Puedes oírme. Soy la voz de los espíritus atrapados en este amuleto.", "Tu hijo cruzó hacia esta zona corrompida. Yo te voy a guiar, pero la fuerza para avanzar la vas a encontrar en las formas que los espíritus del bosque te presten.", "Muévete con las flechas o A/D, y salta con Espacio.", "J es tu golpe ligero, K el golpe fuerte. Encadénalos para hacer más daño.", "Cuando despiertes el vínculo con un espíritu animal, usa T para transformarte.")
+lineas = PackedStringArray("Escucha humano...si querés recuperar a tu hijo vas a tener que prestar mucha atención a lo que yo te diga jejeja.", "Tu hijo desprende una extraña fuerza espiritual, la verdad eso no es nada común y esos malditos se lo llevaron para sacarle TODO.", "bueno...esa es la manera bonita de decirlo.", "Te voy a prestar algo de nuestra energía para que los expulses del bosque.", "Muévete con las flechas o A/D, y salta con Espacio.", "J es tu golpe ligero, K el golpe fuerte. Encadénalos para hacer más daño.", "Cuando despiertes el vínculo con un espíritu animal, usa T para transformarte.")
 modo = "Automatico"
 
 [node name="Pause" parent="." unique_id=423654189 instance=ExtResource("8_pause")]
