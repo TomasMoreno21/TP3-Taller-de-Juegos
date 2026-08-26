@@ -118,7 +118,6 @@ lineas = PackedStringArray("...¿Guardabosques? Puedes oírme. Soy la voz de los
 modo = "Automatico"
 
 [node name="Pause" parent="." unique_id=423654189 instance=ExtResource("8_pause")]
-visible = false
 
 [node name="LevelUp" parent="." unique_id=1298784535 instance=ExtResource("8_levelup")]
 
