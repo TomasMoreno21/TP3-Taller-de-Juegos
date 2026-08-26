@@ -32,7 +32,9 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if _shake_timer > 0.0:
 		_shake_timer -= delta
-		offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * _shake_strength
+		var t := clampf(_shake_timer / 0.15, 0.0, 1.0)
+		var cur_strength := _shake_strength * (t * t)
+		offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * cur_strength
 		if _shake_timer <= 0.0:
 			offset = Vector2.ZERO
 
@@ -43,9 +45,9 @@ func _process(delta: float) -> void:
 	else:
 		zoom = objetivo
 
-	# El punch de zoom recupera solo hacia 1.0 (landing más suave).
+	# El punch de zoom recupera con curva suave (ease out).
 	if _punch_scale > 1.0:
-		_punch_scale = maxf(1.0, _punch_scale - 3.0 * delta)
+		_punch_scale = lerpf(_punch_scale, 1.0, minf(4.0 * delta, 1.0))
 
 	# Tilt de cámara transitorio (giro de Lobo) -> recupera a 0.
 	if absf(_tilt) > 0.01:

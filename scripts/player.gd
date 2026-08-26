@@ -777,6 +777,17 @@ func _handle_transform() -> void:
 func _transformar(nueva: int) -> void:
 	if nueva == current_form or _forma_en_cooldown(nueva):
 		return
+	var data_nueva: Forma = forms[nueva]
+	var prev_size: Vector2 = (collision_shape.shape as RectangleShape2D).size
+	var prev_pos: Vector2 = collision_shape.position
+	var new_pos_y := 142.5 - data_nueva.collider_size.y * 0.5
+	(collision_shape.shape as RectangleShape2D).size = data_nueva.collider_size
+	collision_shape.position.y = new_pos_y
+	var bloqueado := test_move(global_transform, Vector2.ZERO)
+	(collision_shape.shape as RectangleShape2D).size = prev_size
+	collision_shape.position = prev_pos
+	if bloqueado:
+		return
 	forms[current_form].reset_form_state()
 	current_form = nueva
 	forma_seleccionada = nueva
@@ -834,6 +845,8 @@ func _apply_form() -> void:
 	visual.self_modulate = _tinte_forma(data.color)
 	visual.skew = 0.0
 	collision_shape.shape.size = data.collider_size
+	collision_shape.position.y = 142.5 - data.collider_size.y * 0.5
+	visual.position.y = collision_shape.position.y + 7.5
 	_gravity_override = -1.0
 	blocking = false
 

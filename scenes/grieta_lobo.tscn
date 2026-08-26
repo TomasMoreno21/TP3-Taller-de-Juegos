@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://grieta_lobo_01"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_techo"]
+size = Vector2(600, 40)
+
+[node name="GrietaLobo" type="Node2D"]
+
+[node name="Techo" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="Visual" type="Polygon2D" parent="Techo"]
+color = Color(0.32, 0.28, 0.24, 1)
+polygon = PackedVector2Array(-300, -20, 300, -20, 300, 20, -300, 20)
+
+[node name="Collision" type="CollisionShape2D" parent="Techo"]
+shape = SubResource("RectangleShape2D_techo")
+
+[node name="Sombra" type="Polygon2D" parent="Techo"]
+color = Color(0, 0, 0, 0.18)
+polygon = PackedVector2Array(-300, 20, 300, 20, 300, 28, -300, 28)
