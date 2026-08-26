@@ -42,6 +42,13 @@ corner_radius_top_right = 16
 corner_radius_bottom_right = 16
 corner_radius_bottom_left = 16
 
+[sub_resource type="StyleBoxFlat" id="fill_esp_delayed"]
+bg_color = Color(0.18, 0.32, 0.6, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
 [sub_resource type="StyleBoxFlat" id="cap_hp"]
 bg_color = Color(0.55, 0.18, 0.18, 1)
 corner_radius_top_left = 11
@@ -138,11 +145,29 @@ layout_mode = 2
 custom_minimum_size = Vector2(42, 22)
 theme_override_styles/panel = SubResource("cap_esp")
 
-[node name="EspBar" type="ProgressBar" parent="Bars/Rows/EspRow"]
-custom_minimum_size = Vector2(42, 0)
+[node name="EspBarStack" type="Control" parent="Bars/Rows/EspRow"]
+custom_minimum_size = Vector2(42, 18)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+
+[node name="EspBarDelayed" type="ProgressBar" parent="Bars/Rows/EspRow/EspBarStack"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/background = SubResource("bg_bar")
+theme_override_styles/fill = SubResource("fill_esp_delayed")
+fill_mode = 3
+show_percentage = false
+
+[node name="EspBar" type="ProgressBar" parent="Bars/Rows/EspRow/EspBarStack"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_styles/background = SubResource("bg_bar")
 theme_override_styles/fill = SubResource("fill_esp")
 fill_mode = 3

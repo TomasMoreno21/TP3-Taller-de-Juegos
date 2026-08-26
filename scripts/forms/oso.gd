@@ -9,7 +9,7 @@ var _landing_tween: Tween
 
 func _init() -> void:
 	form_name = "Oso"
-	speed = 270.0
+	speed = 310.0
 	jump_velocity = -420.0
 	gravity_scale = 1.45
 	max_health = 100
@@ -23,7 +23,8 @@ func _init() -> void:
 	heavy_combo_steps = 2
 	special_damage = 60
 	color = Color(0.55, 0.4, 0.22)
-	collider_size = Vector2(175, 300)
+	collider_size = Vector2(200, 280)
+	camera_lookahead_mult = 0.65
 	shake_strength = 14.0
 	turn_tilt = 9.0
 	lean_angulo = 2.0

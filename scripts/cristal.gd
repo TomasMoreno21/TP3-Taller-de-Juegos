@@ -90,6 +90,9 @@ func take_damage(_cant: int, _kb: float = 0.0, _dir: int = 1) -> void:
 func _flash_golpe() -> void:
 	if visual_root == null:
 		return
+	var cam := get_viewport().get_camera_2d()
+	if cam != null and cam.has_method("shake"):
+		cam.shake(2.5, 0.08)
 	var base_col: Color = cristal_color
 	if poly != null and poly.visible:
 		poly.color = Color(1, 0.85, 0.85)

@@ -17,6 +17,7 @@ var _lookahead_actual := 0.0
 @export var lookahead := 0.28    # anticipación de cámara según velocidad horizontal
 @export var lookahead_umbral := 80.0    # velocidad (px/s) recién pasada la cual empieza el adelanto
 @export var suavizado_lookahead := 3.0  # qué tan suave entra y sale el adelanto
+@export var deadzone_horizontal := 12.0  # zona muerta en X (evita temblor al estar quieto)
 @export var deadzone_vertical := 150.0  # salto dentro de este rango casi no mueve la cámara al subir
 @export var seguimiento_vertical_leve := 0.15  # cuánto sí se mueve dentro de la deadzone al subir
 @export var suavizado_subida := 1.8  # al subir: lento
@@ -63,11 +64,18 @@ func _physics_process(delta: float) -> void:
 	if player == null:
 		return
 	var destino := (player as Node2D).global_position + desplazamiento
-	# Lookahead progresivo: bajo el umbral no hay adelanto; arriba entra y sale suave.
+	# Lookahead progresivo por forma: cada transformación ve más/menos adelante
 	var vel_x: float = (player as Node2D).velocity.x
-	var objetivo_la := clampf(maxf(absf(vel_x) - lookahead_umbral, 0.0) * lookahead * signf(vel_x), -160.0, 160.0)
+	var look_mult := 1.0
+	if "forms" in player and "current_form" in player:
+		var f = (player as Node).get("forms")[(player as Node).get("current_form")]
+		if f != null and "camera_lookahead_mult" in f:
+			look_mult = f.get("camera_lookahead_mult")
+	var objetivo_la := clampf(maxf(absf(vel_x) - lookahead_umbral, 0.0) * lookahead * look_mult * signf(vel_x), -160.0, 160.0)
 	_lookahead_actual = lerpf(_lookahead_actual, objetivo_la, minf(suavizado_lookahead * delta, 1.0))
 	destino.x += _lookahead_actual
+	if absf(destino.x - global_position.x) < deadzone_horizontal:
+		destino.x = global_position.x
 	# Vertical asimétrico: subir lento (deadzone + suavizado bajo), bajar brusco.
 	var dy = destino.y - global_position.y
 	var suavizado_y: float

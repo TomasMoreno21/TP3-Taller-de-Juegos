@@ -14,10 +14,12 @@ enum Form { HUMAN, LOBO, OSO, MURCIELAGO }
 const GRAVITY := 980.0
 const MAX_FALL_SPEED := 950.0
 const GLIDE_FALL_MULTIPLIER := 0.22
-const COYOTE_TIME := 0.12
-const JUMP_BUFFER_TIME := 0.15
+const COYOTE_TIME := 0.14
+const JUMP_BUFFER_TIME := 0.18
 const JUMP_CUT_MULTIPLIER := 0.5
 const TURN_BOOST := 2.2
+const TURN_BOOST_AIR := 1.6
+const FRICTION_AIR_MULT := 0.7
 const APEX_THRESHOLD := 70.0
 const APEX_GRAVITY_MULT := 0.7
 const APEX_CORE_THRESHOLD := 35.0
@@ -76,6 +78,7 @@ var _derrota_activa := false
 var _invuln_timer := 0.0
 var _cooldown_formas: Dictionary = {}
 const COOLDOWN_AGOTADA := 3.0
+var _idle_breath_t := 0.0
 @export var limite_caida := 3000.0
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
@@ -125,14 +128,16 @@ func _physics_process(delta: float) -> void:
 	else:
 		if dir != 0.0:
 			facing = 1 if dir > 0 else -1
-			var boost := TURN_BOOST if dir * velocity.x < 0.0 else 1.0
+			var base_boost := TURN_BOOST if is_on_floor() else TURN_BOOST_AIR
+			var boost := base_boost if dir * velocity.x < 0.0 else 1.0
 			if boost > 1.0 and absf(velocity.x) > 120.0 and is_on_floor():
 				_emitir_polvo(0.4)
 			velocity.x = move_toward(velocity.x, dir * data.speed, data.accel * boost * delta)
 		else:
 			if absf(velocity.x) > 250.0 and is_on_floor():
 				squash_y(0.12, 0.15)
-			velocity.x = move_toward(velocity.x, 0.0, data.friction * delta)
+			var fric := data.friction * (FRICTION_AIR_MULT if not is_on_floor() else 1.0)
+			velocity.x = move_toward(velocity.x, 0.0, fric * delta)
 
 	if Input.is_action_just_pressed("jump"):
 		if _coyote_time > 0.0 or data.can_jump():
@@ -140,13 +145,14 @@ func _physics_process(delta: float) -> void:
 		else:
 			_jump_buffer = JUMP_BUFFER_TIME
 	if Input.is_action_just_released("jump") and velocity.y < 0.0:
-		var t := clampf(velocity.y / -320.0, 0.0, 1.0)
+		var t := clampf(velocity.y / data.jump_velocity, 0.0, 1.0)
 		velocity.y *= lerpf(0.85, JUMP_CUT_MULTIPLIER, t)
 
 	var g: float = GRAVITY * data.gravity_scale
 	if _gravity_override >= 0.0:
 		g = _gravity_override
-	if data.is_gliding(self):
+	var gliding := data.is_gliding(self)
+	if gliding:
 		g *= GLIDE_FALL_MULTIPLIER
 	# Apex hang escalonado: núcleo del ápice muy flotante, banda cercana suave.
 	if absf(velocity.y) < APEX_CORE_THRESHOLD:
@@ -158,7 +164,12 @@ func _physics_process(delta: float) -> void:
 
 	if is_on_floor() and velocity.y > 0:
 		velocity.y = 0
-	velocity.y = min(velocity.y + g * delta, MAX_FALL_SPEED)
+	var max_fall := MAX_FALL_SPEED if not gliding else 380.0
+	velocity.y = min(velocity.y + g * delta, max_fall)
+	if gliding:
+		var dir_glide := Input.get_axis("move_left", "move_right")
+		if dir_glide != 0.0:
+			velocity.x = move_toward(velocity.x, dir_glide * data.speed * 1.1, data.accel * 0.6 * delta)
 	move_and_slide()
 	if is_on_wall() and not is_on_floor():
 		_try_ledge_assist()
@@ -167,6 +178,7 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor() and velocity.y > 0:
 		velocity.y = 0
 	_sprint_zoom(data)
+	_actualizar_respiracion_idle(delta, data)
 
 	if is_on_floor():
 		data.on_floor(self)
@@ -511,15 +523,19 @@ func _hitstop_por_tipo() -> void:
 	var dur := 0.0
 	match _current_attack_type:
 		"light":
-			dur = 0.025
+			dur = 0.03
 		"heavy":
-			dur = 0.05
+			dur = 0.06
 		"special":
-			dur = 0.065
-		"combo":
 			dur = 0.075
+		"combo":
+			dur = 0.09
 		_:
 			return
+	if current_form == Form.OSO:
+		dur *= 1.25
+	elif current_form == Form.LOBO:
+		dur *= 0.85
 	if dur <= 0.0:
 		return
 	Engine.time_scale = 0.0
@@ -974,6 +990,18 @@ func _try_step_up() -> void:
 			continue
 		global_position.y -= h
 		return
+
+
+func _actualizar_respiracion_idle(delta: float, _data: Forma) -> void:
+	if _sprite_tween != null and _sprite_tween.is_valid():
+		return
+	if not is_on_floor() or absf(velocity.x) > 10.0 or _attacking or blocking:
+		_idle_breath_t = 0.0
+		return
+	_idle_breath_t += delta
+	var breath := sin(_idle_breath_t * 1.4) * 0.012
+	var base := Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1)
+	visual.scale = base * Vector2(1.0, 1.0 + breath)
 
 
 func _en_combate() -> bool:

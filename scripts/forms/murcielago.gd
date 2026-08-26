@@ -18,7 +18,8 @@ func _init() -> void:
 	heavy_combo_steps = 2
 	special_damage = 15
 	color = Color(0.52, 0.4, 0.62)
-	collider_size = Vector2(175, 300)
+	collider_size = Vector2(160, 286)
+	camera_lookahead_mult = 0.86
 	transform_duration = 9.0
 	turn_tilt = 9.0
 	lean_angulo = 2.0

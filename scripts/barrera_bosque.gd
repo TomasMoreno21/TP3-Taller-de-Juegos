@@ -83,8 +83,8 @@ func _actualizar_ray() -> void:
 	if vivos.size() == 3:
 		pts.append(vivos[0].position)
 	ray.points = pts
-	ray.width = 2.0
-	ray.default_color = Color(0.62, 0.42, 0.92, 0.22)
+	ray.width = 3.5
+	ray.default_color = Color(0.62, 0.42, 0.92, 0.32)
 
 
 func _brillo_proximidad() -> void:
@@ -96,7 +96,7 @@ func _brillo_proximidad() -> void:
 	if near:
 		barrera_poly.modulate = barrera_poly.modulate.lerp(Color(0.58, 0.42, 0.78, 0.65), 0.08)
 		if ray != null:
-			ray.default_color = Color(0.62, 0.42, 0.92, 0.38)
+			ray.default_color = Color(0.62, 0.42, 0.92, 0.42)
 
 
 func _abrir_instantaneo() -> void:

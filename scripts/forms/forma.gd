@@ -54,6 +54,7 @@ var _jumps_usados := 0
 @export var sprint_min_speed: float = 99999.0         # velocidad para activar el zoom de sprint
 @export var landing_squash: float = 0.0               # squash al aterrizar (proporcional a impacto)
 @export var turn_tilt_cam: float = 0.0                # inclinación de cámara transitoria al girar
+@export var camera_lookahead_mult: float = 1.0        # multiplicador de lookahead por forma
 
 # Fluidez de combate: multiplicador de recuperación post-golpe (menor = encadena más rápido)
 # e impulso hacia adelante al golpear (lunge; 0 = golpe estático).

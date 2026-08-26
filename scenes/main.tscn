@@ -15,7 +15,7 @@
 [ext_resource type="PackedScene" path="res://scenes/console.tscn" id="15_cons"]
 [ext_resource type="PackedScene" uid="uid://ssvmlcpooygw" path="res://scenes/fondo_bosque.tscn" id="16_fondo"]
 [ext_resource type="PackedScene" path="res://scenes/muro_lobo.tscn" id="17_muro"]
-[ext_resource type="PackedScene" path="res://scenes/barrera_bosque.tscn" id="18_barrera"]
+[ext_resource type="PackedScene" uid="uid://byj8hsa3b1hpe" path="res://scenes/barrera_bosque.tscn" id="18_barrera"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(3000, 57)
@@ -30,7 +30,7 @@ metadata/_custom_type_script = "uid://cui53h2x6gwlf"
 [node name="Main" type="Node2D" unique_id=1244689183]
 
 [node name="Player" parent="." unique_id=780925585 instance=ExtResource("1_player")]
-position = Vector2(4507, 849)
+position = Vector2(3464, 862)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=805542455]
 script = ExtResource("9_cam")
@@ -93,7 +93,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="Tronco" parent="Level" unique_id=822609678 instance=ExtResource("6_tronco")]
-position = Vector2(-447, 881)
+position = Vector2(-448, 890)
 
 [node name="DialogoTronco" parent="Level" unique_id=2033732964 instance=ExtResource("9_dialog")]
 position = Vector2(-690, 834)

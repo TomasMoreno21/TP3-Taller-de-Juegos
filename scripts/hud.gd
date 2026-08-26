@@ -17,7 +17,8 @@ var _combo_base_pos: Vector2
 @onready var combo_label: RichTextLabel = $ComboLabel
 @onready var hp_bar: ProgressBar = $Bars/Rows/HpRow/HpBarStack/HpBar
 @onready var hp_bar_delayed: ProgressBar = $Bars/Rows/HpRow/HpBarStack/HpBarDelayed
-@onready var esp_bar: ProgressBar = $Bars/Rows/EspRow/EspBar
+@onready var esp_bar: ProgressBar = $Bars/Rows/EspRow/EspBarStack/EspBar
+@onready var esp_bar_delayed: ProgressBar = $Bars/Rows/EspRow/EspBarStack/EspBarDelayed
 @onready var esp_cap: PanelContainer = $Bars/Rows/EspRow/EspCap
 @onready var prog_label: Label = $ProgLabel
 @onready var sel_label: Label = $SelLabel
@@ -31,6 +32,7 @@ var _flash_tween: Tween
 var _energia_pulse: Tween
 var _energia_aviso_dado := false
 var _hp_delayed_tween: Tween
+var _esp_delayed_tween: Tween
 
 
 var _selector_refresh := 0.0
@@ -74,6 +76,11 @@ func _ready() -> void:
 		hp_bar_delayed.max_value = 100
 		hp_bar_delayed.value = 100
 	hp_bar.value = 100
+	if esp_bar_delayed != null:
+		esp_bar_delayed.max_value = 100.0
+		esp_bar_delayed.value = 100.0
+	esp_bar.max_value = 100.0
+	esp_bar.value = 100.0
 	_prog_refresh()
 	_connectar_player.call_deferred()
 
@@ -262,6 +269,18 @@ func _on_dano_recibido(_cantidad: int) -> void:
 func _on_energia_changed(energia: float) -> void:
 	esp_bar.max_value = 100.0
 	esp_bar.value = energia
+	if esp_bar_delayed != null:
+		esp_bar_delayed.max_value = 100.0
+		if energia < esp_bar_delayed.value:
+			if _esp_delayed_tween != null and _esp_delayed_tween.is_valid():
+				_esp_delayed_tween.kill()
+			_esp_delayed_tween = create_tween()
+			_esp_delayed_tween.tween_interval(0.32)
+			_esp_delayed_tween.tween_property(esp_bar_delayed, "value", energia, 0.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		elif energia > esp_bar_delayed.value:
+			if _esp_delayed_tween != null and _esp_delayed_tween.is_valid():
+				_esp_delayed_tween.kill()
+			esp_bar_delayed.value = energia
 	if energia < 25.0 and _player != null and _player.current_form != 0:
 		if not _energia_aviso_dado:
 			_aviso("¡Energía baja!")
