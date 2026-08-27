@@ -4,6 +4,10 @@
 [ext_resource type="Texture2D" uid="uid://cec7efmcgawlc" path="res://Sprites/Jugador y Transformaciones/ccorrer2.png" id="2_b7l1w"]
 [ext_resource type="Texture2D" uid="uid://cs3jtm4q7tlbr" path="res://Sprites/Jugador y Transformaciones/ccorrer3.png" id="3_h04gk"]
 [ext_resource type="Texture2D" uid="uid://cjx5qylpmbylp" path="res://Sprites/Jugador y Transformaciones/ccorrer4.png" id="4_8ci31"]
+[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/1lobo correr.png" id="5_lobo1"]
+[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/2lobo correr.png" id="6_lobo2"]
+[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/3lobo correr.png" id="7_lobo3"]
+[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/4lobo correr.png" id="8_lobo4"]
 
 [sub_resource type="Image" id="Image_ybjtb"]
 data = {
@@ -998,4 +1002,21 @@ animations = [{
 "loop": 1,
 "name": &"walk",
 "speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_lobo1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_lobo2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_lobo3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_lobo4")
+}],
+"loop": 1,
+"name": &"lobo_run",
+"speed": 12.0
 }]

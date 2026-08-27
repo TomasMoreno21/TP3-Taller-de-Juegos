@@ -602,7 +602,7 @@ func squash_y(amount: float, duration: float) -> void:
 		_sprite_tween.kill()
 	var base := Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1)
 	visual.scale = base
-	visual.position.y = 0.0
+	visual.position.y = _visual_base_y()
 	_sprite_tween = create_tween()
 	_sprite_tween.tween_property(visual, "scale:y", base.y * (1.0 - amount), duration * 0.4)
 	_sprite_tween.tween_property(visual, "scale:y", base.y, duration * 0.6)
@@ -638,7 +638,7 @@ func stretch_y(amount: float, duration: float) -> void:
 		_sprite_tween.kill()
 	var base := Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1)
 	visual.scale = base
-	visual.position.y = 0.0
+	visual.position.y = _visual_base_y()
 	_sprite_tween = create_tween()
 	_sprite_tween.tween_property(visual, "scale:y", base.y * (1.0 + amount), duration * 0.4)
 	_sprite_tween.tween_property(visual, "scale:y", base.y, duration * 0.6)
@@ -680,6 +680,7 @@ func _punch_sprite(amount: float) -> void:
 		_sprite_tween.kill()
 	var base := Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1)
 	visual.scale = base
+	visual.position.y = _visual_base_y()
 	_sprite_tween = create_tween()
 	_sprite_tween.tween_property(visual, "scale", base * (1.0 + amount), 0.05).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_sprite_tween.tween_property(visual, "scale", base, 0.1)
@@ -855,6 +856,10 @@ func _flash_transformacion() -> void:
 	)
 
 
+func _visual_base_y() -> float:
+	return collision_shape.position.y + 7.5
+
+
 func _apply_form() -> void:
 	var data: Forma = forms[current_form]
 	_aplicar_facing()
@@ -863,7 +868,7 @@ func _apply_form() -> void:
 	visual.skew = 0.0
 	collision_shape.shape.size = data.collider_size
 	collision_shape.position.y = 142.5 - data.collider_size.y * 0.5
-	visual.position.y = collision_shape.position.y + 7.5
+	visual.position.y = _visual_base_y()
 	_gravity_override = -1.0
 	blocking = false
 
@@ -893,14 +898,18 @@ func _update_tint() -> void:
 
 func _update_animacion() -> void:
 	_aplicar_facing()
-	if visual.animation != "run":
-		visual.play("run")
+	var anim := "run"
+	if current_form == Form.LOBO and visual.sprite_frames.has_animation("lobo_run"):
+		anim = "lobo_run"
+	if visual.animation != anim:
+		visual.play(anim)
 	var data: Forma = forms[current_form]
 	if absf(velocity.x) < 10.0:
 		visual.speed_scale = 0.0
 	else:
 		visual.speed_scale = clampf(absf(velocity.x) / maxf(data.speed, 1.0), 0.4, 1.6)
-	var lean := clampf(velocity.x / maxf(data.speed, 1.0), -1.0, 1.0) * deg_to_rad(data.lean_angulo)
+	var lean_mult := 1.6 if not is_on_floor() else 1.0
+	var lean := clampf(velocity.x / maxf(data.speed, 1.0), -1.0, 1.0) * deg_to_rad(data.lean_angulo) * lean_mult
 	visual.skew = lerpf(visual.skew, -lean, minf(8.0 * get_physics_process_delta_time(), 1.0))
 
 
