@@ -57,7 +57,7 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.collider_size = Vector2(28, 56)
 		"chaman":
 			d.tipo_nombre = "Chamán"
-			d.max_health = 90
+			d.max_health = 96
 			d.speed = 40.0
 			d.stop_distance = 40.0
 			d.attack_damage = 12

@@ -29,7 +29,7 @@ func _init() -> void:
 	landing_squash = 0.1
 	mult_recuperacion = 1.35
 	combos = [
-		{"nombre": "Ala Cortante", "secuencia": ["light", "heavy"], "dano": 28, "knockback": 240.0, "tamano": Vector2(192, 102), "rango": 114.0},
+		{"nombre": "Ala Cortante", "secuencia": ["light", "heavy"], "dano": 32, "knockback": 240.0, "tamano": Vector2(192, 102), "rango": 114.0},
 	]
 
 

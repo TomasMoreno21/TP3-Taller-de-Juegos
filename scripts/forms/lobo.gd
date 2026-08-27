@@ -9,15 +9,15 @@ func _init() -> void:
 	gravity_scale = 0.9
 	jumps = 2
 	max_health = 100
-	attack_damage = 5
+	attack_damage = 6
 	attack_range = 90.0
 	attack_size = Vector2(140, 85)
 	light_combo_steps = 3
-	heavy_damage = 8
+	heavy_damage = 10
 	heavy_range = 105.0
 	heavy_size = Vector2(150, 95)
 	heavy_combo_steps = 2
-	special_damage = 12
+	special_damage = 14
 	color = Color(0.58, 0.64, 0.75)
 	collider_size = Vector2(210, 160)
 	camera_lookahead_mult = 1.15
@@ -36,7 +36,7 @@ func _init() -> void:
 	mult_recuperacion = 0.85
 	lunge_light = 110.0
 	combos = [
-		{"nombre": "Mordida", "secuencia": ["light", "heavy"], "dano": 22, "knockback": 240.0, "tamano": Vector2(180, 102), "rango": 102.0},
+		{"nombre": "Mordida", "secuencia": ["light", "heavy"], "dano": 26, "knockback": 240.0, "tamano": Vector2(180, 102), "rango": 102.0},
 	]
 
 
