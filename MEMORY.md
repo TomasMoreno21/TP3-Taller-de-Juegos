@@ -178,14 +178,26 @@
 - **Diálogos restaurados (`scenes/main.tscn`):** `DialogoIntro` (automático, 5 líneas del amuleto + tutorial J/K/T) y `DialogoTronco` (zona, 2 líneas del tronco Oso) habían quedado en `lineas = []` tras merges (commit `b281ebe` tenía el texto correcto) → restaurados a `PackedStringArray` originales, editables en inspector.
 - **Verificación:** import OK, smoke OK, autotest FALLOS=6 esperados.
 
+### Sesión 27/08 (b) — Nivel 1 real (`scenes/nivel1.tscn`), desbloqueo progresivo reactivado, TileSet inicial
+- **`main.tscn` deja de ser "el nivel"**: pasa a ser oficialmente el playground de pruebas de mecánicas (así lo definió el usuario). Se creó **`scenes/nivel1.tscn`** como la primera fase jugable real: 7 partes (inicio → introducción → enseñanza → prueba → escalada → clímax → final), ~4750px, spawn→Santuario, con Humano primero (movimiento, plataformeo, combo vs. 1+2 cultistas) y Lobo desbloqueado a mitad de nivel (transformación, agachado por `GrietaLobo`, doble salto obligatorio en una escalera de 3 plataformas, gestión de energía con pickups dedicados). 6 cultistas en 3 `Encounter` (1/2/3, el último en 2 olas), 3 `Rompible`, 4 `Pickup` dedicados, 3 `DialogTrigger`.
+- **`progresion.gd::forma_desbloqueada()` reactivada** a `return form_index < nivel` (estaba hardcodeada a `true`, "TEMPORAL (pruebas)", desde el 17/08h). Sin esto, "Lobo se desbloquea a mitad del nivel 1" no se podía forzar. Bajó el autotest de 6 fallos esperados a **FALLOS=0** (los checks de desbloqueo progresivo ya estaban escritos en `autotest.gd` desde antes, solo esperaban este revert).
+- **`main.tscn` sigue permitiendo todas las formas** pese al revert: se le agregó `scripts/main_playground.gd` (script mínimo en el nodo raíz `Main`, `_ready()` fuerza `get_node("/root/Progresion").set_nivel(4)`) para que siga siendo un playground completo sin depender de recordar el comando de consola `nivel 4`.
+- **Bug repetido y ya documentado (Lote 2) — autoload como identificador global en `--script`:** `main_playground.gd` usaba `Progresion.set_nivel(4)` (identificador global) y rompía la COMPILACIÓN de `autotest.gd` con "Identifier not found: Progresion" (no un fallo de test, un error de carga que abortaba el resto). Fix: `get_node("/root/Progresion")`, como ya usan pickup/rompible/hud/console. **Ningún script del proyecto usa el identificador global de un autoload** — antes de escribir uno nuevo, grepear `Progresion\.` (o el autoload que sea) para confirmar el patrón existente.
+- **TileSet nuevo (`resources/tileset_bosque.tres`)**, primer uso de `TileMapLayer` en el proyecto (hasta ahora todo el terreno era `StaticBody2D+Polygon2D` a mano). Grid confirmado por análisis de píxeles (Python/Pillow, no por el editor — no hay acceso interactivo a Godot en esta sesión): `Tileset.png` es 320×192px = grid 10×6 de 32×32 exacto. Se registraron 2 tiles con colisión (piso borde `(2,3)` y relleno `(5,4)`) pero **el `TileMapLayer` "Terreno" quedó vacío (sin pintar)**: el terreno real del nivel usa el patrón probado `StaticBody2D+Polygon2D` (`Piso1`/`Piso2`, mismo estilo que `main.tscn`) para no arriesgar corromper a ciegas el `tile_data` binario (formato empaquetado bit a bit, no verificable sin abrir el editor). **Pendiente:** pintar `Terreno` a mano en el editor (1-2 min, solo estética) o pedir que se intente por script si se acepta el riesgo.
+- **Convención de coordenadas para terreno nuevo:** suelo (`y_suelo=992`) con el piso hecho de rectángulos centrados (`node.position.y = top + half_height`). Player/Enemy NO tienen el origen exactamente en los pies (offset ~130px y ~48px respectivamente, según el `CollisionShape2D` de cada `.tscn`) — para spawns/posiciones nuevas, calcular `origin.y = y_suelo - offset` en vez de tantear a ojo.
+- **Verificación:** import OK, smoke OK, autotest FALLOS=0, `tests/diag_nivel1.gd` (nuevo, mismo patrón que `diag_zona2.gd`) FALLOS=0 (3 arenas, 6 cultistas, 3 rompibles, 4 pickups, 3 diálogos, piso continuo salvo el pozo de Introducción, gap de `GrietaLobo`=199px entre 160 y 300).
+- **Lección de testing (nueva):** un `PhysicsPointQueryParameters2D` sobre el piso falla si el punto de consulta cae exactamente en el borde de la `RectangleShape2D` (ni 1px arriba de la superficie superior, ni justo en el borde derecho de la última pieza) — `intersect_point` es estricto en el borde. Consultar unos px **adentro** del sólido (no en la superficie ni en el límite exacto del rectángulo).
+
 ### Build/Run y verificación
+- **(27/08b) Ruta real del ejecutable en esta máquina:** `Godot_v4.7.1-stable_win64.exe` en `Downloads` es en realidad una **carpeta** (no el .exe); el binario está adentro: `C:\Users\UNRaf_Libre\Downloads\Godot_v4.7.1-stable_win64.exe\Godot_v4.7.1-stable_win64_console.exe` (usar la variante `_console.exe` para que los `print()` de los tests salgan por stdout). Si un `& "...Godot...exe"` da "no se reconoce como cmdlet", es este problema — revisar con `Get-Item` si el path es `Directory` antes de asumir que el ejecutable se movió.
 ```powershell
+$godot = "C:\Users\UNRaf_Libre\Downloads\Godot_v4.7.1-stable_win64.exe\Godot_v4.7.1-stable_win64_console.exe"
 # import (regenera UIDs, registra class_name)
-& "C:\Users\Usuario\Downloads\Godot_v4.7-stable_win64_console.exe" --headless --import
+& $godot --headless --import
 # smoke del juego
-& "...Godot_v4.7-stable_win64_console.exe" --headless --path . --quit-after 5
+& $godot --headless --path . --quit-after 5
 # tests
-& "...exe" --headless --path . --script res://tests/autotest.gd
+& $godot --headless --path . --script res://tests/autotest.gd
 ```
 
 ---

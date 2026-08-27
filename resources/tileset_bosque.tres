@@ -1,0 +1,16 @@
+[gd_resource type="TileSet" load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://Sprites/Elementos/1 Tiles/Tileset.png" id="1_tex"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_bosque"]
+texture = ExtResource("1_tex")
+texture_region_size = Vector2i(32, 32)
+2:3/0 = 0
+2:3/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+5:4/0 = 0
+5:4/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+
+[resource]
+tile_size = Vector2i(32, 32)
+physics_layer_0/collision_layer = 1
+sources/0 = SubResource("TileSetAtlasSource_bosque")

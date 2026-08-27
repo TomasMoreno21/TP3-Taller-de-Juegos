@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://ssvmlcpooygw" path="res://scenes/fondo_bosque.tscn" id="16_fondo"]
 [ext_resource type="PackedScene" path="res://scenes/muro_lobo.tscn" id="17_muro"]
 [ext_resource type="PackedScene" uid="uid://byj8hsa3b1hpe" path="res://scenes/barrera_bosque.tscn" id="18_barrera"]
+[ext_resource type="Script" path="res://scripts/main_playground.gd" id="19_playground"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(3000, 57)
@@ -29,6 +30,7 @@ script = ExtResource("8_85g3d")
 metadata/_custom_type_script = "uid://cui53h2x6gwlf"
 
 [node name="Main" type="Node2D" unique_id=1244689183]
+script = ExtResource("19_playground")
 
 [node name="Player" parent="." unique_id=780925585 instance=ExtResource("1_player")]
 position = Vector2(3464, 862)
