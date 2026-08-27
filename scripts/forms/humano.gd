@@ -27,7 +27,7 @@ func _init() -> void:
 	accel = 2600.0
 	friction = 2200.0
 	combos = [
-		{"nombre": "Remate", "secuencia": ["light", "heavy"], "dano": 42, "knockback": 260.0, "tamano": Vector2(162, 114), "rango": 126.0},
+		{"nombre": "Remate", "secuencia": ["light", "heavy"], "dano": 38, "knockback": 260.0, "tamano": Vector2(162, 114), "rango": 126.0},
 	]
 
 

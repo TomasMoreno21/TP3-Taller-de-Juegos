@@ -78,7 +78,12 @@ var _derrota_activa := false
 var _invuln_timer := 0.0
 var _cooldown_formas: Dictionary = {}
 const COOLDOWN_AGOTADA := 3.0
+const COOLDOWN_TRANSFORM := 3.0
+var _cooldown_transform := 0.0
 var _idle_breath_t := 0.0
+var _trepando: bool = false
+var _enredadera_actual: Area2D = null
+var _trepado_cooldown: float = 0.0
 @export var limite_caida := 3000.0
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
@@ -117,13 +122,16 @@ func _physics_process(delta: float) -> void:
 
 	var data: Forma = forms[current_form]
 	data.tick(self, delta)
+	_handle_enredadera(delta)
 	if _attack_air_buffer > 0.0:
 		_attack_air_buffer -= delta
 		if _attack_air_buffer <= 0.0:
 			_attack_air_buffer_type = ""
 
 	var dir := Input.get_axis("move_left", "move_right")
-	if data.is_dashing():
+	if _trepando:
+		dir = 0.0
+	elif data.is_dashing():
 		velocity.x = facing * data.dash_speed()
 	else:
 		if dir != 0.0:
@@ -139,7 +147,7 @@ func _physics_process(delta: float) -> void:
 			var fric := data.friction * (FRICTION_AIR_MULT if not is_on_floor() else 1.0)
 			velocity.x = move_toward(velocity.x, 0.0, fric * delta)
 
-	if Input.is_action_just_pressed("jump"):
+	if not _trepando and Input.is_action_just_pressed("jump"):
 		if _coyote_time > 0.0 or data.can_jump():
 			data.try_jump(self)
 		else:
@@ -171,7 +179,9 @@ func _physics_process(delta: float) -> void:
 		if dir_glide != 0.0:
 			velocity.x = move_toward(velocity.x, dir_glide * data.speed * 1.1, data.accel * 0.6 * delta)
 	move_and_slide()
-	if is_on_wall() and not is_on_floor():
+	if _trepando:
+		pass
+	elif is_on_wall() and not is_on_floor():
 		_try_ledge_assist()
 	elif is_on_wall() and is_on_floor() and absf(velocity.x) > 10.0:
 		_try_step_up()
@@ -461,10 +471,11 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	var coll: RectangleShape2D = collision_shape.shape
 	var shape: RectangleShape2D = attack_hitbox.shape
 	var total_range := range + size.x * 0.5
-	shape.size = Vector2(total_range, coll.size.y)
+	var h := maxf(coll.size.y, size.y)
+	shape.size = Vector2(total_range, h)
 	attack_hitbox.shape = shape
 	attack_hitbox.disabled = false
-	attack_area.position = Vector2(facing * total_range * 0.5, 0.0)
+	attack_area.position = Vector2(facing * total_range * 0.5, collision_shape.position.y)
 	attack_area.monitoring = true
 
 
@@ -687,6 +698,8 @@ func _punch_sprite(amount: float) -> void:
 
 
 func _handle_energia(delta: float) -> void:
+	if _cooldown_transform > 0.0:
+		_cooldown_transform = maxf(_cooldown_transform - delta, 0.0)
 	for k in _cooldown_formas.keys():
 		_cooldown_formas[k] -= delta
 		if _cooldown_formas[k] <= 0.0:
@@ -699,7 +712,7 @@ func _handle_energia(delta: float) -> void:
 		if energia <= 0.0:
 			energia = 0.0
 			var agotada := current_form
-			_transformar(Form.HUMAN)
+			_transformar(Form.HUMAN, true)
 			_cooldown_formas[agotada] = COOLDOWN_AGOTADA
 			transformacion_agotada.emit()
 	energia_changed.emit(energia)
@@ -789,7 +802,9 @@ func _handle_transform() -> void:
 	_transformar(forma_seleccionada)
 
 
-func _transformar(nueva: int) -> void:
+func _transformar(nueva: int, forzar: bool = false) -> void:
+	if not forzar and _cooldown_transform > 0.0:
+		return
 	if nueva == current_form or _forma_en_cooldown(nueva):
 		return
 	var data_nueva: Forma = forms[nueva]
@@ -815,6 +830,7 @@ func _transformar(nueva: int) -> void:
 		cam.punch(1.07)
 	if nueva == Form.HUMAN:
 		_particulas_regreso()
+	_cooldown_transform = COOLDOWN_TRANSFORM
 	form_changed.emit(data.form_name)
 	forma_selectada_cambiada.emit(nueva)
 	health_changed.emit(health, VIDA_MAX)
@@ -898,6 +914,13 @@ func _update_tint() -> void:
 
 func _update_animacion() -> void:
 	_aplicar_facing()
+	if _trepando:
+		if visual.animation != "climb":
+			visual.play("climb")
+		visual.speed_scale = 1.0 if absf(velocity.y) > 10.0 else 0.0
+		visual.skew = lerpf(visual.skew, 0.0, minf(8.0 * get_physics_process_delta_time(), 1.0))
+		visual.rotation = lerpf(visual.rotation, 0.0, minf(10.0 * get_physics_process_delta_time(), 1.0))
+		return
 	var anim := "run"
 	if current_form == Form.LOBO and visual.sprite_frames.has_animation("lobo_run"):
 		anim = "lobo_run"
@@ -908,9 +931,23 @@ func _update_animacion() -> void:
 		visual.speed_scale = 0.0
 	else:
 		visual.speed_scale = clampf(absf(velocity.x) / maxf(data.speed, 1.0), 0.4, 1.6)
-	var lean_mult := 1.6 if not is_on_floor() else 1.0
-	var lean := clampf(velocity.x / maxf(data.speed, 1.0), -1.0, 1.0) * deg_to_rad(data.lean_angulo) * lean_mult
-	visual.skew = lerpf(visual.skew, -lean, minf(8.0 * get_physics_process_delta_time(), 1.0))
+	var base_lean := clampf(velocity.x / maxf(data.speed, 1.0), -1.0, 1.0) * deg_to_rad(data.lean_angulo)
+	var lean_mult := 1.4 if not is_on_floor() else 1.0
+	var lean := base_lean * lean_mult
+	visual.skew = lerpf(visual.skew, lean, minf(8.0 * get_physics_process_delta_time(), 1.0))
+	var target_rot := 0.0
+	if current_form == Form.LOBO and not is_on_floor():
+		if velocity.y < -30.0:
+			if absf(velocity.x) > 10.0:
+				target_rot = deg_to_rad(-14.0) * signf(velocity.x)
+			else:
+				target_rot = deg_to_rad(-7.0) * facing
+		elif velocity.y > 80.0:
+			if absf(velocity.x) > 10.0:
+				target_rot = deg_to_rad(14.0) * signf(velocity.x)
+			else:
+				target_rot = deg_to_rad(7.0) * facing
+	visual.rotation = lerpf(visual.rotation, target_rot, minf(10.0 * get_physics_process_delta_time(), 1.0))
 
 
 func _handle_death() -> void:
@@ -1041,6 +1078,80 @@ func _actualizar_respiracion_idle(delta: float, _data: Forma) -> void:
 	var breath := sin(_idle_breath_t * 1.4) * 0.012
 	var base := Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1)
 	visual.scale = base * Vector2(1.0, 1.0 + breath)
+
+
+func _handle_enredadera(delta: float) -> void:
+	if _trepado_cooldown > 0.0:
+		_trepado_cooldown = maxf(_trepado_cooldown - delta, 0.0)
+	if _trepando:
+		if current_form != Form.HUMAN:
+			_salir_enredadera()
+			return
+		if _enredadera_actual == null or not is_instance_valid(_enredadera_actual):
+			_salir_enredadera()
+			return
+		var alto: float = float(_enredadera_actual.get("alto")) if _enredadera_actual.get("alto") != null else 400.0
+		var ancho: float = float(_enredadera_actual.get("ancho")) if _enredadera_actual.get("ancho") != null else 32.0
+		var top: float = _enredadera_actual.global_position.y - alto * 0.5
+		var bot: float = _enredadera_actual.global_position.y + alto * 0.5
+		var overlapping: bool = false
+		if _enredadera_actual is Area2D:
+			overlapping = (_enredadera_actual as Area2D).get_overlapping_bodies().has(self)
+		if not overlapping:
+			overlapping = absf(global_position.x - _enredadera_actual.global_position.x) < ancho * 0.5 + 36.0 and global_position.y > top - 36.0 and global_position.y < bot + 36.0
+		if not overlapping:
+			_salir_enredadera()
+			return
+		if Input.is_action_just_pressed("jump"):
+			_salir_enredadera()
+			velocity.y = forms[current_form].jump_velocity * 1.0
+			velocity.x = facing * 140.0
+			_trepado_cooldown = 0.28
+			return
+		var dir_y: int = 0
+		if Input.is_action_pressed("move_up"):
+			dir_y -= 1
+		if Input.is_action_pressed("move_down"):
+			dir_y += 1
+		var cs: float = float(_enredadera_actual.get("climb_speed")) if _enredadera_actual.get("climb_speed") != null else 200.0
+		velocity.y = dir_y * cs
+		velocity.x = 0.0
+		_gravity_override = 0.0
+		global_position.x = lerpf(global_position.x, _enredadera_actual.global_position.x, 12.0 * delta)
+		return
+	if _trepado_cooldown > 0.0:
+		return
+	if current_form != Form.HUMAN:
+		return
+	if not (Input.is_action_pressed("move_up") or Input.is_action_pressed("move_down") or Input.is_action_pressed("jump")):
+		return
+	for e in get_tree().get_nodes_in_group("enredadera"):
+		if not is_instance_valid(e):
+			continue
+		var area := e as Area2D
+		var alto2: float = float(area.get("alto")) if area.get("alto") != null else 400.0
+		var ancho2: float = float(area.get("ancho")) if area.get("ancho") != null else 32.0
+		var top2: float = area.global_position.y - alto2 * 0.5
+		var bot2: float = area.global_position.y + alto2 * 0.5
+		var is_overlap: bool = false
+		if area is Area2D:
+			is_overlap = (area as Area2D).get_overlapping_bodies().has(self)
+		if not is_overlap:
+			is_overlap = absf(global_position.x - area.global_position.x) < ancho2 * 0.5 + 36.0 and global_position.y > top2 - 36.0 and global_position.y < bot2 + 36.0
+		if is_overlap:
+			_trepando = true
+			_enredadera_actual = area
+			_gravity_override = 0.0
+			velocity.y = 0.0
+			velocity.x = 0.0
+			global_position.x = area.global_position.x
+			break
+
+
+func _salir_enredadera() -> void:
+	_trepando = false
+	_enredadera_actual = null
+	_gravity_override = -1.0
 
 
 func _en_combate() -> bool:

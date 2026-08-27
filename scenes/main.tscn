@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://ssvmlcpooygw" path="res://scenes/fondo_bosque.tscn" id="16_fondo"]
 [ext_resource type="PackedScene" path="res://scenes/muro_lobo.tscn" id="17_muro"]
 [ext_resource type="PackedScene" uid="uid://byj8hsa3b1hpe" path="res://scenes/barrera_bosque.tscn" id="18_barrera"]
+[ext_resource type="PackedScene" path="res://scenes/enredadera.tscn" id="19_enredadera"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(3000, 57)
@@ -31,7 +32,7 @@ metadata/_custom_type_script = "uid://cui53h2x6gwlf"
 [node name="Main" type="Node2D" unique_id=1244689183]
 
 [node name="Player" parent="." unique_id=780925585 instance=ExtResource("1_player")]
-position = Vector2(3464, 862)
+position = Vector2(3902, 852)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=805542455]
 script = ExtResource("9_cam")
@@ -98,7 +99,7 @@ position = Vector2(-448, 890)
 
 [node name="DialogoTronco" parent="Level" unique_id=2033732964 instance=ExtResource("9_dialog")]
 position = Vector2(-690, 834)
-lineas = PackedStringArray("Hace falta que nos abramos paso por el bosque, lo que se interponga en nuestro camino puedes destruirlo.", "Cuando despiertes al espíritu del Oso, acércate y usa L para aplastarlo.")
+lineas = []
 
 [node name="BarreraBosque" parent="Level" unique_id=910000001 instance=ExtResource("18_barrera")]
 position = Vector2(2331, 879)
@@ -108,13 +109,18 @@ barrera_id = "main_barrera_1"
 position = Vector2(-3127, 915)
 
 [node name="GrietaLobo" parent="Level" unique_id=1594948280 instance=ExtResource("8_muem4")]
-position = Vector2(1215, 822)
+position = Vector2(1811, 826)
+
+[node name="Enredadera" parent="Level" unique_id=1919191919 instance=ExtResource("19_enredadera")]
+position = Vector2(1490, 839)
+ancho = 36.0
+alto = 500.0
 
 [node name="Hud" parent="." unique_id=972088848 instance=ExtResource("4_hud")]
 
 [node name="DialogoIntro" parent="." unique_id=860836594 instance=ExtResource("9_dialog")]
 position = Vector2(184, 801)
-lineas = PackedStringArray("Escucha humano...si querés recuperar a tu hijo vas a tener que prestar mucha atención a lo que yo te diga jejeja.", "Tu hijo desprende una extraña fuerza espiritual, la verdad eso no es nada común y esos malditos se lo llevaron para sacarle TODO.", "bueno...esa es la manera bonita de decirlo.", "Te voy a prestar algo de nuestra energía para que los expulses del bosque.", "Muévete con las flechas o A/D, y salta con Espacio.", "J es tu golpe ligero, K el golpe fuerte. Encadénalos para hacer más daño.", "Cuando despiertes el vínculo con un espíritu animal, usa T para transformarte.")
+lineas = []
 modo = "Automatico"
 
 [node name="Pause" parent="." unique_id=423654189 instance=ExtResource("8_pause")]
