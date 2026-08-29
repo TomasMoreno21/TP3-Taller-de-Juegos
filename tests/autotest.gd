@@ -100,7 +100,7 @@ func _init() -> void:
 	Input.action_release("heavy")
 	await physics_frame
 	var remate_dmg: int = hp_tras_j - e_combo.health
-	_check(remate_dmg == 42, "J→K ejecuta el Remate (42 dmg, fue %d)" % remate_dmg)
+	_check(remate_dmg == 38, "J→K ejecuta el Remate (38 dmg, fue %d)" % remate_dmg)
 	await _esperar_recuperacion("combo")
 	_limpiar_dummies()
 
@@ -163,6 +163,29 @@ func _init() -> void:
 	await _esperar_recuperacion("light")
 	_check(en.health < hp_en, "Enemigos: el melee del humano daña al sectario (%d -> %d)" % [hp_en, en.health])
 	_limpiar_enemigos()
+
+	# --- Melee: el Lobo daña a un enemigo real (bug 27/08: attack_range=90 no alcanzaba
+	# el collider de 210px de ancho del propio Lobo, quedaba "whiffeando") ---
+	_console._ejecutar(PackedStringArray(["form", "lobo"]))
+	await process_frame
+	var en_lobo := preload("res://scenes/enemy.tscn").instantiate()
+	en_lobo.tipo = "cultista"
+	_scene.add_child(en_lobo)
+	en_lobo.global_position = _player.global_position + Vector2(60, 0)
+	await _wait_frames(30)
+	_player.facing = 1
+	_player.velocity = Vector2.ZERO
+	await physics_frame
+	var hp_en_lobo: int = en_lobo.health
+	Input.action_press("attack")
+	await physics_frame
+	await physics_frame
+	Input.action_release("attack")
+	await _esperar_recuperacion("light")
+	_check(en_lobo.health < hp_en_lobo, "Lobo: el melee daña a un enemigo real (%d -> %d)" % [hp_en_lobo, en_lobo.health])
+	_limpiar_enemigos()
+	_console._ejecutar(PackedStringArray(["form", "humano"]))
+	await process_frame
 
 	# --- Enemigos: muerte recarga energía (Documento: golpes en combate) ---
 	_player.energia = 40.0

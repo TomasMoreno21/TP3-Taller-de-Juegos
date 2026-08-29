@@ -148,12 +148,12 @@ position = Vector2(2350, 944)
 scale = Vector2(0.5, 1.0)
 
 [node name="Enemy1" parent="EncounterB" instance=ExtResource("10_enemy")]
-position = Vector2(-80, 0)
+position = Vector2(-140, 0)
 spawn_telegrafiado = true
 ritual_duracion = 0.3
 
 [node name="Enemy2" parent="EncounterB" instance=ExtResource("10_enemy")]
-position = Vector2(80, 0)
+position = Vector2(140, 0)
 spawn_telegrafiado = true
 ritual_duracion = 0.6
 
@@ -164,12 +164,12 @@ position = Vector2(4050, 944)
 scale = Vector2(0.6, 1.0)
 
 [node name="Enemy1" parent="EncounterC" instance=ExtResource("10_enemy")]
-position = Vector2(-100, 0)
+position = Vector2(-140, 0)
 spawn_telegrafiado = true
 ritual_duracion = 0.3
 
 [node name="Enemy2" parent="EncounterC" instance=ExtResource("10_enemy")]
-position = Vector2(100, 0)
+position = Vector2(140, 0)
 spawn_telegrafiado = true
 ritual_duracion = 0.5
 

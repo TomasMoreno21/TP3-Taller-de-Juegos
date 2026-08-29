@@ -114,7 +114,7 @@ position = Vector2(-3127, 915)
 [node name="GrietaLobo" parent="Level" unique_id=1594948280 instance=ExtResource("8_muem4")]
 position = Vector2(1811, 826)
 
-[node name="Enredadera" parent="Level" unique_id=1919191919 instance=ExtResource("19_enredadera")]
+[node name="Enredadera" parent="Level" unique_id=1919191919 instance=ExtResource("20_enredadera")]
 position = Vector2(1490, 839)
 ancho = 36.0
 alto = 500.0

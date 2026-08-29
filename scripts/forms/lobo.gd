@@ -10,7 +10,7 @@ func _init() -> void:
 	jumps = 2
 	max_health = 100
 	attack_damage = 6
-	attack_range = 90.0
+	attack_range = 110.0
 	attack_size = Vector2(140, 85)
 	light_combo_steps = 3
 	heavy_damage = 10

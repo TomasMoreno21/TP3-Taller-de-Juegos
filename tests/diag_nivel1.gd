@@ -45,6 +45,30 @@ func _init() -> void:
 	_check(arenas == 3, "Nivel1: 3 arenas de encuentro (hay %d)" % arenas)
 	_check(total_enemigos == 6, "Nivel1: 6 cultistas en total (hay %d)" % total_enemigos)
 
+	# Enemigos de la misma ola no deben arrancar con colliders superpuestos
+	# (bug 27/08: 160px de separación vs 175px de ancho de collider -> depenetración
+	# violenta al activarse la colisión, eyectaba al jugador fuera del nivel).
+	const ANCHO_COLLIDER_ENEMIGO := 175.0
+	var solapes := 0
+	for hijo in nivel.get_children():
+		if String(hijo.name).begins_with("Encounter"):
+			var por_ola: Dictionary = {}
+			for sub in hijo.get_children():
+				if "tipo" in sub and "ola_asignada" in sub:
+					var ola: int = int(sub.ola_asignada)
+					if not por_ola.has(ola):
+						por_ola[ola] = []
+					por_ola[ola].append(sub.position.x)
+			for ola in por_ola:
+				var xs: Array = por_ola[ola]
+				xs.sort()
+				for i in range(xs.size() - 1):
+					var separacion: float = xs[i + 1] - xs[i]
+					if separacion < ANCHO_COLLIDER_ENEMIGO:
+						solapes += 1
+						print("  [AVISO] ", hijo.name, " ola=", ola, " enemigos a ", separacion, "px de separación (colliders de 175px se superponen)")
+	_check(solapes == 0, "Nivel1: ningún par de enemigos de la misma ola arranca con colliders superpuestos (%d casos)" % solapes)
+
 	var santuario := nivel.get_node_or_null("Santuario")
 	_check(santuario != null and santuario.activar_victoria, "Nivel1: santuario final con victoria")
 	var consola := nivel.get_node_or_null("Consola")
