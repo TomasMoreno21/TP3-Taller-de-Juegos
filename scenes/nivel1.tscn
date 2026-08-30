@@ -1,12 +1,12 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene format=3 uid="uid://bge4s3nawq0qh"]
 
 [ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="2_cam"]
 [ext_resource type="PackedScene" uid="uid://ssvmlcpooygw" path="res://scenes/fondo_bosque.tscn" id="3_fondo"]
-[ext_resource type="TileSet" path="res://resources/tileset_bosque.tres" id="4_tileset"]
+[ext_resource type="TileSet" uid="uid://cm28ivesvx3ed" path="res://resources/tileset_bosque.tres" id="4_tileset"]
 [ext_resource type="PackedScene" path="res://scenes/grieta_lobo.tscn" id="5_grieta"]
 [ext_resource type="PackedScene" uid="uid://cr2s0l8k2s5l4" path="res://scenes/rompible.tscn" id="6_romp"]
-[ext_resource type="PackedScene" uid="uid://cq9u0k8d1s5l4" path="res://scenes/pickup.tscn" id="7_pick"]
+[ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="7_pick"]
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="8_dialog"]
 [ext_resource type="PackedScene" uid="uid://x0o25yeqfgsm" path="res://scenes/encounter.tscn" id="9_enc"]
 [ext_resource type="PackedScene" uid="uid://bxsawwmlxb7mt" path="res://scenes/enemy.tscn" id="10_enemy"]
@@ -16,180 +16,170 @@
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="14_levelup"]
 [ext_resource type="PackedScene" path="res://scenes/console.tscn" id="15_cons"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_piso1"]
-size = Vector2(448, 200)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_piso2"]
-size = Vector2(4192, 200)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
+size = Vector2(4800, 401)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_plat"]
 size = Vector2(280, 30)
 
-[node name="Nivel1" type="Node2D"]
+[node name="Nivel1" type="Node2D" unique_id=1020284745]
 
-[node name="Player" parent="." instance=ExtResource("1_player")]
+[node name="Player" parent="." unique_id=1763988589 instance=ExtResource("1_player")]
 position = Vector2(100, 862)
 
-[node name="Camara" type="Camera2D" parent="."]
-script = ExtResource("2_cam")
+[node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
 limit_left = -100
-limit_right = 4900
 limit_top = -2000
+limit_right = 4900
 limit_bottom = 1100
+script = ExtResource("2_cam")
 
-[node name="FondoBosque" parent="." instance=ExtResource("3_fondo")]
+[node name="FondoBosque" parent="." unique_id=542214532 instance=ExtResource("3_fondo")]
 
-[node name="Terreno" type="TileMapLayer" parent="."]
+[node name="Terreno" type="TileMapLayer" parent="." unique_id=211863747]
 tile_set = ExtResource("4_tileset")
-collision_enabled = true
 
-[node name="Piso1" type="StaticBody2D" parent="."]
-position = Vector2(224, 1092)
+[node name="Piso" type="StaticBody2D" parent="." unique_id=64631073]
+position = Vector2(2400, 1092)
 
-[node name="Piso1Visual" type="Polygon2D" parent="Piso1"]
+[node name="PisoVisual" type="Polygon2D" parent="Piso" unique_id=1712558488]
 color = Color(0.16, 0.32, 0.18, 1)
-polygon = PackedVector2Array(-224, -100, 224, -100, 224, 100, -224, 100)
+polygon = PackedVector2Array(-2400, -100, 2400, -100, 2400, 100, -2400, 100)
 
-[node name="Piso1Collision" type="CollisionShape2D" parent="Piso1"]
-shape = SubResource("RectangleShape2D_piso1")
+[node name="PisoCollision" type="CollisionShape2D" parent="Piso" unique_id=2085221829]
+position = Vector2(0, 100.5)
+shape = SubResource("RectangleShape2D_piso")
 
-[node name="Piso2" type="StaticBody2D" parent="."]
-position = Vector2(2704, 1092)
-
-[node name="Piso2Visual" type="Polygon2D" parent="Piso2"]
-color = Color(0.16, 0.32, 0.18, 1)
-polygon = PackedVector2Array(-2096, -100, 2096, -100, 2096, 100, -2096, 100)
-
-[node name="Piso2Collision" type="CollisionShape2D" parent="Piso2"]
-shape = SubResource("RectangleShape2D_piso2")
-
-[node name="PlatDoble1" type="StaticBody2D" parent="."]
+[node name="PlatDoble1" type="StaticBody2D" parent="." unique_id=863292461]
 position = Vector2(3350, 858)
 
-[node name="PlatDoble1Visual" type="Polygon2D" parent="PlatDoble1"]
+[node name="PlatDoble1Visual" type="Polygon2D" parent="PlatDoble1" unique_id=1789313563]
 color = Color(0.32, 0.5, 0.26, 1)
 polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 
-[node name="PlatDoble1Collision" type="CollisionShape2D" parent="PlatDoble1"]
+[node name="PlatDoble1Collision" type="CollisionShape2D" parent="PlatDoble1" unique_id=562003458]
 shape = SubResource("RectangleShape2D_plat")
 
-[node name="PlatDoble2" type="StaticBody2D" parent="."]
+[node name="PlatDoble2" type="StaticBody2D" parent="." unique_id=400806940]
 position = Vector2(3530, 717)
 
-[node name="PlatDoble2Visual" type="Polygon2D" parent="PlatDoble2"]
+[node name="PlatDoble2Visual" type="Polygon2D" parent="PlatDoble2" unique_id=678343929]
 color = Color(0.32, 0.5, 0.26, 1)
 polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 
-[node name="PlatDoble2Collision" type="CollisionShape2D" parent="PlatDoble2"]
+[node name="PlatDoble2Collision" type="CollisionShape2D" parent="PlatDoble2" unique_id=2020243894]
 shape = SubResource("RectangleShape2D_plat")
 
-[node name="PlatDoble3" type="StaticBody2D" parent="."]
+[node name="PlatDoble3" type="StaticBody2D" parent="." unique_id=2024035164]
 position = Vector2(3700, 577)
 
-[node name="PlatDoble3Visual" type="Polygon2D" parent="PlatDoble3"]
+[node name="PlatDoble3Visual" type="Polygon2D" parent="PlatDoble3" unique_id=6174304]
 color = Color(0.32, 0.5, 0.26, 1)
 polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 
-[node name="PlatDoble3Collision" type="CollisionShape2D" parent="PlatDoble3"]
+[node name="PlatDoble3Collision" type="CollisionShape2D" parent="PlatDoble3" unique_id=1855219336]
 shape = SubResource("RectangleShape2D_plat")
 
-[node name="GrietaLobo" parent="." instance=ExtResource("5_grieta")]
+[node name="GrietaLobo" parent="." unique_id=105804219 instance=ExtResource("5_grieta")]
 position = Vector2(2950, 773)
 
-[node name="Rompible1" parent="." instance=ExtResource("6_romp")]
+[node name="Rompible1" parent="." unique_id=2082107955 instance=ExtResource("6_romp")]
 position = Vector2(700, 940)
 
-[node name="Rompible2" parent="." instance=ExtResource("6_romp")]
+[node name="Rompible2" parent="." unique_id=441688810 instance=ExtResource("6_romp")]
 position = Vector2(1750, 940)
 
-[node name="Rompible3" parent="." instance=ExtResource("6_romp")]
+[node name="Rompible3" parent="." unique_id=1602575286 instance=ExtResource("6_romp")]
 position = Vector2(2600, 940)
 
-[node name="Pickup1" parent="." instance=ExtResource("7_pick")]
+[node name="Pickup1" parent="." unique_id=1605633986 instance=ExtResource("7_pick")]
 position = Vector2(2850, 940)
 
-[node name="Pickup2" parent="." instance=ExtResource("7_pick")]
+[node name="Pickup2" parent="." unique_id=937879990 instance=ExtResource("7_pick")]
 position = Vector2(3350, 800)
 
-[node name="Pickup3" parent="." instance=ExtResource("7_pick")]
+[node name="Pickup3" parent="." unique_id=308484336 instance=ExtResource("7_pick")]
 position = Vector2(3530, 660)
 
-[node name="Pickup4" parent="." instance=ExtResource("7_pick")]
+[node name="Pickup4" parent="." unique_id=1145590561 instance=ExtResource("7_pick")]
 position = Vector2(3900, 940)
 
-[node name="DialogoIntro" parent="." instance=ExtResource("8_dialog")]
+[node name="DialogoIntro" parent="." unique_id=1685442069 instance=ExtResource("8_dialog")]
 position = Vector2(150, 820)
-lineas = PackedStringArray("Escucha humano... si querés recuperar a tu hijo, vas a tener que prestar atención a lo que te diga.", "Te presto algo de nuestra energía espiritual para que llegues hasta la guarida de esos cultistas.", "Muévete con las flechas o A/D, y saltá con Espacio.")
+lineas = []
 modo = "Automatico"
 
-[node name="DialogoCombate" parent="." instance=ExtResource("8_dialog")]
-position = Vector2(1250, 820)
-lineas = PackedStringArray("Ahí hay un cultista. J es tu golpe ligero, K el golpe fuerte.", "Encadená los dos golpes para hacer un combo y noquearlo más rápido.")
+[node name="DialogoCombate" parent="." unique_id=1063822624 instance=ExtResource("8_dialog")]
+position = Vector2(1109, 784)
+lineas = []
 
-[node name="DialogoLobo" parent="." instance=ExtResource("8_dialog")]
+[node name="DialogoLobo" parent="." unique_id=120336290 instance=ExtResource("8_dialog")]
 position = Vector2(2750, 820)
-lineas = PackedStringArray("Sentís el vínculo con el Lobo despertar. Usa T para transformarte.", "En forma de Lobo podés agacharte para pasar por huecos bajos, y tenés doble salto: saltá otra vez en el aire.", "Pero cuidado: la transformación consume energía. Recogé los cristales para mantenerla.")
+lineas = []
 
-[node name="EncounterA" parent="." instance=ExtResource("9_enc")]
+[node name="EncounterA" parent="." unique_id=450537322 instance=ExtResource("9_enc")]
 position = Vector2(1450, 944)
 
 [node name="ArenaShape" parent="EncounterA/Arena" index="0"]
-scale = Vector2(0.35, 1.0)
+scale = Vector2(0.35, 1)
 
-[node name="Enemy" parent="EncounterA" instance=ExtResource("10_enemy")]
+[node name="Enemy" parent="EncounterA" unique_id=2080375130 instance=ExtResource("10_enemy")]
 position = Vector2(0, 0)
 spawn_telegrafiado = true
 ritual_duracion = 0.5
 
-[node name="EncounterB" parent="." instance=ExtResource("9_enc")]
+[node name="EncounterB" parent="." unique_id=1662278058 instance=ExtResource("9_enc")]
 position = Vector2(2350, 944)
 
 [node name="ArenaShape" parent="EncounterB/Arena" index="0"]
-scale = Vector2(0.5, 1.0)
+scale = Vector2(0.5, 1)
 
-[node name="Enemy1" parent="EncounterB" instance=ExtResource("10_enemy")]
+[node name="Enemy1" parent="EncounterB" unique_id=422124019 instance=ExtResource("10_enemy")]
 position = Vector2(-140, 0)
 spawn_telegrafiado = true
 ritual_duracion = 0.3
 
-[node name="Enemy2" parent="EncounterB" instance=ExtResource("10_enemy")]
+[node name="Enemy2" parent="EncounterB" unique_id=944372925 instance=ExtResource("10_enemy")]
 position = Vector2(140, 0)
 spawn_telegrafiado = true
 ritual_duracion = 0.6
 
-[node name="EncounterC" parent="." instance=ExtResource("9_enc")]
+[node name="EncounterC" parent="." unique_id=1798637985 instance=ExtResource("9_enc")]
 position = Vector2(4050, 944)
 
 [node name="ArenaShape" parent="EncounterC/Arena" index="0"]
-scale = Vector2(0.6, 1.0)
+scale = Vector2(0.6, 1)
 
-[node name="Enemy1" parent="EncounterC" instance=ExtResource("10_enemy")]
+[node name="Enemy1" parent="EncounterC" unique_id=2004167285 instance=ExtResource("10_enemy")]
 position = Vector2(-140, 0)
 spawn_telegrafiado = true
 ritual_duracion = 0.3
 
-[node name="Enemy2" parent="EncounterC" instance=ExtResource("10_enemy")]
+[node name="Enemy2" parent="EncounterC" unique_id=2095962334 instance=ExtResource("10_enemy")]
 position = Vector2(140, 0)
 spawn_telegrafiado = true
 ritual_duracion = 0.5
 
-[node name="Enemy3" parent="EncounterC" instance=ExtResource("10_enemy")]
-position = Vector2(0, 0)
+[node name="Enemy3" parent="EncounterC" unique_id=1473634744 instance=ExtResource("10_enemy")]
+ola_asignada = 1
 spawn_telegrafiado = true
 ritual_duracion = 0.4
-ola_asignada = 1
 
-[node name="Santuario" parent="." instance=ExtResource("11_sant")]
+[node name="Santuario" parent="." unique_id=1856516154 instance=ExtResource("11_sant")]
 position = Vector2(4650, 940)
 activar_victoria = true
 
-[node name="Hud" parent="." instance=ExtResource("12_hud")]
+[node name="Hud" parent="." unique_id=643194512 instance=ExtResource("12_hud")]
+visible = false
 
-[node name="Pause" parent="." instance=ExtResource("13_pause")]
+[node name="Pause" parent="." unique_id=1748003137 instance=ExtResource("13_pause")]
+visible = false
 
-[node name="LevelUp" parent="." instance=ExtResource("14_levelup")]
+[node name="LevelUp" parent="." unique_id=462113082 instance=ExtResource("14_levelup")]
+visible = false
 
-[node name="Consola" parent="." instance=ExtResource("15_cons")]
+[node name="Consola" parent="." unique_id=565580708 instance=ExtResource("15_cons")]
+visible = false
 
 [editable path="EncounterA"]
 [editable path="EncounterB"]

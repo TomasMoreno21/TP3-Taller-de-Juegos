@@ -4,7 +4,7 @@
 [ext_resource type="SpriteFrames" uid="uid://bkfv821bksv2h" path="res://resources/enemigo1_frames.tres" id="2_frames1"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(175, 319)
+size = Vector2(73, 199)
 
 [node name="Enemy" type="CharacterBody2D" unique_id=87872202]
 collision_layer = 2
@@ -27,5 +27,5 @@ animation = &"idle"
 autoplay = "idle"
 
 [node name="Collision" type="CollisionShape2D" parent="." unique_id=446829624]
-position = Vector2(0, -111.5)
+position = Vector2(-31.5, -74.5)
 shape = SubResource("RectangleShape2D_body")

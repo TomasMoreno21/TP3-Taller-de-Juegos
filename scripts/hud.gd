@@ -45,6 +45,7 @@ func _process(delta: float) -> void:
 			_actualizar_selector()
 
 func _ready() -> void:
+	visible = true
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 	_esp_cap_style = esp_cap.get_theme_stylebox("panel").duplicate()

@@ -86,8 +86,13 @@ func _ready() -> void:
 			animated.visible = false
 			poly.visible = true
 			poly.color = enemy_data.color
+		if collide_shape != null:
+			collide_shape.shape = collide_shape.shape.duplicate()
 		if collide_shape != null and enemy_data.collider_size != Vector2.ZERO:
+			var pies_offset := 0.0
+			pies_offset = collide_shape.position.y + collide_shape.shape.size.y * 0.5
 			collide_shape.shape.size = enemy_data.collider_size
+			collide_shape.position.y = pies_offset - enemy_data.collider_size.y * 0.5
 	else:
 		health = 40
 
@@ -122,7 +127,10 @@ func _mostrar_circulo_ritual() -> void:
 	else:
 		_ritual.color = Color(0.8, 0.4, 0.4, 0.7)
 	_ritual.polygon = _circulo_poligono(24)
-	_ritual.position = Vector2(0, 20)
+	var pies_y := 0.0
+	if collide_shape != null and collide_shape.shape is RectangleShape2D:
+		pies_y = collide_shape.position.y + collide_shape.shape.size.y * 0.5
+	_ritual.position = Vector2(0, pies_y)
 	add_child(_ritual)
 	var tw := create_tween()
 	tw.tween_property(_ritual, "scale", Vector2(1.5, 1.5), 0.6)

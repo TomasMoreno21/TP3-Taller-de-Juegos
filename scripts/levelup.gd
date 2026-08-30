@@ -17,6 +17,7 @@ var _estilo_normal: StyleBoxFlat
 
 
 func _ready() -> void:
+	visible = true
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("levelup")
 	panel.visible = false

@@ -17,6 +17,7 @@ var _controls: CanvasLayer
 
 
 func _ready() -> void:
+	visible = true
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 90
 	for i in botones.size():

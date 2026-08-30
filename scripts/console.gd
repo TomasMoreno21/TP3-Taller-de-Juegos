@@ -24,6 +24,7 @@ const COMANDOS := {
 
 
 func _ready() -> void:
+	visible = true
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("console")
 	panel.visible = false
