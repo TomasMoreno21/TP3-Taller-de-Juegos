@@ -26,6 +26,9 @@ func _init() -> void:
 	camera_zoom = Vector2.ONE
 	accel = 2600.0
 	friction = 2200.0
+	accel_air_mult = 0.65
+	coyote_time = 0.16
+	jump_buffer_time = 0.18
 	combos = [
 		{"nombre": "Remate", "secuencia": ["light", "heavy"], "dano": 38, "knockback": 260.0, "tamano": Vector2(162, 114), "rango": 126.0},
 	]

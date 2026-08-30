@@ -19,12 +19,15 @@ func _init() -> void:
 	special_damage = 15
 	color = Color(0.52, 0.4, 0.62)
 	collider_size = Vector2(160, 286)
-	camera_lookahead_mult = 0.86
+	camera_lookahead_mult = 1.0
 	transform_duration = 9.0
 	turn_tilt = 9.0
-	lean_angulo = 2.0
+	lean_angulo = 3.5
 	accel = 2400.0
 	friction = 2000.0
+	accel_air_mult = 0.65
+	coyote_time = 0.14
+	jump_buffer_time = 0.18
 	camera_zoom = Vector2(0.95, 0.95)
 	landing_squash = 0.1
 	mult_recuperacion = 1.8

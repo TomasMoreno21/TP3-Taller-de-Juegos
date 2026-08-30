@@ -12,6 +12,7 @@ var _t := 0.0
 @onready var barrera_sprite: Sprite2D = $Barrera/Visual/Sprite
 @onready var barrera_collision: CollisionShape2D = $Barrera/Collision
 @onready var ray: Line2D = $Ray
+@onready var luz_barrera: PointLight2D = $Barrera/Visual/LuzBarrera
 
 
 func _ready() -> void:
@@ -37,7 +38,9 @@ func _process(delta: float) -> void:
 		var s := 1.0 + sin(_t * 0.9) * 0.012
 		barrera_visual_root.scale = Vector2(s, s)
 		if barrera_poly != null:
-			barrera_poly.modulate.a = 0.58 + sin(_t * 1.2) * 0.07
+			barrera_poly.modulate.a = 0.62 + sin(_t * 1.2) * 0.09
+		if luz_barrera != null:
+			luz_barrera.energy = 1.6 + sin(_t * 1.1) * 0.35
 	_actualizar_ray()
 	_brillo_proximidad()
 
@@ -105,6 +108,8 @@ func _abrir_instantaneo() -> void:
 		barrera.visible = false
 		if barrera_collision != null:
 			barrera_collision.disabled = true
+	if luz_barrera != null:
+		luz_barrera.enabled = false
 	if ray != null:
 		ray.visible = false
 	for c in _cristales():
@@ -121,6 +126,9 @@ func _abrir_animado() -> void:
 		prog.barreras_abiertas[barrera_id] = true
 	if barrera_collision != null:
 		barrera_collision.set_deferred("disabled", true)
+	if luz_barrera != null:
+		var twl := create_tween()
+		twl.tween_property(luz_barrera, "energy", 0.0, 0.35)
 	_burst_barrera()
 	if ray != null:
 		var twr := create_tween()

@@ -13,11 +13,18 @@ script = ExtResource("1_cristal")
 [node name="Visual" type="Node2D" parent="."]
 
 [node name="Halo" type="Polygon2D" parent="Visual"]
-color = Color(0.62, 0.42, 0.92, 0.18)
+color = Color(0.72, 0.48, 1.0, 0.28)
 polygon = PackedVector2Array(0, -30, 22, 0, 0, 30, -22, 0)
 
+[node name="Luz" type="PointLight2D" parent="Visual"]
+color = Color(0.72, 0.42, 1.0, 1)
+energy = 2.2
+texture_scale = 0.55
+shadow_enabled = false
+blend_mode = 1
+
 [node name="Poly" type="Polygon2D" parent="Visual"]
-color = Color(0.62, 0.42, 0.92, 1)
+color = Color(0.78, 0.52, 1.0, 1)
 polygon = PackedVector2Array(0, -22, 16, 0, 0, 22, -16, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Visual"]

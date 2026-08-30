@@ -3,9 +3,11 @@
 [ext_resource type="Script" path="res://scripts/enredadera.gd" id="1_enredadera"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_enredadera"]
+resource_local_to_scene = true
 size = Vector2(32, 400)
 
 [node name="Enredadera" type="Area2D" groups=["enredadera"]]
+z_index = -1
 collision_layer = 0
 collision_mask = 4
 script = ExtResource("1_enredadera")
@@ -16,9 +18,7 @@ script = ExtResource("1_enredadera")
 color = Color(0.18, 0.42, 0.2, 1)
 polygon = PackedVector2Array(-16, -200, 16, -200, 16, 200, -16, 200)
 
-[node name="Hojas" type="Polygon2D" parent="Visual"]
-color = Color(0.32, 0.6, 0.26, 1)
-polygon = PackedVector2Array(-20, -180, -12, -180, -10, -140, -22, -140)
+[node name="Hojas" type="Node2D" parent="Visual"]
 
 [node name="Collision" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_enredadera")

@@ -25,14 +25,17 @@ func _init() -> void:
 	transform_duration = 8.0
 	turn_tilt = 9.0
 	lean_angulo = 4.5
-	hit_zoom = 1.015
+	hit_zoom = 1.025
 	accel = 4200.0
 	friction = 3600.0
+	accel_air_mult = 0.85
+	coyote_time = 0.14
+	jump_buffer_time = 0.20
 	camera_zoom = Vector2(0.94, 0.94)
 	sprint_zoom_out = 0.04
 	sprint_min_speed = 420.0
 	turn_tilt_cam = 0.06
-	landing_squash = 0.08
+	landing_squash = 0.14
 	mult_recuperacion = 0.85
 	lunge_light = 110.0
 	combos = [
@@ -48,6 +51,13 @@ const DOUBLE_JUMP_STRETCH_DURATION := 0.35
 func on_second_jump(player: CharacterBody2D) -> void:
 	player.apply_zip(DOUBLE_JUMP_ZIP)
 	player.stretch_y(DOUBLE_JUMP_STRETCH, DOUBLE_JUMP_STRETCH_DURATION)
+	var cam := player.get_viewport().get_camera_2d()
+	if cam != null and cam.has_method("punch"):
+		cam.punch(1.03)
+	if cam != null and cam.has_method("shake"):
+		cam.shake(3.0, 0.1)
+	if player.has_method("_emitir_polvo"):
+		player._emitir_polvo(0.7)
 
 
 func perform_light(player: CharacterBody2D, step: int) -> void:

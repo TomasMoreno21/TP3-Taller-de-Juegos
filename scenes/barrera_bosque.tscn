@@ -14,10 +14,17 @@ collision_mask = 0
 
 [node name="Visual" type="Node2D" parent="Barrera" unique_id=1305733353]
 
+[node name="LuzBarrera" type="PointLight2D" parent="Barrera/Visual" unique_id=999999999]
+color = Color(0.68, 0.38, 1.0, 1)
+energy = 1.6
+texture_scale = 1.8
+shadow_enabled = false
+blend_mode = 1
+
 [node name="Poly" type="Polygon2D" parent="Barrera/Visual" unique_id=1248111599]
 position = Vector2(0, -178)
 scale = Vector2(1, 2.1125)
-color = Color(0.45, 0.3, 0.65, 0.55)
+color = Color(0.62, 0.38, 0.88, 0.62)
 polygon = PackedVector2Array(-110, -160, 110, -160, 110, 160, -110, 160)
 
 [node name="Sprite" type="Sprite2D" parent="Barrera/Visual" unique_id=1580003956]

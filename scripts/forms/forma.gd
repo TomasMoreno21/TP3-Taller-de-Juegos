@@ -47,6 +47,9 @@ var _jumps_usados := 0
 # y rozamiento al soltar el input (más alto = frena más seco, bajo = derrapa).
 @export var accel: float = 2400.0
 @export var friction: float = 2200.0
+@export var accel_air_mult: float = 0.65
+@export var coyote_time: float = 0.14
+@export var jump_buffer_time: float = 0.18
 
 # Game feel de cámara por forma.
 @export var camera_zoom: Vector2 = Vector2.ONE        # zoom objetivo al estar transformado

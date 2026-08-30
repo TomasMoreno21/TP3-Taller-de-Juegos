@@ -80,11 +80,23 @@ var _cooldown_formas: Dictionary = {}
 const COOLDOWN_AGOTADA := 3.0
 const COOLDOWN_TRANSFORM := 3.0
 var _cooldown_transform := 0.0
+var _transform_buffer: float = 0.0
+const TRANSFORM_BUFFER_TIME := 0.15
 var _idle_breath_t := 0.0
 var _trepando: bool = false
 var _enredadera_actual: Area2D = null
 var _trepado_cooldown: float = 0.0
 var _trepar_hold_t: float = 0.0
+var _vine_coyote_timer: float = 0.0
+var _vine_buffer_timer: float = 0.0
+var _vine_particulas_timer: float = 0.0
+const VINE_COYOTE_TIME := 0.15
+const VINE_BUFFER_TIME := 0.15
+var _murci_glide_t: float = 0.0
+var _was_gliding: bool = false
+var _apex_squash_t: float = 0.0
+var _ledge_cooldown: float = 0.0
+var _was_on_wall: bool = false
 @export var limite_caida := 3000.0
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
@@ -112,6 +124,9 @@ func _ready() -> void:
 	health = VIDA_MAX
 	_spawn_position = global_position
 	_base_sprite_scale = Vector2(absf(visual.scale.x), visual.scale.y)
+	floor_snap_length = 0.0
+	floor_max_angle = deg_to_rad(45.0)
+	wall_min_slide_angle = deg_to_rad(15.0)
 	_apply_form()
 
 
@@ -123,6 +138,8 @@ func _physics_process(delta: float) -> void:
 
 	var data: Forma = forms[current_form]
 	data.tick(self, delta)
+	if _ledge_cooldown > 0.0:
+		_ledge_cooldown = maxf(_ledge_cooldown - delta, 0.0)
 	_handle_enredadera(delta)
 	if _attack_air_buffer > 0.0:
 		_attack_air_buffer -= delta
@@ -130,6 +147,8 @@ func _physics_process(delta: float) -> void:
 			_attack_air_buffer_type = ""
 
 	var dir := Input.get_axis("move_left", "move_right")
+	if absf(dir) < 0.35:
+		dir = 0.0
 	if _trepando:
 		dir = 0.0
 	elif data.is_dashing():
@@ -140,8 +159,16 @@ func _physics_process(delta: float) -> void:
 			var base_boost := TURN_BOOST if is_on_floor() else TURN_BOOST_AIR
 			var boost := base_boost if dir * velocity.x < 0.0 else 1.0
 			if boost > 1.0 and absf(velocity.x) > 120.0 and is_on_floor():
-				_emitir_polvo(0.4)
-			velocity.x = move_toward(velocity.x, dir * data.speed, data.accel * boost * delta)
+				if current_form == Form.LOBO:
+					if polvo != null:
+						polvo.direction = Vector2(-facing, -0.25)
+						polvo.initial_velocity_min = 90.0
+						polvo.initial_velocity_max = 160.0
+					_emitir_polvo(0.7)
+				else:
+					_emitir_polvo(0.4)
+			var air_mult := data.accel_air_mult if not is_on_floor() else 1.0
+			velocity.x = move_toward(velocity.x, dir * data.speed, data.accel * boost * air_mult * delta)
 		else:
 			if absf(velocity.x) > 250.0 and is_on_floor():
 				squash_y(0.12, 0.15)
@@ -152,7 +179,7 @@ func _physics_process(delta: float) -> void:
 		if _coyote_time > 0.0 or data.can_jump():
 			data.try_jump(self)
 		else:
-			_jump_buffer = JUMP_BUFFER_TIME
+			_jump_buffer = data.jump_buffer_time
 	if Input.is_action_just_released("jump") and velocity.y < 0.0:
 		var t := clampf(velocity.y / data.jump_velocity, 0.0, 1.0)
 		velocity.y *= lerpf(0.85, JUMP_CUT_MULTIPLIER, t)
@@ -161,8 +188,20 @@ func _physics_process(delta: float) -> void:
 	if _gravity_override >= 0.0:
 		g = _gravity_override
 	var gliding := data.is_gliding(self)
-	if gliding:
-		g *= GLIDE_FALL_MULTIPLIER
+	if gliding and current_form == Form.MURCIELAGO:
+		if not _was_gliding:
+			squash_y(0.12, 0.15)
+		_murci_glide_t += delta
+		_was_gliding = true
+		var prog := clampf(_murci_glide_t / 1.4, 0.0, 1.0)
+		g *= lerpf(0.18, 0.52, prog)
+	else:
+		if _was_gliding:
+			stretch_y(0.14, 0.18)
+		_was_gliding = false
+		_murci_glide_t = 0.0
+		if gliding:
+			g *= GLIDE_FALL_MULTIPLIER
 	# Apex hang escalonado: núcleo del ápice muy flotante, banda cercana suave.
 	if absf(velocity.y) < APEX_CORE_THRESHOLD:
 		g *= APEX_CORE_MULT
@@ -173,13 +212,19 @@ func _physics_process(delta: float) -> void:
 
 	if is_on_floor() and velocity.y > 0:
 		velocity.y = 0
-	var max_fall := MAX_FALL_SPEED if not gliding else 380.0
+	var prog_fall := clampf(_murci_glide_t / 1.4, 0.0, 1.0) if current_form == Form.MURCIELAGO and gliding else 0.0
+	var max_fall := MAX_FALL_SPEED if not gliding else (lerpf(300.0, 520.0, prog_fall) if current_form == Form.MURCIELAGO else 380.0)
 	velocity.y = min(velocity.y + g * delta, max_fall)
 	if gliding:
 		var dir_glide := Input.get_axis("move_left", "move_right")
+		if absf(dir_glide) < 0.35:
+			dir_glide = 0.0
 		if dir_glide != 0.0:
-			velocity.x = move_toward(velocity.x, dir_glide * data.speed * 1.1, data.accel * 0.6 * delta)
+			var m := 1.35 if current_form == Form.MURCIELAGO else 1.1
+			var a := 0.9 if current_form == Form.MURCIELAGO else 0.6
+			velocity.x = move_toward(velocity.x, dir_glide * data.speed * m, data.accel * a * delta)
 	move_and_slide()
+	# _try_platform_snap y _try_coleccion_borde deshabilitados temporalmente para debug de drift lento
 	if _trepando:
 		pass
 	elif is_on_wall() and not is_on_floor():
@@ -193,7 +238,7 @@ func _physics_process(delta: float) -> void:
 
 	if is_on_floor():
 		data.on_floor(self)
-		_coyote_time = COYOTE_TIME
+		_coyote_time = data.coyote_time
 		if not _was_on_floor:
 			data.on_landing(self, _fall_impact)
 			_squash_landing(data, _fall_impact)
@@ -220,9 +265,14 @@ func _physics_process(delta: float) -> void:
 	if sombra != null:
 		if is_on_floor():
 			sombra.visible = true
-			sombra.position = Vector2(0, 85)
-			sombra.scale = Vector2(1, 1)
-			sombra.modulate.a = 0.22
+			if current_form == Form.MURCIELAGO:
+				sombra.position = Vector2(0, 142)
+				sombra.scale = Vector2(1.25, 1.1)
+				sombra.modulate.a = 0.16
+			else:
+				sombra.position = Vector2(0, 85)
+				sombra.scale = Vector2(1, 1)
+				sombra.modulate.a = 0.22
 		else:
 			var space_state := get_world_2d().direct_space_state
 			var params := PhysicsRayQueryParameters2D.create(global_position, global_position + Vector2(0, 600))
@@ -247,12 +297,12 @@ func _physics_process(delta: float) -> void:
 
 	if _jump_buffer > 0.0:
 		_jump_buffer -= delta
-		if is_on_floor():
+		if is_on_floor() or _coyote_time > 0.0 or data.can_jump():
 			data.try_jump(self)
 			_jump_buffer = 0.0
 
 	_pasos_timer -= delta
-	if is_on_floor() and absf(velocity.x) > 0.5 and _pasos_timer <= 0.0:
+	if current_form != Form.MURCIELAGO and is_on_floor() and absf(velocity.x) > 0.5 and _pasos_timer <= 0.0:
 		_pasos_timer = PASOS_INTERVALO
 		_emitir_polvo(0.8)
 
@@ -264,6 +314,7 @@ func _physics_process(delta: float) -> void:
 	_handle_formas_cruceta()
 	_handle_forma_ciclo()
 	_handle_transform()
+	_was_on_wall = is_on_wall()
 	if global_position.y > limite_caida:
 		health = 0
 	_handle_death()
@@ -626,6 +677,19 @@ func _emitir_polvo(_escala: float) -> void:
 	polvo.emitting = true
 
 
+func _emitir_burst_hojas() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+	p.global_position = global_position + Vector2(randf_range(-10, 10), -10)
+	p.self_modulate = Color(0.32, 0.6, 0.26, 0.9)
+	p.amount = 6
+	p.lifetime = 0.35
+	get_tree().current_scene.add_child(p)
+	p.restart()
+	p.emitting = true
+
+
 func _squash_landing(data: Forma, impacto: float) -> void:
 	var amt := data.landing_squash
 	if amt <= 0.0 or impacto <= 0.0:
@@ -787,20 +851,26 @@ func _handle_forma_ciclo() -> void:
 
 
 func _handle_transform() -> void:
-	if not Input.is_action_just_pressed("transform"):
+	if _transform_buffer > 0.0:
+		_transform_buffer = maxf(_transform_buffer - get_physics_process_delta_time(), 0.0)
+	if Input.is_action_just_pressed("transform"):
+		_transform_buffer = TRANSFORM_BUFFER_TIME
+	if _transform_buffer <= 0.0 or _cooldown_transform > 0.0:
 		return
-	# T ya transformado en la forma preseleccionada = revertir a Humano al toque,
-	# si no T no hacía nada (se sentía como que no respondía)
 	if current_form != Form.HUMAN and forma_seleccionada == current_form:
+		var prev_h: int = current_form
 		_transformar(Form.HUMAN)
+		if current_form != prev_h:
+			_transform_buffer = 0.0
 		return
 	if forma_seleccionada == current_form:
-		# nada preseleccionado todavía con Q: T solo avanza a la próxima forma
-		# desbloqueada y transforma directo, no se queda sin hacer nada
 		_avanzar_seleccion()
 	if not _progresion().forma_desbloqueada(forma_seleccionada) or _forma_en_cooldown(forma_seleccionada):
 		return
+	var prev: int = current_form
 	_transformar(forma_seleccionada)
+	if current_form != prev:
+		_transform_buffer = 0.0
 
 
 func _transformar(nueva: int, forzar: bool = false) -> void:
@@ -922,8 +992,26 @@ func _update_animacion() -> void:
 		visual.skew = lerpf(visual.skew, 0.0, minf(8.0 * get_physics_process_delta_time(), 1.0))
 		visual.rotation = lerpf(visual.rotation, 0.0, minf(10.0 * get_physics_process_delta_time(), 1.0))
 		return
+	var data_glide: Forma = forms[current_form]
+	if current_form == Form.MURCIELAGO and data_glide.is_gliding(self):
+		if visual.animation != "murci_volar":
+			visual.play("murci_volar")
+		visual.frame = 1
+		visual.speed_scale = 0.0
+		var base_lean_g := clampf(velocity.x / maxf(data_glide.speed, 1.0), -1.0, 1.0) * deg_to_rad(data_glide.lean_angulo)
+		visual.skew = lerpf(visual.skew, base_lean_g, minf(8.0 * get_physics_process_delta_time(), 1.0))
+		var prog_rot := clampf(_murci_glide_t / 1.4, 0.0, 1.0)
+		var ang := lerpf(5.0, 16.0, prog_rot)
+		var ang_q := lerpf(3.0, 10.0, prog_rot)
+		visual.rotation = lerpf(visual.rotation, deg_to_rad(ang) * facing, minf(6.0 * get_physics_process_delta_time(), 1.0))
+		return
 	var anim := "run"
-	if current_form == Form.LOBO and visual.sprite_frames.has_animation("lobo_run"):
+	if current_form == Form.MURCIELAGO and visual.sprite_frames.has_animation("murci_volar"):
+		if not is_on_floor() or absf(velocity.y) > 20.0:
+			anim = "murci_volar"
+		elif visual.sprite_frames.has_animation("murci_run"):
+			anim = "murci_run"
+	elif current_form == Form.LOBO and visual.sprite_frames.has_animation("lobo_run"):
 		anim = "lobo_run"
 	if visual.animation != anim:
 		visual.play(anim)
@@ -932,6 +1020,8 @@ func _update_animacion() -> void:
 		visual.speed_scale = 0.0
 	else:
 		visual.speed_scale = clampf(absf(velocity.x) / maxf(data.speed, 1.0), 0.4, 1.6)
+		if current_form == Form.LOBO:
+			visual.speed_scale = pow(visual.speed_scale, 0.82)
 	var base_lean := clampf(velocity.x / maxf(data.speed, 1.0), -1.0, 1.0) * deg_to_rad(data.lean_angulo)
 	var lean_mult := 1.4 if not is_on_floor() else 1.0
 	var lean := base_lean * lean_mult
@@ -949,6 +1039,19 @@ func _update_animacion() -> void:
 			else:
 				target_rot = deg_to_rad(7.0) * facing
 	visual.rotation = lerpf(visual.rotation, target_rot, minf(10.0 * get_physics_process_delta_time(), 1.0))
+	if current_form == Form.LOBO and not is_on_floor() and absf(velocity.y) < APEX_CORE_THRESHOLD and not _trepando and (_sprite_tween == null or not _sprite_tween.is_valid()):
+		var apex_target := Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1) * Vector2(1.06, 0.94)
+		visual.scale = visual.scale.lerp(apex_target, 0.18)
+	if current_form == Form.LOBO and is_on_floor() and absf(velocity.x) > 320.0:
+		var cam_tilt2 := get_viewport().get_camera_2d()
+		if cam_tilt2 != null and cam_tilt2.has_method("tilt"):
+			cam_tilt2.tilt(-deg_to_rad(1.4) * signf(velocity.x) * clampf(absf(velocity.x) / 690.0, 0.0, 1.0))
+	if current_form == Form.MURCIELAGO and not _trepando and is_on_floor() and absf(velocity.x) > 10.0:
+		var t := Time.get_ticks_msec() / 1000.0
+		var onda := sin(t * 5.0) * 3.5 + sin(t * 9.0) * 1.8
+		visual.position.y = _visual_base_y() + onda
+	elif current_form == Form.MURCIELAGO and not _trepando:
+		visual.position.y = lerpf(visual.position.y, _visual_base_y(), minf(6.0 * get_physics_process_delta_time(), 1.0))
 
 
 func _handle_death() -> void:
@@ -1020,6 +1123,9 @@ func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 70
 	if current_form == Form.MURCIELAGO:
 		velocity.x -= facing * 120.0
 		squash_y(0.18, 0.25)
+		var cam2 := get_viewport().get_camera_2d()
+		if cam2 != null and cam2.has_method("shake"):
+			cam2.shake(2.0, 0.08)
 
 
 func _buscar_enemigo_homing(rango: float) -> Node2D:
@@ -1045,9 +1151,15 @@ func _try_interact() -> bool:
 
 
 func _try_ledge_assist() -> void:
-	if absf(velocity.x) < 8.0:
+	if _ledge_cooldown > 0.0:
 		return
-	for h in [28.0, 32.0, 24.0, 16.0, 36.0]:
+	if _was_on_wall:
+		return
+	if absf(velocity.x) < 4.0 and absf(Input.get_axis("move_left", "move_right")) < 0.15:
+		return
+	if velocity.y < -20.0:
+		return
+	for h in [12.0, 16.0, 20.0]:
 		var up := Transform2D(0, Vector2.ZERO).translated(Vector2(0, -h))
 		if test_move(up, Vector2(facing * 10, 0)):
 			continue
@@ -1056,6 +1168,7 @@ func _try_ledge_assist() -> void:
 		global_position.y -= h
 		velocity.y = minf(velocity.y, -160.0)
 		velocity.x = facing * maxf(absf(velocity.x), 140.0)
+		_ledge_cooldown = 0.45
 		_emitir_polvo(0.6)
 		visual.scale = Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1) * Vector2(1.08, 0.92)
 		if _sprite_tween != null and _sprite_tween.is_valid():
@@ -1079,9 +1192,9 @@ func _try_corner_nudge() -> void:
 
 
 func _try_step_up() -> void:
-	if absf(velocity.x) < 8.0:
+	if absf(velocity.x) < 4.0 and absf(Input.get_axis("move_left", "move_right")) < 0.15:
 		return
-	for h in [24.0, 28.0, 18.0, 12.0, 32.0]:
+	for h in [12.0, 16.0, 20.0]:
 		var up := Transform2D(0, Vector2.ZERO).translated(Vector2(0, -h))
 		if test_move(up, Vector2(facing * 12, 0)):
 			continue
@@ -1091,6 +1204,33 @@ func _try_step_up() -> void:
 		velocity.x = facing * maxf(absf(velocity.x), 110.0)
 		_emitir_polvo(0.4)
 		return
+
+
+func _try_platform_snap() -> void:
+	if is_on_floor() or velocity.y < 30.0:
+		return
+	for off in [10.0, -10.0, 6.0, -6.0]:
+		var test_xform := Transform2D(0, Vector2.ZERO).translated(Vector2(off, 0))
+		if not test_move(test_xform, Vector2(0, 8)):
+			var test_floor := Transform2D(0, Vector2.ZERO).translated(Vector2(off, 0))
+			if not test_move(test_floor, Vector2.ZERO):
+				continue
+			if test_move(test_floor, Vector2(0, 1)):
+				global_position.x += off
+				velocity.y = 0.0
+				_coyote_time = forms[current_form].coyote_time
+				return
+
+
+func _try_coleccion_borde() -> void:
+	if is_on_floor() or velocity.y < 20.0:
+		return
+	for off in [12.0, -12.0]:
+		var side := Transform2D(0, Vector2.ZERO).translated(Vector2(off, 0))
+		if not test_move(side, Vector2(0, 10)):
+			global_position.x += off * 0.55
+			velocity.y = minf(velocity.y, 80.0)
+			return
 
 
 func _actualizar_respiracion_idle(delta: float, _data: Forma) -> void:
@@ -1108,6 +1248,12 @@ func _actualizar_respiracion_idle(delta: float, _data: Forma) -> void:
 func _handle_enredadera(delta: float) -> void:
 	if _trepado_cooldown > 0.0:
 		_trepado_cooldown = maxf(_trepado_cooldown - delta, 0.0)
+	if _vine_buffer_timer > 0.0:
+		_vine_buffer_timer = maxf(_vine_buffer_timer - delta, 0.0)
+	if _vine_particulas_timer > 0.0:
+		_vine_particulas_timer = maxf(_vine_particulas_timer - delta, 0.0)
+	if Input.is_action_just_pressed("move_up") or Input.is_action_just_pressed("move_down") or Input.is_action_just_pressed("jump"):
+		_vine_buffer_timer = VINE_BUFFER_TIME
 	if _trepando:
 		if current_form != Form.HUMAN:
 			_salir_enredadera()
@@ -1123,10 +1269,16 @@ func _handle_enredadera(delta: float) -> void:
 		if _enredadera_actual is Area2D:
 			overlapping = (_enredadera_actual as Area2D).get_overlapping_bodies().has(self)
 		if not overlapping:
-			overlapping = absf(global_position.x - _enredadera_actual.global_position.x) < ancho * 0.5 + 36.0 and global_position.y > top - 36.0 and global_position.y < bot + 36.0
+			overlapping = absf(global_position.x - _enredadera_actual.global_position.x) < ancho * 0.5 + 48.0 and global_position.y > top - 48.0 and global_position.y < bot + 48.0
 		if not overlapping:
-			_salir_enredadera()
-			return
+			if _vine_coyote_timer > 0.0:
+				_vine_coyote_timer = maxf(_vine_coyote_timer - delta, 0.0)
+				overlapping = true
+			else:
+				_salir_enredadera()
+				return
+		else:
+			_vine_coyote_timer = VINE_COYOTE_TIME
 		var dir_y: int = 0
 		if Input.is_action_pressed("move_up"):
 			dir_y -= 1
@@ -1136,11 +1288,12 @@ func _handle_enredadera(delta: float) -> void:
 			var vy_prev: float = velocity.y
 			_salir_enredadera()
 			var jump_mult := 1.1 if dir_y < 0 or vy_prev < -40.0 else 1.0
-			velocity.y = forms[current_form].jump_velocity * jump_mult + vy_prev * 0.2
+			velocity.y = forms[current_form].jump_velocity * jump_mult + vy_prev * 0.25
 			velocity.x = facing * 200.0
-			_trepado_cooldown = 0.28
+			_trepado_cooldown = 0.7
 			squash_y(0.18, 0.18)
 			_emitir_polvo(0.6)
+			_emitir_burst_hojas()
 			var cam := get_viewport().get_camera_2d()
 			if cam != null and cam.has_method("punch"):
 				cam.punch(1.04)
@@ -1149,21 +1302,34 @@ func _handle_enredadera(delta: float) -> void:
 			_trepar_hold_t += delta
 		else:
 			_trepar_hold_t = 0.0
+			_vine_particulas_timer = 0.0
 		var cs_base: float = float(_enredadera_actual.get("climb_speed")) if _enredadera_actual.get("climb_speed") != null else 260.0
 		var cs: float = 320.0 if _trepar_hold_t > 0.6 and dir_y != 0 else cs_base
 		var target_vy: float = dir_y * cs
-		velocity.y = lerpf(velocity.y, target_vy, 8.0 * delta)
+		var accel := 2600.0 if _trepar_hold_t > 0.6 else 1800.0
+		if dir_y != 0:
+			velocity.y = move_toward(velocity.y, target_vy, accel * delta)
+		else:
+			velocity.y = lerpf(velocity.y, 0.0, 4.5 * delta)
 		velocity.x = 0.0
 		_gravity_override = 0.0
-		global_position.x = lerpf(global_position.x, _enredadera_actual.global_position.x, 12.0 * delta)
+		global_position.x = lerpf(global_position.x, _enredadera_actual.global_position.x, 18.0 * delta)
 		if dir_y != 0 and absf(velocity.y) > 20.0:
 			visual.skew = lerpf(visual.skew, deg_to_rad(3.0) * -dir_y, 6.0 * delta)
+		if dir_y != 0 and absf(velocity.y) > 80.0 and _vine_particulas_timer <= 0.0:
+			_emitir_polvo(0.45)
+			if _trepar_hold_t > 0.6:
+				_emitir_burst_hojas()
+				_vine_particulas_timer = 0.55
+			else:
+				_vine_particulas_timer = 0.9
 		return
 	if _trepado_cooldown > 0.0:
 		return
 	if current_form != Form.HUMAN:
 		return
-	if not (Input.is_action_pressed("move_up") or Input.is_action_pressed("move_down") or Input.is_action_pressed("jump")):
+	var quiere_trepar: bool = Input.is_action_pressed("move_up") or Input.is_action_pressed("move_down") or Input.is_action_pressed("jump") or _vine_buffer_timer > 0.0
+	if not quiere_trepar:
 		return
 	for e in get_tree().get_nodes_in_group("enredadera"):
 		if not is_instance_valid(e):
@@ -1177,7 +1343,7 @@ func _handle_enredadera(delta: float) -> void:
 		if area is Area2D:
 			is_overlap = (area as Area2D).get_overlapping_bodies().has(self)
 		if not is_overlap:
-			is_overlap = absf(global_position.x - area.global_position.x) < ancho2 * 0.5 + 36.0 and global_position.y > top2 - 36.0 and global_position.y < bot2 + 36.0
+			is_overlap = absf(global_position.x - area.global_position.x) < ancho2 * 0.5 + 48.0 and global_position.y > top2 - 48.0 and global_position.y < bot2 + 48.0
 		if is_overlap:
 			_trepando = true
 			_enredadera_actual = area
@@ -1192,6 +1358,7 @@ func _salir_enredadera() -> void:
 	_trepando = false
 	_enredadera_actual = null
 	_gravity_override = -1.0
+	_trepado_cooldown = maxf(_trepado_cooldown, 0.7)
 
 
 func _en_combate() -> bool:

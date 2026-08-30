@@ -8,6 +8,10 @@
 [ext_resource type="Texture2D" uid="uid://cad1diumnfom3" path="res://Sprites/Jugador y Transformaciones/2lobo correr.png" id="6_lobo2"]
 [ext_resource type="Texture2D" uid="uid://dyxdl5ml23b56" path="res://Sprites/Jugador y Transformaciones/3lobo correr.png" id="7_lobo3"]
 [ext_resource type="Texture2D" uid="uid://b7o2e332bp5fv" path="res://Sprites/Jugador y Transformaciones/4lobo correr.png" id="8_lobo4"]
+[ext_resource type="Texture2D" uid="uid://boy1xam3t3kgo" path="res://Sprites/Jugador y Transformaciones/1murci volar.png" id="9_murci1"]
+[ext_resource type="Texture2D" uid="uid://dahkkhxidsfbt" path="res://Sprites/Jugador y Transformaciones/2muci volar.png" id="10_murci2"]
+[ext_resource type="Texture2D" uid="uid://dmann800u6otn" path="res://Sprites/Jugador y Transformaciones/3murci volar.png" id="11_murci3"]
+[ext_resource type="Texture2D" uid="uid://b74fwsdtf2mjp" path="res://Sprites/Jugador y Transformaciones/4murci volar.png" id="12_murci4"]
 
 [resource]
 animations = [{
@@ -43,6 +47,40 @@ animations = [{
 "loop": 1,
 "name": &"lobo_run",
 "speed": 12.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_murci1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_murci2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_murci3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_murci4")
+}],
+"loop": 1,
+"name": &"murci_run",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_murci1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_murci2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_murci3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_murci4")
+}],
+"loop": 1,
+"name": &"murci_volar",
+"speed": 10.0
 }, {
 "frames": [{
 "duration": 1.0,

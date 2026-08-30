@@ -66,7 +66,13 @@ func _physics_process(delta: float) -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if player == null:
 		return
-	var destino := (player as Node2D).global_position + desplazamiento
+	var trepando: bool = false
+	if player is Node:
+		var tv = (player as Node).get("_trepando")
+		if tv != null:
+			trepando = bool(tv)
+	var desp := Vector2(0, -180) if trepando else desplazamiento
+	var destino := (player as Node2D).global_position + desp
 	# (2) Ver 40px más arriba si saltas alto (vy < -300)
 	var vel_y: float = (player as Node2D).velocity.y
 	if vel_y < -300.0:
@@ -78,7 +84,9 @@ func _physics_process(delta: float) -> void:
 	# (1) Zoom por velocidad + (7) suavizado de bajada si planea
 	var vel_x: float = (player as Node2D).velocity.x
 	var look_mult := 1.0
-	if "forms" in player and "current_form" in player:
+	if trepando:
+		look_mult = 0.22
+	elif "forms" in player and "current_form" in player:
 		var f = (player as Node).get("forms")[(player as Node).get("current_form")]
 		if f != null and "camera_lookahead_mult" in f:
 			look_mult = f.get("camera_lookahead_mult")
@@ -90,20 +98,23 @@ func _physics_process(delta: float) -> void:
 	# (1) Zoom por velocidad: 200→0, 650→0.08 (0.92)
 	var extra_zoom := clampf((absf(vel_x) - 200.0) / 450.0, 0.0, 1.0) * 0.08
 	_zoom_velocidad = 1.0 - extra_zoom
-	# Vertical asimétrico: subir lento (deadzone + suavizado bajo), bajar brusco (7) o suave si planea (4)
+	# Vertical asimétrico: subir lento (deadzone + suavizado bajo), bajar brusco (7) o suave si planea (4) — trepando enfoca vertical
+	var dz_vert := 40.0 if trepando else deadzone_vertical
+	var suav_up := 3.2 if trepando else suavizado_subida
 	var dy = destino.y - global_position.y
 	var suavizado_y: float
 	if dy < 0:
-		if absf(dy) < deadzone_vertical:
-			destino.y = global_position.y + dy * seguimiento_vertical_leve
-		suavizado_y = suavizado_subida
+		if absf(dy) < dz_vert:
+			var seg := 0.45 if trepando else seguimiento_vertical_leve
+			destino.y = global_position.y + dy * seg
+		suavizado_y = suav_up
 	else:
 		var gliding := false
 		if "forms" in player and "current_form" in player:
 			var fg = (player as Node).get("forms")[(player as Node).get("current_form")]
 			if fg != null and fg.has_method("is_gliding"):
 				gliding = fg.call("is_gliding", player)
-		suavizado_y = 4.0 if gliding else suavizado_bajada
+		suavizado_y = 3.0 if trepando else (4.0 if gliding else suavizado_bajada)
 	global_position.x = lerpf(global_position.x, destino.x, minf(suavizado * delta, 1.0))
 	global_position.y = lerpf(global_position.y, destino.y, minf(suavizado_y * delta, 1.0))
 
