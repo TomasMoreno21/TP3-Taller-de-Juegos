@@ -84,6 +84,7 @@ var _idle_breath_t := 0.0
 var _trepando: bool = false
 var _enredadera_actual: Area2D = null
 var _trepado_cooldown: float = 0.0
+var _trepar_hold_t: float = 0.0
 @export var limite_caida := 3000.0
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
@@ -1005,7 +1006,9 @@ func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 70
 	if current_form == Form.MURCIELAGO:
 		var objetivo := _buscar_enemigo_homing(500.0)
 		if objetivo != null:
-			dir_inicial = (objetivo.global_position - proj.global_position).normalized()
+			var to_obj: Vector2 = objetivo.global_position - proj.global_position
+			if to_obj.length_squared() > 0.01:
+				dir_inicial = to_obj.normalized()
 		proj.set("homing", true)
 		proj.set("homing_range", 500.0)
 		proj.set("homing_strength", 4.0)
@@ -1042,29 +1045,51 @@ func _try_interact() -> bool:
 
 
 func _try_ledge_assist() -> void:
-	if absf(velocity.x) < 10.0:
+	if absf(velocity.x) < 8.0:
 		return
-	for h in [16.0, 20.0, 12.0]:
+	for h in [28.0, 32.0, 24.0, 16.0, 36.0]:
 		var up := Transform2D(0, Vector2.ZERO).translated(Vector2(0, -h))
-		if test_move(up, Vector2(facing * 6, 0)):
+		if test_move(up, Vector2(facing * 10, 0)):
 			continue
 		if test_move(up, Vector2(0, 0)):
 			continue
 		global_position.y -= h
-		velocity.y = minf(velocity.y, -90.0)
+		velocity.y = minf(velocity.y, -160.0)
+		velocity.x = facing * maxf(absf(velocity.x), 140.0)
+		_emitir_polvo(0.6)
+		visual.scale = Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1) * Vector2(1.08, 0.92)
+		if _sprite_tween != null and _sprite_tween.is_valid():
+			_sprite_tween.kill()
+		_sprite_tween = create_tween()
+		_sprite_tween.tween_property(visual, "scale", Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		return
+	_try_corner_nudge()
+
+
+func _try_corner_nudge() -> void:
+	if not is_on_ceiling():
+		return
+	for d in [12.0, -12.0, 18.0, -18.0]:
+		var side := Transform2D(0, Vector2.ZERO).translated(Vector2(d, 0))
+		if not test_move(side, Vector2(0, -8)):
+			global_position.x += d
+			velocity.x = d * 9.0
+			_emitir_polvo(0.5)
+			return
 
 
 func _try_step_up() -> void:
-	if absf(velocity.x) < 10.0:
+	if absf(velocity.x) < 8.0:
 		return
-	for h in [14.0, 18.0, 10.0]:
+	for h in [24.0, 28.0, 18.0, 12.0, 32.0]:
 		var up := Transform2D(0, Vector2.ZERO).translated(Vector2(0, -h))
-		if test_move(up, Vector2(facing * 8, 0)):
+		if test_move(up, Vector2(facing * 12, 0)):
 			continue
 		if test_move(up, Vector2(0, 0)):
 			continue
 		global_position.y -= h
+		velocity.x = facing * maxf(absf(velocity.x), 110.0)
+		_emitir_polvo(0.4)
 		return
 
 
@@ -1102,22 +1127,37 @@ func _handle_enredadera(delta: float) -> void:
 		if not overlapping:
 			_salir_enredadera()
 			return
-		if Input.is_action_just_pressed("jump"):
-			_salir_enredadera()
-			velocity.y = forms[current_form].jump_velocity * 1.0
-			velocity.x = facing * 140.0
-			_trepado_cooldown = 0.28
-			return
 		var dir_y: int = 0
 		if Input.is_action_pressed("move_up"):
 			dir_y -= 1
 		if Input.is_action_pressed("move_down"):
 			dir_y += 1
-		var cs: float = float(_enredadera_actual.get("climb_speed")) if _enredadera_actual.get("climb_speed") != null else 200.0
-		velocity.y = dir_y * cs
+		if Input.is_action_just_pressed("jump"):
+			var vy_prev: float = velocity.y
+			_salir_enredadera()
+			var jump_mult := 1.1 if dir_y < 0 or vy_prev < -40.0 else 1.0
+			velocity.y = forms[current_form].jump_velocity * jump_mult + vy_prev * 0.2
+			velocity.x = facing * 200.0
+			_trepado_cooldown = 0.28
+			squash_y(0.18, 0.18)
+			_emitir_polvo(0.6)
+			var cam := get_viewport().get_camera_2d()
+			if cam != null and cam.has_method("punch"):
+				cam.punch(1.04)
+			return
+		if dir_y != 0:
+			_trepar_hold_t += delta
+		else:
+			_trepar_hold_t = 0.0
+		var cs_base: float = float(_enredadera_actual.get("climb_speed")) if _enredadera_actual.get("climb_speed") != null else 260.0
+		var cs: float = 320.0 if _trepar_hold_t > 0.6 and dir_y != 0 else cs_base
+		var target_vy: float = dir_y * cs
+		velocity.y = lerpf(velocity.y, target_vy, 8.0 * delta)
 		velocity.x = 0.0
 		_gravity_override = 0.0
 		global_position.x = lerpf(global_position.x, _enredadera_actual.global_position.x, 12.0 * delta)
+		if dir_y != 0 and absf(velocity.y) > 20.0:
+			visual.skew = lerpf(visual.skew, deg_to_rad(3.0) * -dir_y, 6.0 * delta)
 		return
 	if _trepado_cooldown > 0.0:
 		return

@@ -23,8 +23,12 @@ func _physics_process(delta: float) -> void:
 	if homing and not enemy_shot:
 		var target: Node2D = _buscar_enemigo_cercano()
 		if target != null:
-			var dir_deseada := (target.global_position - global_position).normalized()
-			direction = direction.lerp(dir_deseada, homing_strength * delta).normalized()
+			var to_target: Vector2 = target.global_position - global_position
+			if to_target.length_squared() > 0.01:
+				var dir_deseada: Vector2 = to_target.normalized()
+				var blended: Vector2 = direction.lerp(dir_deseada, homing_strength * delta)
+				if blended.length_squared() > 0.01:
+					direction = blended.normalized()
 	global_position += direction * speed * delta
 	if _fuera_de_camara():
 		queue_free()

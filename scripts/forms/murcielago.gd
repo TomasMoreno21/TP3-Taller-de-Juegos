@@ -27,7 +27,7 @@ func _init() -> void:
 	friction = 2000.0
 	camera_zoom = Vector2(0.95, 0.95)
 	landing_squash = 0.1
-	mult_recuperacion = 1.35
+	mult_recuperacion = 1.8
 	combos = [
 		{"nombre": "Ala Cortante", "secuencia": ["light", "heavy"], "dano": 32, "knockback": 240.0, "tamano": Vector2(192, 102), "rango": 114.0},
 	]

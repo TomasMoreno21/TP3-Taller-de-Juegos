@@ -1,6 +1,6 @@
 extends Area2D
 
-@export var climb_speed: float = 200.0
+@export var climb_speed: float = 260.0
 @export var ancho: float = 32.0
 @export var alto: float = 400.0
 @export var required_form: int = 0

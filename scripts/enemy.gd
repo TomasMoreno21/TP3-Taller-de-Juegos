@@ -240,7 +240,8 @@ func _ataque_melee(player: Node2D) -> void:
 
 func _disparar(player: Node2D) -> void:
 	_reproducir_animacion_ataque("attack2")
-	var dir := (player.global_position - global_position).normalized()
+	var to_player: Vector2 = player.global_position - global_position
+	var dir: Vector2 = to_player.normalized() if to_player.length_squared() > 0.01 else Vector2(_dir, 0.0)
 	var proj: Area2D = preload("res://scenes/projectile.tscn").instantiate()
 	proj.global_position = global_position + Vector2(_dir * 25.0, -10.0)
 	proj.set("direction", dir)

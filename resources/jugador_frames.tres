@@ -14,18 +14,17 @@ animations = [{
 "frames": [{
 "duration": 1.0,
 "texture": ExtResource("1_ybjtb")
-}, {
-"duration": 1.0,
-"texture": ExtResource("2_b7l1w")
-}, {
-"duration": 1.0,
-"texture": ExtResource("3_h04gk")
-}, {
-"duration": 1.0,
-"texture": ExtResource("4_8ci31")
 }],
-"loop": true,
-"name": &"run",
+"loop": 1,
+"name": &"climb",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_ybjtb")
+}],
+"loop": 1,
+"name": &"idle",
 "speed": 5.0
 }, {
 "frames": [{
@@ -41,23 +40,24 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("8_lobo4")
 }],
-"loop": true,
+"loop": 1,
 "name": &"lobo_run",
 "speed": 12.0
 }, {
 "frames": [{
 "duration": 1.0,
 "texture": ExtResource("1_ybjtb")
-}],
-"loop": true,
-"name": &"climb",
-"speed": 5.0
 }, {
-"frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_ybjtb")
+"texture": ExtResource("2_b7l1w")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_h04gk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_8ci31")
 }],
-"loop": true,
-"name": &"idle",
+"loop": 1,
+"name": &"run",
 "speed": 5.0
 }]
