@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="13_pause"]
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="14_levelup"]
 [ext_resource type="PackedScene" path="res://scenes/console.tscn" id="15_cons"]
+[ext_resource type="PackedScene" path="res://scenes/enredadera.tscn" id="16_enredadera"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
 size = Vector2(4800, 401)
@@ -35,6 +36,8 @@ limit_bottom = 1100
 script = ExtResource("2_cam")
 
 [node name="FondoBosque" parent="." unique_id=542214532 instance=ExtResource("3_fondo")]
+offset = Vector2(-31.195, 0)
+transform = Transform2D(1, 0, 0, 1, -31.195, 0)
 
 [node name="Terreno" type="TileMapLayer" parent="." unique_id=211863747]
 tile_set = ExtResource("4_tileset")
@@ -80,17 +83,72 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 [node name="PlatDoble3Collision" type="CollisionShape2D" parent="PlatDoble3" unique_id=1855219336]
 shape = SubResource("RectangleShape2D_plat")
 
+[node name="Enredadera1" parent="." unique_id=800000001 instance=ExtResource("16_enredadera")]
+position = Vector2(2213, 737)
+ancho = 36.0
+alto = 500.0
+
+[node name="Plataforma1" type="StaticBody2D" parent="." unique_id=800000002]
+position = Vector2(1010, 752)
+
+[node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma1" unique_id=800000003]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plataforma1Collision" type="CollisionShape2D" parent="Plataforma1" unique_id=800000004]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="Plataforma3" type="StaticBody2D" parent="." unique_id=1020045928]
+position = Vector2(717, 838)
+
+[node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma3" unique_id=1771737614]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plataforma1Collision" type="CollisionShape2D" parent="Plataforma3" unique_id=2088030116]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="Plataforma4" type="StaticBody2D" parent="." unique_id=1820663570]
+position = Vector2(441, 924)
+
+[node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma4" unique_id=1876678510]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plataforma1Collision" type="CollisionShape2D" parent="Plataforma4" unique_id=580097200]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="Plataforma2" type="StaticBody2D" parent="." unique_id=627536273]
+position = Vector2(1297, 672)
+
+[node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma2" unique_id=1458600014]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plataforma1Collision" type="CollisionShape2D" parent="Plataforma2" unique_id=1589954667]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="Plataforma5" type="StaticBody2D" parent="." unique_id=1990082882]
+position = Vector2(2479, 503)
+
+[node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma5" unique_id=847789452]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plataforma1Collision" type="CollisionShape2D" parent="Plataforma5" unique_id=122026005]
+shape = SubResource("RectangleShape2D_plat")
+
 [node name="GrietaLobo" parent="." unique_id=105804219 instance=ExtResource("5_grieta")]
 position = Vector2(2950, 773)
 
 [node name="Rompible1" parent="." unique_id=2082107955 instance=ExtResource("6_romp")]
-position = Vector2(700, 940)
+position = Vector2(1891, 633)
 
 [node name="Rompible2" parent="." unique_id=441688810 instance=ExtResource("6_romp")]
-position = Vector2(1750, 940)
+position = Vector2(809, 935)
 
 [node name="Rompible3" parent="." unique_id=1602575286 instance=ExtResource("6_romp")]
-position = Vector2(2600, 940)
+position = Vector2(2388, 422)
 
 [node name="Pickup1" parent="." unique_id=1605633986 instance=ExtResource("7_pick")]
 position = Vector2(2850, 940)
@@ -105,34 +163,33 @@ position = Vector2(3530, 660)
 position = Vector2(3900, 940)
 
 [node name="DialogoIntro" parent="." unique_id=1685442069 instance=ExtResource("8_dialog")]
-position = Vector2(150, 820)
+position = Vector2(181, 820)
 lineas = []
 modo = "Automatico"
+una_vez = false
 
 [node name="DialogoCombate" parent="." unique_id=1063822624 instance=ExtResource("8_dialog")]
-position = Vector2(1109, 784)
+position = Vector2(1592, 774)
 lineas = []
+una_vez = false
 
 [node name="DialogoLobo" parent="." unique_id=120336290 instance=ExtResource("8_dialog")]
 position = Vector2(2750, 820)
 lineas = []
+una_vez = false
 
 [node name="EncounterA" parent="." unique_id=450537322 instance=ExtResource("9_enc")]
-position = Vector2(1450, 944)
+position = Vector2(1651.395, 1444)
 
 [node name="ArenaShape" parent="EncounterA/Arena" index="0"]
-scale = Vector2(0.35, 1)
+scale = Vector2(0.7, 1)
 
 [node name="Enemy" parent="EncounterA" unique_id=2080375130 instance=ExtResource("10_enemy")]
-position = Vector2(0, 0)
 spawn_telegrafiado = true
 ritual_duracion = 0.5
 
 [node name="EncounterB" parent="." unique_id=1662278058 instance=ExtResource("9_enc")]
-position = Vector2(2350, 944)
-
-[node name="ArenaShape" parent="EncounterB/Arena" index="0"]
-scale = Vector2(0.5, 1)
+position = Vector2(2350, 1444)
 
 [node name="Enemy1" parent="EncounterB" unique_id=422124019 instance=ExtResource("10_enemy")]
 position = Vector2(-140, 0)
@@ -145,10 +202,10 @@ spawn_telegrafiado = true
 ritual_duracion = 0.6
 
 [node name="EncounterC" parent="." unique_id=1798637985 instance=ExtResource("9_enc")]
-position = Vector2(4050, 944)
+position = Vector2(4050, 1444)
 
 [node name="ArenaShape" parent="EncounterC/Arena" index="0"]
-scale = Vector2(0.6, 1)
+scale = Vector2(1.2, 1)
 
 [node name="Enemy1" parent="EncounterC" unique_id=2004167285 instance=ExtResource("10_enemy")]
 position = Vector2(-140, 0)
