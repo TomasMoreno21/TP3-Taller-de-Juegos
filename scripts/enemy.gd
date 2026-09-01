@@ -26,6 +26,9 @@ var _dir := -1
 var _attack_anim := ""
 var _attack_anim_timer := 0.0
 var _stun_timer := 0.0
+var _windup_timer := 0.0
+var _lunge_timer := 0.0
+var _lunge_hit := false
 
 @onready var visual: Node2D = $Visual
 @onready var poly: Polygon2D = $Visual/Poly
@@ -33,40 +36,54 @@ var _stun_timer := 0.0
 @onready var collide_shape: CollisionShape2D = $Collision
 
 
+func _freeze_hitstop(duracion: float = 0.07) -> void:
+	var hs = get_node_or_null("/root/Hitstop")
+	if hs != null and hs.has_method("freeze"):
+		hs.freeze(duracion)
+
+
 static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 	var d := Enemigo.new()
 	match enemy_tipo:
 		"cultista":
 			d.tipo_nombre = "Cultista"
-			d.max_health = 40
-			d.speed = 75.0
+			d.max_health = 75
+			d.speed = 140.0
 			d.stop_distance = 30.0
-			d.attack_damage = 8
+			d.attack_damage = 12
 			d.attack_range = 110.0
-			d.attack_cooldown = 1.2
+			d.attack_cooldown = 0.7
+			d.windup_tiempo = 0.28
+			d.lunge_velocidad = 420.0
 			d.color = Color(0.55, 0.38, 0.3)
+			d.knockback_resist = 0.55
 		"arquero":
 			d.tipo_nombre = "Arquero"
-			d.max_health = 35
-			d.speed = 55.0
-			d.attack_damage = 10
-			d.attack_cooldown = 2.2
+			d.max_health = 60
+			d.speed = 95.0
+			d.attack_damage = 15
+			d.attack_cooldown = 1.4
 			d.projectile = true
 			d.shoot_range = 420.0
+			d.retrocede_dist = 170.0
+			d.proyectil_speed = 430.0
 			d.color = Color(0.42, 0.3, 0.5)
 			d.collider_size = Vector2(28, 56)
+			d.knockback_resist = 0.45
 		"chaman":
 			d.tipo_nombre = "Chamán"
-			d.max_health = 96
-			d.speed = 40.0
+			d.max_health = 155
+			d.speed = 72.0
 			d.stop_distance = 40.0
-			d.attack_damage = 12
-			d.attack_cooldown = 2.6
+			d.attack_damage = 18
+			d.attack_cooldown = 1.6
 			d.projectile = true
 			d.shoot_range = 480.0
+			d.retrocede_dist = 190.0
+			d.proyectil_speed = 470.0
 			d.color = Color(0.4, 0.34, 0.24)
 			d.collider_size = Vector2(34, 66)
-			d.knockback_resist = 0.3
+			d.knockback_resist = 0.6
 	return d
 
 
@@ -193,21 +210,64 @@ func _physics_process(delta: float) -> void:
 		if dist <= enemy_data.shoot_range and _attack_timer <= 0.0:
 			_disparar(player)
 			_attack_timer = enemy_data.attack_cooldown
-		velocity.x = 0.0 if dist <= enemy_data.shoot_range else _dir * enemy_data.speed
-	else:
-		var dist_h := absf(player.global_position.x - global_position.x)
-		if dist_h > enemy_data.attack_range:
-			velocity.x = _dir * enemy_data.speed
+		if enemy_data.retrocede_dist > 0.0 and dist <= enemy_data.retrocede_dist:
+			velocity.x = -_dir * enemy_data.speed
 		else:
+			velocity.x = 0.0 if dist <= enemy_data.shoot_range else _dir * enemy_data.speed
+	else:
+		var gap := _gap_x(player)
+		if _windup_timer > 0.0:
+			_windup_timer -= delta
 			velocity.x = 0.0
-			if _attack_timer <= 0.0:
+			if _windup_timer <= 0.0:
+				if enemy_data.lunge_velocidad > 0.0:
+					_lunge_timer = enemy_data.lunge_tiempo
+					_lunge_hit = false
+					_attack_timer = enemy_data.attack_cooldown
+				else:
+					_ataque_melee(player)
+					_attack_timer = enemy_data.attack_cooldown
+		elif _lunge_timer > 0.0:
+			_lunge_timer -= delta
+			if not _lunge_hit:
+				velocity.x = _dir * enemy_data.lunge_velocidad
+				if gap < enemy_data.lunge_alcance:
+					_lunge_hit = true
+					_ataque_melee(player)
+			else:
+				velocity.x = 0.0
+			if _lunge_timer <= 0.0:
+				velocity.x = 0.0
+		elif _attack_timer > 0.0:
+			var min_stop := enemy_data.attack_range * 0.55
+			velocity.x = _dir * enemy_data.speed if gap > min_stop else 0.0
+		elif gap <= enemy_data.attack_range:
+			if enemy_data.windup_tiempo > 0.0:
+				_windup_timer = enemy_data.windup_tiempo
+				_reproducir_animacion_ataque("attack1")
+				_attack_anim_timer = enemy_data.windup_tiempo + enemy_data.lunge_tiempo + 0.12
+			else:
 				_ataque_melee(player)
 				_attack_timer = enemy_data.attack_cooldown
+		else:
+			velocity.x = _dir * enemy_data.speed
 
 	_update_animacion()
 	move_and_slide()
 	if is_on_floor() and velocity.y > 0:
 		velocity.y = 0
+
+
+func _gap_x(player: Node2D) -> float:
+	var medio_enemigo := 0.0
+	if collide_shape != null and collide_shape.shape is RectangleShape2D:
+		medio_enemigo = (collide_shape.shape as RectangleShape2D).size.x * 0.5
+	var medio_player := 0.0
+	for c in player.get_children():
+		if c is CollisionShape2D and c.shape is RectangleShape2D:
+			medio_player = (c.shape as RectangleShape2D).size.x * 0.5
+			break
+	return maxf(absf(player.global_position.x - global_position.x) - medio_enemigo - medio_player, 0.0)
 
 
 func _update_animacion() -> void:
@@ -245,7 +305,7 @@ func _disparar(player: Node2D) -> void:
 	var proj: Area2D = preload("res://scenes/projectile.tscn").instantiate()
 	proj.global_position = global_position + Vector2(_dir * 25.0, -10.0)
 	proj.set("direction", dir)
-	proj.set("speed", 340.0)
+	proj.set("speed", enemy_data.proyectil_speed)
 	proj.set("damage", enemy_data.attack_damage)
 	proj.set("enemy_shot", true)
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
@@ -256,10 +316,16 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
 	if health <= 0:
 		return
 	health -= cantidad
-	if knockback > 0.0:
+	_freeze_hitstop()
+	var en_ataque := _windup_timer > 0.0 or _lunge_timer > 0.0
+	var armadura: bool = enemy_data != null and enemy_data.armadura_ataque and en_ataque
+	if knockback > 0.0 and not armadura:
 		var resist: float = enemy_data.knockback_resist if enemy_data != null else 1.0
 		velocity.x = dir * knockback * (1.0 - resist)
 		_stun_timer = 0.22
+	if not armadura:
+		_windup_timer = 0.0
+		_lunge_timer = 0.0
 	if visual != null:
 		visual.modulate = Color(1, 0.6, 0.6)
 		var base_scale := visual.scale

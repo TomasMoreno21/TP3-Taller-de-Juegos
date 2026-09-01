@@ -37,6 +37,14 @@ const RECOVERY_LIGHT := 0.275
 const RECOVERY_HEAVY := 0.5
 const RECOVERY_SPECIAL := 0.75
 const RECOVERY_COMBO := 0.875
+const MELEE_STICKY_REACH := 240.0
+const MELEE_STICKY_PIVOT := 28.0
+const MELEE_STICKY_SPEED_MULT := 0.85
+const HITSTOP_LIGHT := 0.07
+const HITSTOP_HEAVY := 0.12
+const HITSTOP_SPECIAL := 0.14
+const HITSTOP_COMBO := 0.17
+const HITSTOP_DANO := 0.07
 const VIDA_MAX := 100
 
 var forms: Array[Forma] = []
@@ -80,6 +88,7 @@ var _cooldown_formas: Dictionary = {}
 const COOLDOWN_AGOTADA := 3.0
 const COOLDOWN_TRANSFORM := 3.0
 var _cooldown_transform := 0.0
+var _special_cooldown := 0.0
 var _transform_buffer: float = 0.0
 const TRANSFORM_BUFFER_TIME := 0.15
 var _idle_breath_t := 0.0
@@ -90,8 +99,19 @@ var _trepar_hold_t: float = 0.0
 var _vine_coyote_timer: float = 0.0
 var _vine_buffer_timer: float = 0.0
 var _vine_particulas_timer: float = 0.0
+var _vine_dir_hold_t: float = 0.0
+var _salto_enredadera: bool = false
 const VINE_COYOTE_TIME := 0.15
 const VINE_BUFFER_TIME := 0.15
+const TREPAR_ACCEL := 4200.0
+const TREPAR_ACCEL_TURBO := 9000.0
+const TREPAR_TURBO_INICIO := 0.15
+const TREPAR_TURBO_RAMP := 0.45
+const TREPAR_TURBO_MULT := 1.4
+const TREPAR_DOWN_MULT := 1.5
+const TREPAR_STOP_LERP := 8.0
+const TREPAR_EXIT_HOLD := 0.1
+const TREPAR_SALIR_COOLDOWN := 0.45
 var _murci_glide_t: float = 0.0
 var _was_gliding: bool = false
 var _apex_squash_t: float = 0.0
@@ -140,6 +160,8 @@ func _physics_process(delta: float) -> void:
 	data.tick(self, delta)
 	if _ledge_cooldown > 0.0:
 		_ledge_cooldown = maxf(_ledge_cooldown - delta, 0.0)
+	if _special_cooldown > 0.0:
+		_special_cooldown = maxf(_special_cooldown - delta, 0.0)
 	_handle_enredadera(delta)
 	if _attack_air_buffer > 0.0:
 		_attack_air_buffer -= delta
@@ -175,8 +197,12 @@ func _physics_process(delta: float) -> void:
 			var fric := data.friction * (FRICTION_AIR_MULT if not is_on_floor() else 1.0)
 			velocity.x = move_toward(velocity.x, 0.0, fric * delta)
 
+	_melee_sticky(data, delta)
+
 	if not _trepando and Input.is_action_just_pressed("jump"):
-		if _coyote_time > 0.0 or data.can_jump():
+		if _salto_enredadera:
+			pass
+		elif _coyote_time > 0.0 or data.can_jump():
 			data.try_jump(self)
 		else:
 			_jump_buffer = data.jump_buffer_time
@@ -391,6 +417,25 @@ func _lanzar_buffered(data: Forma, airborne: bool) -> void:
 	_procesar_ataque(tipo, data, airborne)
 
 
+func _melee_sticky(data: Forma, delta: float) -> void:
+	if not _attacking or _hit_applied or data.melee_sticky <= 0.0:
+		return
+	var objetivo := _buscar_enemigo_homing(MELEE_STICKY_REACH)
+	if objetivo == null:
+		return
+	var dx := objetivo.global_position.x - global_position.x
+	var dir := signf(dx)
+	if dir == 0.0:
+		return
+	var dist := absf(dx)
+	if dir != facing:
+		if dist > MELEE_STICKY_PIVOT:
+			return
+		facing = int(dir)
+		_aplicar_facing()
+	velocity.x = move_toward(velocity.x, dir * data.speed * MELEE_STICKY_SPEED_MULT, data.melee_sticky * delta)
+
+
 func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 	match tipo:
 		"light":
@@ -437,6 +482,8 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 		"special":
 			if _try_interact():
 				return
+			if _special_cooldown > 0.0 and forms[current_form].special_cooldown > 0.0:
+				return
 			_light_step = 0
 			_heavy_step = 0
 			var combo := _detectar_combo("special")
@@ -446,6 +493,7 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 				_current_attack_type = "special"
 				_combo_timer = 0.0
 				data.perform_special(self)
+				_special_cooldown = data.special_cooldown_combate if _en_combate() else data.special_cooldown
 				_play_attack_fx("special", 1)
 				_punch_sprite(0.4)
 				attack_performed.emit("special", 1)
@@ -589,6 +637,7 @@ func _check_attack_hits() -> void:
 			_aplicar_knockback(body)
 		elif body.has_method("take_damage"):
 			body.take_damage(dmg, kb, facing)
+		_spark_golpe(body, idx)
 	_hit_applied = true
 	_registrar_golpe_racha()
 	_hitstop_por_tipo()
@@ -600,13 +649,13 @@ func _hitstop_por_tipo() -> void:
 	var dur := 0.0
 	match _current_attack_type:
 		"light":
-			dur = 0.03
+			dur = HITSTOP_LIGHT
 		"heavy":
-			dur = 0.06
+			dur = HITSTOP_HEAVY
 		"special":
-			dur = 0.075
+			dur = HITSTOP_SPECIAL
 		"combo":
-			dur = 0.09
+			dur = HITSTOP_COMBO
 		_:
 			return
 	if current_form == Form.OSO:
@@ -615,9 +664,13 @@ func _hitstop_por_tipo() -> void:
 		dur *= 0.85
 	if dur <= 0.0:
 		return
-	Engine.time_scale = 0.0
-	await get_tree().create_timer(dur, true, false, true).timeout
-	Engine.time_scale = 1.0
+	_freeze_hitstop(dur)
+
+
+func _freeze_hitstop(duracion: float = HITSTOP_DANO) -> void:
+	var hs = get_node_or_null("/root/Hitstop")
+	if hs != null and hs.has_method("freeze"):
+		hs.freeze(duracion)
 
 
 func _zoom_punch_por_tipo() -> void:
@@ -646,13 +699,31 @@ func _shake_por_tipo() -> void:
 				fuerza = forma.shake_golpe_pesado
 			"combo":
 				fuerza = forma.shake_golpe_combo
-	cam.shake(fuerza, 0.08)
+		cam.shake(fuerza, 0.15)
 
 
 func _aplicar_knockback(body: Node2D) -> void:
 	if _current_attack_knockback <= 0.0 or not body is RigidBody2D:
 		return
 	body.apply_impulse(Vector2(facing * _current_attack_knockback, -120.0))
+
+
+func _spark_golpe(body: Node2D, idx: int) -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+	var px := body.global_position.x - facing * 10.0
+	if idx == 1:
+		px += facing * 8.0
+	p.global_position = Vector2(px, body.global_position.y - 12.0)
+	var tinte := Color(1, 0.9, 0.4, 0.95)
+	if current_form >= 0 and current_form < forms.size():
+		tinte = forms[current_form].color
+	p.self_modulate = tinte
+	p.amount = 6
+	get_tree().root.add_child(p)
+	p.restart()
+	p.emitting = true
 
 
 func _play_attack_fx(tipo: String, _step: int) -> void:
@@ -988,7 +1059,10 @@ func _update_animacion() -> void:
 	if _trepando:
 		if visual.animation != "climb":
 			visual.play("climb")
-		visual.speed_scale = 1.0 if absf(velocity.y) > 10.0 else 0.0
+		var cs_anim: float = 260.0
+		if _enredadera_actual != null:
+			cs_anim = float(_enredadera_actual.get("climb_speed")) if _enredadera_actual.get("climb_speed") != null else 260.0
+		visual.speed_scale = clampf(absf(velocity.y) / maxf(cs_anim, 1.0), 0.12, 2.0)
 		visual.skew = lerpf(visual.skew, 0.0, minf(8.0 * get_physics_process_delta_time(), 1.0))
 		visual.rotation = lerpf(visual.rotation, 0.0, minf(10.0 * get_physics_process_delta_time(), 1.0))
 		return
@@ -1069,10 +1143,11 @@ func take_damage(cantidad: int, _knockback: float = 0.0, _dir: int = 1) -> void:
 	if god_mode or blocking or _invuln_timer > 0.0:
 		return
 	health -= cantidad
+	_freeze_hitstop()
 	health_changed.emit(health, VIDA_MAX)
 	dano_recibido.emit(cantidad)
 	_shake_dano_recibido()
-	_invuln_timer = 0.8
+	_invuln_timer = 0.55
 	_handle_death()
 
 
@@ -1114,7 +1189,7 @@ func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 70
 				dir_inicial = to_obj.normalized()
 		proj.set("homing", true)
 		proj.set("homing_range", 500.0)
-		proj.set("homing_strength", 4.0)
+		proj.set("homing_strength", 6.5)
 	proj.set("direction", dir_inicial)
 	proj.set("speed", alcance)
 	proj.set("damage", forms[current_form].special_damage)
@@ -1133,6 +1208,8 @@ func _buscar_enemigo_homing(rango: float) -> Node2D:
 	var mejor_dist := rango
 	for n in get_tree().get_nodes_in_group("enemy"):
 		if not is_instance_valid(n) or not n.has_method("take_damage"):
+			continue
+		if n.get("_activo") == false:
 			continue
 		if "health" in n and n.health <= 0:
 			continue
@@ -1246,6 +1323,7 @@ func _actualizar_respiracion_idle(delta: float, _data: Forma) -> void:
 
 
 func _handle_enredadera(delta: float) -> void:
+	_salto_enredadera = false
 	if _trepado_cooldown > 0.0:
 		_trepado_cooldown = maxf(_trepado_cooldown - delta, 0.0)
 	if _vine_buffer_timer > 0.0:
@@ -1279,6 +1357,9 @@ func _handle_enredadera(delta: float) -> void:
 				return
 		else:
 			_vine_coyote_timer = VINE_COYOTE_TIME
+		var dir_x := Input.get_axis("move_left", "move_right")
+		if absf(dir_x) < 0.5:
+			dir_x = 0.0
 		var dir_y: int = 0
 		if Input.is_action_pressed("move_up"):
 			dir_y -= 1
@@ -1287,10 +1368,10 @@ func _handle_enredadera(delta: float) -> void:
 		if Input.is_action_just_pressed("jump"):
 			var vy_prev: float = velocity.y
 			_salir_enredadera()
+			_salto_enredadera = true
 			var jump_mult := 1.1 if dir_y < 0 or vy_prev < -40.0 else 1.0
 			velocity.y = forms[current_form].jump_velocity * jump_mult + vy_prev * 0.25
 			velocity.x = facing * 200.0
-			_trepado_cooldown = 0.7
 			squash_y(0.18, 0.18)
 			_emitir_polvo(0.6)
 			_emitir_burst_hojas()
@@ -1298,22 +1379,42 @@ func _handle_enredadera(delta: float) -> void:
 			if cam != null and cam.has_method("punch"):
 				cam.punch(1.04)
 			return
+		if dir_x != 0.0 and is_on_floor():
+			_vine_dir_hold_t += delta
+			if _vine_dir_hold_t >= TREPAR_EXIT_HOLD:
+				var lateral := test_move(Transform2D(0, Vector2.ZERO), Vector2(dir_x * 8.0, 0))
+				if not lateral:
+					_salir_enredadera()
+					velocity.x = dir_x * 140.0
+					return
+		else:
+			_vine_dir_hold_t = 0.0
 		if dir_y != 0:
 			_trepar_hold_t += delta
 		else:
 			_trepar_hold_t = 0.0
 			_vine_particulas_timer = 0.0
 		var cs_base: float = float(_enredadera_actual.get("climb_speed")) if _enredadera_actual.get("climb_speed") != null else 260.0
-		var cs: float = 320.0 if _trepar_hold_t > 0.6 and dir_y != 0 else cs_base
-		var target_vy: float = dir_y * cs
-		var accel := 2600.0 if _trepar_hold_t > 0.6 else 1800.0
-		if dir_y != 0:
-			velocity.y = move_toward(velocity.y, target_vy, accel * delta)
+		var turbo_t: float = clampf((_trepar_hold_t - TREPAR_TURBO_INICIO) / TREPAR_TURBO_RAMP, 0.0, 1.0) if _trepar_hold_t > TREPAR_TURBO_INICIO else 0.0
+		var cs: float = cs_base * lerpf(1.0, TREPAR_TURBO_MULT, turbo_t)
+		var accel := lerpf(TREPAR_ACCEL, TREPAR_ACCEL_TURBO, turbo_t)
+		var meta: float = dir_y * cs
+		if dir_y > 0:
+			meta *= TREPAR_DOWN_MULT
+		var bloqueado_arriba: bool = dir_y < 0 and test_move(Transform2D(0, Vector2.ZERO), Vector2(0, -(cs * delta + 1.0)))
+		if bloqueado_arriba:
+			velocity.y = minf(velocity.y, 0.0)
+		elif dir_y != 0:
+			velocity.y = move_toward(velocity.y, meta, accel * delta)
 		else:
-			velocity.y = lerpf(velocity.y, 0.0, 4.5 * delta)
+			velocity.y = lerpf(velocity.y, 0.0, TREPAR_STOP_LERP * delta)
 		velocity.x = 0.0
 		_gravity_override = 0.0
-		global_position.x = lerpf(global_position.x, _enredadera_actual.global_position.x, 18.0 * delta)
+		var dx: float = _enredadera_actual.global_position.x - global_position.x
+		if absf(dx) > 1.0:
+			var paso := clampf(dx, -260.0 * delta, 260.0 * delta)
+			if not test_move(Transform2D(0, Vector2.ZERO), Vector2(paso, 0)):
+				global_position.x += paso
 		if dir_y != 0 and absf(velocity.y) > 20.0:
 			visual.skew = lerpf(visual.skew, deg_to_rad(3.0) * -dir_y, 6.0 * delta)
 		if dir_y != 0 and absf(velocity.y) > 80.0 and _vine_particulas_timer <= 0.0:
@@ -1328,7 +1429,9 @@ func _handle_enredadera(delta: float) -> void:
 		return
 	if current_form != Form.HUMAN:
 		return
-	var quiere_trepar: bool = Input.is_action_pressed("move_up") or Input.is_action_pressed("move_down") or Input.is_action_pressed("jump") or _vine_buffer_timer > 0.0
+	var quiere_trepar: bool = Input.is_action_pressed("move_up") or Input.is_action_pressed("move_down")
+	if not is_on_floor():
+		quiere_trepar = quiere_trepar or Input.is_action_pressed("jump") or _vine_buffer_timer > 0.0
 	if not quiere_trepar:
 		return
 	for e in get_tree().get_nodes_in_group("enredadera"):
@@ -1350,7 +1453,13 @@ func _handle_enredadera(delta: float) -> void:
 			_gravity_override = 0.0
 			velocity.y = 0.0
 			velocity.x = 0.0
-			global_position.x = area.global_position.x
+			_vine_dir_hold_t = 0.0
+			var paso_agarre: float = area.global_position.x - global_position.x
+			if not test_move(Transform2D(0, Vector2.ZERO), Vector2(paso_agarre, 0)):
+				global_position.x = area.global_position.x
+			if not is_on_floor():
+				squash_y(0.12, 0.12)
+				_emitir_burst_hojas()
 			break
 
 
@@ -1358,7 +1467,7 @@ func _salir_enredadera() -> void:
 	_trepando = false
 	_enredadera_actual = null
 	_gravity_override = -1.0
-	_trepado_cooldown = maxf(_trepado_cooldown, 0.7)
+	_trepado_cooldown = maxf(_trepado_cooldown, TREPAR_SALIR_COOLDOWN)
 
 
 func _en_combate() -> bool:

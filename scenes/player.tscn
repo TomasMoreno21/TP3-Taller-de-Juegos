@@ -7,7 +7,7 @@
 size = Vector2(175, 283)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
-size = Vector2(60, 180)
+size = Vector2(43.363636, 150.32259)
 
 [node name="Player" type="CharacterBody2D" unique_id=780925585]
 collision_layer = 4
@@ -29,6 +29,7 @@ collision_mask = 3
 monitoring = false
 
 [node name="AttackHitbox" type="CollisionShape2D" parent="AttackArea" unique_id=846182347]
+scale = Vector2(1.5714285, 1.0941176)
 shape = SubResource("RectangleShape2D_attack")
 disabled = true
 

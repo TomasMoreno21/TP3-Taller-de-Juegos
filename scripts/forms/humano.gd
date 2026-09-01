@@ -29,6 +29,7 @@ func _init() -> void:
 	accel_air_mult = 0.65
 	coyote_time = 0.16
 	jump_buffer_time = 0.18
+	melee_sticky = 700.0
 	combos = [
 		{"nombre": "Remate", "secuencia": ["light", "heavy"], "dano": 38, "knockback": 260.0, "tamano": Vector2(162, 114), "rango": 126.0},
 	]

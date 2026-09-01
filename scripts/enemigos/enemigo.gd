@@ -14,3 +14,10 @@ extends Resource
 @export var collider_size: Vector2 = Vector2(30, 60)
 @export var knockback_resist: float = 0.3
 @export var stun_duracion: float = 0.15
+@export var windup_tiempo: float = 0.0
+@export var lunge_velocidad: float = 0.0
+@export var lunge_tiempo: float = 0.18
+@export var lunge_alcance: float = 95.0
+@export var retrocede_dist: float = 0.0
+@export var proyectil_speed: float = 340.0
+@export var armadura_ataque: bool = true

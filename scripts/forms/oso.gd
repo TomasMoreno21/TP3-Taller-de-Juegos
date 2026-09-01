@@ -39,6 +39,7 @@ func _init() -> void:
 	turn_tilt_cam = 0.05
 	mult_recuperacion = 1.15
 	lunge_heavy = 220.0
+	melee_sticky = 1200.0
 	combos = [
 		{"nombre": "Garra", "secuencia": ["light", "heavy"], "dano": 48, "knockback": 360.0, "tamano": Vector2(288, 186), "rango": 198.0},
 	]

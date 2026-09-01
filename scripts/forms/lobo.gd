@@ -38,6 +38,7 @@ func _init() -> void:
 	landing_squash = 0.14
 	mult_recuperacion = 0.85
 	lunge_light = 110.0
+	melee_sticky = 950.0
 	combos = [
 		{"nombre": "Mordida", "secuencia": ["light", "heavy"], "dano": 26, "knockback": 240.0, "tamano": Vector2(180, 102), "rango": 102.0},
 	]

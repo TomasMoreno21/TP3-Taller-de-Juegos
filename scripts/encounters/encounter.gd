@@ -157,7 +157,8 @@ func _spawnear_auto(ola: WaveOla) -> int:
 func _posicion_spawn(i: int, ola: WaveOla, total: int) -> Vector2:
 	if ola.edge:
 		var lado := -1.0 if i % 2 == 0 else 1.0
-		return arena_center + Vector2(lado * (arena_medio_ancho + 140.0), 0.0)
+		var fila := floori(i / 2.0)
+		return arena_center + Vector2(lado * (arena_medio_ancho + 140.0) - lado * 60.0 * fila, 0.0)
 	var desvio := (float(i) - float(total - 1) * 0.5) * ola.offset.x
 	return arena_center + Vector2(desvio, ola.offset.y)
 

@@ -5,7 +5,7 @@ var speed := 700.0
 var damage := 15
 var enemy_shot := false
 var homing := false
-var homing_strength := 4.0
+var homing_strength := 6.5
 var homing_range := 500.0
 var _life := 2.5
 
@@ -52,14 +52,14 @@ func _buscar_enemigo_cercano() -> Node2D:
 	var mejor: Node2D = null
 	var mejor_dist := homing_range
 	for n in get_tree().get_nodes_in_group("enemy"):
-		if not is_instance_valid(n) or not n.has_method("take_damage"):
-			continue
-		if "health" in n and n.health <= 0:
+		if not _activo_y_vivo(n):
 			continue
 		var d := global_position.distance_to(n.global_position)
 		if d < mejor_dist:
 			mejor_dist = d
 			mejor = n
+	if mejor != null:
+		return mejor
 	for n in get_tree().get_nodes_in_group("cristal"):
 		if not is_instance_valid(n) or not n.has_method("take_damage"):
 			continue
@@ -68,6 +68,16 @@ func _buscar_enemigo_cercano() -> Node2D:
 			mejor_dist = d
 			mejor = n
 	return mejor
+
+
+func _activo_y_vivo(n: Node) -> bool:
+	if not is_instance_valid(n) or not n.has_method("take_damage"):
+		return false
+	if n.get("_activo") == false:
+		return false
+	if "health" in n and int(n.health) <= 0:
+		return false
+	return true
 
 
 func _on_body_entered(body: Node2D) -> void:

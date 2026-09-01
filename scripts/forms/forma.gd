@@ -25,6 +25,8 @@ var _jumps_usados := 0
 
 # Ataque especial (L)
 @export var special_damage: int = 25
+@export var special_cooldown: float = 0.0        # espera entre especiales fuera de combate (0 = sin límite)
+@export var special_cooldown_combate: float = 0.0  # espera entre especiales en combate (0 = sin límite)
 
 # Combos por secuencia (desbloqueables al subir de nivel)
 # Cada entry: {"nombre", "secuencia" (Array de "light"/"heavy"/"special"), "dano", "knockback", "tamano", "rango"}
@@ -36,9 +38,9 @@ var _jumps_usados := 0
 @export var shake_duration: float = 0.15
 @export var hit_rotation: float = 14.0
 @export var hit_zoom: float = 1.02
-@export var shake_golpe_ligero: float = 2.5
-@export var shake_golpe_pesado: float = 5.0
-@export var shake_golpe_combo: float = 6.0
+@export var shake_golpe_ligero: float = 7.5
+@export var shake_golpe_pesado: float = 12.0
+@export var shake_golpe_combo: float = 15.0
 @export var transform_duration: float = 14.0
 @export var turn_tilt: float = 0.0
 @export var lean_angulo: float = 3.0   # inclinación leve del sprite según velocidad (grados)
@@ -64,6 +66,7 @@ var _jumps_usados := 0
 @export var mult_recuperacion: float = 1.0
 @export var lunge_light: float = 70.0
 @export var lunge_heavy: float = 150.0
+@export var melee_sticky: float = 0.0               # persecución al enemigo durante el golpe activo (0 = golpe estático)
 
 
 func tick(_player: CharacterBody2D, _delta: float) -> void:
