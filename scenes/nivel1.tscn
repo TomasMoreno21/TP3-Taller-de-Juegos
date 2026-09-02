@@ -18,7 +18,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enredadera.tscn" id="16_enredadera"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
-size = Vector2(4800, 401)
+size = Vector2(16000, 401)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_plat"]
 size = Vector2(280, 30)
@@ -31,30 +31,28 @@ position = Vector2(100, 862)
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
 limit_left = -100
 limit_top = -2000
-limit_right = 4900
+limit_right = 16100
 limit_bottom = 1100
 script = ExtResource("2_cam")
 
 [node name="FondoBosque" parent="." unique_id=542214532 instance=ExtResource("3_fondo")]
-offset = Vector2(-31.195, 0)
-transform = Transform2D(1, 0, 0, 1, -31.195, 0)
 
 [node name="Terreno" type="TileMapLayer" parent="." unique_id=211863747]
 tile_set = ExtResource("4_tileset")
 
 [node name="Piso" type="StaticBody2D" parent="." unique_id=64631073]
-position = Vector2(2400, 1092)
+position = Vector2(8000, 1092)
 
 [node name="PisoVisual" type="Polygon2D" parent="Piso" unique_id=1712558488]
 color = Color(0.16, 0.32, 0.18, 1)
-polygon = PackedVector2Array(-2400, -100, 2400, -100, 2400, 100, -2400, 100)
+polygon = PackedVector2Array(-8000, -100, 8000, -100, 8000, 100, -8000, 100)
 
 [node name="PisoCollision" type="CollisionShape2D" parent="Piso" unique_id=2085221829]
 position = Vector2(0, 100.5)
 shape = SubResource("RectangleShape2D_piso")
 
 [node name="PlatDoble1" type="StaticBody2D" parent="." unique_id=863292461]
-position = Vector2(3350, 858)
+position = Vector2(3212, 925)
 
 [node name="PlatDoble1Visual" type="Polygon2D" parent="PlatDoble1" unique_id=1789313563]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -64,7 +62,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="PlatDoble2" type="StaticBody2D" parent="." unique_id=400806940]
-position = Vector2(3530, 717)
+position = Vector2(3530, 858)
 
 [node name="PlatDoble2Visual" type="Polygon2D" parent="PlatDoble2" unique_id=678343929]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -74,7 +72,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="PlatDoble3" type="StaticBody2D" parent="." unique_id=2024035164]
-position = Vector2(3700, 577)
+position = Vector2(3842, 798)
 
 [node name="PlatDoble3Visual" type="Polygon2D" parent="PlatDoble3" unique_id=6174304]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -139,7 +137,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="GrietaLobo" parent="." unique_id=105804219 instance=ExtResource("5_grieta")]
-position = Vector2(2950, 773)
+position = Vector2(4717, 773)
 
 [node name="Rompible1" parent="." unique_id=2082107955 instance=ExtResource("6_romp")]
 position = Vector2(1891, 633)
@@ -222,8 +220,132 @@ ola_asignada = 1
 spawn_telegrafiado = true
 ritual_duracion = 0.4
 
+[node name="DialogoZona2" parent="." unique_id=2100000001 instance=ExtResource("8_dialog")]
+position = Vector2(6300, 820)
+lineas = []
+una_vez = false
+
+[node name="EncounterD" parent="." unique_id=2100000002 instance=ExtResource("9_enc")]
+position = Vector2(6800, 1444)
+
+[node name="Enemy1" parent="EncounterD" unique_id=2100000003 instance=ExtResource("10_enemy")]
+position = Vector2(-140, 0)
+spawn_telegrafiado = true
+ritual_duracion = 0.3
+
+[node name="Enemy2" parent="EncounterD" unique_id=2100000004 instance=ExtResource("10_enemy")]
+position = Vector2(140, 0)
+spawn_telegrafiado = true
+ritual_duracion = 0.6
+
+[node name="Plataforma6" type="StaticBody2D" parent="." unique_id=2100000005]
+position = Vector2(7600, 850)
+
+[node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma6" unique_id=2100000006]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plataforma1Collision" type="CollisionShape2D" parent="Plataforma6" unique_id=2100000007]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="Plataforma7" type="StaticBody2D" parent="." unique_id=2100000008]
+position = Vector2(7900, 760)
+
+[node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma7" unique_id=2100000009]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plataforma1Collision" type="CollisionShape2D" parent="Plataforma7" unique_id=2100000010]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="Plataforma8" type="StaticBody2D" parent="." unique_id=2100000011]
+position = Vector2(8250, 850)
+
+[node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma8" unique_id=2100000012]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plataforma1Collision" type="CollisionShape2D" parent="Plataforma8" unique_id=2100000013]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="Plataforma9" type="StaticBody2D" parent="." unique_id=2100000014]
+position = Vector2(8600, 950)
+
+[node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma9" unique_id=2100000015]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plataforma1Collision" type="CollisionShape2D" parent="Plataforma9" unique_id=2100000016]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="Rompible4" parent="." unique_id=2100000017 instance=ExtResource("6_romp")]
+position = Vector2(7300, 940)
+
+[node name="Pickup5" parent="." unique_id=2100000023 instance=ExtResource("7_pick")]
+position = Vector2(8100, 940)
+
+[node name="EncounterE" parent="." unique_id=2100000019 instance=ExtResource("9_enc")]
+position = Vector2(10500, 1444)
+
+[node name="ArenaShape" parent="EncounterE/Arena" index="0"]
+scale = Vector2(1.2, 1)
+
+[node name="Enemy1" parent="EncounterE" unique_id=2100000020 instance=ExtResource("10_enemy")]
+position = Vector2(-140, 0)
+spawn_telegrafiado = true
+ritual_duracion = 0.3
+
+[node name="Enemy2" parent="EncounterE" unique_id=2100000021 instance=ExtResource("10_enemy")]
+position = Vector2(140, 0)
+spawn_telegrafiado = true
+ritual_duracion = 0.5
+
+[node name="Enemy3" parent="EncounterE" unique_id=2100000022 instance=ExtResource("10_enemy")]
+ola_asignada = 1
+spawn_telegrafiado = true
+ritual_duracion = 0.4
+
+[node name="Pickup6" parent="." unique_id=2100000024 instance=ExtResource("7_pick")]
+position = Vector2(10700, 940)
+
+[node name="Rompible5" parent="." unique_id=2100000018 instance=ExtResource("6_romp")]
+position = Vector2(11800, 940)
+
+[node name="Pickup7" parent="." unique_id=2100000025 instance=ExtResource("7_pick")]
+position = Vector2(13200, 940)
+
+[node name="Plataforma10" type="StaticBody2D" parent="." unique_id=2100000026]
+position = Vector2(14700, 900)
+
+[node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma10" unique_id=2100000027]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plataforma1Collision" type="CollisionShape2D" parent="Plataforma10" unique_id=2100000028]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="Plataforma11" type="StaticBody2D" parent="." unique_id=2100000029]
+position = Vector2(15000, 820)
+
+[node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma11" unique_id=2100000030]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plataforma1Collision" type="CollisionShape2D" parent="Plataforma11" unique_id=2100000031]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="Plataforma12" type="StaticBody2D" parent="." unique_id=2100000032]
+position = Vector2(15300, 900)
+
+[node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma12" unique_id=2100000033]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="Plataforma1Collision" type="CollisionShape2D" parent="Plataforma12" unique_id=2100000034]
+shape = SubResource("RectangleShape2D_plat")
+
 [node name="Santuario" parent="." unique_id=1856516154 instance=ExtResource("11_sant")]
-position = Vector2(4650, 940)
+position = Vector2(15600, 922)
 activar_victoria = true
 
 [node name="Hud" parent="." unique_id=643194512 instance=ExtResource("12_hud")]
@@ -241,3 +363,5 @@ visible = false
 [editable path="EncounterA"]
 [editable path="EncounterB"]
 [editable path="EncounterC"]
+[editable path="EncounterD"]
+[editable path="EncounterE"]

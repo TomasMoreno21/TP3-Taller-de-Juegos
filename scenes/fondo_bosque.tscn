@@ -12,7 +12,7 @@ layer = -10
 [node name="Capa1" type="ParallaxLayer" parent="." unique_id=1660360400]
 scale = Vector2(1.095, 1.095)
 motion_scale = Vector2(0.02, 1)
-motion_mirroring = Vector2(2162, 0)
+motion_mirroring = Vector2(2105.685, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa1" unique_id=780649687]
 position = Vector2(960, 540)
@@ -22,7 +22,7 @@ texture = ExtResource("1_tex1")
 [node name="Capa2" type="ParallaxLayer" parent="." unique_id=1611309703]
 scale = Vector2(1.095, 1.095)
 motion_scale = Vector2(0.12, 1)
-motion_mirroring = Vector2(6165, 0)
+motion_mirroring = Vector2(2383.815, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa2" unique_id=447901622]
 position = Vector2(960, 540)
@@ -32,7 +32,7 @@ texture = ExtResource("2_tex2")
 [node name="Capa3" type="ParallaxLayer" parent="." unique_id=1361476132]
 scale = Vector2(1.095, 1.095)
 motion_scale = Vector2(0.22, 1)
-motion_mirroring = Vector2(2460, 0)
+motion_mirroring = Vector2(2020.275, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa3" unique_id=32818560]
 position = Vector2(960, 540)
@@ -42,7 +42,7 @@ texture = ExtResource("3_tex3")
 [node name="Capa4" type="ParallaxLayer" parent="." unique_id=1959794254]
 scale = Vector2(1.095, 1.095)
 motion_scale = Vector2(0.4, 1)
-motion_mirroring = Vector2(1995, 0)
+motion_mirroring = Vector2(2279.79, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa4" unique_id=1840883901]
 position = Vector2(960, 540)

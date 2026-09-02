@@ -1087,6 +1087,8 @@ func _update_animacion() -> void:
 			anim = "murci_run"
 	elif current_form == Form.LOBO and visual.sprite_frames.has_animation("lobo_run"):
 		anim = "lobo_run"
+	elif current_form == Form.OSO and visual.sprite_frames.has_animation("oso_caminar"):
+		anim = "oso_caminar"
 	if visual.animation != anim:
 		visual.play(anim)
 	var data: Forma = forms[current_form]

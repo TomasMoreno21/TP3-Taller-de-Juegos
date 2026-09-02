@@ -42,8 +42,8 @@ func _init() -> void:
 				" enemigos=", en_arena,
 				" arena_center=", hijo.arena_center,
 				" medio_ancho=", snappedf(hijo.arena_medio_ancho, 0.1))
-	_check(arenas == 3, "Nivel1: 3 arenas de encuentro (hay %d)" % arenas)
-	_check(total_enemigos == 6, "Nivel1: 6 cultistas en total (hay %d)" % total_enemigos)
+	_check(arenas == 5, "Nivel1: 5 arenas de encuentro (hay %d)" % arenas)
+	_check(total_enemigos == 11, "Nivel1: 11 cultistas en total (hay %d)" % total_enemigos)
 
 	# Enemigos de la misma ola no deben arrancar con colliders superpuestos
 	# (bug 27/08: 160px de separación vs 175px de ancho de collider -> depenetración
@@ -84,14 +84,14 @@ func _init() -> void:
 			pickups += 1
 		if String(hijo.name).begins_with("Dialogo"):
 			dialogos += 1
-	_check(rompibles == 3, "Nivel1: 3 rompibles (hay %d)" % rompibles)
-	_check(pickups == 4, "Nivel1: 4 pickups dedicados (hay %d)" % pickups)
-	_check(dialogos == 3, "Nivel1: 3 diálogos (hay %d)" % dialogos)
+	_check(rompibles == 5, "Nivel1: 5 rompibles (hay %d)" % rompibles)
+	_check(pickups == 7, "Nivel1: 7 pickups dedicados (hay %d)" % pickups)
+	_check(dialogos == 4, "Nivel1: 4 diálogos (hay %d)" % dialogos)
 
 	# Suelo continuo, salvo el pozo intencional de la Introducción (x 448-608).
 	var huecos_inesperados := 0
 	var x := 0.0
-	while x <= 4750.0:
+	while x <= 15950.0:
 		var dentro_del_pozo := x > 428.0 and x < 628.0
 		var params := PhysicsPointQueryParameters2D.new()
 		params.position = Vector2(x, 1000.0)
