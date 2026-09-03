@@ -86,7 +86,7 @@ func _init() -> void:
 			dialogos += 1
 	_check(rompibles == 5, "Nivel1: 5 rompibles (hay %d)" % rompibles)
 	_check(pickups == 7, "Nivel1: 7 pickups dedicados (hay %d)" % pickups)
-	_check(dialogos == 4, "Nivel1: 4 diálogos (hay %d)" % dialogos)
+	_check(dialogos == 6, "Nivel1: 6 diálogos (hay %d)" % dialogos)
 
 	# Suelo continuo, salvo el pozo intencional de la Introducción (x 448-608).
 	var huecos_inesperados := 0

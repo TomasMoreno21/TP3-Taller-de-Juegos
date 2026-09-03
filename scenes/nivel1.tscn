@@ -87,7 +87,7 @@ ancho = 36.0
 alto = 500.0
 
 [node name="Plataforma1" type="StaticBody2D" parent="." unique_id=800000002]
-position = Vector2(1010, 752)
+position = Vector2(1113, 752)
 
 [node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma1" unique_id=800000003]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -97,7 +97,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="Plataforma3" type="StaticBody2D" parent="." unique_id=1020045928]
-position = Vector2(717, 838)
+position = Vector2(770, 838)
 
 [node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma3" unique_id=1771737614]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -117,7 +117,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="Plataforma2" type="StaticBody2D" parent="." unique_id=627536273]
-position = Vector2(1297, 672)
+position = Vector2(1456, 672)
 
 [node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma2" unique_id=1458600014]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -137,13 +137,13 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="GrietaLobo" parent="." unique_id=105804219 instance=ExtResource("5_grieta")]
-position = Vector2(4717, 773)
+position = Vector2(6244, 271)
 
 [node name="Rompible1" parent="." unique_id=2082107955 instance=ExtResource("6_romp")]
-position = Vector2(1891, 633)
+position = Vector2(1738, 2052)
 
 [node name="Rompible2" parent="." unique_id=441688810 instance=ExtResource("6_romp")]
-position = Vector2(809, 935)
+position = Vector2(1366, 2189)
 
 [node name="Rompible3" parent="." unique_id=1602575286 instance=ExtResource("6_romp")]
 position = Vector2(2388, 422)
@@ -162,12 +162,12 @@ position = Vector2(3900, 940)
 
 [node name="DialogoIntro" parent="." unique_id=1685442069 instance=ExtResource("8_dialog")]
 position = Vector2(181, 820)
-lineas = []
+lineas = PackedStringArray("Humano... yo soy el protector de los espíritus del bosque.", "Este bosque tiene una guerra secreta con los cultistas.", "Quieren apoderarse del bosque y toda la fuerza espiritual del mismo.", "No entiendo por qué se llevaron a tu hijo, pero estoy seguro que no por buenos motivos.", "Para derrotar a esos malditos, voy a prestarte de nuestro poder.", "Movete con ← → (o A/D) y saltá con Espacio.", "J es tu golpe rápido, K tu golpe fuerte.")
 modo = "Automatico"
 una_vez = false
 
 [node name="DialogoCombate" parent="." unique_id=1063822624 instance=ExtResource("8_dialog")]
-position = Vector2(1592, 774)
+position = Vector2(2026, 768)
 lineas = []
 una_vez = false
 
@@ -177,7 +177,7 @@ lineas = []
 una_vez = false
 
 [node name="EncounterA" parent="." unique_id=450537322 instance=ExtResource("9_enc")]
-position = Vector2(1651.395, 1444)
+position = Vector2(5753.395, 830)
 
 [node name="ArenaShape" parent="EncounterA/Arena" index="0"]
 scale = Vector2(0.7, 1)
@@ -314,6 +314,11 @@ position = Vector2(11800, 940)
 [node name="Pickup7" parent="." unique_id=2100000025 instance=ExtResource("7_pick")]
 position = Vector2(13200, 940)
 
+[node name="DialogoZona3" parent="." unique_id=2100000035 instance=ExtResource("8_dialog")]
+position = Vector2(13800, 900)
+lineas = []
+una_vez = false
+
 [node name="Plataforma10" type="StaticBody2D" parent="." unique_id=2100000026]
 position = Vector2(14700, 900)
 
@@ -343,6 +348,11 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 
 [node name="Plataforma1Collision" type="CollisionShape2D" parent="Plataforma12" unique_id=2100000034]
 shape = SubResource("RectangleShape2D_plat")
+
+[node name="DialogoSantuario" parent="." unique_id=2100000036 instance=ExtResource("8_dialog")]
+position = Vector2(15150, 850)
+lineas = []
+una_vez = false
 
 [node name="Santuario" parent="." unique_id=1856516154 instance=ExtResource("11_sant")]
 position = Vector2(15600, 922)
