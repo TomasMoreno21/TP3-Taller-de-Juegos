@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://bf8ohs7pjg025"]
+
+[ext_resource type="Script" uid="uid://goypxiug4e43" path="res://scripts/pinchos.gd" id="1_pinchos"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_zona"]
+size = Vector2(160, 32)
+
+[node name="Pinchos" type="Area2D" unique_id=1559597765]
+collision_layer = 0
+collision_mask = 4
+script = ExtResource("1_pinchos")
+cantidad = 6
+
+[node name="Visual" type="Node2D" parent="." unique_id=971468155]
+
+[node name="KillZone" type="Node2D" parent="." unique_id=263502847]
+
+[node name="Collision" type="CollisionShape2D" parent="KillZone" unique_id=1259349606]
+position = Vector2(0, -16)
+shape = SubResource("RectangleShape2D_zona")

@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="14_levelup"]
 [ext_resource type="PackedScene" path="res://scenes/console.tscn" id="15_cons"]
 [ext_resource type="PackedScene" path="res://scenes/enredadera.tscn" id="16_enredadera"]
+[ext_resource type="PackedScene" path="res://scenes/pinchos.tscn" id="17_pinchos"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
 size = Vector2(16000, 401)
@@ -369,6 +370,9 @@ visible = false
 
 [node name="Consola" parent="." unique_id=565580708 instance=ExtResource("15_cons")]
 visible = false
+
+[node name="PinchosPrueba" parent="." instance=ExtResource("17_pinchos")]
+position = Vector2(400, 865)
 
 [editable path="EncounterA"]
 [editable path="EncounterB"]
