@@ -17,9 +17,10 @@ const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 
 # Cerco de la arena: 2 paredes laterales generadas según el nodo "Arena" (o los @export).
 @export var paredes_auto := true    # generar las 2 paredes que contienen al jugador
+@export var paredes_en_borde_pantalla := true  # reubica las paredes justo en el borde visible de la cámara
 @export var ancho_pared := 30.0     # grosor de cada pared
 @export var altura_pared := 9000.0  # tan alto que no se puede saltar por arriba
-@export var separacion_pared := 60.0  # holgura fuera de arena_medio_ancho
+@export var separacion_pared := 60.0  # holgura fuera de arena_medio_ancho (si no es borde de pantalla)
 
 var estado: int = Estado.INACTIVE
 var _ola_idx := -1
@@ -42,6 +43,13 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	_preparar_manuales()
 	_ocultar_bounds()
+
+
+func _physics_process(_delta: float) -> void:
+	# Mientras pelea, las paredes acompañan el borde visible de la cámara
+	# (así el escenario de combate es toda la pantalla aunque cambie el zoom).
+	if estado == Estado.RUNNING and paredes_en_borde_pantalla:
+		_actualizar_paredes_a_borde()
 
 
 # --- Público (tests / consola) ---
@@ -231,6 +239,25 @@ func _derivar_arena_desde_nodo() -> void:
 func _mostrar_bounds() -> void:
 	for b in _bounds:
 		b.set_deferred("disabled", false)
+	if paredes_en_borde_pantalla:
+		_actualizar_paredes_a_borde()
+
+
+func _actualizar_paredes_a_borde() -> void:
+	# Coloca cada pared sobre el borde visible de la cámara (mitad del viewport
+	# dividida por el zoom): con el jugador en el centro, el combate ocupa toda
+	# la pantalla. Reacciona a transformaciones/cambios de zoom en el camino.
+	if _bounds.is_empty():
+		return
+	var vista_ancho: float = 1920.0
+	if camara != null:
+		vista_ancho = camara.get_viewport_rect().size.x
+	var media_vista := vista_ancho * 0.5 / maxf(camara.zoom.x if camara != null else 1.0, 0.01)
+	for i in _bounds.size():
+		var lado := -1.0 if i == 0 else 1.0
+		var body := _bounds[i].get_parent() as Node2D
+		if body != null:
+			body.global_position.x = arena_center.x + lado * media_vista
 
 
 func _ocultar_bounds() -> void:

@@ -34,6 +34,7 @@ var _jumps_usados := 0
 
 @export var color: Color = Color(1, 1, 1)
 @export var collider_size: Vector2 = Vector2(16, 40)
+@export var flight_lift: float = 0.0         # px que flota el sprite sobre su base (volar/planeo)
 @export var shake_strength: float = 8.0
 @export var shake_duration: float = 0.15
 @export var hit_rotation: float = 14.0

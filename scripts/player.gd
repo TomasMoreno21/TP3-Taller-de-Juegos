@@ -1031,7 +1031,10 @@ func _flash_transformacion() -> void:
 
 
 func _visual_base_y() -> float:
-	return collision_shape.position.y + 7.5
+	var lift := 0.0
+	if current_form >= 0 and current_form < forms.size():
+		lift = forms[current_form].flight_lift
+	return collision_shape.position.y + 7.5 - lift
 
 
 func _apply_form() -> void:

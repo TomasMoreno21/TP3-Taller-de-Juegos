@@ -11,6 +11,9 @@ var fragmentos := 0
 var nivel := 1
 var combos_desbloqueados: Dictionary = {}
 var barreras_abiertas: Dictionary = {}
+## Si no está vacía, las formas se desbloquean SOLO por esta lista (ignora el nivel).
+## La setea cada nivel desde el editor (scripts/setup_progresion_nivel.gd).
+var formas_forzadas: Array = []
 
 
 func _ready() -> void:
@@ -41,6 +44,7 @@ func reset() -> void:
 	nivel = 1
 	combos_desbloqueados = {}
 	barreras_abiertas = {}
+	formas_forzadas = []
 	fragmentos_cambiado.emit(0)
 	nivel_cambiado.emit(1)
 
@@ -71,6 +75,9 @@ func _nombre_combo(form_index: int, indice: int) -> String:
 
 
 func forma_desbloqueada(form_index: int) -> bool:
+	# 04/09: cada nivel puede forzar su lista de formas desde el editor.
+	if not formas_forzadas.is_empty():
+		return form_index in formas_forzadas
 	# 17/08: desbloqueo progresivo por nivel (nivel 2 -> Lobo, 3 -> Oso, 4 -> Murciélago)
 	return form_index < nivel
 

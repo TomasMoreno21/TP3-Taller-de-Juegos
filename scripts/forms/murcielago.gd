@@ -5,8 +5,8 @@ extends Forma
 func _init() -> void:
 	form_name = "Murciélago"
 	speed = 380.0
-	jump_velocity = -350.0
-	gravity_scale = 0.65
+	jump_velocity = -400.0
+	gravity_scale = 0.42
 	max_health = 100
 	attack_damage = 8
 	attack_range = 90.0
@@ -20,7 +20,8 @@ func _init() -> void:
 	special_cooldown = 0.8
 	special_cooldown_combate = 2.0
 	color = Color(0.52, 0.4, 0.62)
-	collider_size = Vector2(160, 286)
+	collider_size = Vector2(150, 120)
+	flight_lift = 30.0
 	camera_lookahead_mult = 1.0
 	transform_duration = 9.0
 	turn_tilt = 9.0
