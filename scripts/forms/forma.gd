@@ -50,8 +50,10 @@ var _jumps_usados := 0
 @export var accel: float = 2400.0
 @export var friction: float = 2200.0
 @export var accel_air_mult: float = 0.65
+@export var jump_h_speed_mult: float = 1.0   # velocidad horizontal máx en el aire (1.0 = igual que en el piso)
 @export var coyote_time: float = 0.14
 @export var jump_buffer_time: float = 0.18
+@export var step_up_max: float = 48.0     # altura máx (px) que sube solo al caminar contra un borde
 
 # Game feel de cámara por forma.
 @export var camera_zoom: Vector2 = Vector2.ONE        # zoom objetivo al estar transformado
@@ -92,6 +94,9 @@ func try_jump(player: CharacterBody2D) -> void:
 		player.squash_y(0.14, 0.08)
 	var vel_factor := clampf(absf(player.velocity.x) / maxf(speed, 1.0), 0.0, 1.0)
 	player.velocity.y = jump_velocity * (1.0 + 0.08 * vel_factor)
+	var max_h := speed * jump_h_speed_mult
+	player.velocity.x = clampf(player.velocity.x, -max_h, max_h)
+	player.set("_salto_aereo_limitado", true)
 	if player.has_method("stretch_y"):
 		player.stretch_y(0.18, 0.2)
 	if player.has_method("_emitir_polvo"):

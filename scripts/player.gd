@@ -16,14 +16,15 @@ const MAX_FALL_SPEED := 950.0
 const GLIDE_FALL_MULTIPLIER := 0.22
 const COYOTE_TIME := 0.14
 const JUMP_BUFFER_TIME := 0.18
-const JUMP_CUT_MULTIPLIER := 0.5
+const JUMP_CUT_MULTIPLIER := 0.42
+const FALL_GRAVITY_MULT := 1.6
 const TURN_BOOST := 2.2
 const TURN_BOOST_AIR := 1.6
 const FRICTION_AIR_MULT := 0.7
-const APEX_THRESHOLD := 70.0
-const APEX_GRAVITY_MULT := 0.7
-const APEX_CORE_THRESHOLD := 35.0
-const APEX_CORE_MULT := 0.45
+const APEX_THRESHOLD := 48.0
+const APEX_GRAVITY_MULT := 0.82
+const APEX_CORE_THRESHOLD := 22.0
+const APEX_CORE_MULT := 0.58
 const TINT_ALPHA := 0.45
 const COMBO_WINDOW := 1.1
 const LINEA_ESPESOR := 40.0
@@ -117,6 +118,9 @@ var _was_gliding: bool = false
 var _apex_squash_t: float = 0.0
 var _ledge_cooldown: float = 0.0
 var _was_on_wall: bool = false
+var _step_up_cd: float = 0.0
+var _salto_aereo_limitado: bool = false
+var _platform_snap_cd: float = 0.0
 @export var limite_caida := 3000.0
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
@@ -144,7 +148,8 @@ func _ready() -> void:
 	health = VIDA_MAX
 	_spawn_position = global_position
 	_base_sprite_scale = Vector2(absf(visual.scale.x), visual.scale.y)
-	floor_snap_length = 0.0
+	floor_snap_length = 5.0
+	floor_stop_on_slope = false
 	floor_max_angle = deg_to_rad(45.0)
 	wall_min_slide_angle = deg_to_rad(15.0)
 	_apply_form()
@@ -160,6 +165,10 @@ func _physics_process(delta: float) -> void:
 	data.tick(self, delta)
 	if _ledge_cooldown > 0.0:
 		_ledge_cooldown = maxf(_ledge_cooldown - delta, 0.0)
+	if _step_up_cd > 0.0:
+		_step_up_cd = maxf(_step_up_cd - delta, 0.0)
+	if _platform_snap_cd > 0.0:
+		_platform_snap_cd = maxf(_platform_snap_cd - delta, 0.0)
 	if _special_cooldown > 0.0:
 		_special_cooldown = maxf(_special_cooldown - delta, 0.0)
 	_handle_enredadera(delta)
@@ -190,7 +199,10 @@ func _physics_process(delta: float) -> void:
 				else:
 					_emitir_polvo(0.4)
 			var air_mult := data.accel_air_mult if not is_on_floor() else 1.0
-			velocity.x = move_toward(velocity.x, dir * data.speed, data.accel * boost * air_mult * delta)
+			var max_spd := data.speed
+			if _salto_aereo_limitado and not is_on_floor():
+				max_spd *= data.jump_h_speed_mult
+			velocity.x = move_toward(velocity.x, dir * max_spd, data.accel * boost * air_mult * delta)
 		else:
 			if absf(velocity.x) > 250.0 and is_on_floor():
 				squash_y(0.12, 0.15)
@@ -234,7 +246,7 @@ func _physics_process(delta: float) -> void:
 	elif absf(velocity.y) < APEX_THRESHOLD:
 		g *= APEX_GRAVITY_MULT
 	if velocity.y > 0:
-		g *= 1.18
+		g *= FALL_GRAVITY_MULT
 
 	if is_on_floor() and velocity.y > 0:
 		velocity.y = 0
@@ -249,8 +261,11 @@ func _physics_process(delta: float) -> void:
 			var m := 1.35 if current_form == Form.MURCIELAGO else 1.1
 			var a := 0.9 if current_form == Form.MURCIELAGO else 0.6
 			velocity.x = move_toward(velocity.x, dir_glide * data.speed * m, data.accel * a * delta)
+	if is_on_floor() and not _trepando and absf(velocity.x) > 10.0:
+		_try_step_up()
 	move_and_slide()
-	# _try_platform_snap y _try_coleccion_borde deshabilitados temporalmente para debug de drift lento
+	if not is_on_floor() and velocity.y > 0.0:
+		_try_platform_snap()
 	if _trepando:
 		pass
 	elif is_on_wall() and not is_on_floor():
@@ -263,6 +278,7 @@ func _physics_process(delta: float) -> void:
 	_actualizar_respiracion_idle(delta, data)
 
 	if is_on_floor():
+		_salto_aereo_limitado = false
 		data.on_floor(self)
 		_coyote_time = data.coyote_time
 		if not _was_on_floor:
@@ -1271,26 +1287,44 @@ func _try_corner_nudge() -> void:
 
 
 func _try_step_up() -> void:
+	if _step_up_cd > 0.0:
+		return
+	if not is_on_floor():
+		return
+	var max_h: float = 48.0
+	if current_form >= 0 and current_form < forms.size():
+		max_h = forms[current_form].step_up_max
+	if max_h <= 0.0:
+		return
 	if absf(velocity.x) < 4.0 and absf(Input.get_axis("move_left", "move_right")) < 0.15:
 		return
-	for h in [12.0, 16.0, 20.0]:
+	if not test_move(Transform2D(0, Vector2.ZERO), Vector2(facing * 1.0, 0)):
+		return
+	for h in [8.0, 16.0, 24.0, 32.0, 48.0]:
+		if h > max_h:
+			break
 		var up := Transform2D(0, Vector2.ZERO).translated(Vector2(0, -h))
 		if test_move(up, Vector2(facing * 12, 0)):
 			continue
 		if test_move(up, Vector2(0, 0)):
 			continue
 		global_position.y -= h
-		velocity.x = facing * maxf(absf(velocity.x), 110.0)
+		velocity.x = facing * maxf(absf(velocity.x), 140.0)
+		_step_up_cd = 0.12
 		_emitir_polvo(0.4)
 		return
 
 
 func _try_platform_snap() -> void:
-	if is_on_floor() or velocity.y < 30.0:
+	if is_on_floor() or velocity.y < 40.0 or _platform_snap_cd > 0.0:
 		return
-	for off in [10.0, -10.0, 6.0, -6.0]:
+	if velocity.y > 160.0:
+		return
+	if test_move(Transform2D(0, Vector2.ZERO), Vector2(0, 4)):
+		return
+	for off in [8.0, -8.0]:
 		var test_xform := Transform2D(0, Vector2.ZERO).translated(Vector2(off, 0))
-		if not test_move(test_xform, Vector2(0, 8)):
+		if not test_move(test_xform, Vector2(0, 6)):
 			var test_floor := Transform2D(0, Vector2.ZERO).translated(Vector2(off, 0))
 			if not test_move(test_floor, Vector2.ZERO):
 				continue
@@ -1298,17 +1332,19 @@ func _try_platform_snap() -> void:
 				global_position.x += off
 				velocity.y = 0.0
 				_coyote_time = forms[current_form].coyote_time
+				_platform_snap_cd = 0.2
 				return
 
 
 func _try_coleccion_borde() -> void:
-	if is_on_floor() or velocity.y < 20.0:
+	if is_on_floor() or velocity.y < 20.0 or _platform_snap_cd > 0.0:
 		return
 	for off in [12.0, -12.0]:
 		var side := Transform2D(0, Vector2.ZERO).translated(Vector2(off, 0))
 		if not test_move(side, Vector2(0, 10)):
-			global_position.x += off * 0.55
+			global_position.x += off * 0.5
 			velocity.y = minf(velocity.y, 80.0)
+			_platform_snap_cd = 0.12
 			return
 
 

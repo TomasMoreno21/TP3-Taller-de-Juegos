@@ -10,8 +10,8 @@ var _landing_tween: Tween
 func _init() -> void:
 	form_name = "Oso"
 	speed = 310.0
-	jump_velocity = -420.0
-	gravity_scale = 1.45
+	jump_velocity = -410.0
+	gravity_scale = 1.55
 	max_health = 100
 	attack_damage = 16
 	attack_range = 120.0
@@ -34,7 +34,7 @@ func _init() -> void:
 	friction = 1400.0
 	accel_air_mult = 0.5
 	coyote_time = 0.18
-	jump_buffer_time = 0.16
+	jump_buffer_time = 0.18
 	camera_zoom = Vector2(0.9, 0.9)
 	turn_tilt_cam = 0.05
 	mult_recuperacion = 1.15

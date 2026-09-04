@@ -6,7 +6,7 @@ func _init() -> void:
 	form_name = "Lobo"
 	speed = 690.0
 	jump_velocity = -540.0
-	gravity_scale = 0.9
+	gravity_scale = 0.82
 	jumps = 2
 	max_health = 100
 	attack_damage = 6
@@ -29,8 +29,9 @@ func _init() -> void:
 	accel = 4200.0
 	friction = 3600.0
 	accel_air_mult = 0.85
-	coyote_time = 0.14
+	coyote_time = 0.16
 	jump_buffer_time = 0.20
+	step_up_max = 64.0
 	camera_zoom = Vector2(0.94, 0.94)
 	sprint_zoom_out = 0.04
 	sprint_min_speed = 420.0
