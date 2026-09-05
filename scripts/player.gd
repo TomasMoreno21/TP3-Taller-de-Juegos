@@ -121,7 +121,7 @@ var _was_on_wall: bool = false
 var _step_up_cd: float = 0.0
 var _salto_aereo_limitado: bool = false
 var _platform_snap_cd: float = 0.0
-@export var limite_caida := 3000.0
+@export var limite_caida := 12000.0
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $Collision

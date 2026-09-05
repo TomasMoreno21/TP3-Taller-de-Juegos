@@ -11,9 +11,11 @@ var _punch_scale := 1.0
 var _tilt := 0.0
 var _lookahead_actual := 0.0
 var _zoom_velocidad := 1.0
+var _descenso_t := 0.0
+var _offset_descenso := 0.0
 
 @export var suavizado := 6.0
-@export var desplazamiento := Vector2(0, -310)
+@export var desplazamiento := Vector2(0, -250)
 @export var suavizado_zoom := 5.0
 @export var lookahead := 0.28    # anticipación de cámara según velocidad horizontal
 @export var lookahead_umbral := 80.0    # velocidad (px/s) recién pasada la cual empieza el adelanto
@@ -23,11 +25,26 @@ var _zoom_velocidad := 1.0
 @export var seguimiento_vertical_leve := 0.15  # cuánto sí se mueve dentro de la deadzone al subir
 @export var suavizado_subida := 1.8  # al subir: lento
 @export var suavizado_bajada := 7.0  # al bajar: brusco y rápido
+@export var tiempo_descenso_extendido := 1.0  # segundos planeando/bajando para anticipar abajo
+@export var offset_descenso_extendido := 320.0  # px que baja más la cámara en descenso prolongado
+@export var suavizado_descenso_extendido := 3.0  # qué tan suave entra/sale ese offset extra
 
 
 func _ready() -> void:
 	_modo = "seguir"
 	_zoom_objetivo = zoom
+
+
+## True mientras el jugador planea (murciélago) o cae de forma sostenida.
+func _bajando_prolongado(player: Node) -> bool:
+	if "forms" in player and "current_form" in player and "velocity" in player:
+		var fg = (player as Node).get("forms")[(player as Node).get("current_form")]
+		if fg != null and fg.has_method("is_gliding"):
+			if fg.call("is_gliding", player):
+				return true
+		if not (player as CharacterBody2D).is_on_floor() and (player as CharacterBody2D).velocity.y > 60.0:
+			return true
+	return false
 
 
 func _process(delta: float) -> void:
@@ -115,6 +132,17 @@ func _physics_process(delta: float) -> void:
 			if fg != null and fg.has_method("is_gliding"):
 				gliding = fg.call("is_gliding", player)
 		suavizado_y = 3.0 if trepando else (4.0 if gliding else suavizado_bajada)
+	# (9) Descenso/planeo prolongado: desplaza la cámara hacia abajo para
+	# mostrar la zona de abajo antes de que el jugador la alcance.
+	var bajando_extendido := _bajando_prolongado(player)
+	if bajando_extendido:
+		_descenso_t += delta
+	else:
+		_descenso_t = 0.0
+	var objetivo_offset := offset_descenso_extendido if _descenso_t >= tiempo_descenso_extendido else 0.0
+	_offset_descenso = lerpf(_offset_descenso, objetivo_offset, minf(suavizado_descenso_extendido * delta, 1.0))
+	destino.y += _offset_descenso
+
 	global_position.x = lerpf(global_position.x, destino.x, minf(suavizado * delta, 1.0))
 	global_position.y = lerpf(global_position.y, destino.y, minf(suavizado_y * delta, 1.0))
 

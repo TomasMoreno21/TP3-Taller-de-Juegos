@@ -21,7 +21,7 @@ const TAMANO_VIEWPORT := Vector2(1920.0, 1080.0)
 @export_group("Camara / vista")
 @export var mostrar_vista := true              # rect de lo que se ve en pantalla
 @export var zoom_vista := 1.0                  # ajusta el rect si la cámara cambia de zoom
-@export var desplazamiento_cam := Vector2(0, -310)  # offset de la cámara sobre el player (camera.gd)
+@export var desplazamiento_cam := Vector2(0, -250)  # offset de la cámara sobre el player (camera.gd)
 @export var seguir_player := true              # sigue al nodo "Player" de la escena
 @export var punto_vista := Vector2(960, 540)   # posición libre para el rect si no sigue al player
 @export var mostrar_limites := false

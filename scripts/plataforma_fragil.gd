@@ -89,7 +89,8 @@ func _rect_toca(a: Rect2, body: Node2D) -> bool:
 	else:
 		return false
 	var b := Rect2(body.global_position + csc.position - s * 0.5, s)
-	return a.intersects(b)
+	# Tolera el contacto exacto borde a borde (el piso "roza" el top de la plataforma).
+	return a.grow(6.0).intersects(b)
 
 
 func _csc_de(body: Node2D) -> CollisionShape2D:
