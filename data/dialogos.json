@@ -1,0 +1,66 @@
+{
+	"main_intro": {
+		"hablante": "Amuleto",
+		"modo": "Automatico",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": []
+	},
+	"main_tronco": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": []
+	},
+	"n1_intro": {
+		"hablante": "Amuleto",
+		"modo": "Automatico",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": [
+			"Humano... yo soy el protector de los espíritus del bosque.",
+			"Este bosque tiene una guerra secreta con los cultistas.",
+			"Quieren apoderarse del bosque y toda la fuerza espiritual del mismo.",
+			"No entiendo por qué se llevaron a tu hijo, pero estoy seguro que no por buenos motivos.",
+			"Para derrotar a esos malditos, voy a prestarte de nuestro poder.",
+			"Movete con ← → (o A/D) y saltá con Espacio.",
+			"J es tu golpe rápido, K tu golpe fuerte."
+		]
+	},
+	"n1_combate": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	},
+	"n1_lobo": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	},
+	"n1_zona2": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	},
+	"n1_zona3": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	},
+	"n1_santuario": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	}
+}

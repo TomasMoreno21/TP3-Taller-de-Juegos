@@ -7,7 +7,7 @@ size = Vector2(150, 400)
 
 [node name="DialogTrigger" type="Area2D"]
 script = ExtResource("1_trigger")
-lineas = PackedStringArray()
+dialogo_id = ""
 
 [node name="Collision" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_trigger")

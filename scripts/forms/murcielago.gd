@@ -35,6 +35,7 @@ func _init() -> void:
 	landing_squash = 0.06
 	mult_recuperacion = 1.8
 	melee_sticky = 550.0
+	step_up_max = 0.0
 	combos = [
 		{"nombre": "Ala Cortante", "secuencia": ["light", "heavy"], "dano": 32, "knockback": 240.0, "tamano": Vector2(192, 102), "rango": 114.0},
 	]

@@ -46,7 +46,7 @@ const HITSTOP_HEAVY := 0.12
 const HITSTOP_SPECIAL := 0.14
 const HITSTOP_COMBO := 0.17
 const HITSTOP_DANO := 0.07
-const VIDA_MAX := 100
+const VIDA_MAX := 500
 
 var forms: Array[Forma] = []
 var current_form: int = Form.HUMAN
@@ -1100,7 +1100,7 @@ func _update_animacion() -> void:
 		return
 	var anim := "run"
 	if current_form == Form.MURCIELAGO and visual.sprite_frames.has_animation("murci_volar"):
-		if not is_on_floor() or absf(velocity.y) > 20.0:
+		if not is_on_floor() and absf(velocity.y) > 20.0:
 			anim = "murci_volar"
 		elif visual.sprite_frames.has_animation("murci_run"):
 			anim = "murci_run"
@@ -1114,7 +1114,8 @@ func _update_animacion() -> void:
 	if absf(velocity.x) < 10.0:
 		visual.speed_scale = 0.0
 	else:
-		visual.speed_scale = clampf(absf(velocity.x) / maxf(data.speed, 1.0), 0.4, 1.6)
+		var speed_min := 0.35 if current_form != Form.MURCIELAGO else 0.7
+		visual.speed_scale = clampf(absf(velocity.x) / maxf(data.speed, 1.0), speed_min, 1.6)
 		if current_form == Form.LOBO:
 			visual.speed_scale = pow(visual.speed_scale, 0.82)
 	var base_lean := clampf(velocity.x / maxf(data.speed, 1.0), -1.0, 1.0) * deg_to_rad(data.lean_angulo)
@@ -1141,7 +1142,7 @@ func _update_animacion() -> void:
 		var cam_tilt2 := get_viewport().get_camera_2d()
 		if cam_tilt2 != null and cam_tilt2.has_method("tilt"):
 			cam_tilt2.tilt(-deg_to_rad(1.4) * signf(velocity.x) * clampf(absf(velocity.x) / 690.0, 0.0, 1.0))
-	if current_form == Form.MURCIELAGO and not _trepando and is_on_floor() and absf(velocity.x) > 10.0:
+	if current_form == Form.MURCIELAGO and not _trepando and not is_on_floor():
 		var t := Time.get_ticks_msec() / 1000.0
 		var onda := sin(t * 5.0) * 3.5 + sin(t * 9.0) * 1.8
 		visual.position.y = _visual_base_y() + onda

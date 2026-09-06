@@ -163,19 +163,15 @@ position = Vector2(3900, 940)
 
 [node name="DialogoIntro" parent="." unique_id=1685442069 instance=ExtResource("8_dialog")]
 position = Vector2(181, 820)
-lineas = PackedStringArray("Humano... yo soy el protector de los espíritus del bosque.", "Este bosque tiene una guerra secreta con los cultistas.", "Quieren apoderarse del bosque y toda la fuerza espiritual del mismo.", "No entiendo por qué se llevaron a tu hijo, pero estoy seguro que no por buenos motivos.", "Para derrotar a esos malditos, voy a prestarte de nuestro poder.", "Movete con ← → (o A/D) y saltá con Espacio.", "J es tu golpe rápido, K tu golpe fuerte.")
-modo = "Automatico"
-una_vez = false
+dialogo_id = "n1_intro"
 
 [node name="DialogoCombate" parent="." unique_id=1063822624 instance=ExtResource("8_dialog")]
 position = Vector2(2026, 768)
-lineas = []
-una_vez = false
+dialogo_id = "n1_combate"
 
 [node name="DialogoLobo" parent="." unique_id=120336290 instance=ExtResource("8_dialog")]
 position = Vector2(2750, 820)
-lineas = []
-una_vez = false
+dialogo_id = "n1_lobo"
 
 [node name="EncounterA" parent="." unique_id=450537322 instance=ExtResource("9_enc")]
 position = Vector2(5753.395, 830)
@@ -223,8 +219,7 @@ ritual_duracion = 0.4
 
 [node name="DialogoZona2" parent="." unique_id=2100000001 instance=ExtResource("8_dialog")]
 position = Vector2(6300, 820)
-lineas = []
-una_vez = false
+dialogo_id = "n1_zona2"
 
 [node name="EncounterD" parent="." unique_id=2100000002 instance=ExtResource("9_enc")]
 position = Vector2(6800, 1444)
@@ -317,8 +312,7 @@ position = Vector2(13200, 940)
 
 [node name="DialogoZona3" parent="." unique_id=2100000035 instance=ExtResource("8_dialog")]
 position = Vector2(13800, 900)
-lineas = []
-una_vez = false
+dialogo_id = "n1_zona3"
 
 [node name="Plataforma10" type="StaticBody2D" parent="." unique_id=2100000026]
 position = Vector2(14700, 900)
@@ -352,8 +346,7 @@ shape = SubResource("RectangleShape2D_plat")
 
 [node name="DialogoSantuario" parent="." unique_id=2100000036 instance=ExtResource("8_dialog")]
 position = Vector2(15150, 850)
-lineas = []
-una_vez = false
+dialogo_id = "n1_santuario"
 
 [node name="Santuario" parent="." unique_id=1856516154 instance=ExtResource("11_sant")]
 position = Vector2(15600, 922)
