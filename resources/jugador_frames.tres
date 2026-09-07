@@ -12,12 +12,20 @@
 [ext_resource type="Texture2D" uid="uid://dahkkhxidsfbt" path="res://Sprites/Jugador y Transformaciones/2muci volar.png" id="10_murci2"]
 [ext_resource type="Texture2D" uid="uid://dmann800u6otn" path="res://Sprites/Jugador y Transformaciones/3murci volar.png" id="11_murci3"]
 [ext_resource type="Texture2D" uid="uid://b74fwsdtf2mjp" path="res://Sprites/Jugador y Transformaciones/4murci volar.png" id="12_murci4"]
-[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/1oso caminar.png" id="13_oso1"]
-[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/2oso caminar.png" id="14_oso2"]
-[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/3oso caminar.png" id="15_oso3"]
-[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/4oso caminar.png" id="16_oso4"]
-[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/5oso caminar.png" id="17_oso5"]
-[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/6oso caminar.png" id="18_oso6"]
+[ext_resource type="Texture2D" uid="uid://dj4rbh5uanys1" path="res://Sprites/Jugador y Transformaciones/1oso caminar.png" id="13_oso1"]
+[ext_resource type="Texture2D" uid="uid://dngbqudevq8hy" path="res://Sprites/Jugador y Transformaciones/2oso caminar.png" id="14_oso2"]
+[ext_resource type="Texture2D" uid="uid://m10muk281v84" path="res://Sprites/Jugador y Transformaciones/3oso caminar.png" id="15_oso3"]
+[ext_resource type="Texture2D" uid="uid://cltprkspxr8kb" path="res://Sprites/Jugador y Transformaciones/4oso caminar.png" id="16_oso4"]
+[ext_resource type="Texture2D" uid="uid://bqcx2kuu7karr" path="res://Sprites/Jugador y Transformaciones/5oso caminar.png" id="17_oso5"]
+[ext_resource type="Texture2D" uid="uid://c0flbm20x8nkc" path="res://Sprites/Jugador y Transformaciones/6oso caminar.png" id="18_oso6"]
+[ext_resource type="Texture2D" uid="uid://7dylbwu5r7q4" path="res://Sprites/Jugador y Transformaciones/1lobo quieto.png" id="19_lidle1"]
+[ext_resource type="Texture2D" uid="uid://e4uayvbcac4b" path="res://Sprites/Jugador y Transformaciones/2lobo quieto.png" id="20_lidle2"]
+[ext_resource type="Texture2D" uid="uid://cf4w3x0tq8dk4" path="res://Sprites/Jugador y Transformaciones/3lobo quieto.png" id="21_lidle3"]
+[ext_resource type="Texture2D" uid="uid://bx0n83vpy61to" path="res://Sprites/Jugador y Transformaciones/4lobo quieto.png" id="22_lidle4"]
+[ext_resource type="Texture2D" uid="uid://p0h7qgyf1wd6" path="res://Sprites/Jugador y Transformaciones/1oso quieto.png" id="23_oidle1"]
+[ext_resource type="Texture2D" uid="uid://bf71kvoul4gcj" path="res://Sprites/Jugador y Transformaciones/2oso quieto.png" id="24_oidle2"]
+[ext_resource type="Texture2D" uid="uid://chb2jeepeeor6" path="res://Sprites/Jugador y Transformaciones/3oso quieto.png" id="25_oidle3"]
+[ext_resource type="Texture2D" uid="uid://bivmtiu0gov2p" path="res://Sprites/Jugador y Transformaciones/4oso quieto.png" id="26_oidle4"]
 
 [resource]
 animations = [{
@@ -35,6 +43,23 @@ animations = [{
 }],
 "loop": 1,
 "name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("19_lidle1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_lidle2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_lidle3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_lidle4")
+}],
+"loop": 1,
+"name": &"lobo_idle",
 "speed": 5.0
 }, {
 "frames": [{
@@ -110,6 +135,23 @@ animations = [{
 "loop": 1,
 "name": &"oso_caminar",
 "speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("23_oidle1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_oidle2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("25_oidle3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("26_oidle4")
+}],
+"loop": 1,
+"name": &"oso_idle",
+"speed": 5.0
 }, {
 "frames": [{
 "duration": 1.0,
