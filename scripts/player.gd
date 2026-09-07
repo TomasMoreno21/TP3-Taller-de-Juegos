@@ -1091,20 +1091,27 @@ func _update_animacion() -> void:
 		var ang_q := lerpf(3.0, 10.0, prog_rot)
 		visual.rotation = lerpf(visual.rotation, deg_to_rad(ang) * facing, minf(6.0 * get_physics_process_delta_time(), 1.0))
 		return
+	var quieto := absf(velocity.x) < 10.0 and is_on_floor()
 	var anim := "run"
 	if current_form == Form.MURCIELAGO and visual.sprite_frames.has_animation("murci_volar"):
 		if not is_on_floor() and absf(velocity.y) > 20.0:
 			anim = "murci_volar"
 		elif visual.sprite_frames.has_animation("murci_run"):
 			anim = "murci_run"
+	elif current_form == Form.LOBO and quieto and visual.sprite_frames.has_animation("lobo_idle"):
+		anim = "lobo_idle"
 	elif current_form == Form.LOBO and visual.sprite_frames.has_animation("lobo_run"):
 		anim = "lobo_run"
+	elif current_form == Form.OSO and quieto and visual.sprite_frames.has_animation("oso_idle"):
+		anim = "oso_idle"
 	elif current_form == Form.OSO and visual.sprite_frames.has_animation("oso_caminar"):
 		anim = "oso_caminar"
 	if visual.animation != anim:
 		visual.play(anim)
 	var data: Forma = forms[current_form]
-	if absf(velocity.x) < 10.0:
+	if anim == "lobo_idle" or anim == "oso_idle":
+		visual.speed_scale = 1.0
+	elif absf(velocity.x) < 10.0:
 		visual.speed_scale = 0.0
 	else:
 		var speed_min := 0.35 if current_form != Form.MURCIELAGO else 0.7
