@@ -4,7 +4,7 @@
 [ext_resource type="SpriteFrames" uid="uid://bhqpshwxoqn22" path="res://resources/jugador_frames.tres" id="2_frames"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(175, 283)
+size = Vector2(152, 277)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
 size = Vector2(43.363636, 150.32259)
@@ -21,7 +21,7 @@ animation = &"run"
 autoplay = "run"
 
 [node name="Collision" type="CollisionShape2D" parent="." unique_id=1655450779]
-position = Vector2(0, -7.5)
+position = Vector2(-2, -4.5)
 shape = SubResource("RectangleShape2D_body")
 
 [node name="AttackArea" type="Area2D" parent="." unique_id=1368461241]

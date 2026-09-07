@@ -25,9 +25,9 @@ var _offset_descenso := 0.0
 @export var seguimiento_vertical_leve := 0.15  # cuánto sí se mueve dentro de la deadzone al subir
 @export var suavizado_subida := 1.8  # al subir: lento
 @export var suavizado_bajada := 7.0  # al bajar: brusco y rápido
-@export var tiempo_descenso_extendido := 1.0  # segundos planeando/bajando para anticipar abajo
-@export var offset_descenso_extendido := 320.0  # px que baja más la cámara en descenso prolongado
-@export var suavizado_descenso_extendido := 3.0  # qué tan suave entra/sale ese offset extra
+@export var tiempo_descenso_extendido := 0.7  # segundos planeando/bajando para anticipar abajo
+@export var offset_descenso_extendido := 420.0  # px que baja más la cámara en descenso prolongado
+@export var suavizado_descenso_extendido := 4.0  # qué tan suave entra/sale ese offset extra
 
 
 func _ready() -> void:

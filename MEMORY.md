@@ -2,6 +2,17 @@
 
 ---
 
+## 🔴 Sesión 05/09 — Diálogos persistentes en `data/dialogos.json` (texto fuera del .tscn)
+
+> **Problema:** las líneas de los diálogos vivían en el `.tscn` (`lineas = PackedStringArray(...)` en cada nodo `DialogTrigger`). Un merge o re-guardado del editor las vaciaba (pasó 2 veces con `DialogoIntro`/`DialogoTronco`, sesión 27/08 y de nuevo en HEAD 2ae4202 vía re-guardado). El usuario pidió que "los diálogos perduren" = que el texto no se borre del juego.
+
+- **`res://data/dialogos.json` (NUEVO directorio `data/`):** un solo dict por `id`, con `hablante`, `modo` ("Zona"/"Automatico"), `retraso`, `una_vez` y `lineas` (array de strings). **Para agregar un diálogo:** crear/editar el trigger en la escena con `dialogo_id` y añadir la entrada al JSON. Es la ÚNICA fuente del texto → escenas y merges ya no pueden borrarlo.
+- **`scripts/dialog_trigger.gd`:** nuevo `@export var dialogo_id: String`. En `_ready`, `_cargar_dialogo_por_id()` carga la entrada (cacheada en `static _cache`, read una sola vez). Si el id no existe → `push_error` y el trigger no dispara. Los exports `lineas/hablante/modo/una_vez/retraso` siguen como fallback para triggers sin id.
+- **IDs migrados:** `main_intro`, `main_tronco` (main.tscn), `n1_intro` (único con texto real, 7 líneas), `n1_combate`, `n1_lobo`, `n1_zona2`, `n1_zona3`, `n1_santuario` (nivel1.tscn). Los triggers vacíos mantienen su entrada con `lineas: []` para completar el texto después.
+- **Verificación:** import limpio, smoke final limpio (incluye `nivel1.tscn`), `tests/diag_dialogos.gd` **FALLOS=0** (6 checks: carga de n1_intro, id inexistente). Autotest **FALLOS=2** — ver nota crítica abajo.
+
+---
+
 ## 🔴 REALINEAMIENTO SPIRIT KEEPER (13/08 — ESTADO ACTUAL, LEER ANTES QUE EL HISTORIAL)
 
 > Todo el código de juego fue **reconstruido desde cero** y alineado al **Documento de Concepto** (`Documento_de_Concepto_TP3_GRUPO9.pdf`, extraído con PyMuPDF a `temp/concepto.txt`). Las secciones de abajo con mecánicas viejas (enemigos/Encounter/Ben 10) son **historial**, no el estado actual.
