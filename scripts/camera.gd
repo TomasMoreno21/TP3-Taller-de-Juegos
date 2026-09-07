@@ -13,9 +13,10 @@ var _lookahead_actual := 0.0
 var _zoom_velocidad := 1.0
 var _descenso_t := 0.0
 var _offset_descenso := 0.0
+var _look_offset := Vector2.ZERO
 
 @export var suavizado := 6.0
-@export var desplazamiento := Vector2(0, -250)
+@export var desplazamiento := Vector2(0, -220)
 @export var suavizado_zoom := 5.0
 @export var lookahead := 0.28    # anticipación de cámara según velocidad horizontal
 @export var lookahead_umbral := 80.0    # velocidad (px/s) recién pasada la cual empieza el adelanto
@@ -28,6 +29,8 @@ var _offset_descenso := 0.0
 @export var tiempo_descenso_extendido := 0.7  # segundos planeando/bajando para anticipar abajo
 @export var offset_descenso_extendido := 420.0  # px que baja más la cámara en descenso prolongado
 @export var suavizado_descenso_extendido := 4.0  # qué tan suave entra/sale ese offset extra
+@export var look_stick_amplitud := 180.0  # px máximos que desplaza la cámara el stick derecho
+@export var look_stick_suavizado := 5.0  # suavizado del desplazamiento del stick derecho
 
 
 func _ready() -> void:
@@ -48,13 +51,18 @@ func _bajando_prolongado(player: Node) -> bool:
 
 
 func _process(delta: float) -> void:
+	# Desplazamiento de cámara con stick derecho del joystick.
+	var look_dir := Vector2(Input.get_axis("cam_izq", "cam_der"), Input.get_axis("cam_arr", "cam_abj"))
+	_look_offset = _look_offset.lerp(look_dir * look_stick_amplitud, minf(look_stick_suavizado * delta, 1.0))
 	if _shake_timer > 0.0:
 		_shake_timer -= delta
 		var t := clampf(_shake_timer / 0.15, 0.0, 1.0)
 		var cur_strength := _shake_strength * (t * t)
-		offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * cur_strength
+		offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * cur_strength + _look_offset
 		if _shake_timer <= 0.0:
-			offset = Vector2.ZERO
+			offset = _look_offset
+	else:
+		offset = _look_offset
 
 	# Zoom por velocidad (1) + punch
 	var objetivo := _zoom_objetivo * _punch_scale * _zoom_velocidad

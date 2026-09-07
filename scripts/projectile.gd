@@ -13,8 +13,11 @@ var _life := 2.5
 @onready var hitbox: CollisionShape2D = $Hitbox
 
 
+const TERRAIN_LAYER := 1  # capa de colisión del TileMap
+
 func _ready() -> void:
-	collision_mask = 4 if enemy_shot else 2
+	# Detecta al Player (4) o Enemigos (2) según el dueño, y además el terreno (1).
+	collision_mask = (4 if enemy_shot else 2) | TERRAIN_LAYER
 	body_entered.connect(_on_body_entered)
 	monitoring = true
 
@@ -29,6 +32,11 @@ func _physics_process(delta: float) -> void:
 				var blended: Vector2 = direction.lerp(dir_deseada, homing_strength * delta)
 				if blended.length_squared() > 0.01:
 					direction = blended.normalized()
+	# Rechaza el terreno (evita atravesar el tilemap a alta velocidad), pero
+	# NO los objetos de energía (barreras y cristales): el sónico los atraviesa.
+	if _choca_terreno(delta):
+		queue_free()
+		return
 	global_position += direction * speed * delta
 	if _fuera_de_camara():
 		queue_free()
@@ -36,6 +44,40 @@ func _physics_process(delta: float) -> void:
 	_life -= delta
 	if _life <= 0.0:
 		queue_free()
+
+
+## Raycast del extremo del proyectil hacia dónde va a avanzar este frame.
+## Devuelve true si choca con el terreno antes de llegar. Los objetos de
+## energía (cristales y barreras, group barrera_energia/cristal) se saltean
+## para que el proyectil sónico del jugador los atraviese.
+func _choca_terreno(delta: float) -> bool:
+	var espacio := get_world_2d().direct_space_state
+	if espacio == null:
+		return false
+	var origen := global_position
+	var destino := global_position + direction * speed * delta + direction * 4.0
+	for _i in 20:
+		var q := PhysicsRayQueryParameters2D.create(origen, destino)
+		q.collide_with_areas = false
+		q.collide_with_bodies = true
+		q.collision_mask = TERRAIN_LAYER
+		var hit := espacio.intersect_ray(q)
+		if hit.is_empty():
+			return false
+		var col: Object = hit["collider"]
+		if not enemy_shot and _es_energia(col):
+			# Salta el objeto de energía y sigue mirando más allá.
+			origen = (hit["position"] as Vector2) + direction * 4.0
+			continue
+		return true
+	return false
+
+
+func _es_energia(col: Object) -> bool:
+	if not col is Node:
+		return false
+	var n := col as Node
+	return n.is_in_group("cristal") or n.is_in_group("barrera_energia")
 
 
 func _fuera_de_camara() -> bool:
@@ -81,6 +123,9 @@ func _activo_y_vivo(n: Node) -> bool:
 
 
 func _on_body_entered(body: Node2D) -> void:
+	# El sónico atraviesa las barreras de energía sin explotar contra ellas.
+	if body.is_in_group("barrera_energia"):
+		return
 	if body.has_method("take_damage"):
 		body.take_damage(damage, 120.0, int(direction.x))
 		if homing and not enemy_shot and body.is_in_group("enemy"):
@@ -89,4 +134,4 @@ func _on_body_entered(body: Node2D) -> void:
 				v.modulate = Color(0.78, 0.55, 1.0)
 				var tw := v.create_tween()
 				tw.tween_property(v, "modulate", Color(1, 1, 1), 0.12)
-	queue_free()
+		queue_free()

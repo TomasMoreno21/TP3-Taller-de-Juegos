@@ -21,7 +21,7 @@ const TAMANO_VIEWPORT := Vector2(1920.0, 1080.0)
 @export_group("Camara / vista")
 @export var mostrar_vista := true              # rect de lo que se ve en pantalla
 @export var zoom_vista := 1.0                  # ajusta el rect si la cámara cambia de zoom
-@export var desplazamiento_cam := Vector2(0, -250)  # offset de la cámara sobre el player (camera.gd)
+@export var desplazamiento_cam := Vector2(0, -220)  # offset de la cámara sobre el player (camera.gd)
 @export var seguir_player := true              # sigue al nodo "Player" de la escena
 @export var punto_vista := Vector2(960, 540)   # posición libre para el rect si no sigue al player
 @export var mostrar_limites := false
@@ -135,6 +135,11 @@ func _draw_saltos() -> void:
 	if _cache_formas.is_empty():
 		for s in SCRIPTS_FORMAS:
 			_cache_formas.append(s.new())
+	var origen := Vector2.ZERO
+	if seguir_player:
+		var jugador := _find_player() as Node2D
+		if jugador != null:
+			origen = jugador.global_position - global_position
 	for i in _cache_formas.size():
 		if i >= formas_activas.size() or not formas_activas[i]:
 			continue
@@ -145,22 +150,30 @@ func _draw_saltos() -> void:
 		var distancia: float = res[2]
 		var color: Color = f.color
 		var nombre := str(f.form_name)
-		draw_polyline(puntos, color, 2.5)
+		draw_polyline(_desplazar_pts(puntos, origen), color, 2.5)
 		if mostrar_distancia:
-			draw_line(Vector2.ZERO, Vector2(distancia, 0), color * Color(1, 1, 1, 0.55), 1.0)
-			_etiqueta(Vector2(distancia * 0.5, 12), "%s %d px" % [nombre, int(distancia)], color)
+			draw_line(origen, origen + Vector2(distancia, 0), color * Color(1, 1, 1, 0.55), 1.0)
+			_etiqueta(origen + Vector2(distancia * 0.5, 12), "%s %d px" % [nombre, int(distancia)], color)
 		if mostrar_altura:
-			draw_line(Vector2.ZERO, Vector2(0, -altura), color * Color(1, 1, 1, 0.55), 1.0)
-			_etiqueta(Vector2(8, -altura * 0.5), "%d px" % int(altura), color)
+			draw_line(origen, origen + Vector2(0, -altura), color * Color(1, 1, 1, 0.55), 1.0)
+			_etiqueta(origen + Vector2(8, -altura * 0.5), "%d px" % int(altura), color)
 		if marcas_cada_tile > 0.0:
-			_draw_marcas(distancia, color)
+			_draw_marcas(distancia, color, origen)
 
 
-func _draw_marcas(distancia: float, color: Color) -> void:
+func _desplazar_pts(pts: PackedVector2Array, off: Vector2) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	out.resize(pts.size())
+	for i in pts.size():
+		out[i] = pts[i] + off
+	return out
+
+
+func _draw_marcas(distancia: float, color: Color, origen: Vector2) -> void:
 	var paso := marcas_cada_tile
 	var x := paso
 	while x < distancia:
-		draw_line(Vector2(x, -8), Vector2(x, 8), color * Color(1, 1, 1, 0.4), 1.0)
+		draw_line(origen + Vector2(x, -8), origen + Vector2(x, 8), color * Color(1, 1, 1, 0.4), 1.0)
 		x += paso
 
 

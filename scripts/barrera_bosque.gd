@@ -16,6 +16,9 @@ var _t := 0.0
 
 
 func _ready() -> void:
+	# Identifica la barrera como energía: el sónico la atraviesa (projectile.gd).
+	if barrera != null:
+		barrera.add_to_group("barrera_energia")
 	var prog := _progresion()
 	if prog != null and prog.barreras_abiertas.has(barrera_id):
 		_abrir_instantaneo()

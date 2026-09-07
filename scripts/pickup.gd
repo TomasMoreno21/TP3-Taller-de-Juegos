@@ -12,4 +12,6 @@ func _ready() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if body.has_method("recoger_energia"):
 		body.recoger_energia()
+		# El alma contribuye a subir de nivel (fragmentos → desbloqueo de combos).
+		get_node("/root/Progresion").add_fragmentos(1)
 		queue_free()

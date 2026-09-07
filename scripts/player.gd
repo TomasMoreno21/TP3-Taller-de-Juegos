@@ -87,7 +87,7 @@ var _derrota_activa := false
 var _invuln_timer := 0.0
 var _cooldown_formas: Dictionary = {}
 const COOLDOWN_AGOTADA := 3.0
-const COOLDOWN_TRANSFORM := 3.0
+const COOLDOWN_TRANSFORM := 1.8
 var _cooldown_transform := 0.0
 var _special_cooldown := 0.0
 var _transform_buffer: float = 0.0
@@ -116,8 +116,6 @@ const TREPAR_SALIR_COOLDOWN := 0.45
 var _murci_glide_t: float = 0.0
 var _was_gliding: bool = false
 var _apex_squash_t: float = 0.0
-var _ledge_cooldown: float = 0.0
-var _was_on_wall: bool = false
 var _step_up_cd: float = 0.0
 var _salto_aereo_limitado: bool = false
 var _platform_snap_cd: float = 0.0
@@ -163,8 +161,6 @@ func _physics_process(delta: float) -> void:
 
 	var data: Forma = forms[current_form]
 	data.tick(self, delta)
-	if _ledge_cooldown > 0.0:
-		_ledge_cooldown = maxf(_ledge_cooldown - delta, 0.0)
 	if _step_up_cd > 0.0:
 		_step_up_cd = maxf(_step_up_cd - delta, 0.0)
 	if _platform_snap_cd > 0.0:
@@ -268,8 +264,6 @@ func _physics_process(delta: float) -> void:
 		_try_platform_snap()
 	if _trepando:
 		pass
-	elif is_on_wall() and not is_on_floor():
-		_try_ledge_assist()
 	elif is_on_wall() and is_on_floor() and absf(velocity.x) > 10.0:
 		_try_step_up()
 	if is_on_floor() and velocity.y > 0:
@@ -356,7 +350,6 @@ func _physics_process(delta: float) -> void:
 	_handle_formas_cruceta()
 	_handle_forma_ciclo()
 	_handle_transform()
-	_was_on_wall = is_on_wall()
 	if global_position.y > limite_caida:
 		health = 0
 	_handle_death()
@@ -1204,14 +1197,14 @@ func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 70
 	proj.global_position = global_position + Vector2(facing * 90.0, -60.0) + pos_referencia
 	var dir_inicial := Vector2(facing, 0.0)
 	if current_form == Form.MURCIELAGO:
-		var objetivo := _buscar_enemigo_homing(500.0)
+		var objetivo := _buscar_enemigo_homing(3000.0)
 		if objetivo != null:
 			var to_obj: Vector2 = objetivo.global_position - proj.global_position
 			if to_obj.length_squared() > 0.01:
 				dir_inicial = to_obj.normalized()
 		proj.set("homing", true)
-		proj.set("homing_range", 500.0)
-		proj.set("homing_strength", 6.5)
+		proj.set("homing_range", 3000.0)
+		proj.set("homing_strength", 12.0)
 	proj.set("direction", dir_inicial)
 	proj.set("speed", alcance)
 	proj.set("damage", forms[current_form].special_damage)
@@ -1247,47 +1240,6 @@ func _try_interact() -> bool:
 		if nodo.has_method("try_interact") and nodo.try_interact(self):
 			return true
 	return false
-
-
-func _try_ledge_assist() -> void:
-	if _ledge_cooldown > 0.0:
-		return
-	if _was_on_wall:
-		return
-	if absf(velocity.x) < 4.0 and absf(Input.get_axis("move_left", "move_right")) < 0.15:
-		return
-	if velocity.y < -20.0:
-		return
-	for h in [12.0, 16.0, 20.0]:
-		var up := Transform2D(0, Vector2.ZERO).translated(Vector2(0, -h))
-		if test_move(up, Vector2(facing * 10, 0)):
-			continue
-		if test_move(up, Vector2(0, 0)):
-			continue
-		global_position.y -= h
-		velocity.y = minf(velocity.y, -160.0)
-		velocity.x = facing * maxf(absf(velocity.x), 140.0)
-		_ledge_cooldown = 0.45
-		_emitir_polvo(0.6)
-		visual.scale = Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1) * Vector2(1.08, 0.92)
-		if _sprite_tween != null and _sprite_tween.is_valid():
-			_sprite_tween.kill()
-		_sprite_tween = create_tween()
-		_sprite_tween.tween_property(visual, "scale", Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		return
-	_try_corner_nudge()
-
-
-func _try_corner_nudge() -> void:
-	if not is_on_ceiling():
-		return
-	for d in [12.0, -12.0, 18.0, -18.0]:
-		var side := Transform2D(0, Vector2.ZERO).translated(Vector2(d, 0))
-		if not test_move(side, Vector2(0, -8)):
-			global_position.x += d
-			velocity.x = d * 9.0
-			_emitir_polvo(0.5)
-			return
 
 
 func _try_step_up() -> void:

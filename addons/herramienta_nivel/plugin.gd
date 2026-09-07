@@ -11,13 +11,22 @@ func _enter_tree() -> void:
 	_boton.text = "Herramienta de nivel"
 	_boton.tooltip_text = "Inserta la herramienta de diseño (vista, saltos, grid) en la escena abierta. Da click de nuevo la mueve al origen si ya existe."
 	_boton.pressed.connect(_insertar)
-	add_control_to_dock(DOCK_SLOT_LEFT_BR, _boton)
+	# El botón ahora vive en el menú "Proyecto" del editor (siempre visible).
+	# Se registra `_toggle_via_menu` (y se define) porque el editor reconstruye
+	# los callbacks del menú con ese nombre; si no existe, da "Method not found".
+	add_tool_menu_item("Insertar herramienta de nivel", Callable(self, "_toggle_via_menu"))
 
 
 func _exit_tree() -> void:
+	remove_tool_menu_item("Insertar herramienta de nivel")
 	remove_control_from_docks(_boton)
 	if is_instance_valid(_boton):
 		_boton.queue_free()
+
+
+## Acción del menú (nombre que el editor usa para invocar la entrada).
+func _toggle_via_menu() -> void:
+	_insertar()
 
 
 func _insertar() -> void:
