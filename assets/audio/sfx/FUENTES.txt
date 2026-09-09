@@ -1,0 +1,26 @@
+Efectos de sonido de combate — fuentes y licencias
+====================================================
+
+golpe_liviano_jugador.mp3
+  Título: Punch 03
+  Autor: Universfield
+  Fuente: https://pixabay.com/sound-effects/film-special-effects-punch-03-352040/
+  Licencia: Pixabay Content License (uso libre, sin atribución obligatoria)
+
+golpe_pesado_jugador.mp3
+  Título: Hard Heavy Impact
+  Autor: DRAGON-STUDIO
+  Fuente: https://pixabay.com/sound-effects/film-special-effects-hard-heavy-impact-515256/
+  Licencia: Pixabay Content License (uso libre, sin atribución obligatoria)
+
+golpe_enemigo.mp3
+  Título: Classic Punch Impact
+  Autor: Universfield
+  Fuente: https://pixabay.com/sound-effects/film-special-effects-classic-punch-impact-352711/
+  Licencia: Pixabay Content License (uso libre, sin atribución obligatoria)
+
+transformacion.mp3
+  Título: earth magic (1)
+  Autor: Yodguard
+  Fuente: https://pixabay.com/sound-effects/film-special-effects-earth-magic-1-378599/
+  Licencia: Pixabay Content License (uso libre, sin atribución obligatoria)

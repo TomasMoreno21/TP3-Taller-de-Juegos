@@ -122,6 +122,11 @@ var _step_up_cd: float = 0.0
 var _salto_aereo_limitado: bool = false
 var _platform_snap_cd: float = 0.0
 @export var limite_caida := 12000.0
+@export var sonido_golpe_liviano: AudioStream
+@export var sonido_golpe_pesado: AudioStream
+@export var sonido_transformacion: AudioStream
+@export var volumen_golpe_db := 0.0
+@export var volumen_transformacion_db := 0.0
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $Collision
@@ -654,6 +659,10 @@ func _check_attack_hits() -> void:
 		elif body.has_method("take_damage"):
 			body.take_damage(dmg, kb, facing)
 		_spark_golpe(body, idx)
+	var sonido_golpe: AudioStream = sonido_golpe_liviano if _current_attack_type == "light" else sonido_golpe_pesado
+	var audio_mgr := get_node_or_null("/root/AudioManager")
+	if audio_mgr != null:
+		audio_mgr.play_sfx(sonido_golpe, volumen_golpe_db)
 	_hit_applied = true
 	_registrar_golpe_racha()
 	_hitstop_por_tipo()
@@ -988,6 +997,9 @@ func _transformar(nueva: int, forzar: bool = false) -> void:
 		cam.punch(1.07)
 	if nueva == Form.HUMAN:
 		_particulas_regreso()
+	var audio_mgr_t := get_node_or_null("/root/AudioManager")
+	if audio_mgr_t != null:
+		audio_mgr_t.play_sfx(sonido_transformacion, volumen_transformacion_db)
 	_cooldown_transform = COOLDOWN_TRANSFORM
 	form_changed.emit(data.form_name)
 	forma_selectada_cambiada.emit(nueva)

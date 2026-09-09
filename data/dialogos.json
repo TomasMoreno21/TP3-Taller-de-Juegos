@@ -33,14 +33,22 @@
 		"modo": "Zona",
 		"retraso": 0.6,
 		"una_vez": false,
-		"lineas": []
+		"lineas": [
+			"Esperá... siento una presencia cerca. No estás solo.",
+			"Preparate, Humano: puede que tengas que pelear."
+		]
 	},
 	"n1_lobo": {
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
 		"una_vez": false,
-		"lineas": []
+		"lineas": [
+			"Este paso es muy angosto para tu forma humana.",
+			"Ya podés convocar al Lobo: presioná T para transformarte.",
+			"Es más bajo, más ágil, y hasta puede saltar dos veces seguidas en el aire.",
+			"Ojo: la transformación consume energía. Si se agota, volvés a ser Humano."
+		]
 	},
 	"n1_zona2": {
 		"hablante": "Amuleto",
@@ -61,6 +69,8 @@
 		"modo": "Zona",
 		"retraso": 0.6,
 		"una_vez": false,
-		"lineas": []
+		"lineas": [
+			"Ya estamos cerca de su guarida..."
+		]
 	}
 }

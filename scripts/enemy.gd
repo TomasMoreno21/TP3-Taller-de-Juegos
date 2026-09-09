@@ -10,6 +10,8 @@ const MAX_FALL_SPEED := 950.0
 @export var ola_asignada: int = 0          # a qué ola pertenece (enemigo manual del Encounter)
 @export var spawn_telegrafiado: bool = false  # aparece con el círculo ritual antes de actuar
 @export var ritual_duracion: float = 0.7  # tiempo del círculo ritual antes de que el enemigo actúe
+@export var sonido_golpe: AudioStream
+@export var volumen_golpe_db := 0.0
 
 const FRAMES_POR_TIPO := {
 	"cultista": preload("res://resources/enemigo1_frames.tres"),
@@ -316,6 +318,9 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
 	if health <= 0:
 		return
 	health -= cantidad
+	var audio_mgr := get_node_or_null("/root/AudioManager")
+	if audio_mgr != null:
+		audio_mgr.play_sfx(sonido_golpe, volumen_golpe_db)
 	_freeze_hitstop()
 	var en_ataque := _windup_timer > 0.0 or _lunge_timer > 0.0
 	var armadura: bool = enemy_data != null and enemy_data.armadura_ataque and en_ataque

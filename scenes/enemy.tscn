@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://nwmht8huha1i" path="res://scripts/enemy.gd" id="1_enemy"]
 [ext_resource type="SpriteFrames" uid="uid://bkfv821bksv2h" path="res://resources/enemigo1_frames.tres" id="2_frames1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/golpe_enemigo.mp3" id="3_sfx_golpe"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(73, 199)
@@ -10,6 +11,8 @@ size = Vector2(73, 199)
 collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_enemy")
+sonido_golpe = ExtResource("3_sfx_golpe")
+volumen_golpe_db = -6.0
 
 [node name="Visual" type="Node2D" parent="." unique_id=1260952583]
 position = Vector2(0, -111.5)

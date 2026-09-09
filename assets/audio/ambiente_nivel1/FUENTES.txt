@@ -1,0 +1,38 @@
+Sonidos de ambientación (bosque nocturno) para nivel1 — fuentes y licencias
+============================================================================
+
+01_windy_night_forest_ambience.mp3
+  Título: Windy Night Forest Ambience
+  Autor: Alex_Jauk
+  Fuente: https://pixabay.com/sound-effects/nature-windy-night-forest-ambience-211715/
+  Licencia: Pixabay Content License (uso libre, sin atribución obligatoria)
+
+02_forest_at_night_ambience.mp3
+  Título: Forest At Night Ambience
+  Autor: fribergmusic2024
+  Fuente: https://freesound.org/s/719558/
+  Licencia: CC0 (dominio público)
+
+03_cricket_sound_at_night.mp3
+  Título: Cricket Sound at Night (Night Bugs at Forest)
+  Autor: TanwerAman
+  Fuente: https://pixabay.com/sound-effects/nature-cricket-sound-at-night-night-bugs-at-forest-238793/
+  Licencia: Pixabay Content License (uso libre, sin atribución obligatoria)
+
+04_owl_hoot.mp3
+  Título: Owl Hoot
+  Autor: Universfield
+  Fuente: https://pixabay.com/sound-effects/nature-owl-hoot-144750/
+  Licencia: Pixabay Content License (uso libre, sin atribución obligatoria)
+
+05_wolf_howl.mp3
+  Título: Wolf Howl 2
+  Autor: DRAGON-STUDIO
+  Fuente: https://pixabay.com/sound-effects/horror-wolf-howl-2-359870/
+  Licencia: Pixabay Content License (uso libre, sin atribución obligatoria)
+
+06_wind_through_trees.mp3
+  Título: Ambience Wind Blowing Through Trees 01
+  Autor: Traian1984
+  Fuente: https://pixabay.com/sound-effects/nature-ambience-wind-blowing-through-trees-01-186986/
+  Licencia: Pixabay Content License (uso libre, sin atribución obligatoria)

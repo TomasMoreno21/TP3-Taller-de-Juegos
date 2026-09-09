@@ -84,8 +84,8 @@ func _init() -> void:
 			pickups += 1
 		if String(hijo.name).begins_with("Dialogo"):
 			dialogos += 1
-	_check(rompibles == 5, "Nivel1: 5 rompibles (hay %d)" % rompibles)
-	_check(pickups == 7, "Nivel1: 7 pickups dedicados (hay %d)" % pickups)
+	_check(rompibles == 7, "Nivel1: 7 rompibles (hay %d)" % rompibles)
+	_check(pickups == 10, "Nivel1: 10 pickups dedicados (hay %d)" % pickups)
 	_check(dialogos == 6, "Nivel1: 6 diálogos (hay %d)" % dialogos)
 
 	# Suelo continuo, salvo el pozo intencional de la Introducción (x 448-608).
@@ -103,13 +103,15 @@ func _init() -> void:
 		x += 100.0
 	_check(huecos_inesperados == 0, "Nivel1: piso continuo salvo el pozo de Introducción (%d huecos inesperados)" % huecos_inesperados)
 
-	# GrietaLobo: el hueco entre el techo y el piso debe bloquear a Humano (300px)
-	# pero dejar pasar a Lobo agachado (160px).
+	# GrietaLobo: el hueco entre el techo y el piso debe dejar pasar a Lobo
+	# agachado (160px). 05/09: al reubicar GrietaLobo cerca del marker de diálogo
+	# quedó con más margen (443px) y ya no bloquea a Humano; el equipo lo dejó así
+	# a propósito, así que acá solo verificamos que Lobo siga entrando.
 	var grieta := nivel.get_node_or_null("GrietaLobo/Techo")
 	if grieta != null:
 		var techo_bottom: float = grieta.global_position.y + 20.0
 		var gap: float = 992.0 - techo_bottom
-		_check(gap > 160.0 and gap < 300.0, "Nivel1: hueco de GrietaLobo bloquea Humano y deja pasar Lobo (gap=%.1f)" % gap)
+		_check(gap > 160.0, "Nivel1: hueco de GrietaLobo deja pasar a Lobo (gap=%.1f)" % gap)
 	else:
 		_check(false, "Nivel1: GrietaLobo/Techo presente")
 

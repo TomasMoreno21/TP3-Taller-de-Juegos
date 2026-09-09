@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" uid="uid://dfckwvhjipli2" path="res://scripts/player.gd" id="1_player"]
 [ext_resource type="SpriteFrames" uid="uid://bhqpshwxoqn22" path="res://resources/jugador_frames.tres" id="2_frames"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/golpe_liviano_jugador.mp3" id="3_sfx_liviano"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/golpe_pesado_jugador.mp3" id="4_sfx_pesado"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/transformacion.mp3" id="5_sfx_transform"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(152, 277)
@@ -13,6 +16,10 @@ size = Vector2(43.363636, 150.32259)
 collision_layer = 4
 collision_mask = 3
 script = ExtResource("1_player")
+sonido_golpe_liviano = ExtResource("3_sfx_liviano")
+sonido_golpe_pesado = ExtResource("4_sfx_pesado")
+sonido_transformacion = ExtResource("5_sfx_transform")
+volumen_golpe_db = -4.0
 
 [node name="Sprite2D" type="AnimatedSprite2D" parent="." unique_id=1857419060]
 texture_filter = 1
