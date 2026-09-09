@@ -17,8 +17,8 @@ func _init() -> void:
 	heavy_size = Vector2(130, 85)
 	heavy_combo_steps = 2
 	special_damage = 15
-	special_cooldown = 0.8
-	special_cooldown_combate = 2.0
+	special_cooldown = 0.4
+	special_cooldown_combate = 1.0
 	color = Color(0.52, 0.4, 0.62)
 	collider_size = Vector2(150, 120)
 	flight_lift = 30.0

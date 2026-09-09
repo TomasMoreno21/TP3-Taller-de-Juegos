@@ -223,7 +223,7 @@ func _init() -> void:
 	# --- Interact: el tronco solo lo rompe el Oso ---
 	await _funcion_tronco()
 
-	# --- Rompibles: 3 golpes + fragmento ---
+	# --- Rompibles: 3 golpes (el fragmento lo da el alma al recogerla, ver pickup) ---
 	_console._ejecutar(PackedStringArray(["form", "humano"]))
 	await process_frame
 	var crate: Node2D = preload("res://scenes/rompible.tscn").instantiate()
@@ -231,7 +231,6 @@ func _init() -> void:
 	crate.global_position = _player.global_position + Vector2(40, 0)
 	await _wait_frames(3)
 	_player.facing = 1
-	var frag_antes: int = int(_progresion().fragmentos)
 	for i in range(3):
 		Input.action_press("attack")
 		await physics_frame
@@ -240,16 +239,17 @@ func _init() -> void:
 		await _wait_frames(3)
 		await _esperar_recuperacion("light")
 	_check(not is_instance_valid(crate), "Rompible: se rompe al 3er golpe")
-	_check(int(_progresion().fragmentos) > frag_antes, "Rompible: otorga un fragmento al romperse")
 
-	# --- Pickup: recarga la energía ---
+	# --- Pickup: recarga la energía Y otorga un fragmento (sube nivel) ---
 	_player.energia = 20.0
 	await process_frame
 	var pickup: Node2D = preload("res://scenes/pickup.tscn").instantiate()
 	_scene.add_child(pickup)
 	pickup.global_position = _player.global_position
+	var frag_antes: int = int(_progresion().fragmentos)
 	await _wait_frames(6)
 	_check(_player.energia > 20.0, "Pickup: recarga la energía del espíritu")
+	_check(int(_progresion().fragmentos) > frag_antes, "Pickup: el alma otorga un fragmento al recogerla")
 
 	# --- Consola: god y mv ---
 	_console._ejecutar(PackedStringArray(["god"]))

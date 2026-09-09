@@ -48,10 +48,6 @@ acento_volumen_db = -2.0
 position = Vector2(100, 862)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
-limit_left = -100
-limit_top = -2000
-limit_right = 16100
-limit_bottom = 1100
 script = ExtResource("2_cam")
 
 [node name="FondoBosque" parent="." unique_id=542214532 instance=ExtResource("3_fondo")]

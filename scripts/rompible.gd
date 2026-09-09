@@ -32,8 +32,9 @@ func registrar_golpe(_dano: int) -> void:
 func _romper() -> void:
 	broken = true
 	_burst_particulas()
+	# El fragmento de progresión lo otorga el alma al RECOGERLA (pickup.gd),
+	# no al romper: si no la agarrás, no sumás el fragmento.
 	_soltar_pickup()
-	get_node("/root/Progresion").add_fragmentos(1)
 	queue_free()
 
 
