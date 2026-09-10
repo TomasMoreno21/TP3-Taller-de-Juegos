@@ -2,6 +2,43 @@
 
 ---
 
+## 🔴 Sesión 10/09 (3) — Sprites de ataque humano enlazados + enemigos a escala natural
+
+> Pedido del usuario: los sprites nuevos de la animación de ataque "no se ven" + integrar los sprites nuevos de enemigos (pendiente de la sesión previa).
+
+- **Causa de los sprites de ataque invisibles:** `resources/jugador_frames.tres` líneas 29-34 referenciaban `PJ A {1-6}.png` (archivos borrados) → los `ext_resource` de `attack1/attack2/attack_full` apuntaban a fantasmas. Fix: reenlazados a `Pj atq {1-6}.png` con sus uids reales del `.import` (`uid://dyeyigpfhh6oc`, `78nqa1chcjpp`, `c0jktb0armluo`, `crlr17bq04ki3`, `deb44sae1e6j2`, `cpwpko102fm`). Mismos ids de recurso, resto del archivo intacto.
+- **`resources/enemigo1_frames.tres` y `resources/enemigo2_frames.tres` REESCRITOS:** pasaron de ~1169 líneas (frames 48×48 embebidos como PackedByteArray) a **28 líneas handcrafted** con `ext_resource` a `Sprites/Enemigos/enemigo gordo1.png` (uid `uid://kvieg5g388al`) y `enemigo flaco1.png` (uid `uid://cdm52qmr4qnjp`). Mismos uids de archivo (`uid://bkfv821bksv2h`, `uid://ucfekjr1adaf`). **Solo 5 animaciones** (idle/run/jump/attack1/attack2) — las únicas que usa `enemy.gd` (se descartaron attack3/climb/craft/death/default/fly/hurt/push/walk, 0 referencias en código/tests).
+- **`scripts/enemigos/enemigo.gd`:** nuevo `@export visual_scale: Vector2 = Vector2.ZERO` (editable desde el editor).
+- **`scripts/enemy.gd`:** `config_por_tipo` setea `visual_scale = Vector2.ONE` y colliders nuevos para cultista/gordo (**96×320**) y arquero/flaco (**72×340**); chamán sin cambios (Poly). En `_ready()`, si `visual_scale != ZERO`: aplica scale 1.0 y reposiciona `Visual` para que los **pies del sprite (altura real de la textura) queden alineados con la base del collider** (reusa `animated.position.y = -1.27` del tscn). El chamán conserva el scale/pos del tscn (pensado para su Polygon2D).
+- **Regla a recordar:** los sprites nuevos se ven a **escala natural (1.0)**; el `visual_scale` del respawn del tscn (3.64583, 5.89583) era para los sprites de 48px — ahora solo aplica al chamán.
+- **Verificación:** import limpio (solo el ERROR preexistente del plugin `herramienta_nivel/plugin.gd`), smoke limpio (`--quit-after 5`), autotest **FALLOS = 1** (solo el flaky conocido "Murciélago: special dispara proyectil sónico", NO es regresión). `git status`: `PJ A *.png` + `.import` borrados (staged por el usuario), `Pj atq` + `Sprites/Enemigos/` untracked.
+
+---
+
+## 🔴 Sesión 10/09 (2) — Orbe rojo de vida (drop 30% de los enemigos)
+
+> Pedido del usuario: orbe de vida que sueltan los enemigos; "visualmente igual al orbe de energía" pero rojo; los recoge el player al tocarlo (regla: editable desde el editor, sin `.tres`).
+
+- **`scenes/pickup_vida.tscn` + `scripts/pickup_vida.gd` NUEVOS:** Area2D idéntico al pickup de energía (rombo `0,-10 / 8,0 / 0,10 / -8,0`, radio 11, `collision_mask=4`) pero `color = Color(1, 0.32, 0.28)`. Export `curacion := 30`; `body_entered` → `body.curar(curacion)` + `queue_free()`.
+- **`player.gd::curar(cantidad)` NUEVO:** `health = clampi(health + cantidad, 0, VIDA_MAX)` + emite `health_changed` (para el HUD). OJO: `VIDA_MAX` real del player es **100** (en el resumen previo figuraba 500 por error; el `.tscn`/script manda).
+- **`enemy.gd::_soltar_orbe_vida()` NUEVO (llamado desde `_morir()`):** `if randf() > 0.3: return`; instancia `pickup_vida.tscn` en `global_position` y lo agrega al `current_scene` (fallback `get_parent()`). No compite con el drop de energía: es un objeto aparte.
+- **Verificación:** `tests/diag_orbe.gd` NUEVO **FALLOS=0** (aislado, sin `main.tscn` porque los encounters dañan al player y contaminan las aserciones de vida): `curar(30)` 50→80, no pasa `VIDA_MAX`, 40 muertes → suelta orbe, al tocarlo cura. Smoke limpio, import limpio (solo el ERROR preexistente del plugin), autotest **FALLOS=1** (mejor que baseline 2: la consola `mv` ahora pasa; solo el murciélago special sigue flaky). `diag_checkpoint` re-corrido **FALLOS=0**.
+
+---
+
+## 🔴 Sesión 10/09 — Checkpoint colocable (respawn en el lugar, sin recargar el nivel)
+
+> Pedido del usuario: escena de checkpoint reutilizable + **al morir NO se resetea el nivel** (el jugador se teletransporta al último checkpoint y el mundo queda como estaba: enemigos muertos siguen muertos, pickups recogidos, rompibles rotos) + **estado completo** restaurado (posición, forma, vida, energía; fragmentos/combos/barreras/diálogos ya persisten porque no se recarga la escena) + **feedback visual** de activación (se enciende).
+
+- **`scenes/checkpoint.tscn` + `scripts/checkpoint.gd` NUEVOS:** Area2D reutilizable (`collision_mask=4`, igual que pickup/santuario). Al `body_entered` llama `player.actualizar_checkpoint(global_position + offset_respawn)` (export `offset_respawn := Vector2(0,-60)`), se enciende (`color_apagado` → `color_encendido`, glow + `burst`), con señal `activado` y exports de colores (regla: editable desde el editor, sin `.tres`). Visual: hexágono vectorial (poste + glow).
+- **`player.gd::actualizar_checkpoint` AHORA GUARDA ESTADO COMPLETO** (antes solo `_spawn_position`): `_checkpoint_forma`, `_checkpoint_vida`, `_checkpoint_energia`, `_tiene_checkpoint=true`. Nuevos métodos `tiene_checkpoint()` e `reaparecer_en_checkpoint()` (teleport a `_spawn_position`, restaura forma vía `_restaurar_forma()` que aplica collider/zoom sin cooldown ni sonido, vida, energía, limpia `_derrota_activa`, racha, `_invuln_timer=1.5` y re-emite señales para el HUD).
+- **`derrota.gd::_reintentar()` ahora bifurca:** si el player tiene checkpoint → `paused=false` + `reaparecer_en_checkpoint()` + `queue_free()` (NO recarga la escena). Sin checkpoint → `reload_current_scene()` (comportamiento previo intacto).
+- **`santuario.gd` reordenado:** curar ANTES de `actualizar_checkpoint` (si no, el snapshot guardaba la vida previa al heal y el respawn restauraba vida baja — regresión contra el reload previo).
+- **Instancias:** `Checkpoint1` @(9780,920) y `CheckpointLobo` @(16800,920) en `nivel1prueba.tscn` (regla: NO tocar `nivel1.tscn`).
+- **Verificación:** import limpio, smoke final limpio, autotest **FALLOS=2** (baseline: murciélago special flaky + consola `mv`), `tests/diag_checkpoint.gd` NUEVO **FALLOS=0** (activa checkpoint, verifica snapshot+restauración posición/vida/energía/`_derrota_activa`). Ojo: `tests/diag_derrota.gd` tiene bug PREEXISTENTE (carga `nivel_2.tscn` inexistente, el real es `nivel2.tscn` → timeout) — no se usa en la verificación estándar.
+
+---
+
 ## 🔴 Sesión 08/09 — Nivel 1 (prueba) rediseñado: 44.000 px, 3 actos, coherencia de plataformeo
 
 > Basado en feedback del usuario: el nivel duraba ~1 min, estaba "desordenado y sin sentido", faltaban secuencias de plataformeo y espacios vacíos entre zonas de conflicto. Pedido explícito: **44.000 px**, "muchísimo más largo", plataformeo coherente. Decisiones confirmadas: **5 arenas / 14 enemigos** (escalada 2→2→3 [ola]→3 [presión]→4 final) y **3 actos**.

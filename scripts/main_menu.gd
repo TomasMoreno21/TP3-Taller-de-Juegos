@@ -1,6 +1,6 @@
 extends Control
 
-const SCENE_JUEGO := "res://scenes/main.tscn"
+const SCENE_JUEGO := "res://scenes/nivel1.tscn"
 const SCENE_CONTROLES := "res://scenes/controls.tscn"
 
 var _indice := 0
@@ -37,7 +37,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("move_down"):
 		_navegar(1)
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("attack"):
+	elif event.is_action_pressed("menu_confirm"):
 		get_viewport().set_input_as_handled()
 		_on_boton_pressed(_indice)
 

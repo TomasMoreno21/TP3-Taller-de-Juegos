@@ -22,6 +22,7 @@
 [ext_resource type="PackedScene" path="res://scenes/console.tscn" id="20_cons"]
 [ext_resource type="PackedScene" uid="uid://bf8ohs7pjg025" path="res://scenes/pinchos.tscn" id="21_pinchos"]
 [ext_resource type="PackedScene" uid="uid://plataforma_0001" path="res://scenes/plataforma.tscn" id="22_plat"]
+[ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="23_check"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
 size = Vector2(44400, 401)
@@ -146,6 +147,9 @@ position = Vector2(9200, 920)
 [node name="PickupCalmaB2" parent="." instance=ExtResource("12_pick")]
 position = Vector2(9500, 920)
 
+[node name="Checkpoint1" parent="." instance=ExtResource("23_check")]
+position = Vector2(9780, 920)
+
 [node name="DialogoPlataformas" parent="." instance=ExtResource("13_dialog")]
 position = Vector2(9750, 820)
 dialogo_id = "p1_plataformas"
@@ -190,6 +194,9 @@ position = Vector2(16000, 800)
 
 [node name="MuroLobo" parent="." instance=ExtResource("8_muro")]
 position = Vector2(16600, 867)
+
+[node name="CheckpointLobo" parent="." instance=ExtResource("23_check")]
+position = Vector2(16800, 920)
 
 [node name="Plat17200" parent="." instance=ExtResource("22_plat")]
 position = Vector2(17200, 795)

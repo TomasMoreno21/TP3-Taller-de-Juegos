@@ -35,7 +35,9 @@
 		"una_vez": false,
 		"lineas": [
 			"Esperá... siento una presencia cerca. No estás solo.",
-			"Preparate, Humano: puede que tengas que pelear."
+			"Preparate, Humano: vamos a tener que pelear.",
+			"Cuando los derrotes, puede que recuperemos los espiritus que asesinaron.",
+			"Si lo logramos, te los daré para que puedas curarte, te necesito vivo y tu hijo también"
 		]
 	},
 	"n1_lobo": {
@@ -55,14 +57,22 @@
 		"modo": "Zona",
 		"retraso": 0.6,
 		"una_vez": false,
-		"lineas": []
+		"lineas": [
+			"Esos cultistas dejaron energia espiritual desperdigada por ahi.",
+			"También las dejaron en cajas para almacenarlas.",
+			"Rompe la caja a puños y recuperala, te ayudará a aumentar tu poder espiritual."
+			
+		]
 	},
 	"n1_zona3": {
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
 		"una_vez": false,
-		"lineas": []
+		"lineas": [
+			"Veo que tenes buena agilidad, tal vez puedas usar esas enredaderas para avanzar.",
+			"Pulsa A para agarrarte y soltarte, movete con el joystick izquierdo."
+		]
 	},
 	"n1_santuario": {
 		"hablante": "Amuleto",
@@ -87,7 +97,10 @@
 		"modo": "Automatico",
 		"retraso": 0.6,
 		"una_vez": false,
-		"lineas": []
+		"lineas": [
+			"Cuando los derrotes, puede que recuperemos los espiritus que asesinaron.",
+			"Si lo logramos, te los daré para que puedas curarte, te necesito vivo."
+		]
 	},
 	"p1_enredadera": {
 		"hablante": "Amuleto",

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://y1pfc51d8aoa"
-path="res://.godot/imported/PJ A 2.png-9b2fdc83c9d6cd2a3d19bb4936575d34.ctex"
+uid="uid://kvieg5g388al"
+path="res://.godot/imported/enemigo gordo1.png-1491007082d91d0e26de3cded0ea8b62.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Jugador y Transformaciones/PJ A 2.png"
-dest_files=["res://.godot/imported/PJ A 2.png-9b2fdc83c9d6cd2a3d19bb4936575d34.ctex"]
+source_file="res://Sprites/Enemigos/enemigo gordo1.png"
+dest_files=["res://.godot/imported/enemigo gordo1.png-1491007082d91d0e26de3cded0ea8b62.ctex"]
 
 [params]
 

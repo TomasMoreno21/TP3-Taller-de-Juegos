@@ -7,12 +7,16 @@ var _opciones: Array = []
 var _indice := 0
 var _slots: Array[PanelContainer] = []
 var _estilo_normal: StyleBoxFlat
+var _es_joypad := false
 
 @export var pausar_al_abrir := true  # pausa el juego mientras se elige (off en los autotest)
 
 @onready var panel: Control = $Panel
 @onready var title: Label = $Panel/Margin/VBox/Title
 @onready var options_row: HBoxContainer = $Panel/Margin/VBox/Options
+@onready var combo_nombre: Label = $Panel/Margin/VBox/ComboInfo/ComboNombre
+@onready var combo_funcion: Label = $Panel/Margin/VBox/ComboInfo/ComboFuncion
+@onready var combo_como: Label = $Panel/Margin/VBox/ComboInfo/ComboComo
 @onready var hint: Label = $Panel/Margin/VBox/Hint
 
 
@@ -53,6 +57,10 @@ func cerrar() -> void:
 func _input(event: InputEvent) -> void:
 	if not _open:
 		return
+	if event is InputEventJoypadButton or event is InputEventJoypadMotion:
+		_es_joypad = true
+	elif event is InputEventKey:
+		_es_joypad = false
 	if event.is_action_pressed("move_up"):
 		_mover_indice(-1)
 		get_viewport().set_input_as_handled()
@@ -129,6 +137,49 @@ func _render() -> void:
 		else:
 			slot.remove_theme_stylebox_override("panel")
 			slot.scale = Vector2.ONE
+	_render_detalle_combo()
+
+
+func _render_detalle_combo() -> void:
+	var op: Dictionary = _opciones[_indice]
+	var prog: Node = get_node("/root/Progresion")
+	var player := get_tree().get_first_node_in_group("player")
+	if op["bloqueada"]:
+		combo_nombre.text = "Forma bloqueada"
+		combo_funcion.text = "Subí de nivel para desbloquearla."
+		combo_como.text = ""
+		return
+	if player == null or player.forms.size() <= op["form_index"]:
+		combo_nombre.text = "Forma desbloqueada"
+		combo_funcion.text = ""
+		combo_como.text = ""
+		return
+	var forma: Forma = player.forms[op["form_index"]]
+	var desbloqueados: int = prog.combos_desbloqueados_forma(op["form_index"])
+	if desbloqueados >= forma.combos.size():
+		combo_nombre.text = "Forma desbloqueada"
+		combo_funcion.text = "Ya tiene todos sus combos."
+		combo_como.text = ""
+		return
+	var c: Dictionary = forma.combos[desbloqueados]
+	combo_nombre.text = "Combo: %s" % str(c.get("nombre", "Combo"))
+	combo_funcion.text = "Es un ataque más fuerte."
+	combo_como.text = "%s" % _secuencia_texto(c.get("secuencia", []))
+
+
+func _secuencia_texto(secuencia: Array) -> String:
+	var partes: PackedStringArray = []
+	for paso in secuencia:
+		var label := "?"
+		match str(paso):
+			"light":
+				label = "X" if _es_joypad else "J"
+			"heavy":
+				label = "Y" if _es_joypad else "K"
+			"special":
+				label = "B" if _es_joypad else "L"
+		partes.append(label)
+	return " + ".join(partes)
 
 
 func _confirmar() -> void:

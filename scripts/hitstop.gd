@@ -1,5 +1,7 @@
 extends Node
 
+signal descongelado
+
 var _restore_ms: int = 0
 var _slow_scale: float = 1.0
 var _slow_restore_ms: int = 0
@@ -12,6 +14,7 @@ func _process(_delta: float) -> void:
 			Engine.time_scale = _slow_scale
 		else:
 			Engine.time_scale = 1.0
+		descongelado.emit()
 	if _slow_restore_ms > 0 and Time.get_ticks_msec() >= _slow_restore_ms:
 		_slow_restore_ms = 0
 		_slow_scale = 1.0

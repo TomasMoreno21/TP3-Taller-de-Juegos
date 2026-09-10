@@ -27,7 +27,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("move_down"):
 		_navegar(1)
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("attack"):
+	elif event.is_action_pressed("menu_confirm"):
 		get_viewport().set_input_as_handled()
 		_on_boton_pressed(_indice)
 
@@ -52,4 +52,9 @@ func _on_boton_pressed(i: int) -> void:
 
 func _reintentar() -> void:
 	get_tree().paused = false
-	get_tree().reload_current_scene()
+	var player := get_tree().get_first_node_in_group("player")
+	if player != null and player.has_method("tiene_checkpoint") and player.has_method("reaparecer_en_checkpoint") and player.tiene_checkpoint():
+		player.reaparecer_en_checkpoint()
+		queue_free()
+	else:
+		get_tree().reload_current_scene()

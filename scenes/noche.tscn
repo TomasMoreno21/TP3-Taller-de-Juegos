@@ -1,13 +1,13 @@
-[gd_scene format=3 uid="uid://noche_001"]
+[gd_scene format=3 uid="uid://65wfbu1kb774"]
 
-[node name="Noche" type="CanvasLayer"]
+[node name="Noche" type="CanvasLayer" unique_id=1637767478]
 layer = 5
 
-[node name="Velo" type="ColorRect" parent="."]
+[node name="Velo" type="ColorRect" parent="." unique_id=223430470]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.06, 0.08, 0.16, 0.46)
+color = Color(0.07045063, 0.09204782, 0.18271998, 0.45882353)

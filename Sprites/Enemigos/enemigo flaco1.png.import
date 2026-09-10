@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cuyou5cba4x15"
-path="res://.godot/imported/PJ A 5.png-7d244fd4d8d6980dcdf09c899fe4611e.ctex"
+uid="uid://cdm52qmr4qnjp"
+path="res://.godot/imported/enemigo flaco1.png-668f98ff5bbae6a20865a906fe2a8d02.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Jugador y Transformaciones/PJ A 5.png"
-dest_files=["res://.godot/imported/PJ A 5.png-7d244fd4d8d6980dcdf09c899fe4611e.ctex"]
+source_file="res://Sprites/Enemigos/enemigo flaco1.png"
+dest_files=["res://.godot/imported/enemigo flaco1.png-668f98ff5bbae6a20865a906fe2a8d02.ctex"]
 
 [params]
 

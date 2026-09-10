@@ -21,6 +21,8 @@ sonido_golpe_pesado = ExtResource("4_sfx_pesado")
 sonido_transformacion = ExtResource("5_sfx_transform")
 volumen_golpe_db = -14.0
 volumen_transformacion_db = -10.0
+volumen_golpe_pesado_db = -8.0
+volumen_special_db = -10.0
 
 [node name="Sprite2D" type="AnimatedSprite2D" parent="." unique_id=1857419060]
 texture_filter = 1

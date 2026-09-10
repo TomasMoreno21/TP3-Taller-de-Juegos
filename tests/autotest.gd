@@ -56,11 +56,13 @@ func _init() -> void:
 	await physics_frame
 	Input.action_release("transform")
 	_check(_player.current_form == 0, "Nivel 1: transformar no cambia (sigue Humano)")
-	_progresion().add_fragmentos(3)
-	_check(int(_progresion().nivel) == 2, "3 fragmentos suben a nivel 2")
+	_progresion().add_fragmentos(5)
+	_check(int(_progresion().nivel) == 2, "5 fragmentos suben a nivel 2")
 	_check(_progresion().forma_desbloqueada(1) == true, "Nivel 2: Lobo desbloqueado")
-	_progresion().add_fragmentos(3)
-	_progresion().add_fragmentos(3)
+	_progresion().add_fragmentos(7)
+	_check(int(_progresion().nivel) == 3, "12 fragmentos suben a nivel 3")
+	_progresion().add_fragmentos(9)
+	_check(int(_progresion().nivel) == 4, "21 fragmentos suben a nivel 4")
 	_check(_progresion().forma_desbloqueada(3) == true, "Nivel 4: Murciélago desbloqueado")
 
 	# --- Melee: el humano daña al dummy ---
@@ -289,7 +291,7 @@ func _init() -> void:
 		desbloqueos.append(nombre)
 	)
 	_check(lvl.get("panel").visible == false, "LevelUp: menú cerrado al inicio")
-	_progresion().add_fragmentos(3)
+	_progresion().add_fragmentos(5)
 	await process_frame
 	_check(lvl.get("panel").visible == true, "LevelUp: subir nivel abre el menú")
 	var op_lvl2: Array = lvl.get("_opciones")

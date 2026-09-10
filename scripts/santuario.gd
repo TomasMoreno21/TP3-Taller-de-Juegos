@@ -18,9 +18,9 @@ func _ready() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if not body.has_method("actualizar_checkpoint"):
 		return
-	body.actualizar_checkpoint(global_position + Vector2(0, -60))
 	if auto_curar and body.has_method("heal_full"):
 		body.heal_full()
+	body.actualizar_checkpoint(global_position + Vector2(0, -60))
 	if not _activado:
 		_activado = true
 		_mostrar_victoria()

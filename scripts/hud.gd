@@ -71,6 +71,7 @@ func _ready() -> void:
 	prog.nivel_cambiado.connect(_on_nivel)
 	prog.nivel_subio.connect(_on_nivel_subio)
 	prog.combo_desbloqueado.connect(_on_combo)
+	prog.forma_desbloqueada_evento.connect(_on_forma_desbloqueada)
 
 	hp_bar.max_value = 100
 	if hp_bar_delayed != null:
@@ -129,6 +130,18 @@ func _forma_nueva(nuevo_nivel: int) -> String:
 	var player := get_tree().get_first_node_in_group("player")
 	if player != null and player.forms.size() > form_idx:
 		return str(player.forms[form_idx].form_name)
+	return ""
+
+
+func _on_forma_desbloqueada(form_index: int) -> void:
+	_aviso("¡%s DESBLOQUEADO!" % _nombre_forma(form_index))
+	_actualizar_selector()
+
+
+func _nombre_forma(form_index: int) -> String:
+	var player := get_tree().get_first_node_in_group("player")
+	if player != null and player.forms.size() > form_index:
+		return str(player.forms[form_index].form_name)
 	return ""
 
 
@@ -305,7 +318,11 @@ func _on_agotada() -> void:
 
 func _prog_refresh() -> void:
 	var prog: Node = get_node("/root/Progresion")
-	prog_label.text = "FRAGMENTOS %d/3 · NIVEL %d" % [prog.fragmentos % 3, prog.nivel]
+	var base: int = prog.fragmentos_para_nivel(prog.nivel)
+	var siguiente: int = prog.fragmentos_para_nivel(prog.nivel + 1)
+	var tramo: int = prog.fragmentos - base
+	var requeridos: int = siguiente - base
+	prog_label.text = "FRAGMENTOS %d/%d · NIVEL %d" % [tramo, requeridos, prog.nivel]
 
 
 func _limpiar_idle() -> void:

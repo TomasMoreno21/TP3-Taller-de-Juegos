@@ -34,7 +34,6 @@ func mostrar(lineas: Array, hablante: String = "Amuleto") -> void:
 		_cola.append({"texto": String(l), "hablante": hablante})
 	if not _abierto:
 		_abierto = true
-		get_tree().paused = true
 		panel.visible = true
 		_siguiente_linea()
 
@@ -71,7 +70,11 @@ func _terminar_tipeo() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not _abierto:
 		return
-	if event.is_action_pressed("attack") or event.is_action_pressed("ui_accept"):
+	if event.is_action_pressed("dialog_skip"):
+		_saltar_todo()
+		get_viewport().set_input_as_handled()
+		return
+	if event.is_action_pressed("dialog_next"):
 		if _tipeando:
 			texto_label.visible_ratio = 1.0
 			_terminar_tipeo()
@@ -80,8 +83,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+func _saltar_todo() -> void:
+	_cola.clear()
+	_texto_completo = ""
+	_tipeando = false
+	_cerrar()
+
+
 func _cerrar() -> void:
 	_abierto = false
 	panel.visible = false
-	get_tree().paused = false
 	dialogo_terminado.emit()

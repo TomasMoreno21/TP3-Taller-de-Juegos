@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cl1008n0sxeh3"
-path="res://.godot/imported/PJ A 6.png-cb646bba4ee93ba85a86d698b52f7b9f.ctex"
+uid="uid://c0jktb0armluo"
+path="res://.godot/imported/Pj atq 3.png-6300d874e6fd67d515f84902c24bfdd8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Sprites/Jugador y Transformaciones/PJ A 6.png"
-dest_files=["res://.godot/imported/PJ A 6.png-cb646bba4ee93ba85a86d698b52f7b9f.ctex"]
+source_file="res://Sprites/Jugador y Transformaciones/Pj atq 3.png"
+dest_files=["res://.godot/imported/Pj atq 3.png-6300d874e6fd67d515f84902c24bfdd8.ctex"]
 
 [params]
 

@@ -4,8 +4,7 @@ signal fragmentos_cambiado(total: int)
 signal nivel_cambiado(nuevo_nivel: int)
 signal combo_desbloqueado(form_index: int, combo_nombre: String)
 signal nivel_subio(nuevo_nivel: int)
-
-const FRAGMENTOS_POR_NIVEL := 3
+signal forma_desbloqueada_evento(form_index: int)
 
 var fragmentos := 0
 var nivel := 1
@@ -16,6 +15,8 @@ var dialogos_vistos: Dictionary = {}
 ## Si no está vacía, las formas se desbloquean SOLO por esta lista (ignora el nivel).
 ## La setea cada nivel desde el editor (scripts/setup_progresion_nivel.gd).
 var formas_forzadas: Array = []
+## Formas desbloqueadas por eventos de nivel (trigger unlock_forma), persisten entre muertes.
+var _extra_formas: Dictionary = {}
 
 
 func _ready() -> void:
@@ -25,7 +26,7 @@ func _ready() -> void:
 func add_fragmentos(cantidad: int) -> void:
 	fragmentos += maxi(cantidad, 0)
 	fragmentos_cambiado.emit(fragmentos)
-	while fragmentos >= nivel * FRAGMENTOS_POR_NIVEL:
+	while fragmentos >= fragmentos_para_nivel(nivel + 1):
 		subir_nivel()
 
 
@@ -35,9 +36,14 @@ func subir_nivel() -> void:
 	nivel_subio.emit(nivel)
 
 
+## Fragmentos acumulados necesarios para alcanzar el nivel n (5, 12, 21, 32...).
+func fragmentos_para_nivel(n: int) -> int:
+	return maxi(n - 1, 0) * (n + 3)
+
+
 func set_nivel(n: int) -> void:
 	nivel = maxi(n, 1)
-	fragmentos = maxi(fragmentos, nivel * FRAGMENTOS_POR_NIVEL)
+	fragmentos = maxi(fragmentos, fragmentos_para_nivel(nivel))
 	nivel_cambiado.emit(nivel)
 
 
@@ -48,6 +54,7 @@ func reset() -> void:
 	barreras_abiertas = {}
 	dialogos_vistos = {}
 	formas_forzadas = []
+	_extra_formas = {}
 	fragmentos_cambiado.emit(0)
 	nivel_cambiado.emit(1)
 
@@ -78,11 +85,22 @@ func _nombre_combo(form_index: int, indice: int) -> String:
 
 
 func forma_desbloqueada(form_index: int) -> bool:
+	# Desbloqueos de eventos (triggers de nivel) tienen prioridad sobre todo.
+	if _extra_formas.has(form_index):
+		return true
 	# 04/09: cada nivel puede forzar su lista de formas desde el editor.
 	if not formas_forzadas.is_empty():
 		return form_index in formas_forzadas
 	# 17/08: desbloqueo progresivo por nivel (nivel 2 -> Lobo, 3 -> Oso, 4 -> Murciélago)
 	return form_index < nivel
+
+
+## Desbloquea una forma por evento de nivel (persiste hasta reset()).
+func desbloquear_forma(form_index: int) -> void:
+	if _extra_formas.has(form_index):
+		return
+	_extra_formas[form_index] = true
+	forma_desbloqueada_evento.emit(form_index)
 
 
 func pasos_luz() -> int:

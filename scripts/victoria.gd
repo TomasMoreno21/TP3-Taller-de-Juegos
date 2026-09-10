@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const SCENE_MENU := "res://scenes/main_menu.tscn"
+const SCENE_NIVEL1 := "res://scenes/nivel1.tscn"
 
 var _indice := 0
 
@@ -26,7 +27,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("move_down"):
 		_navegar(1)
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("attack"):
+	elif event.is_action_pressed("menu_confirm"):
 		get_viewport().set_input_as_handled()
 		_on_boton_pressed(_indice)
 
@@ -51,4 +52,4 @@ func _on_boton_pressed(i: int) -> void:
 func _reintentar() -> void:
 	get_tree().paused = false
 	get_node("/root/Progresion").reset()
-	get_tree().change_scene_to_file("res://scenes/main.tscn")
+	get_tree().change_scene_to_file(SCENE_NIVEL1)

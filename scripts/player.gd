@@ -1,4 +1,4 @@
-﻿extends CharacterBody2D
+extends CharacterBody2D
 
 signal form_changed(form_name: String)
 signal forma_selectada_cambiada(forma_index: int)
@@ -41,12 +41,12 @@ const RECOVERY_COMBO := 0.875
 const MELEE_STICKY_REACH := 240.0
 const MELEE_STICKY_PIVOT := 28.0
 const MELEE_STICKY_SPEED_MULT := 0.85
-const HITSTOP_LIGHT := 0.07
-const HITSTOP_HEAVY := 0.12
-const HITSTOP_SPECIAL := 0.14
-const HITSTOP_COMBO := 0.17
-const HITSTOP_DANO := 0.07
-const VIDA_MAX := 500
+const HITSTOP_LIGHT := 0.035
+const HITSTOP_HEAVY := 0.07
+const HITSTOP_SPECIAL := 0.09
+const HITSTOP_COMBO := 0.11
+const HITSTOP_DANO := 0.05
+const VIDA_MAX := 100
 
 var forms: Array[Forma] = []
 var current_form: int = Form.HUMAN
@@ -90,6 +90,10 @@ var _sprite_tween: Tween
 var _turn_prev_facing := 0
 var _base_sprite_scale := Vector2.ONE
 var _spawn_position := Vector2.ZERO
+var _tiene_checkpoint := false
+var _checkpoint_forma := Form.HUMAN
+var _checkpoint_vida := VIDA_MAX
+var _checkpoint_energia := ENERGIA_MAX
 var _derrota_activa := false
 var _invuln_timer := 0.0
 var _cooldown_formas: Dictionary = {}
@@ -132,6 +136,9 @@ var _platform_snap_cd: float = 0.0
 @export var sonido_transformacion: AudioStream
 @export var volumen_golpe_db := 0.0
 @export var volumen_transformacion_db := 0.0
+## Offsets de volumen (dB) para el golpe pesado y el especial, aplicados sobre volumen_golpe_db.
+@export var volumen_golpe_pesado_db := 0.0
+@export var volumen_special_db := 0.0
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $Collision
@@ -166,7 +173,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	blocking = Input.is_action_pressed("block")
+	var dialogo_bloquea := _dialogo_bloquea_input()
+	blocking = false if dialogo_bloquea else Input.is_action_pressed("block")
 	if blocking != _was_blocking:
 		_was_blocking = blocking
 		_update_tint()
@@ -185,8 +193,10 @@ func _physics_process(delta: float) -> void:
 		if _attack_air_buffer <= 0.0:
 			_attack_air_buffer_type = ""
 
-	var dir := Input.get_axis("move_left", "move_right")
+	var dir := 0.0 if dialogo_bloquea else Input.get_axis("move_left", "move_right")
 	if absf(dir) < 0.35:
+		dir = 0.0
+	if dialogo_bloquea:
 		dir = 0.0
 	if _trepando:
 		dir = 0.0
@@ -219,14 +229,14 @@ func _physics_process(delta: float) -> void:
 
 	_melee_sticky(data, delta)
 
-	if not _trepando and Input.is_action_just_pressed("jump"):
+	if not dialogo_bloquea and not _trepando and Input.is_action_just_pressed("jump"):
 		if _salto_enredadera:
 			pass
 		elif _coyote_time > 0.0 or data.can_jump():
 			data.try_jump(self)
 		else:
 			_jump_buffer = data.jump_buffer_time
-	if Input.is_action_just_released("jump") and velocity.y < 0.0:
+	if not dialogo_bloquea and Input.is_action_just_released("jump") and velocity.y < 0.0:
 		var t := clampf(velocity.y / data.jump_velocity, 0.0, 1.0)
 		velocity.y *= lerpf(0.85, JUMP_CUT_MULTIPLIER, t)
 
@@ -262,7 +272,7 @@ func _physics_process(delta: float) -> void:
 	var max_fall := MAX_FALL_SPEED if not gliding else (lerpf(300.0, 520.0, prog_fall) if current_form == Form.MURCIELAGO else 380.0)
 	velocity.y = min(velocity.y + g * delta, max_fall)
 	if gliding:
-		var dir_glide := Input.get_axis("move_left", "move_right")
+		var dir_glide := 0.0 if dialogo_bloquea else Input.get_axis("move_left", "move_right")
 		if absf(dir_glide) < 0.35:
 			dir_glide = 0.0
 		if dir_glide != 0.0:
@@ -354,18 +364,24 @@ func _physics_process(delta: float) -> void:
 		_pasos_timer = PASOS_INTERVALO
 		_emitir_polvo(0.8)
 
-	_handle_attack(delta)
+	if not dialogo_bloquea:
+		_handle_attack(delta)
+		_handle_seleccion_forma()
+		_handle_formas_cruceta()
+		_handle_forma_ciclo()
+		_handle_transform()
 	_check_attack_hits()
 	_handle_racha(delta)
 	_handle_energia(delta)
-	_handle_seleccion_forma()
-	_handle_formas_cruceta()
-	_handle_forma_ciclo()
-	_handle_transform()
 	if global_position.y > limite_caida:
 		health = 0
 	_handle_death()
 	_update_animacion()
+
+
+func _dialogo_bloquea_input() -> bool:
+	var dialogo := get_node_or_null("/root/Dialogo")
+	return dialogo != null and dialogo.esta_activo()
 
 
 func _handle_racha(delta: float) -> void:
@@ -562,6 +578,8 @@ func _ejecutar_finisher(data: Forma, combo: Dictionary) -> void:
 	_play_attack_fx("combo", 1)
 	_punch_sprite(0.45)
 	attack_performed.emit("combo", combo.get("nombre", "Combo"))
+	if current_form == Form.HUMAN:
+		_iniciar_anim_ataque("attack1")
 	if DisplayServer.get_name() != "headless":
 		var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
 		p.global_position = global_position + Vector2(facing * 30, -20)
@@ -680,16 +698,21 @@ func _check_attack_hits() -> void:
 		_spark_golpe(body, idx)
 	var sonido_golpe: AudioStream = sonido_golpe_liviano if _current_attack_type == "light" else sonido_golpe_pesado
 	var audio_mgr := get_node_or_null("/root/AudioManager")
-	if audio_mgr != null:
-		audio_mgr.play_sfx(sonido_golpe, volumen_golpe_db)
 	_hit_applied = true
 	_registrar_golpe_racha()
-	_hitstop_por_tipo()
+	var dur_hitstop := _hitstop_por_tipo()
 	_zoom_punch_por_tipo()
 	_shake_por_tipo()
+	if audio_mgr != null:
+		var vol := volumen_golpe_db
+		if _current_attack_type == "heavy":
+			vol += volumen_golpe_pesado_db
+		elif _current_attack_type == "special":
+			vol += volumen_special_db
+		audio_mgr.play_sfx_sincronizado(sonido_golpe, vol, dur_hitstop > 0.0)
 
 
-func _hitstop_por_tipo() -> void:
+func _hitstop_por_tipo() -> float:
 	var dur := 0.0
 	match _current_attack_type:
 		"light":
@@ -701,14 +724,15 @@ func _hitstop_por_tipo() -> void:
 		"combo":
 			dur = HITSTOP_COMBO
 		_:
-			return
+			return 0.0
 	if current_form == Form.OSO:
 		dur *= 1.25
 	elif current_form == Form.LOBO:
 		dur *= 0.85
 	if dur <= 0.0:
-		return
+		return 0.0
 	_freeze_hitstop(dur)
+	return dur
 
 
 func _freeze_hitstop(duracion: float = HITSTOP_DANO) -> void:
@@ -1271,8 +1295,55 @@ func heal_full() -> void:
 	health_changed.emit(health, VIDA_MAX)
 
 
+## Cura una cantidad sin superar la vida máxima (usado por el orbe rojo de vida).
+func curar(cantidad: int) -> void:
+	health = clampi(health + cantidad, 0, VIDA_MAX)
+	health_changed.emit(health, VIDA_MAX)
+
+
 func actualizar_checkpoint(pos: Vector2) -> void:
 	_spawn_position = pos
+	_checkpoint_forma = current_form
+	_checkpoint_vida = health
+	_checkpoint_energia = energia
+	_tiene_checkpoint = true
+
+
+func tiene_checkpoint() -> bool:
+	return _tiene_checkpoint
+
+
+func reaparecer_en_checkpoint() -> void:
+	if not _tiene_checkpoint:
+		return
+	global_position = _spawn_position
+	velocity = Vector2.ZERO
+	health = _checkpoint_vida
+	energia = _checkpoint_energia
+	_derrota_activa = false
+	_restaurar_forma(_checkpoint_forma)
+	_cancelar_anim_ataque()
+	blocking = false
+	_racha = 0
+	_racha_timer = 0.0
+	_invuln_timer = 1.5
+	health_changed.emit(health, VIDA_MAX)
+	energia_changed.emit(energia)
+
+
+func _restaurar_forma(nueva: int) -> void:
+	if nueva == current_form:
+		return
+	forms[current_form].reset_form_state()
+	current_form = nueva
+	forma_seleccionada = nueva
+	var data: Forma = forms[current_form]
+	data.reset_form_state()
+	_apply_form()
+	_zoom_transform(data)
+	form_changed.emit(data.form_name)
+	forma_selectada_cambiada.emit(nueva)
+	health_changed.emit(health, VIDA_MAX)
 
 
 func recoger_energia() -> void:

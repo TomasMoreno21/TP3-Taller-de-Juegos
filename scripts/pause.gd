@@ -11,6 +11,7 @@ var _controls: CanvasLayer
 	$Panel/Margin/VBox/Reanudar,
 	$Panel/Margin/VBox/Controles,
 	$Panel/Margin/VBox/Menu,
+	$Panel/Margin/VBox/VolverMenu,
 	$Panel/Margin/VBox/Salir,
 ]
 @onready var dim: ColorRect = $Dim
@@ -44,7 +45,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("move_down"):
 		_navegar(1)
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("attack"):
+	elif event.is_action_pressed("menu_confirm"):
 		get_viewport().set_input_as_handled()
 		_on_boton_pressed(_indice)
 
@@ -107,9 +108,17 @@ func _on_boton_pressed(i: int) -> void:
 		1:
 			_abrir_controles()
 		2:
-			_volver_menu()
+			_reiniciar_nivel()
 		3:
+			_volver_menu()
+		4:
 			get_tree().quit()
+
+
+func _reiniciar_nivel() -> void:
+	get_tree().paused = false
+	get_node("/root/Progresion").reset()
+	get_tree().reload_current_scene()
 
 
 func _abrir_controles() -> void:

@@ -59,7 +59,8 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.windup_tiempo = 0.28
 			d.lunge_velocidad = 420.0
 			d.color = Color(0.55, 0.38, 0.3)
-			d.collider_size = Vector2(70, 200)
+			d.collider_size = Vector2(96, 320)
+			d.visual_scale = Vector2.ONE
 			d.knockback_resist = 0.55
 		"arquero":
 			d.tipo_nombre = "Arquero"
@@ -72,7 +73,8 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.retrocede_dist = 170.0
 			d.proyectil_speed = 430.0
 			d.color = Color(0.42, 0.3, 0.5)
-			d.collider_size = Vector2(64, 190)
+			d.collider_size = Vector2(72, 340)
+			d.visual_scale = Vector2.ONE
 			d.knockback_resist = 0.45
 		"chaman":
 			d.tipo_nombre = "Chamán"
@@ -93,6 +95,7 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 
 func _ready() -> void:
 	add_to_group("enemy")
+	_mirar_jugador()
 	if enemy_data == null or enemy_data.tipo_nombre.is_empty() or enemy_data.tipo_nombre == "Sectario":
 		enemy_data = config_por_tipo(tipo)
 	if enemy_data != null:
@@ -117,6 +120,19 @@ func _ready() -> void:
 			collide_shape.shape.size = enemy_data.collider_size
 			collide_shape.position.x = centro_x - enemy_data.collider_size.x * 0.5
 			collide_shape.position.y = pies_offset - enemy_data.collider_size.y * 0.5
+		if enemy_data.visual_scale != Vector2.ZERO and visual != null:
+			# Escala natural: el sprite se muestra a tamaño real y sus pies se alinean
+			# con la base del collider (el sprite recién original usa escala de 48px).
+			visual.scale = enemy_data.visual_scale
+			var tex_h := 0.0
+			if frames != null and frames.has_animation("idle") and frames.get_frame_count("idle") > 0:
+				var tex: Texture2D = frames.get_frame_texture("idle", 0)
+				if tex != null:
+					tex_h = tex.get_height()
+			var pies_y := 0.0
+			if collide_shape != null and collide_shape.shape is RectangleShape2D:
+				pies_y = collide_shape.position.y + collide_shape.shape.size.y * 0.5
+			visual.position.y = pies_y - enemy_data.visual_scale.y * (animated.position.y + tex_h * 0.5)
 	else:
 		health = 40
 
@@ -170,6 +186,7 @@ func _circulo_poligono(puntos: int) -> PackedVector2Array:
 
 
 func _physics_process(delta: float) -> void:
+	_mirar_jugador()
 	if _telegraph_timer > 0.0:
 		_telegraph_timer -= delta
 		velocity.x = 0.0
@@ -210,8 +227,6 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var dist := global_position.distance_to(player.global_position)
-	_dir = 1 if player.global_position.x > global_position.x else -1
-	visual.scale.x = absf(visual.scale.x) * _dir
 
 	if _usar_proyectil():
 		if dist <= enemy_data.shoot_range and _attack_timer <= 0.0:
@@ -266,6 +281,15 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if is_on_floor() and velocity.y > 0:
 		velocity.y = 0
+
+
+func _mirar_jugador() -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return
+	_dir = 1 if player.global_position.x > global_position.x else -1
+	if visual != null:
+		visual.scale.x = absf(visual.scale.x) * -_dir
 
 
 func _gap_x(player: Node2D) -> float:
@@ -326,27 +350,19 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
 	if health <= 0:
 		return
 	health -= cantidad
-	var audio_mgr := get_node_or_null("/root/AudioManager")
-	if audio_mgr != null:
-		audio_mgr.play_sfx(sonido_golpe, volumen_golpe_db)
-	_freeze_hitstop()
-	var en_ataque := _windup_timer > 0.0 or _lunge_timer > 0.0
-	var armadura: bool = enemy_data != null and enemy_data.armadura_ataque and en_ataque
-	if knockback > 0.0 and not armadura:
-		var resist: float = enemy_data.knockback_resist if enemy_data != null else 1.0
-		velocity.x = dir * knockback * (1.0 - resist)
-		_stun_timer = 0.22
-	if not armadura:
-		_windup_timer = 0.0
-		_lunge_timer = 0.0
 	if visual != null:
 		visual.modulate = Color(1, 0.6, 0.6)
 		var base_scale := visual.scale
 		var sx := absf(base_scale.x)
 		var sy := base_scale.y
+		# El squash preserva el facing actual: usar `dir` aquí voltearía al sprite
+		# hacia el lado opuesto al jugador (el golpe viene de la dirección opuesta).
+		var signo := signf(base_scale.x)
+		if signo == 0.0:
+			signo = 1.0
 		var tw2 := create_tween()
-		tw2.tween_property(visual, "scale", Vector2(sx * 1.15 * _dir, sy * 0.85), 0.07)
-		tw2.tween_property(visual, "scale", Vector2(sx * _dir, sy), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw2.tween_property(visual, "scale", Vector2(signo * sx * 1.15, sy * 0.85), 0.05)
+		tw2.tween_property(visual, "scale", Vector2(signo * sx, sy), 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		if DisplayServer.get_name() != "headless":
 			var lbl := Label.new()
 			lbl.text = str(cantidad)
@@ -360,9 +376,22 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
 			tw3.tween_property(lbl, "global_position:y", lbl.global_position.y - 32, 0.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 			tw3.parallel().tween_property(lbl, "modulate:a", 0.0, 0.6)
 			tw3.tween_callback(lbl.queue_free)
-		await get_tree().create_timer(0.08).timeout
-		if is_instance_valid(visual):
-			visual.modulate = Color(1, 1, 1)
+	var audio_mgr := get_node_or_null("/root/AudioManager")
+	if audio_mgr != null:
+		# el sonido del cuerpo suena cuando la animación se des-congela (impacto visible)
+		audio_mgr.play_sfx_sincronizado(sonido_golpe, volumen_golpe_db)
+	var en_ataque := _windup_timer > 0.0 or _lunge_timer > 0.0
+	var armadura: bool = enemy_data != null and enemy_data.armadura_ataque and en_ataque
+	if knockback > 0.0 and not armadura:
+		var resist: float = enemy_data.knockback_resist if enemy_data != null else 1.0
+		velocity.x = dir * knockback * (1.0 - resist)
+		_stun_timer = 0.22
+	if not armadura:
+		_windup_timer = 0.0
+		_lunge_timer = 0.0
+	await get_tree().create_timer(0.08).timeout
+	if is_instance_valid(visual):
+		visual.modulate = Color(1, 1, 1)
 	if health <= 0:
 		_morir()
 
@@ -381,12 +410,23 @@ func _morir() -> void:
 	set_physics_process(false)
 	_colision(false)
 	_burst_particulas()
+	_soltar_orbe_vida()
 	visual.modulate = Color(4, 4, 4, 1)
 	var tw := create_tween()
 	tw.tween_property(visual, "modulate:a", 0.0, 0.3)
 	tw.parallel().tween_property(visual, "rotation", visual.rotation + deg_to_rad(8) * _dir, 0.3)
 	tw.tween_interval(0.1)
 	tw.tween_callback(queue_free)
+
+
+## 55% de chance de soltar un orbe rojo de vida al morir.
+func _soltar_orbe_vida() -> void:
+	if randf() > 0.55:
+		return
+	var orbe: Area2D = preload("res://scenes/pickup_vida.tscn").instantiate()
+	orbe.global_position = global_position
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	destino.add_child(orbe)
 
 
 func _liberar_only() -> void:
