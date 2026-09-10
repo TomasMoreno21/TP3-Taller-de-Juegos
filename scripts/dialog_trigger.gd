@@ -64,5 +64,16 @@ func _disparar() -> void:
 		return
 	if lineas.is_empty():
 		return
+	# Solo se muestra una vez por partida (persiste aunque el jugador muera y
+	# la escena se recargue; Progresion es un autoload y no se reinicia).
+	if not dialogo_id.is_empty():
+		var prog := get_node_or_null("/root/Progresion")
+		if prog != null and (prog as Node).dialogo_visto(dialogo_id):
+			_disparado = true
+			return
 	_disparado = true
+	if not dialogo_id.is_empty():
+		var prog := get_node_or_null("/root/Progresion")
+		if prog != null:
+			(prog as Node).marcar_dialogo_visto(dialogo_id)
 	get_node("/root/Dialogo").mostrar(Array(lineas), hablante)

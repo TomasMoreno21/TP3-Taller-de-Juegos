@@ -174,7 +174,15 @@ func _posicion_spawn(i: int, ola: WaveOla, total: int) -> Vector2:
 func _on_enemy_died() -> void:
 	_vivos_ola -= 1
 	if estado == Estado.RUNNING and _vivos_ola <= 0:
+		if _ola_idx + 1 >= _total_olas():
+			_slowmo_cierre()
 		_siguiente_ola()
+
+
+func _slowmo_cierre() -> void:
+	var hs := get_node_or_null("/root/Hitstop")
+	if hs != null and hs.has_method("slowmo"):
+		hs.slowmo(0.3, 0.4)
 
 
 func _ola_resuelta() -> void:

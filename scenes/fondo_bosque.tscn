@@ -18,6 +18,7 @@ motion_mirroring = Vector2(2105.685, 0)
 position = Vector2(960, 540)
 scale = Vector2(1.095, 1.095)
 texture = ExtResource("1_tex1")
+texture_repeat = 2
 
 [node name="Capa2" type="ParallaxLayer" parent="." unique_id=1611309703]
 scale = Vector2(1.095, 1.095)
@@ -28,6 +29,7 @@ motion_mirroring = Vector2(2383.815, 0)
 position = Vector2(960, 540)
 scale = Vector2(1.095, 1.095)
 texture = ExtResource("2_tex2")
+texture_repeat = 2
 
 [node name="Capa3" type="ParallaxLayer" parent="." unique_id=1361476132]
 scale = Vector2(1.095, 1.095)
@@ -38,6 +40,7 @@ motion_mirroring = Vector2(2020.275, 0)
 position = Vector2(960, 540)
 scale = Vector2(1.095, 1.095)
 texture = ExtResource("3_tex3")
+texture_repeat = 2
 
 [node name="Capa4" type="ParallaxLayer" parent="." unique_id=1959794254]
 scale = Vector2(1.095, 1.095)
@@ -48,8 +51,10 @@ motion_mirroring = Vector2(2279.79, 0)
 position = Vector2(960, 540)
 scale = Vector2(1.095, 1.095)
 texture = ExtResource("4_tex4")
+texture_repeat = 2
 
 [node name="5Par_Bosque" type="Sprite2D" parent="Capa4" unique_id=1458377549]
 position = Vector2(1219, 1205)
 scale = Vector2(1.095, 1.095)
 texture = ExtResource("5_tex5")
+texture_repeat = 2

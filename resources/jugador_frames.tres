@@ -26,6 +26,12 @@
 [ext_resource type="Texture2D" uid="uid://bf71kvoul4gcj" path="res://Sprites/Jugador y Transformaciones/2oso quieto.png" id="24_oidle2"]
 [ext_resource type="Texture2D" uid="uid://chb2jeepeeor6" path="res://Sprites/Jugador y Transformaciones/3oso quieto.png" id="25_oidle3"]
 [ext_resource type="Texture2D" uid="uid://bivmtiu0gov2p" path="res://Sprites/Jugador y Transformaciones/4oso quieto.png" id="26_oidle4"]
+[ext_resource type="Texture2D" uid="uid://bll122077kvdi" path="res://Sprites/Jugador y Transformaciones/PJ A 1.png" id="27_atq1"]
+[ext_resource type="Texture2D" uid="uid://y1pfc51d8aoa" path="res://Sprites/Jugador y Transformaciones/PJ A 2.png" id="28_atq2"]
+[ext_resource type="Texture2D" uid="uid://vf40oegkl0mf" path="res://Sprites/Jugador y Transformaciones/PJ A 3.png" id="29_atq3"]
+[ext_resource type="Texture2D" uid="uid://ecd6kl4ohxv" path="res://Sprites/Jugador y Transformaciones/PJ A 4.png" id="30_atq4"]
+[ext_resource type="Texture2D" uid="uid://cuyou5cba4x15" path="res://Sprites/Jugador y Transformaciones/PJ A 5.png" id="31_atq5"]
+[ext_resource type="Texture2D" uid="uid://cl1008n0sxeh3" path="res://Sprites/Jugador y Transformaciones/PJ A 6.png" id="32_atq6"]
 
 [resource]
 animations = [{
@@ -169,4 +175,55 @@ animations = [{
 "loop": 1,
 "name": &"run",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("27_atq1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("28_atq2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("29_atq3")
+}],
+"loop": 0,
+"name": &"attack1",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("30_atq4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("31_atq5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("32_atq6")
+}],
+"loop": 0,
+"name": &"attack2",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("27_atq1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("28_atq2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("29_atq3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("30_atq4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("31_atq5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("32_atq6")
+}],
+"loop": 0,
+"name": &"attack_full",
+"speed": 6.0
 }]

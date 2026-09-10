@@ -1,0 +1,515 @@
+[gd_scene format=3 uid="uid://n1lprueba_0001"]
+
+[ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="1_player"]
+[ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="2_cam"]
+[ext_resource type="PackedScene" uid="uid://ssvmlcpooygw" path="res://scenes/fondo_bosque.tscn" id="3_fondo"]
+[ext_resource type="TileSet" uid="uid://cm28ivesvx3ed" path="res://resources/tileset_bosque.tres" id="4_tileset"]
+[ext_resource type="Script" path="res://scripts/pinta_terreno.gd" id="5_pinta"]
+[ext_resource type="Script" path="res://scripts/setup_progresion_nivel.gd" id="6_setup"]
+[ext_resource type="PackedScene" uid="uid://grieta_lobo_01" path="res://scenes/grieta_lobo.tscn" id="7_grieta"]
+[ext_resource type="PackedScene" uid="uid://muro_lobo_001" path="res://scenes/muro_lobo.tscn" id="8_muro"]
+[ext_resource type="PackedScene" uid="uid://enredadera_001" path="res://scenes/enredadera.tscn" id="9_enredadera"]
+[ext_resource type="PackedScene" uid="uid://totem_lobo_001" path="res://scenes/totem_lobo.tscn" id="10_totem"]
+[ext_resource type="PackedScene" uid="uid://cr2s0l8k2s5l4" path="res://scenes/rompible.tscn" id="11_romp"]
+[ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="12_pick"]
+[ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="13_dialog"]
+[ext_resource type="PackedScene" uid="uid://x0o25yeqfgsm" path="res://scenes/encounter.tscn" id="14_enc"]
+[ext_resource type="PackedScene" uid="uid://bxsawwmlxb7mt" path="res://scenes/enemy.tscn" id="15_enemy"]
+[ext_resource type="PackedScene" uid="uid://c1w7l3sant0r4" path="res://scenes/santuario.tscn" id="16_sant"]
+[ext_resource type="PackedScene" uid="uid://dkyk8avpptlls" path="res://scenes/hud.tscn" id="17_hud"]
+[ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="18_pause"]
+[ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="19_levelup"]
+[ext_resource type="PackedScene" path="res://scenes/console.tscn" id="20_cons"]
+[ext_resource type="PackedScene" uid="uid://bf8ohs7pjg025" path="res://scenes/pinchos.tscn" id="21_pinchos"]
+[ext_resource type="PackedScene" uid="uid://plataforma_0001" path="res://scenes/plataforma.tscn" id="22_plat"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
+size = Vector2(44400, 401)
+
+[node name="Nivel1Prueba" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(100, 862)
+
+[node name="Camara" type="Camera2D" parent="."]
+script = ExtResource("2_cam")
+
+[node name="SetupProgresion" type="Node" parent="."]
+script = ExtResource("6_setup")
+nivel_minimo = 1
+formas_forzadas = Array[int]([0])
+
+[node name="FondoBosque" parent="." instance=ExtResource("3_fondo")]
+visible = false
+
+[node name="Terreno" type="TileMapLayer" parent="."]
+tile_set = ExtResource("4_tileset")
+collision_enabled = false
+
+[node name="Pinta" type="Node" parent="Terreno"]
+script = ExtResource("5_pinta")
+nodo_terreno = NodePath("..")
+pisos = [{"desde": Vector2i(0, 31), "hasta": Vector2i(1387, 34)}]
+
+[node name="Piso" type="StaticBody2D" parent="."]
+position = Vector2(22200, 1092)
+
+[node name="PisoVisual" type="Polygon2D" parent="Piso"]
+color = Color(0.16, 0.32, 0.18, 1)
+polygon = PackedVector2Array(-22200, -100, 22200, -100, 22200, 100, -22200, 100)
+
+[node name="PisoCollision" type="CollisionShape2D" parent="Piso"]
+position = Vector2(0, 100.5)
+shape = SubResource("RectangleShape2D_piso")
+
+[node name="DialogoIntro" parent="." instance=ExtResource("13_dialog")]
+position = Vector2(700, 820)
+dialogo_id = "p1_intro"
+
+[node name="DialogoEnredadera" parent="." instance=ExtResource("13_dialog")]
+position = Vector2(2500, 820)
+dialogo_id = "p1_enredadera"
+
+[node name="Enredadera1" parent="." instance=ExtResource("9_enredadera")]
+position = Vector2(2800, 876)
+ancho = 36.0
+alto = 500.0
+
+[node name="PickupVino" parent="." instance=ExtResource("12_pick")]
+position = Vector2(2930, 520)
+
+[node name="Plat3300" parent="." instance=ExtResource("22_plat")]
+position = Vector2(3300, 915)
+
+[node name="PickupCalmaA" parent="." instance=ExtResource("12_pick")]
+position = Vector2(3900, 920)
+
+[node name="DialogoCombate" parent="." instance=ExtResource("13_dialog")]
+position = Vector2(5100, 820)
+dialogo_id = "p1_combate"
+
+[node name="Encounter1" parent="." instance=ExtResource("14_enc")]
+position = Vector2(6000, 967)
+
+[node name="Enemy1" parent="Encounter1" instance=ExtResource("15_enemy")]
+position = Vector2(-140, 0)
+spawn_telegrafiado = true
+ritual_duracion = 0.3
+
+[node name="Enemy2" parent="Encounter1" instance=ExtResource("15_enemy")]
+position = Vector2(140, 0)
+spawn_telegrafiado = true
+ritual_duracion = 0.5
+
+[node name="Plat6600" parent="." instance=ExtResource("22_plat")]
+position = Vector2(6600, 915)
+
+[node name="Plat7030" parent="." instance=ExtResource("22_plat")]
+position = Vector2(7030, 915)
+
+[node name="Plat7460" parent="." instance=ExtResource("22_plat")]
+position = Vector2(7460, 915)
+
+[node name="Plat7890" parent="." instance=ExtResource("22_plat")]
+position = Vector2(7890, 915)
+
+[node name="Plat8320" parent="." instance=ExtResource("22_plat")]
+position = Vector2(8320, 915)
+
+[node name="Plat8750" parent="." instance=ExtResource("22_plat")]
+position = Vector2(8750, 915)
+
+[node name="Plat9180" parent="." instance=ExtResource("22_plat")]
+position = Vector2(9180, 915)
+
+[node name="Pincho1" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(6815, 990)
+
+[node name="Pincho2" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(7245, 990)
+
+[node name="Pincho3" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(7675, 990)
+
+[node name="Pincho4" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(8105, 990)
+
+[node name="Pincho5" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(8535, 990)
+
+[node name="PickupPlatA1" parent="." instance=ExtResource("12_pick")]
+position = Vector2(7130, 850)
+
+[node name="PickupCalmaB1" parent="." instance=ExtResource("12_pick")]
+position = Vector2(9200, 920)
+
+[node name="PickupCalmaB2" parent="." instance=ExtResource("12_pick")]
+position = Vector2(9500, 920)
+
+[node name="DialogoPlataformas" parent="." instance=ExtResource("13_dialog")]
+position = Vector2(9750, 820)
+dialogo_id = "p1_plataformas"
+
+[node name="Enredadera2" parent="." instance=ExtResource("9_enredadera")]
+position = Vector2(10100, 876)
+ancho = 36.0
+alto = 500.0
+
+[node name="Plat10500" parent="." instance=ExtResource("22_plat")]
+position = Vector2(10500, 795)
+
+[node name="Plat10900" parent="." instance=ExtResource("22_plat")]
+position = Vector2(10900, 795)
+
+[node name="Plat11300" parent="." instance=ExtResource("22_plat")]
+position = Vector2(11300, 875)
+
+[node name="Plat11700" parent="." instance=ExtResource("22_plat")]
+position = Vector2(11700, 915)
+
+[node name="Pincho6" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(11100, 990)
+
+[node name="Pincho7" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(11500, 990)
+
+[node name="PickupAltura1" parent="." instance=ExtResource("12_pick")]
+position = Vector2(10500, 730)
+
+[node name="PickupAltura2" parent="." instance=ExtResource("12_pick")]
+position = Vector2(11300, 810)
+
+[node name="PickupCalmaC1" parent="." instance=ExtResource("12_pick")]
+position = Vector2(12800, 920)
+
+[node name="TotemLobo" parent="." instance=ExtResource("10_totem")]
+position = Vector2(14200, 967)
+
+[node name="GrietaLobo" parent="." instance=ExtResource("7_grieta")]
+position = Vector2(16000, 800)
+
+[node name="MuroLobo" parent="." instance=ExtResource("8_muro")]
+position = Vector2(16600, 867)
+
+[node name="Plat17200" parent="." instance=ExtResource("22_plat")]
+position = Vector2(17200, 795)
+
+[node name="Plat17800" parent="." instance=ExtResource("22_plat")]
+position = Vector2(17800, 795)
+
+[node name="PickupMuro" parent="." instance=ExtResource("12_pick")]
+position = Vector2(17500, 730)
+
+[node name="Plat18600" parent="." instance=ExtResource("22_plat")]
+position = Vector2(18600, 795)
+
+[node name="Plat19240" parent="." instance=ExtResource("22_plat")]
+position = Vector2(19240, 795)
+
+[node name="Plat19880" parent="." instance=ExtResource("22_plat")]
+position = Vector2(19880, 795)
+
+[node name="Plat20520" parent="." instance=ExtResource("22_plat")]
+position = Vector2(20520, 795)
+
+[node name="Plat21160" parent="." instance=ExtResource("22_plat")]
+position = Vector2(21160, 795)
+
+[node name="Pincho8" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(18920, 990)
+
+[node name="Pincho9" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(19560, 990)
+
+[node name="Pincho10" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(20200, 990)
+
+[node name="Pincho11" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(20840, 990)
+
+[node name="PickupLobo1" parent="." instance=ExtResource("12_pick")]
+position = Vector2(19240, 730)
+
+[node name="PickupLobo2" parent="." instance=ExtResource("12_pick")]
+position = Vector2(20520, 730)
+
+[node name="PickupCalmaD1" parent="." instance=ExtResource("12_pick")]
+position = Vector2(21400, 920)
+
+[node name="PickupCalmaD2" parent="." instance=ExtResource("12_pick")]
+position = Vector2(21800, 920)
+
+[node name="DialogoCombate2" parent="." instance=ExtResource("13_dialog")]
+position = Vector2(23200, 820)
+dialogo_id = "p1_combate2"
+
+[node name="Encounter2" parent="." instance=ExtResource("14_enc")]
+position = Vector2(24400, 967)
+
+[node name="Enemy1" parent="Encounter2" instance=ExtResource("15_enemy")]
+position = Vector2(-160, 0)
+tipo = "arquero"
+spawn_telegrafiado = true
+ritual_duracion = 0.3
+
+[node name="Enemy2" parent="Encounter2" instance=ExtResource("15_enemy")]
+position = Vector2(160, 0)
+spawn_telegrafiado = true
+ritual_duracion = 0.5
+
+[node name="Enredadera3" parent="." instance=ExtResource("9_enredadera")]
+position = Vector2(25600, 876)
+ancho = 36.0
+alto = 500.0
+
+[node name="PickupEnredadera2" parent="." instance=ExtResource("12_pick")]
+position = Vector2(25650, 500)
+
+[node name="Plat26000" parent="." instance=ExtResource("22_plat")]
+position = Vector2(26000, 715)
+
+[node name="Plat26400" parent="." instance=ExtResource("22_plat")]
+position = Vector2(26400, 715)
+
+[node name="PickupT4A" parent="." instance=ExtResource("12_pick")]
+position = Vector2(26000, 650)
+
+[node name="Plat26800" parent="." instance=ExtResource("22_plat")]
+position = Vector2(26800, 795)
+
+[node name="Plat27150" parent="." instance=ExtResource("22_plat")]
+position = Vector2(27150, 875)
+
+[node name="Plat27550" parent="." instance=ExtResource("22_plat")]
+position = Vector2(27550, 915)
+
+[node name="Pincho12" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(26900, 990)
+
+[node name="Pincho13" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(27300, 990)
+
+[node name="Plat27900" parent="." instance=ExtResource("22_plat")]
+position = Vector2(27900, 915)
+
+[node name="Plat28340" parent="." instance=ExtResource("22_plat")]
+position = Vector2(28340, 915)
+
+[node name="Plat28800" parent="." instance=ExtResource("22_plat")]
+position = Vector2(28800, 875)
+
+[node name="Plat29180" parent="." instance=ExtResource("22_plat")]
+position = Vector2(29180, 875)
+
+[node name="Plat29500" parent="." instance=ExtResource("22_plat")]
+position = Vector2(29500, 795)
+
+[node name="Plat29860" parent="." instance=ExtResource("22_plat")]
+position = Vector2(29860, 795)
+
+[node name="Plat30200" parent="." instance=ExtResource("22_plat")]
+position = Vector2(30200, 715)
+
+[node name="Plat30400" parent="." instance=ExtResource("22_plat")]
+position = Vector2(30400, 715)
+
+[node name="Plat30700" parent="." instance=ExtResource("22_plat")]
+position = Vector2(30700, 715)
+
+[node name="Pincho14" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(28500, 990)
+
+[node name="Pincho15" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(28900, 990)
+
+[node name="Pincho16" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(29300, 990)
+
+[node name="Pincho17" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(29700, 990)
+
+[node name="Pincho18" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(30100, 990)
+
+[node name="Pincho19" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(30500, 990)
+
+[node name="PickupClimax" parent="." instance=ExtResource("12_pick")]
+position = Vector2(30200, 650)
+
+[node name="PickupCalmaE1" parent="." instance=ExtResource("12_pick")]
+position = Vector2(31800, 920)
+
+[node name="PickupCalmaE2" parent="." instance=ExtResource("12_pick")]
+position = Vector2(32100, 920)
+
+[node name="PickupCalmaE3" parent="." instance=ExtResource("12_pick")]
+position = Vector2(32400, 920)
+
+[node name="DialogoCombate3" parent="." instance=ExtResource("13_dialog")]
+position = Vector2(34400, 820)
+dialogo_id = "p1_combate3"
+
+[node name="Encounter3" parent="." instance=ExtResource("14_enc")]
+position = Vector2(35600, 967)
+
+[node name="Enemy1" parent="Encounter3" instance=ExtResource("15_enemy")]
+position = Vector2(-160, 0)
+spawn_telegrafiado = true
+ritual_duracion = 0.3
+
+[node name="Enemy2" parent="Encounter3" instance=ExtResource("15_enemy")]
+position = Vector2(160, 0)
+spawn_telegrafiado = true
+ritual_duracion = 0.5
+
+[node name="Enemy3" parent="Encounter3" instance=ExtResource("15_enemy")]
+position = Vector2(260, 0)
+ola_asignada = 1
+spawn_telegrafiado = true
+ritual_duracion = 0.4
+
+[node name="Plat36100" parent="." instance=ExtResource("22_plat")]
+position = Vector2(36100, 915)
+
+[node name="Plat36500" parent="." instance=ExtResource("22_plat")]
+position = Vector2(36500, 915)
+
+[node name="Plat36900" parent="." instance=ExtResource("22_plat")]
+position = Vector2(36900, 875)
+
+[node name="Plat37250" parent="." instance=ExtResource("22_plat")]
+position = Vector2(37250, 875)
+
+[node name="Plat37600" parent="." instance=ExtResource("22_plat")]
+position = Vector2(37600, 795)
+
+[node name="Plat37900" parent="." instance=ExtResource("22_plat")]
+position = Vector2(37900, 795)
+
+[node name="Plat38200" parent="." instance=ExtResource("22_plat")]
+position = Vector2(38200, 715)
+
+[node name="Plat38500" parent="." instance=ExtResource("22_plat")]
+position = Vector2(38500, 715)
+
+[node name="Pincho20" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(37000, 990)
+
+[node name="Pincho21" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(37700, 990)
+
+[node name="Pincho22" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(38300, 990)
+
+[node name="PickupT4" parent="." instance=ExtResource("12_pick")]
+position = Vector2(38200, 650)
+
+[node name="Rompible1" parent="." instance=ExtResource("11_romp")]
+position = Vector2(38900, 940)
+
+[node name="Rompible2" parent="." instance=ExtResource("11_romp")]
+position = Vector2(39150, 940)
+
+[node name="Rompible3" parent="." instance=ExtResource("11_romp")]
+position = Vector2(39400, 940)
+
+[node name="PickupTesoroRomp" parent="." instance=ExtResource("12_pick")]
+position = Vector2(39000, 860)
+
+[node name="Encounter4" parent="." instance=ExtResource("14_enc")]
+position = Vector2(41000, 967)
+
+[node name="Enemy1" parent="Encounter4" instance=ExtResource("15_enemy")]
+position = Vector2(-200, 0)
+tipo = "arquero"
+spawn_telegrafiado = true
+ritual_duracion = 0.3
+
+[node name="Enemy2" parent="Encounter4" instance=ExtResource("15_enemy")]
+position = Vector2(0, 0)
+spawn_telegrafiado = true
+ritual_duracion = 0.5
+
+[node name="Enemy3" parent="Encounter4" instance=ExtResource("15_enemy")]
+position = Vector2(200, 0)
+tipo = "arquero"
+spawn_telegrafiado = true
+ritual_duracion = 0.4
+
+[node name="Enredadera4" parent="." instance=ExtResource("9_enredadera")]
+position = Vector2(42300, 876)
+ancho = 36.0
+alto = 500.0
+
+[node name="PickupE4" parent="." instance=ExtResource("12_pick")]
+position = Vector2(42300, 560)
+
+[node name="DialogoSantuario" parent="." instance=ExtResource("13_dialog")]
+position = Vector2(42550, 820)
+dialogo_id = "p1_santuario"
+
+[node name="Plat42700" parent="." instance=ExtResource("22_plat")]
+position = Vector2(42700, 715)
+
+[node name="Plat43000" parent="." instance=ExtResource("22_plat")]
+position = Vector2(43000, 715)
+
+[node name="Plat43300" parent="." instance=ExtResource("22_plat")]
+position = Vector2(43300, 715)
+
+[node name="Pincho23" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(42850, 990)
+
+[node name="Pincho24" parent="." instance=ExtResource("21_pinchos")]
+position = Vector2(43150, 990)
+
+[node name="PickupFinal" parent="." instance=ExtResource("12_pick")]
+position = Vector2(43000, 650)
+
+[node name="Encounter5" parent="." instance=ExtResource("14_enc")]
+position = Vector2(43900, 967)
+
+[node name="Enemy1" parent="Encounter5" instance=ExtResource("15_enemy")]
+position = Vector2(-200, 0)
+spawn_telegrafiado = true
+ritual_duracion = 0.3
+
+[node name="Enemy2" parent="Encounter5" instance=ExtResource("15_enemy")]
+position = Vector2(0, 0)
+tipo = "arquero"
+spawn_telegrafiado = true
+ritual_duracion = 0.5
+
+[node name="Enemy3" parent="Encounter5" instance=ExtResource("15_enemy")]
+position = Vector2(200, 0)
+spawn_telegrafiado = true
+ritual_duracion = 0.4
+
+[node name="Enemy4" parent="Encounter5" instance=ExtResource("15_enemy")]
+position = Vector2(300, 0)
+ola_asignada = 1
+spawn_telegrafiado = true
+ritual_duracion = 0.3
+
+[node name="Santuario" parent="." instance=ExtResource("16_sant")]
+position = Vector2(44350, 922)
+activar_victoria = true
+
+[node name="Hud" parent="." instance=ExtResource("17_hud")]
+visible = false
+
+[node name="Pause" parent="." instance=ExtResource("18_pause")]
+visible = false
+
+[node name="LevelUp" parent="." instance=ExtResource("19_levelup")]
+visible = false
+
+[node name="Consola" parent="." instance=ExtResource("20_cons")]
+visible = false
+
+[editable path="Encounter1"]
+[editable path="Encounter2"]
+[editable path="Encounter3"]
+[editable path="Encounter4"]
+[editable path="Encounter5"]

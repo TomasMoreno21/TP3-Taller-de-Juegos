@@ -24,9 +24,10 @@
 [ext_resource type="AudioStream" uid="uid://dbn1bgmhyq3kn" path="res://assets/audio/ambiente_nivel1/04_owl_hoot.mp3" id="22_amb_buho"]
 [ext_resource type="AudioStream" uid="uid://cfvewxj0nqnet" path="res://assets/audio/ambiente_nivel1/05_wolf_howl.mp3" id="23_amb_lobo"]
 [ext_resource type="AudioStream" uid="uid://cvu07hps8mr8q" path="res://assets/audio/ambiente_nivel1/06_wind_through_trees.mp3" id="24_amb_viento2"]
+[ext_resource type="PackedScene" path="res://scenes/herramienta_nivel.tscn" id="25_dr8ev"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
-size = Vector2(16000, 401)
+size = Vector2(25670, 401)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_plat"]
 size = Vector2(280, 30)
@@ -45,7 +46,7 @@ acentos = Array[AudioStream]([ExtResource("22_amb_buho"), ExtResource("23_amb_lo
 acento_volumen_db = -2.0
 
 [node name="Player" parent="." unique_id=1763988589 instance=ExtResource("1_player")]
-position = Vector2(100, 862)
+position = Vector2(8066, 823)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
 script = ExtResource("2_cam")
@@ -59,15 +60,18 @@ tile_set = ExtResource("4_tileset")
 position = Vector2(8000, 1092)
 
 [node name="PisoVisual" type="Polygon2D" parent="Piso" unique_id=1712558488]
+position = Vector2(4836.0015, 509.00003)
+scale = Vector2(1.6045002, 6.09)
 color = Color(0.16, 0.32, 0.18, 1)
 polygon = PackedVector2Array(-8000, -100, 8000, -100, 8000, 100, -8000, 100)
 
 [node name="PisoCollision" type="CollisionShape2D" parent="Piso" unique_id=2085221829]
-position = Vector2(0, 100.5)
+position = Vector2(4835, 100.5)
 shape = SubResource("RectangleShape2D_piso")
 
 [node name="PlatDoble1" type="StaticBody2D" parent="." unique_id=863292461]
-position = Vector2(4536.377, 731.5338)
+position = Vector2(4677, 575.00006)
+rotation = -1.5734348
 
 [node name="PlatDoble1Visual" type="Polygon2D" parent="PlatDoble1" unique_id=1789313563]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -77,7 +81,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="PlatDoble4" type="StaticBody2D" parent="." unique_id=1723274043]
-position = Vector2(4520.6045, 566.8613)
+position = Vector2(10195, 830)
 
 [node name="PlatDoble1Visual" type="Polygon2D" parent="PlatDoble4" unique_id=146622545]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -87,7 +91,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="PlatDoble5" type="StaticBody2D" parent="." unique_id=15961890]
-position = Vector2(4520.6045, 639.8613)
+position = Vector2(10916, 764)
 
 [node name="PlatDoble1Visual" type="Polygon2D" parent="PlatDoble5" unique_id=1959412230]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -97,7 +101,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="PlatDoble6" type="StaticBody2D" parent="." unique_id=259989588]
-position = Vector2(4530.4023, 832.4588)
+position = Vector2(4519, 447)
 
 [node name="PlatDoble1Visual" type="Polygon2D" parent="PlatDoble6" unique_id=2104564492]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -107,7 +111,8 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="PlatDoble7" type="StaticBody2D" parent="." unique_id=1115706513]
-position = Vector2(4512.8447, 403.56888)
+position = Vector2(4368, 572.0001)
+rotation = -1.5787704
 
 [node name="PlatDoble1Visual" type="Polygon2D" parent="PlatDoble7" unique_id=1199671798]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -117,7 +122,8 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="PlatDoble8" type="StaticBody2D" parent="." unique_id=1342522146]
-position = Vector2(4517.667, 483.73383)
+position = Vector2(4678, 852)
+rotation = -1.5701593
 
 [node name="PlatDoble1Visual" type="Polygon2D" parent="PlatDoble8" unique_id=449076263]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -127,7 +133,8 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="PlatDoble2" type="StaticBody2D" parent="." unique_id=400806940]
-position = Vector2(4531.5728, 920.0288)
+position = Vector2(4367.9995, 854)
+rotation = -1.5665538
 
 [node name="PlatDoble2Visual" type="Polygon2D" parent="PlatDoble2" unique_id=678343929]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -137,7 +144,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="PlatDoble3" type="StaticBody2D" parent="." unique_id=2024035164]
-position = Vector2(11129.404, 825.55383)
+position = Vector2(19969.404, 825.55383)
 
 [node name="PlatDoble3Visual" type="Polygon2D" parent="PlatDoble3" unique_id=6174304]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -157,17 +164,17 @@ ancho = 36.0
 alto = 500.0
 
 [node name="Enredadera3" parent="." unique_id=1758860922 instance=ExtResource("16_enredadera")]
-position = Vector2(4129, 402)
+position = Vector2(4138, -14)
 ancho = 36.0
 alto = 500.0
 
 [node name="Enredadera5" parent="." unique_id=1428130658 instance=ExtResource("16_enredadera")]
-position = Vector2(12068, 307)
+position = Vector2(20840, 302)
 ancho = 36.0
 alto = 500.0
 
 [node name="Enredadera4" parent="." unique_id=2089772587 instance=ExtResource("16_enredadera")]
-position = Vector2(4520, -1)
+position = Vector2(4775, -22)
 ancho = 36.0
 alto = 500.0
 
@@ -222,55 +229,56 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="GrietaLobo" parent="." unique_id=105804219 instance=ExtResource("5_grieta")]
-position = Vector2(7452, 529)
+position = Vector2(23430.002, 306.00006)
+rotation = -1.582734
 
 [node name="GrietaLobo2" parent="." unique_id=614328212 instance=ExtResource("5_grieta")]
-position = Vector2(15027, 609)
+position = Vector2(23714, 595)
 
 [node name="Rompible1" parent="." unique_id=2082107955 instance=ExtResource("6_romp")]
-position = Vector2(11702, 942)
+position = Vector2(23594, 516)
 
 [node name="Rompible2" parent="." unique_id=441688810 instance=ExtResource("6_romp")]
-position = Vector2(11802, 851)
+position = Vector2(23599, 430)
 
 [node name="Rompible3" parent="." unique_id=1602575286 instance=ExtResource("6_romp")]
-position = Vector2(3703.2822, 289.21512)
+position = Vector2(5495.6084, 933.89954)
 
 [node name="Pickup1" parent="." unique_id=1605633986 instance=ExtResource("7_pick")]
-position = Vector2(3807.7134, 280.8606)
+position = Vector2(5600.0396, 925.545)
 
 [node name="Pickup2" parent="." unique_id=937879990 instance=ExtResource("7_pick")]
-position = Vector2(3594.6738, 276.68335)
+position = Vector2(5387, 921.36774)
 
 [node name="Pickup3" parent="." unique_id=308484336 instance=ExtResource("7_pick")]
-position = Vector2(3637.1567, 209.8963)
+position = Vector2(5429.483, 854.5807)
 
 [node name="Pickup4" parent="." unique_id=1145590561 instance=ExtResource("7_pick")]
-position = Vector2(3786.8271, 197.31561)
+position = Vector2(5579.1533, 842)
 
 [node name="Pickup8" parent="." unique_id=732809745 instance=ExtResource("7_pick")]
-position = Vector2(6385, 802)
+position = Vector2(9245.664, 814)
 
 [node name="Pickup9" parent="." unique_id=35374032 instance=ExtResource("7_pick")]
-position = Vector2(6092.399, 897.19855)
+position = Vector2(9143, 733)
 
 [node name="Pickup10" parent="." unique_id=473048980 instance=ExtResource("7_pick")]
-position = Vector2(6187.3364, 825.0461)
+position = Vector2(9048, 837.0461)
 
 [node name="DialogoIntro" parent="." unique_id=1685442069 instance=ExtResource("8_dialog")]
-position = Vector2(181, 820)
+position = Vector2(87, 801)
 dialogo_id = "n1_intro"
 
 [node name="DialogoCombate" parent="." unique_id=1063822624 instance=ExtResource("8_dialog")]
-position = Vector2(4525, 9)
+position = Vector2(6372, 790)
 dialogo_id = "n1_combate"
 
 [node name="DialogoLobo" parent="." unique_id=120336290 instance=ExtResource("8_dialog")]
-position = Vector2(7052, 799)
+position = Vector2(14686, 803)
 dialogo_id = "n1_lobo"
 
 [node name="EncounterA" parent="." unique_id=450537322 instance=ExtResource("9_enc")]
-position = Vector2(5626.5176, 731.4063)
+position = Vector2(7195, 743)
 
 [node name="ArenaShape" parent="EncounterA/Arena" index="0"]
 scale = Vector2(0.7, 1)
@@ -281,7 +289,7 @@ spawn_telegrafiado = true
 ritual_duracion = 0.5
 
 [node name="EncounterB" parent="." unique_id=1662278058 instance=ExtResource("9_enc")]
-position = Vector2(9356.36, 724.30164)
+position = Vector2(17446, 743)
 
 [node name="Enemy1" parent="EncounterB" unique_id=422124019 instance=ExtResource("10_enemy")]
 position = Vector2(-227.36035, 181.69836)
@@ -332,7 +340,7 @@ spawn_telegrafiado = true
 ritual_duracion = 0.6
 
 [node name="Plataforma6" type="StaticBody2D" parent="." unique_id=2100000005]
-position = Vector2(7600, 850)
+position = Vector2(15199, 797)
 
 [node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma6" unique_id=2100000006]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -342,7 +350,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="Plataforma7" type="StaticBody2D" parent="." unique_id=2100000008]
-position = Vector2(7900, 760)
+position = Vector2(15481, 797)
 
 [node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma7" unique_id=2100000009]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -352,7 +360,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="Plataforma8" type="StaticBody2D" parent="." unique_id=2100000011]
-position = Vector2(8250, 850)
+position = Vector2(15762, 797)
 
 [node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma8" unique_id=2100000012]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -362,7 +370,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="Plataforma9" type="StaticBody2D" parent="." unique_id=2100000014]
-position = Vector2(8600, 950)
+position = Vector2(16044, 796)
 
 [node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma9" unique_id=2100000015]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -372,19 +380,19 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="Rompible4" parent="." unique_id=2100000017 instance=ExtResource("6_romp")]
-position = Vector2(6225, 928)
+position = Vector2(9085.664, 940)
 
 [node name="Rompible6" parent="." unique_id=1685828451 instance=ExtResource("6_romp")]
-position = Vector2(6283, 841)
+position = Vector2(9143.664, 853)
 
 [node name="Rompible7" parent="." unique_id=601104054 instance=ExtResource("6_romp")]
-position = Vector2(6331, 932)
+position = Vector2(9191.664, 944)
 
 [node name="Pickup5" parent="." unique_id=2100000023 instance=ExtResource("7_pick")]
-position = Vector2(7918, 684)
+position = Vector2(15552, 688)
 
 [node name="EncounterE" parent="." unique_id=2100000019 instance=ExtResource("9_enc")]
-position = Vector2(13764.891, 711.87225)
+position = Vector2(22604.89, 711.87225)
 
 [node name="ArenaShape" parent="EncounterE/Arena" index="0"]
 scale = Vector2(1.2, 1)
@@ -406,20 +414,20 @@ spawn_telegrafiado = true
 ritual_duracion = 0.4
 
 [node name="Pickup6" parent="." unique_id=2100000024 instance=ExtResource("7_pick")]
-position = Vector2(11877, 947)
+position = Vector2(23831, 474)
 
 [node name="Rompible5" parent="." unique_id=2100000018 instance=ExtResource("6_romp")]
-position = Vector2(11800, 940)
+position = Vector2(23692, 514)
 
 [node name="Pickup7" parent="." unique_id=2100000025 instance=ExtResource("7_pick")]
-position = Vector2(13200, 940)
+position = Vector2(22040, 940)
 
 [node name="DialogoZona3" parent="." unique_id=2100000035 instance=ExtResource("8_dialog")]
-position = Vector2(2291.69, 252.84033)
+position = Vector2(2541, 591)
 dialogo_id = "n1_zona3"
 
 [node name="Plataforma10" type="StaticBody2D" parent="." unique_id=2100000026]
-position = Vector2(14700, 900)
+position = Vector2(23567, 790)
 
 [node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma10" unique_id=2100000027]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -429,7 +437,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="Plataforma11" type="StaticBody2D" parent="." unique_id=2100000029]
-position = Vector2(15000, 820)
+position = Vector2(23848, 789)
 
 [node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma11" unique_id=2100000030]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -439,7 +447,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="Plataforma12" type="StaticBody2D" parent="." unique_id=2100000032]
-position = Vector2(15300, 900)
+position = Vector2(24128, 790)
 
 [node name="Plataforma1Visual" type="Polygon2D" parent="Plataforma12" unique_id=2100000033]
 color = Color(0.32, 0.5, 0.26, 1)
@@ -449,11 +457,11 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="DialogoSantuario" parent="." unique_id=2100000036 instance=ExtResource("8_dialog")]
-position = Vector2(14450, 776)
+position = Vector2(23290, 776)
 dialogo_id = "n1_santuario"
 
 [node name="Santuario" parent="." unique_id=1856516154 instance=ExtResource("11_sant")]
-position = Vector2(15600, 922)
+position = Vector2(25125, 888)
 activar_victoria = true
 
 [node name="Hud" parent="." unique_id=643194512 instance=ExtResource("12_hud")]
@@ -538,58 +546,184 @@ position = Vector2(4100.6997, 990.1393)
 position = Vector2(4264.245, 990.69727)
 
 [node name="PinchosPrueba26" parent="." unique_id=398770625 instance=ExtResource("17_pinchos")]
-position = Vector2(10917, 977.1001)
+position = Vector2(19772, 982.1001)
 
 [node name="PinchosPrueba27" parent="." unique_id=922111160 instance=ExtResource("17_pinchos")]
-position = Vector2(11090.754, 976.40283)
+position = Vector2(19945.754, 981.40283)
 
 [node name="PinchosPrueba28" parent="." unique_id=710135286 instance=ExtResource("17_pinchos")]
-position = Vector2(11254.805, 976)
+position = Vector2(20109.805, 981)
 
 [node name="PinchosPrueba29" parent="." unique_id=1173763174 instance=ExtResource("17_pinchos")]
-position = Vector2(11416.455, 976.5421)
+position = Vector2(20271.455, 981.5421)
 
 [node name="PinchosPrueba30" parent="." unique_id=1264123774 instance=ExtResource("17_pinchos")]
-position = Vector2(11580, 977.1001)
+position = Vector2(20435, 982.1001)
 
 [node name="PinchosPrueba31" parent="." unique_id=1684909569 instance=ExtResource("17_pinchos")]
-position = Vector2(10105, 984.1001)
+position = Vector2(18945, 984.1001)
 
 [node name="PinchosPrueba32" parent="." unique_id=2132848115 instance=ExtResource("17_pinchos")]
-position = Vector2(10278.754, 983.40283)
+position = Vector2(19118.754, 983.40283)
 
 [node name="PinchosPrueba33" parent="." unique_id=1056838499 instance=ExtResource("17_pinchos")]
-position = Vector2(10442.805, 983)
+position = Vector2(19282.805, 983)
 
 [node name="PinchosPrueba34" parent="." unique_id=1685061226 instance=ExtResource("17_pinchos")]
-position = Vector2(10604.455, 983.5421)
+position = Vector2(19444.455, 983.5421)
 
 [node name="PinchosPrueba35" parent="." unique_id=995338953 instance=ExtResource("17_pinchos")]
-position = Vector2(10768, 984.1001)
+position = Vector2(19608, 984.1001)
 
 [node name="PinchosPrueba36" parent="." unique_id=1256619270 instance=ExtResource("17_pinchos")]
-position = Vector2(11948, 984.1001)
+position = Vector2(20596, 983.1001)
 
 [node name="PinchosPrueba37" parent="." unique_id=1905944299 instance=ExtResource("17_pinchos")]
-position = Vector2(12121.754, 983.40283)
+position = Vector2(20769.754, 982.40283)
 
 [node name="PinchosPrueba38" parent="." unique_id=1771516405 instance=ExtResource("17_pinchos")]
-position = Vector2(12285.805, 983)
+position = Vector2(20933.805, 982)
 
 [node name="PinchosPrueba39" parent="." unique_id=1036246762 instance=ExtResource("17_pinchos")]
-position = Vector2(12447.455, 983.5421)
+position = Vector2(21095.455, 982.5421)
 
 [node name="PinchosPrueba40" parent="." unique_id=1905851373 instance=ExtResource("17_pinchos")]
-position = Vector2(12611, 984.1001)
+position = Vector2(21259, 983.1001)
 
 [node name="PinchosPrueba20" parent="." unique_id=376250969 instance=ExtResource("17_pinchos")]
-position = Vector2(4414, 381)
+position = Vector2(4432, 431)
 
 [node name="PinchosPrueba21" parent="." unique_id=1199800681 instance=ExtResource("17_pinchos")]
-position = Vector2(4593, 381)
+position = Vector2(4592, 430)
 
 [node name="zonalobo" type="Marker2D" parent="." unique_id=1233082189]
-position = Vector2(7102, 833)
+position = Vector2(14736, 837)
+
+[node name="PinchosPrueba41" parent="." unique_id=592308514 instance=ExtResource("17_pinchos")]
+position = Vector2(15140, 781)
+
+[node name="PinchosPrueba42" parent="." unique_id=2039300993 instance=ExtResource("17_pinchos")]
+position = Vector2(15301, 781)
+
+[node name="PinchosPrueba43" parent="." unique_id=745569618 instance=ExtResource("17_pinchos")]
+position = Vector2(15462, 781)
+
+[node name="PinchosPrueba44" parent="." unique_id=1254335174 instance=ExtResource("17_pinchos")]
+position = Vector2(15623, 781)
+
+[node name="PinchosPrueba45" parent="." unique_id=1151839325 instance=ExtResource("17_pinchos")]
+position = Vector2(15784, 781)
+
+[node name="PinchosPrueba46" parent="." unique_id=221197907 instance=ExtResource("17_pinchos")]
+position = Vector2(16103, 780)
+
+[node name="PinchosPrueba47" parent="." unique_id=1539215382 instance=ExtResource("17_pinchos")]
+position = Vector2(15945, 780)
+
+[node name="PinchosPrueba48" parent="." unique_id=972711914 instance=ExtResource("17_pinchos")]
+position = Vector2(10036, 980.40283)
+
+[node name="PinchosPrueba49" parent="." unique_id=765723330 instance=ExtResource("17_pinchos")]
+position = Vector2(10200.05, 980)
+
+[node name="PinchosPrueba50" parent="." unique_id=635845269 instance=ExtResource("17_pinchos")]
+position = Vector2(10362, 980.40283)
+
+[node name="PinchosPrueba51" parent="." unique_id=1894565088 instance=ExtResource("17_pinchos")]
+position = Vector2(10526.05, 980)
+
+[node name="PinchosPrueba52" parent="." unique_id=704290553 instance=ExtResource("17_pinchos")]
+position = Vector2(10688, 980.40283)
+
+[node name="PinchosPrueba53" parent="." unique_id=61163928 instance=ExtResource("17_pinchos")]
+position = Vector2(10852.05, 980)
+
+[node name="PinchosPrueba54" parent="." unique_id=2037856885 instance=ExtResource("17_pinchos")]
+position = Vector2(11014, 980.40283)
+
+[node name="PinchosPrueba55" parent="." unique_id=956756851 instance=ExtResource("17_pinchos")]
+position = Vector2(11178.05, 980)
+
+[node name="PinchosPrueba56" parent="." unique_id=1810063341 instance=ExtResource("17_pinchos")]
+position = Vector2(11342, 980.40283)
+
+[node name="PinchosPrueba57" parent="." unique_id=1725996177 instance=ExtResource("17_pinchos")]
+position = Vector2(11506.05, 980)
+
+[node name="PinchosPrueba58" parent="." unique_id=128211893 instance=ExtResource("17_pinchos")]
+position = Vector2(11668, 980.40283)
+
+[node name="PinchosPrueba59" parent="." unique_id=1851781134 instance=ExtResource("17_pinchos")]
+position = Vector2(11832.05, 980)
+
+[node name="PinchosPrueba60" parent="." unique_id=235754205 instance=ExtResource("17_pinchos")]
+position = Vector2(11993.699, 980.5421)
+
+[node name="PinchosPrueba61" parent="." unique_id=1590504421 instance=ExtResource("17_pinchos")]
+position = Vector2(12157.245, 981.1001)
+
+[node name="PinchosPrueba62" parent="." unique_id=1262594771 instance=ExtResource("17_pinchos")]
+position = Vector2(12324.05, 980)
+
+[node name="PinchosPrueba63" parent="." unique_id=2109767548 instance=ExtResource("17_pinchos")]
+position = Vector2(12486, 980.40283)
+
+[node name="PinchosPrueba64" parent="." unique_id=1818443292 instance=ExtResource("17_pinchos")]
+position = Vector2(12650.05, 980)
+
+[node name="PinchosPrueba65" parent="." unique_id=1561253656 instance=ExtResource("17_pinchos")]
+position = Vector2(12811.699, 980.5421)
+
+[node name="PinchosPrueba66" parent="." unique_id=867489696 instance=ExtResource("17_pinchos")]
+position = Vector2(12975.245, 981.1001)
+
+[node name="PinchosPrueba67" parent="." unique_id=434962333 instance=ExtResource("17_pinchos")]
+position = Vector2(13149, 980.40283)
+
+[node name="PinchosPrueba68" parent="." unique_id=382375193 instance=ExtResource("17_pinchos")]
+position = Vector2(13313.05, 980)
+
+[node name="PinchosPrueba69" parent="." unique_id=1092383005 instance=ExtResource("17_pinchos")]
+position = Vector2(13474.699, 980.5421)
+
+[node name="PinchosPrueba70" parent="." unique_id=1007387652 instance=ExtResource("17_pinchos")]
+position = Vector2(13638.245, 981.1001)
+
+[node name="HerramientaNivel" parent="." unique_id=700655792 instance=ExtResource("25_dr8ev")]
+
+[node name="PlatDoble9" type="StaticBody2D" parent="." unique_id=883012593]
+position = Vector2(13119, 707)
+
+[node name="PlatDoble1Visual" type="Polygon2D" parent="PlatDoble9" unique_id=1604285621]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="PlatDoble1Collision" type="CollisionShape2D" parent="PlatDoble9" unique_id=1156499173]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="PlatDoble10" type="StaticBody2D" parent="." unique_id=1090804611]
+position = Vector2(12329, 632)
+
+[node name="PlatDoble1Visual" type="Polygon2D" parent="PlatDoble10" unique_id=1540062206]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="PlatDoble1Collision" type="CollisionShape2D" parent="PlatDoble10" unique_id=1625932015]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="PlatDoble11" type="StaticBody2D" parent="." unique_id=1850220923]
+position = Vector2(11627, 706)
+
+[node name="PlatDoble1Visual" type="Polygon2D" parent="PlatDoble11" unique_id=1054370414]
+color = Color(0.32, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
+
+[node name="PlatDoble1Collision" type="CollisionShape2D" parent="PlatDoble11" unique_id=591283861]
+shape = SubResource("RectangleShape2D_plat")
+
+[node name="DialogoJoystick" parent="." unique_id=496226126 instance=ExtResource("8_dialog")]
+position = Vector2(8066, 761)
+dialogo_id = "n1-joystick"
 
 [editable path="EncounterA"]
 [editable path="EncounterB"]

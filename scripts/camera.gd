@@ -29,7 +29,7 @@ var _look_offset := Vector2.ZERO
 @export var tiempo_descenso_extendido := 0.7  # segundos planeando/bajando para anticipar abajo
 @export var offset_descenso_extendido := 420.0  # px que baja más la cámara en descenso prolongado
 @export var suavizado_descenso_extendido := 4.0  # qué tan suave entra/sale ese offset extra
-@export var look_stick_amplitud := 180.0  # px máximos que desplaza la cámara el stick derecho
+@export var look_stick_amplitud := 220.0  # px máximos que desplaza la cámara el stick derecho
 @export var look_stick_suavizado := 5.0  # suavizado del desplazamiento del stick derecho
 
 

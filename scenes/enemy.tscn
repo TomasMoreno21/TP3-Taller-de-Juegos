@@ -12,7 +12,7 @@ collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_enemy")
 sonido_golpe = ExtResource("3_sfx_golpe")
-volumen_golpe_db = -6.0
+volumen_golpe_db = -16.0
 
 [node name="Visual" type="Node2D" parent="." unique_id=1260952583]
 position = Vector2(0, -111.5)

@@ -11,6 +11,8 @@ var fragmentos := 0
 var nivel := 1
 var combos_desbloqueados: Dictionary = {}
 var barreras_abiertas: Dictionary = {}
+## Dialogos ya mostrados (persisten entre muertes; se limpian al resetear partida).
+var dialogos_vistos: Dictionary = {}
 ## Si no está vacía, las formas se desbloquean SOLO por esta lista (ignora el nivel).
 ## La setea cada nivel desde el editor (scripts/setup_progresion_nivel.gd).
 var formas_forzadas: Array = []
@@ -44,6 +46,7 @@ func reset() -> void:
 	nivel = 1
 	combos_desbloqueados = {}
 	barreras_abiertas = {}
+	dialogos_vistos = {}
 	formas_forzadas = []
 	fragmentos_cambiado.emit(0)
 	nivel_cambiado.emit(1)
@@ -84,3 +87,13 @@ func forma_desbloqueada(form_index: int) -> bool:
 
 func pasos_luz() -> int:
 	return maxi(nivel, 1)
+
+
+## True si el diálogo con ese id ya se mostró en esta partida (persiste entre muertes).
+func dialogo_visto(id: String) -> bool:
+	return dialogos_vistos.has(id)
+
+
+## Marca un diálogo como ya mostrado.
+func marcar_dialogo_visto(id: String) -> void:
+	dialogos_vistos[id] = true

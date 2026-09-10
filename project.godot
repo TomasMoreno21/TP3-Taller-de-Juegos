@@ -1,4 +1,4 @@
-﻿; Engine configuration file.
+; Engine configuration file.
 ; It's best edited using the editor UI and not directly,
 ; since the parameters that go here are not all obvious.
 ;
@@ -7,6 +7,8 @@
 ;   param=value ; assign values to parameters
 
 config_version=5
+
+"ï»¿config_version"=5
 
 [application]
 
@@ -189,4 +191,5 @@ toggle_herramienta={
 textures/canvas_textures/default_texture_filter=0
 rendering_device/driver.windows="d3d12"
 environment/defaults/default_clear_color=Color(0.4588, 0.498, 0.3804, 1)
-snap/snap_2d_transforms_to_pixel=false
+snap/snap_2d_transforms_to_pixel=true
+snap/snap_2d_vertices_to_pixel=true

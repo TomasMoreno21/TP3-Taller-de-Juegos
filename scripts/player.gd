@@ -1,4 +1,4 @@
-extends CharacterBody2D
+﻿extends CharacterBody2D
 
 signal form_changed(form_name: String)
 signal forma_selectada_cambiada(forma_index: int)
@@ -60,6 +60,10 @@ var blocking := false
 var _attacking := false
 var _attack_timer := 0.0
 var _hit_applied := false
+var _whiff_applied := false
+var _whiff_grace := 0.0
+const WHIFF_RECOVERY_MULT := 1.25
+const WHIFF_GRACE_TIME := 0.06
 var _current_attack_damage := 0
 var _current_attack_knockback := 0.0
 var _current_attack_type := "light"
@@ -76,6 +80,9 @@ var _combo_timer := 0.0
 var _racha := 0
 var _racha_timer := 0.0
 var _buffered_attack := ""
+var _attack_anim_timer := 0.0
+var _attack_anim_actual := "attack1"
+var _attack_anim_cola: Array[String] = []
 var _was_blocking := false
 var _was_on_floor := false
 var _fall_impact := 0.0
@@ -241,7 +248,7 @@ func _physics_process(delta: float) -> void:
 		_murci_glide_t = 0.0
 		if gliding:
 			g *= GLIDE_FALL_MULTIPLIER
-	# Apex hang escalonado: núcleo del ápice muy flotante, banda cercana suave.
+	# Apex hang escalonado: nÃºcleo del Ã¡pice muy flotante, banda cercana suave.
 	if absf(velocity.y) < APEX_CORE_THRESHOLD:
 		g *= APEX_CORE_MULT
 	elif absf(velocity.y) < APEX_THRESHOLD:
@@ -473,16 +480,20 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 					_play_attack_fx("light", _light_step)
 					_punch_sprite(0.15)
 					attack_performed.emit("light", _light_step)
+					if current_form == Form.HUMAN:
+						_iniciar_anim_ataque("attack1")
 		"heavy":
 			_current_attack_type = "heavy"
 			if airborne:
 				_light_step = 0
+				_cancelar_anim_ataque()
 				data.perform_jump_attack(self, true)
 				_play_attack_fx("heavy", 1)
 				_punch_sprite(0.3)
 				attack_performed.emit("heavy", _heavy_step)
 			else:
 				_light_step = 0
+				_cancelar_anim_ataque()
 				var combo := _detectar_combo("heavy")
 				if not combo.is_empty():
 					_ejecutar_finisher(data, combo)
@@ -493,6 +504,8 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 					_play_attack_fx("heavy", _heavy_step)
 					_punch_sprite(0.3)
 					attack_performed.emit("heavy", _heavy_step)
+					if current_form == Form.HUMAN:
+						_iniciar_anim_ataque("attack2")
 		"special":
 			if _try_interact():
 				return
@@ -500,6 +513,7 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 				return
 			_light_step = 0
 			_heavy_step = 0
+			_cancelar_anim_ataque()
 			var combo := _detectar_combo("special")
 			if not combo.is_empty():
 				_ejecutar_finisher(data, combo)
@@ -511,6 +525,8 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 				_play_attack_fx("special", 1)
 				_punch_sprite(0.4)
 				attack_performed.emit("special", 1)
+				if current_form == Form.HUMAN:
+					_iniciar_anim_ataque("attack_full")
 
 
 func _detectar_combo(tipo: String) -> Dictionary:
@@ -540,6 +556,7 @@ func _ejecutar_finisher(data: Forma, combo: Dictionary) -> void:
 	_current_attack_type = "combo"
 	_light_step = 0
 	_heavy_step = 0
+	_cancelar_anim_ataque()
 	_combo_timer = 0.0
 	data.perform_combo(self, combo)
 	_play_attack_fx("combo", 1)
@@ -557,9 +574,11 @@ func _ejecutar_finisher(data: Forma, combo: Dictionary) -> void:
 
 func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: float = 0.0) -> void:
 	_attacking = true
+	_whiff_applied = false
+	_whiff_grace = 0.0
 	var data: Forma = forms[current_form]
 	_attack_timer = _recovery_for(_current_attack_type) * data.mult_recuperacion
-	# Imán suave al enemigo más cercano si estás un poco lejos
+	# ImÃ¡n suave al enemigo mÃ¡s cercano si estÃ¡s un poco lejos
 	var objetivo := _buscar_enemigo_homing(200.0)
 	if objetivo != null:
 		var dist := global_position.distance_to(objetivo.global_position)
@@ -633,6 +652,11 @@ func _check_attack_hits() -> void:
 			if objetivos.size() >= 2:
 				break
 	if objetivos.is_empty():
+		if not _whiff_applied and (_current_attack_type == "light" or _current_attack_type == "heavy"):
+			_whiff_grace += get_physics_process_delta_time()
+			if _whiff_grace >= WHIFF_GRACE_TIME:
+				_whiff_applied = true
+				_attack_timer *= WHIFF_RECOVERY_MULT
 		return
 	var mult_tercer := 1.0
 	if _current_attack_type == "light" and _light_step == forms[current_form].light_combo_steps:
@@ -651,6 +675,8 @@ func _check_attack_hits() -> void:
 			_aplicar_knockback(body)
 		elif body.has_method("take_damage"):
 			body.take_damage(dmg, kb, facing)
+			if _current_attack_type == "combo" and "health" in body and body.health <= 0:
+				_freeze_slowmo(0.3, 0.4)
 		_spark_golpe(body, idx)
 	var sonido_golpe: AudioStream = sonido_golpe_liviano if _current_attack_type == "light" else sonido_golpe_pesado
 	var audio_mgr := get_node_or_null("/root/AudioManager")
@@ -689,6 +715,12 @@ func _freeze_hitstop(duracion: float = HITSTOP_DANO) -> void:
 	var hs = get_node_or_null("/root/Hitstop")
 	if hs != null and hs.has_method("freeze"):
 		hs.freeze(duracion)
+
+
+func _freeze_slowmo(duracion: float, escala: float) -> void:
+	var hs = get_node_or_null("/root/Hitstop")
+	if hs != null and hs.has_method("slowmo"):
+		hs.slowmo(duracion, escala)
 
 
 func _zoom_punch_por_tipo() -> void:
@@ -745,7 +777,7 @@ func _spark_golpe(body: Node2D, idx: int) -> void:
 
 
 func _play_attack_fx(tipo: String, _step: int) -> void:
-	# El feedback visual del golpe (Polygon2D) se quitó en el rebuild; sin nodo, no hay FX.
+	# El feedback visual del golpe (Polygon2D) se quitÃ³ en el rebuild; sin nodo, no hay FX.
 	pass
 
 
@@ -873,8 +905,8 @@ func _handle_energia(delta: float) -> void:
 
 
 func _handle_seleccion_forma() -> void:
-	# Solo Q (form_next) cicla la preselección del flujo viejo.
-	# W/S/↑↓ ya no tocan la selección: causaban transformaciones accidentales.
+	# Solo Q (form_next) cicla la preselecciÃ³n del flujo viejo.
+	# W/S/â†‘â†“ ya no tocan la selecciÃ³n: causaban transformaciones accidentales.
 	if Input.is_action_just_pressed("form_next"):
 		_avanzar_seleccion()
 
@@ -911,7 +943,7 @@ func _avanzar_seleccion() -> bool:
 
 
 func _handle_formas_cruceta() -> void:
-	# La cruceta transforma directo: ↑ Murciélago, → Lobo, ← Oso, ↓ Humano.
+	# La cruceta transforma directo: â†‘ MurciÃ©lago, â†’ Lobo, â† Oso, â†“ Humano.
 	var objetivo := -1
 	if Input.is_action_just_pressed("forma_arriba"):
 		objetivo = Form.MURCIELAGO
@@ -929,7 +961,7 @@ func _handle_formas_cruceta() -> void:
 
 
 func _handle_forma_ciclo() -> void:
-	# RT/E: cicla la preselección hacia adelante; LT: hacia atrás.
+	# RT/E: cicla la preselecciÃ³n hacia adelante; LT: hacia atrÃ¡s.
 	# RB/T es quien confirma y transforma en la preseleccionada.
 	if Input.is_action_just_pressed("forma_swap"):
 		if _avanzar_seleccion():
@@ -981,6 +1013,7 @@ func _transformar(nueva: int, forzar: bool = false) -> void:
 	forms[current_form].reset_form_state()
 	current_form = nueva
 	forma_seleccionada = nueva
+	_cancelar_anim_ataque()
 	var data: Forma = forms[current_form]
 	data.reset_form_state()
 	_apply_form()
@@ -1078,8 +1111,49 @@ func _update_tint() -> void:
 	visual.self_modulate = _tinte_forma(data.color)
 
 
+func _duracion_anim(anim: String) -> float:
+	var sf: SpriteFrames = visual.sprite_frames
+	if sf != null and sf.has_animation(anim):
+		return float(sf.get_frame_count(anim)) / maxf(sf.get_animation_speed(anim), 0.01)
+	return 0.5
+
+
+func _iniciar_anim_ataque(anim: String) -> void:
+	_attack_anim_cola.clear()
+	_attack_anim_cola.append(anim)
+	_attack_anim_actual = anim
+	_attack_anim_timer = _duracion_anim(anim)
+	visual.play(anim)
+
+
+func _cancelar_anim_ataque() -> void:
+	_attack_anim_cola.clear()
+	_attack_anim_timer = 0.0
+	_attack_anim_actual = "attack1"
+
+
 func _update_animacion() -> void:
 	_aplicar_facing()
+# Ataques del Humano con cola propia: cada grupo de frames completa su
+	# duración aunque la recuperación del golpe ya haya terminado.
+	# Light -> attack1 (1-3), Heavy -> attack2 (4-6), Special -> attack_full (1-6).
+	if current_form == Form.HUMAN and _attack_anim_cola.size() > 0:
+		_attack_anim_timer -= get_physics_process_delta_time()
+		if _attack_anim_timer <= 0.0:
+			if _attack_anim_cola.size() > 1:
+				_attack_anim_cola.pop_front()
+				_attack_anim_actual = _attack_anim_cola[0]
+				_attack_anim_timer = _duracion_anim(_attack_anim_actual)
+				visual.play(_attack_anim_actual)
+			else:
+				_attack_anim_cola.clear()
+				_attack_anim_timer = 0.0
+		if _attack_anim_cola.size() > 0:
+			var anim := _attack_anim_cola[0]
+			if visual.animation != anim:
+				visual.play(anim)
+			visual.speed_scale = 1.0
+		return
 	if _trepando:
 		if visual.animation != "climb":
 			visual.play("climb")

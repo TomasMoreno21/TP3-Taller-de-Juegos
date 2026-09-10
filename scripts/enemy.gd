@@ -372,10 +372,16 @@ func _morir() -> void:
 	if player != null and player.has_method("on_enemy_killed"):
 		(player as Node2D).on_enemy_killed()
 	died.emit()
+	_freeze_hitstop(0.09)
+	if DisplayServer.get_name() != "headless":
+		var cam := get_viewport().get_camera_2d()
+		if cam != null and cam.has_method("punch"):
+			cam.punch(1.05)
 	_liberar_only()
 	set_physics_process(false)
 	_colision(false)
 	_burst_particulas()
+	visual.modulate = Color(4, 4, 4, 1)
 	var tw := create_tween()
 	tw.tween_property(visual, "modulate:a", 0.0, 0.3)
 	tw.parallel().tween_property(visual, "rotation", visual.rotation + deg_to_rad(8) * _dir, 0.3)

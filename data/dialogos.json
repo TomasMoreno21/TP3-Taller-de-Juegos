@@ -24,8 +24,8 @@
 			"Quieren apoderarse del bosque y toda la fuerza espiritual del mismo.",
 			"No entiendo por qué se llevaron a tu hijo, pero estoy seguro que no por buenos motivos.",
 			"Para derrotar a esos malditos, voy a prestarte de nuestro poder.",
-			"Movete con ← → (o A/D) y saltá con Espacio.",
-			"J es tu golpe rápido, K tu golpe fuerte."
+			"Movete con con joystick izquierdo y saltá con A.",
+			"X es tu golpe rápido, Y tu golpe fuerte."
 		]
 	},
 	"n1_combate": {
@@ -45,7 +45,7 @@
 		"una_vez": false,
 		"lineas": [
 			"Este paso es muy angosto para tu forma humana.",
-			"Ya podés convocar al Lobo: presioná T para transformarte.",
+			"Ya podés convocar al Lobo: presioná RT para seleccionar la forma, RB para transformarte.",
 			"Es más bajo, más ágil, y hasta puede saltar dos veces seguidas en el aire.",
 			"Ojo: la transformación consume energía. Si se agota, volvés a ser Humano."
 		]
@@ -72,5 +72,70 @@
 		"lineas": [
 			"Ya estamos cerca de su guarida..."
 		]
+	},
+	"n1-joystick": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": [
+			"No vemos el lugar seguro desde acá, usa el joystick derecho para mover la cámara."
+		]
+	},
+	"p1_intro": {
+		"hablante": "Amuleto",
+		"modo": "Automatico",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	},
+	"p1_enredadera": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	},
+	"p1_combate": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	},
+	"p1_combate2": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	},
+	"p1_combate3": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	},
+	"p1_plataformas": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	},
+	"p1_lobo": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	},
+	"p1_santuario": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
 	}
 }
