@@ -17,8 +17,11 @@ func _init() -> void:
 	heavy_size = Vector2(140, 100)
 	heavy_combo_steps = 2
 	special_damage = 22
+	special_size = Vector2(198, 126)
+	special_range = 156.0
+	special_knockback = 260.0
 	color = Color(0.42, 0.62, 0.36)
-	collider_size = Vector2(175, 300)
+	collider_size = Vector2(190, 318)
 	shake_strength = 5.0
 	turn_tilt = 9.0
 	hit_rotation = 7.0
@@ -30,11 +33,11 @@ func _init() -> void:
 	jump_h_speed_mult = 0.75
 	coyote_time = 0.16
 	jump_buffer_time = 0.18
-	melee_sticky = 700.0
+	melee_sticky = 0.0
 	combos = [
 		{"nombre": "Remate", "secuencia": ["light", "heavy"], "dano": 38, "knockback": 260.0, "tamano": Vector2(162, 114), "rango": 126.0},
 	]
 
 
 func perform_special(player: CharacterBody2D) -> void:
-	player.enable_melee(Vector2(198, 126), 156.0, special_damage, 260.0)
+	player.enable_melee(special_size, special_range, special_damage, special_knockback)

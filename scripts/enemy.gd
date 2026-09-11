@@ -13,6 +13,7 @@ const MAX_FALL_SPEED := 950.0
 @export var sonido_golpe: AudioStream
 @export var volumen_golpe_db := 0.0
 @export var perseguir_fuera_rango: bool = false  # los proyectiles se quedan donde spawnnean y atacan a rango
+@export var limite_caida := 6000.0
 
 const FRAMES_POR_TIPO := {
 	"cultista": preload("res://resources/enemigo1_frames.tres"),
@@ -32,6 +33,7 @@ var _stun_timer := 0.0
 var _windup_timer := 0.0
 var _lunge_timer := 0.0
 var _lunge_hit := false
+var _ultima_pos_valida := Vector2.ZERO
 
 @onready var visual: Node2D = $Visual
 @onready var poly: Polygon2D = $Visual/Poly
@@ -59,8 +61,9 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.windup_tiempo = 0.28
 			d.lunge_velocidad = 420.0
 			d.color = Color(0.55, 0.38, 0.3)
-			d.collider_size = Vector2(96, 320)
+			d.collider_size = Vector2(127, 380)
 			d.visual_scale = Vector2.ONE
+			d.offset_visual_x = 3.3
 			d.knockback_resist = 0.55
 		"arquero":
 			d.tipo_nombre = "Arquero"
@@ -73,8 +76,9 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.retrocede_dist = 170.0
 			d.proyectil_speed = 430.0
 			d.color = Color(0.42, 0.3, 0.5)
-			d.collider_size = Vector2(72, 340)
+			d.collider_size = Vector2(103, 410)
 			d.visual_scale = Vector2.ONE
+			d.offset_visual_x = 5.3
 			d.knockback_resist = 0.45
 		"chaman":
 			d.tipo_nombre = "Chamán"
@@ -88,7 +92,10 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.retrocede_dist = 190.0
 			d.proyectil_speed = 470.0
 			d.color = Color(0.4, 0.34, 0.24)
-			d.collider_size = Vector2(84, 220)
+			d.collider_size = Vector2(102, 330)
+			d.collider_pies_y = 65.4
+			d.offset_visual_x = 0.0
+			d.visual_scale = Vector2.ONE
 			d.knockback_resist = 0.6
 	return d
 
@@ -113,12 +120,15 @@ func _ready() -> void:
 		if collide_shape != null:
 			collide_shape.shape = collide_shape.shape.duplicate()
 		if collide_shape != null and enemy_data.collider_size != Vector2.ZERO:
-			# Ancla la base (pies) en el punto Y del collider original y mantiene
-			# el CENTRO X, evitando que la hitbox quede corrida al cambiar el tamaño.
+			# El CollisionShape2D dibuja el RectangleShape2D CENTRADO en su position:
+			# dejar position.x en 0 centra la hitbox sobre el origen del nodo (donde
+			# también se dibuja el sprite). Antes se sumaba -size.x/2 y la caja real
+			# quedaba desplazada un ancho completo hacia la izquierda.
 			var pies_offset: float = collide_shape.position.y + collide_shape.shape.size.y * 0.5
-			var centro_x: float = collide_shape.position.x + collide_shape.shape.size.x * 0.5
+			if enemy_data.collider_pies_y > 0.0:
+				pies_offset = enemy_data.collider_pies_y
 			collide_shape.shape.size = enemy_data.collider_size
-			collide_shape.position.x = centro_x - enemy_data.collider_size.x * 0.5
+			collide_shape.position.x = 0.0
 			collide_shape.position.y = pies_offset - enemy_data.collider_size.y * 0.5
 		if enemy_data.visual_scale != Vector2.ZERO and visual != null:
 			# Escala natural: el sprite se muestra a tamaño real y sus pies se alinean
@@ -133,6 +143,11 @@ func _ready() -> void:
 			if collide_shape != null and collide_shape.shape is RectangleShape2D:
 				pies_y = collide_shape.position.y + collide_shape.shape.size.y * 0.5
 			visual.position.y = pies_y - enemy_data.visual_scale.y * (animated.position.y + tex_h * 0.5)
+			# Corrige la asimetría del dibujo dentro de su lámina: si el centro visual
+			# del personaje no coincide con el centro de la textura, se corre el sprite
+			# para que la hitbox quede centrada sobre el personaje visible.
+			if visual.position.x == 0.0:
+				visual.position.x = -enemy_data.offset_visual_x
 	else:
 		health = 40
 
@@ -186,6 +201,21 @@ func _circulo_poligono(puntos: int) -> PackedVector2Array:
 
 
 func _physics_process(delta: float) -> void:
+	if health <= 0:
+		return
+	# Guardia anti-NaN: una colisión degenerada con el jugador (bordes exactos)
+	# puede volver no-finito el velocity/posición en move_and_slide. Si pasa,
+	# se restaura la última posición válida en vez de volar al infinito.
+	if not velocity.is_finite():
+		velocity = Vector2.ZERO
+	if not global_position.is_finite():
+		global_position = _ultima_pos_valida
+		velocity = Vector2.ZERO
+		return
+	_ultima_pos_valida = global_position
+	if global_position.y > limite_caida:
+		matar_por_caida()
+		return
 	_mirar_jugador()
 	if _telegraph_timer > 0.0:
 		_telegraph_timer -= delta
@@ -432,6 +462,14 @@ func _soltar_orbe_vida() -> void:
 func _liberar_only() -> void:
 	_activo = false
 	velocity = Vector2.ZERO
+
+
+## Mata al enemigo desde afuera (ej: oleada fuera de la arena).
+func matar_por_caida() -> void:
+	if health <= 0:
+		return
+	health = 0
+	_morir()
 
 
 func _burst_particulas() -> void:

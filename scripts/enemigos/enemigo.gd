@@ -12,6 +12,8 @@ extends Resource
 @export var shoot_range: float = 420.0
 @export var color: Color = Color(0.55, 0.38, 0.3)
 @export var collider_size: Vector2 = Vector2(30, 60)
+@export var collider_pies_y: float = 0.0   # Y de la base de los pies del collider (0 = usar la del tscn)
+@export var offset_visual_x: float = 0.0   # corrimiento del centro visual del personaje dentro de su sprite
 @export var visual_scale: Vector2 = Vector2.ZERO
 @export var knockback_resist: float = 0.3
 @export var stun_duracion: float = 0.15

@@ -50,6 +50,8 @@ func _physics_process(_delta: float) -> void:
 	# (así el escenario de combate es toda la pantalla aunque cambie el zoom).
 	if estado == Estado.RUNNING and paredes_en_borde_pantalla:
 		_actualizar_paredes_a_borde()
+		if estado == Estado.RUNNING:
+			_comprobar_limbos()
 
 
 # --- Público (tests / consola) ---
@@ -189,6 +191,19 @@ func _ola_resuelta() -> void:
 	if estado != Estado.RUNNING:
 		return
 	_siguiente_ola()
+
+
+## Anti soft-lock: si un enemigo queda fuera de la arena (cayó a un pozo),
+## se lo marca como muerto para que la ola pueda resolverse.
+func _comprobar_limbos() -> void:
+	var margen := 400.0
+	for e in _spawned:
+		if is_instance_valid(e) and e.health > 0 and e.global_position.y > _arena_base_y + margen:
+			e.matar_por_caida()
+	for grupo in _manuales:
+		for e in grupo:
+			if is_instance_valid(e) and e.health > 0 and e.global_position.y > _arena_base_y + margen:
+				e.matar_por_caida()
 
 
 func _total_olas() -> int:

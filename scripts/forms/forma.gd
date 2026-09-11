@@ -25,6 +25,10 @@ var _jumps_usados := 0
 
 # Ataque especial (L)
 @export var special_damage: int = 25
+@export var special_range: float = 150.0
+@export var special_size: Vector2 = Vector2(160, 90)
+@export var special_knockback: float = 240.0
+@export var heavy_knockback: float = 150.0
 @export var special_cooldown: float = 0.0        # espera entre especiales fuera de combate (0 = sin límite)
 @export var special_cooldown_combate: float = 0.0  # espera entre especiales en combate (0 = sin límite)
 
@@ -136,7 +140,7 @@ func perform_light(player: CharacterBody2D, step: int) -> void:
 
 
 func perform_heavy(player: CharacterBody2D, step: int) -> void:
-	player.enable_melee(heavy_size, heavy_range, heavy_damage_at(step), 150.0)
+	player.enable_melee(heavy_size, heavy_range, heavy_damage_at(step), heavy_knockback)
 
 
 func perform_special(_player: CharacterBody2D) -> void:

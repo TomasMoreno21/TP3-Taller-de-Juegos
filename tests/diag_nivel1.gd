@@ -46,9 +46,8 @@ func _init() -> void:
 	_check(total_enemigos == 11, "Nivel1: 11 cultistas en total (hay %d)" % total_enemigos)
 
 	# Enemigos de la misma ola no deben arrancar con colliders superpuestos
-	# (bug 27/08: 160px de separación vs 175px de ancho de collider -> depenetración
-	# violenta al activarse la colisión, eyectaba al jugador fuera del nivel).
-	const ANCHO_COLLIDER_ENEMIGO := 175.0
+	# (bug 27/08: colliders anchos causaban depenetración violenta).
+	const ANCHO_COLLIDER_ENEMIGO := 100.0
 	var solapes := 0
 	for hijo in nivel.get_children():
 		if String(hijo.name).begins_with("Encounter"):

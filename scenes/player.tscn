@@ -7,7 +7,7 @@
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/transformacion.mp3" id="5_sfx_transform"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(152, 277)
+size = Vector2(190, 318)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
 size = Vector2(43.363636, 150.32259)

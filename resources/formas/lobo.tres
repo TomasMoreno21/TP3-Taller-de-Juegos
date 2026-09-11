@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="Lobo" format=3 uid="uid://c3x8k207w4q1v"]
+
+[ext_resource type="Script" uid="uid://b77n0o6ygrbux" path="res://scripts/forms/lobo.gd" id="1_forma"]
+
+[resource]
+script = ExtResource("1_forma")
+attack_range = 205.0
+attack_size = Vector2(140, 85)
+heavy_range = 105.0
+heavy_size = Vector2(150, 95)
+special_range = 180.0
+special_size = Vector2(210, 120)
+special_knockback = 220.0
+combos = Array[Dictionary]([{
+"dano": 26,
+"knockback": 240.0,
+"nombre": "Mordida",
+"rango": 102.0,
+"secuencia": ["light", "heavy"],
+"tamano": Vector2(180, 102)
+}])

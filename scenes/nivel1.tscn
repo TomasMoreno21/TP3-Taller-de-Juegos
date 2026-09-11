@@ -49,7 +49,7 @@ acentos = Array[AudioStream]([ExtResource("22_amb_buho"), ExtResource("23_amb_lo
 acento_volumen_db = -2.0
 
 [node name="Player" parent="." unique_id=1763988589 instance=ExtResource("1_player")]
-position = Vector2(6808, 816)
+position = Vector2(-248, 800)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
 script = ExtResource("2_cam")
@@ -243,7 +243,7 @@ position = Vector2(23578, 698)
 position = Vector2(23583, 612)
 
 [node name="Rompible3" parent="." unique_id=1602575286 instance=ExtResource("6_romp")]
-position = Vector2(5560, 930)
+position = Vector2(5560, 936.5)
 
 [node name="Pickup2" parent="." unique_id=937879990 instance=ExtResource("7_pick")]
 position = Vector2(5860, 895)
@@ -378,7 +378,7 @@ polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 shape = SubResource("RectangleShape2D_plat")
 
 [node name="Rompible7" parent="." unique_id=601104054 instance=ExtResource("6_romp")]
-position = Vector2(9149, 937)
+position = Vector2(9149, 936.5)
 
 [node name="Pickup5" parent="." unique_id=2100000023 instance=ExtResource("7_pick")]
 position = Vector2(21862, 886)

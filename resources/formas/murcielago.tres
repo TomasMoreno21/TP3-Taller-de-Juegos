@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Murcielago" load_steps=2 format=3 uid="uid://h6v2q9c3d7w5n"]
+
+[ext_resource type="Script" uid="uid://2a5tlfr567ar" path="res://scripts/forms/murcielago.gd" id="1_forma"]
+
+[resource]
+script = ExtResource("1_forma")
+attack_size = Vector2(110, 70)
+attack_range = 90.0
+heavy_size = Vector2(130, 85)
+heavy_range = 110.0
+combos = [{
+"dano": 32,
+"knockback": 240.0,
+"nombre": "Ala Cortante",
+"rango": 114.0,
+"secuencia": ["light", "heavy"],
+"tamano": Vector2(192, 102)
+}]

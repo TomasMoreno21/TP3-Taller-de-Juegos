@@ -6,10 +6,10 @@ extends Node2D
 
 const PlayerScript := preload("res://scripts/player.gd")
 const SCRIPTS_FORMAS := [
-	preload("res://scripts/forms/humano.gd"),
-	preload("res://scripts/forms/lobo.gd"),
-	preload("res://scripts/forms/oso.gd"),
-	preload("res://scripts/forms/murcielago.gd"),
+	preload("res://resources/formas/humano.tres"),
+	preload("res://resources/formas/lobo.tres"),
+	preload("res://resources/formas/oso.tres"),
+	preload("res://resources/formas/murcielago.tres"),
 ]
 
 const TAMANO_VIEWPORT := Vector2(1920.0, 1080.0)
@@ -134,7 +134,7 @@ func _draw_grid(area: Rect2) -> void:
 func _draw_saltos() -> void:
 	if _cache_formas.is_empty():
 		for s in SCRIPTS_FORMAS:
-			_cache_formas.append(s.new())
+			_cache_formas.append(s)
 	var origen := Vector2.ZERO
 	if seguir_player:
 		var jugador := _find_player() as Node2D

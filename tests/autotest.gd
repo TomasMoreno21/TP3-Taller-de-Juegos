@@ -173,7 +173,7 @@ func _init() -> void:
 	var en_lobo := preload("res://scenes/enemy.tscn").instantiate()
 	en_lobo.tipo = "cultista"
 	_scene.add_child(en_lobo)
-	en_lobo.global_position = _player.global_position + Vector2(60, 0)
+	en_lobo.global_position = _player.global_position + Vector2(250, 0)
 	await _wait_frames(30)
 	_player.facing = 1
 	_player.velocity = Vector2.ZERO
@@ -195,18 +195,23 @@ func _init() -> void:
 	var en2 := preload("res://scenes/enemy.tscn").instantiate()
 	en2.tipo = "cultista"
 	_scene.add_child(en2)
-	# Colocar a ambos en piso abierto y esperar que reposen: si el loop arranca
-	# con la pareja en plena caída, el knockback los separa en X y aterrizan en
-	# niveles distintos (plataforma vs suelo) → el golpe deja de conectar.
+	# Punto plano conocido de main. Ubicar al ENEMIGO en la MISMA base/fila que el
+	# player (no en la cornisa del tilemap): si queda en la cornisa, el lunge lo
+	# tira escalón abajo y choca contra el player en el aire → colisión
+	# degenerada → posiciones NaN (bug 11/09 con colliders proporcionados).
+	# 1) Se deja reposar al player en el piso plano y se encara al enemigo a su MISMA y,
+	# 2) se espera que ambos reposen juntos ANTES de pelear.
 	_player.global_position = Vector2(-520, 780)
+	await _wait_frames(40)  # el player reposa en el piso (y≈861)
 	en2.global_position = _player.global_position + Vector2(60, 0)
-	await _wait_frames(40)
+	_player.facing = 1
+	await _wait_frames(40)  # el enemigo reposa junto al player en el mismo piso
 	_player.facing = 1
 	_player.velocity = Vector2.ZERO
 	await physics_frame
 	var energia_antes: float = _player.energia
 	for i in range(10):
-		if not is_instance_valid(en2):
+		if not is_instance_valid(en2) or en2.health <= 0:
 			break
 		_player.global_position = en2.global_position - Vector2(20, 0)
 		_player.facing = 1
@@ -404,16 +409,16 @@ func _wait_frames(n: int) -> void:
 
 
 func _esperar_recuperacion(ataque: String) -> void:
-	var frames := 20
+	var frames := 16
 	match ataque:
 		"light":
-			frames = 20
+			frames = 19
 		"heavy":
-			frames = 30
+			frames = 36
 		"special":
-			frames = 44
+			frames = 58
 		"combo":
-			frames = 52
+			frames = 66
 	await _wait_frames(frames)
 
 

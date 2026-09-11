@@ -18,7 +18,7 @@ Instrucciones de trabajo para el asistente en este proyecto.
 
 ## Estado clave del proyecto
 - **Perspectiva:** side-scroller 2D, cámara zoom 1, resolución 1920×1080 (1 px del mundo = 1 px en pantalla). El nodo raíz del player NO tiene `scale`; la escala visual va en el `AnimatedSprite2D`.
-- **Formas:** `Form` enum en `player.gd` — Humano(0), Lobo(1), Oso(2), Murciélago(3). Se cargan desde `scripts/forms/*.gd` vía `FORM_SCRIPTS` (NO hay `.tres` de formas). Vida compartida (`VIDA_MAX=100`); energía de transformación drena 8/s y a 0 vuelve a Humano.
+- **Formas:** `Form` enum en `player.gd` — Humano(0), Lobo(1), Oso(2), Murciélago(3). Se cargan desde `resources/formas/*.tres` (Resource con script de `scripts/forms/*.gd`) vía `const FORMAS`; los `.tres` aportan datos editables en el Inspector: geometría de golpe (`attack/heavy/special` + knockbacks) y los `combos`. El resto de stats (velocidad, saltos, física, collider) vive en el `_init()` de cada `.gd`. Vida compartida (`VIDA_MAX=100`); energía de transformación drena 8/s y a 0 vuelve a Humano.
 - **Progresión:** autoload `Progresion`, 3 fragmentos por nivel; `forma_desbloqueada = form_index < nivel` (2→Lobo, 3→Oso, 4→Murciélago); 1 combo por forma desbloqueable al subir de nivel.
 - **Enemigos:** cultista/arquero/chamán, stats en `enemy.gd::config_por_tipo(tipo)` (NO hay `.tres`). Sprites en `resources/enemigo{1,2}_frames.tres`.
 - **UIX ya implementada (15/08):** menú principal (`main_menu.tscn`, main scene), pausa (`pause.tscn`), controles (`controls.tscn`), HUD (`hud.tscn`).
@@ -27,9 +27,9 @@ Instrucciones de trabajo para el asistente en este proyecto.
 ## Verificación (siempre al terminar un cambio)
 Usar el ejecutable de Godot (ajustá la ruta si cambió):
 ```
-& "C:\Users\UNRaf_Libre\Downloads\Godot_v4.7.1-stable_win64.exe" --headless --import
-& "C:\Users\UNRaf_Libre\Downloads\Godot_v4.7.1-stable_win64.exe" --headless --path . --quit-after 5
-& "C:\Users\UNRaf_Libre\Downloads\Godot_v4.7.1-stable_win64.exe" --headless --path . --script res://tests/autotest.gd
+& "C:\Users\Usuario\Downloads\Godot_v4.7-stable_win64_console.exe" --headless --import
+& "C:\Users\Usuario\Downloads\Godot_v4.7-stable_win64_console.exe" --headless --path . --quit-after 5
+& "C:\Users\Usuario\Downloads\Godot_v4.7-stable_win64_console.exe" --headless --path . --script res://tests/autotest.gd
 ```
 - Import limpio → smoke limpio → autotest **FALLOS = 0** (y `diag_formas` / `diag_hud` / `diag_feedback` / `diag_golpe` cuando el cambio aplique).
 - Reportame el resultado de la verificación al terminar.

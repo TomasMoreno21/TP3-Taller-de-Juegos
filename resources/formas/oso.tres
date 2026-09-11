@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="Oso" load_steps=2 format=3 uid="uid://m5t9p4n8b6r2s"]
+
+[ext_resource type="Script" uid="uid://d0remsxk01l00" path="res://scripts/forms/oso.gd" id="1_forma"]
+
+[resource]
+script = ExtResource("1_forma")
+attack_size = Vector2(168, 132)
+attack_range = 120.0
+heavy_size = Vector2(216, 156)
+heavy_range = 156.0
+heavy_knockback = 220.0
+special_size = Vector2(390, 210)
+special_range = 234.0
+special_knockback = 320.0
+combos = [{
+"dano": 48,
+"knockback": 360.0,
+"nombre": "Garra",
+"rango": 198.0,
+"secuencia": ["light", "heavy"],
+"tamano": Vector2(288, 186)
+}]

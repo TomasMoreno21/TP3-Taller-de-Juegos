@@ -36,7 +36,7 @@ nivel_minimo = 4
 formas_forzadas = Array[int]([0, 1, 3])
 
 [node name="Player" parent="." unique_id=1763988589 instance=ExtResource("2_player")]
-position = Vector2(5694, 3475)
+position = Vector2(6408, 5348)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
 position = Vector2(2, 8)

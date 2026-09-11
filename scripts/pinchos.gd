@@ -10,6 +10,7 @@ extends Area2D
 @export var color_estaca := Color(0.63, 0.44, 0.24)  # cuerpo de cada estaca
 @export var enterrado := 36.0    # tramo que queda DENTRO del tile (tapado por el tilemap)
 @export var z_index_detras := -1 # el nodo se dibuja detrás del tilemap (asoman las puntas)
+@export var fraccion_zona_dano := 0.4  # qué porción del alto VISIBLE mata (el resto es decorativo)
 
 var _kill_zone_size := Vector2.ZERO
 var _hit_cd := 0.0
@@ -49,7 +50,9 @@ func _cuerpo_en_zona(body: Node2D) -> bool:
 	else:
 		return false
 	var rect_body := Rect2(body.global_position + csc.position - s * 0.5, s)
-	var alto_zona := _kill_zone_size.y + 46.0
+	# La zona de daño es solo la puntas SUPERIORES del alto visible (fair: tocar
+	# el tallo/palo no mata). Antes cubría 46px extra de aire por encima.
+	var alto_zona := _kill_zone_size.y * fraccion_zona_dano
 	var rect_zona := Rect2(
 		global_position.x - _kill_zone_size.x * 0.5,
 		global_position.y - alto_zona,
@@ -68,6 +71,7 @@ func _csc_de(body: Node2D) -> CollisionShape2D:
 
 func _dibujar() -> void:
 	_kill_zone_size = Vector2(maxf(cantidad * ancho_pincho, 10.0), maxf(alto, 10.0))
+	var alto_zona := _kill_zone_size.y * fraccion_zona_dano
 	# Collider visible/depurable (no se usa para detección, pero ayuda a ver el área)
 	var killzone: Node2D = get_node_or_null("KillZone")
 	if killzone != null:
@@ -76,9 +80,9 @@ func _dibujar() -> void:
 			c.queue_free()
 		var nuevo := CollisionShape2D.new()
 		var sh := RectangleShape2D.new()
-		sh.size = Vector2(_kill_zone_size.x, _kill_zone_size.y + 46.0)
+		sh.size = Vector2(_kill_zone_size.x, alto_zona)
 		nuevo.shape = sh
-		nuevo.position = Vector2(0, -(_kill_zone_size.y + 46.0) * 0.5)
+		nuevo.position = Vector2(0, -alto_zona * 0.5)
 		nuevo.name = "Collision"
 		killzone.add_child(nuevo)
 	# Empalizada de madera detrás del tilemap: la barra y el cuerpo de las

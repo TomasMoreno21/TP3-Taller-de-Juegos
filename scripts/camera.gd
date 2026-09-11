@@ -36,6 +36,11 @@ var _look_offset := Vector2.ZERO
 func _ready() -> void:
 	_modo = "seguir"
 	_zoom_objetivo = zoom
+	# Arranca ya encuadrada sobre el jugador (evita que al cargar el nivel la
+	# cámara muestre la esquina del mundo mientras el diálogo de introducción corre).
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player != null:
+		global_position = player.global_position + desplazamiento
 
 
 ## True mientras el jugador planea (murciélago) o cae de forma sostenida.

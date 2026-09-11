@@ -2,6 +2,84 @@
 
 ---
 
+## 🔴 Sesión 11/09 — Gameplay rebalanceado + fix colisiones + pulido visual
+
+> Pedido del usuario: lista de mejoras de gameplay (bloqueo de movimiento al atacar, hitboxes proporcionales, orbes grandes, rompibles a pecho, animaciones más rápidas, cámara al inicio, enemigo de oleada que desaparece, azul oscuro). Aprobado todo junto.
+
+### Bloqueo de movimiento al atacar (Plan A + C)
+- **`player.gd` + formas:** `dir` (eje X) se anula cuando `_attacking==true`; planeo del Murciélago (`is_gliding`) también bloqueado durante ataque. `melee_sticky` de todas las formas → 0. Sin homing push ni lunges (funciones eliminadas).
+- **Recuperaciones bajadas** para compensar el bloqueo: LIGHT 0.275→0.22 / HEAVY 0.5→0.42 (SPECIAL 0.75 / COMBO 0.875 sin cambios).
+
+### Colliders del jugador cubriendo el sprite completo (usuario, 11/09)
+- **Bug reportado:** en juego, la colisión quedaba más chica que el sprite — las piernas del Humano traspasaban plataformas/piso porque no tenían hitbox.
+- **Medición:** los sprites (escala visual 1.0) llenan todo el canvas (sin padding de sombra): Humano ~187×303, Lobo correr 355×152 / quieto 355×218, Oso ~466×309, Murciélago ~131×118.
+- **Fórmula:** `_apply_form` usa `collision_shape.position.y = 142.5 - h*0.5` y `visual.position.y = 150 - h*0.5`; para que los pies del sprite calcen con la base del collider → `altura = alto_sprite + 15`.
+- **Valores nuevos (`collider_size` en cada `forms/*.gd`):** Humano 190×318, Lobo 360×233, Oso 470×324, Murciélago 135×133. También actualizado el `RectangleShape2D_body` de `player.tscn` (era 152×277, default del editor).
+- **Consecuencia asumida (usuario aprobó "sin modificar grietalobo"):** el gap de GrietaLobo (150-190) ahora NO deja pasar físicamente al Lobo (233 de alto); queda pendiente rediseñar la grieta en otra sesión. `diag_nivel1prueba.gd` solo verifica el gap escalar, sigue en 150-190, comentario actualizado.
+- **Verificación:** import limpio, smoke limpio, autotest **FALLOS = 0** (mejor que los 1-2 flaky previos; en esta corrida pasó incluso el special del murciélago).
+
+### Girar durante el ataque sin moverse (usuario, 11/09)
+- **Pedido:** al pegar, poder girar de lado (cambiar `facing`) pero sin desplazarse.
+- **Cambio en `player.gd`:** el input de movimiento ahora se lee en `cmd_axis`; si `_attacking`, solo se actualiza `facing` (si `cmd_axis != 0.0`) y `dir` queda en 0 → el personaje gira en el lugar pero no se mueve. El `attack_area` conserva la posición del facing del momento del golpe (no se re-posiciona a mitad de recuperación).
+- **Verificación:** import limpio, smoke limpio, autotest **FALLOS = 0**.
+
+### Ritmo del combate más pausado y animaciones sincronizadas (usuario, 11/09)
+- **Pedido:** combate "un poquito más pausado" + sincronizar animaciones de ataque con las duraciones.
+- **Valores elegidos por usuario (opción "Moderado"):** `RECOVERY_LIGHT=0.28`, `HEAVY=0.52`, `SPECIAL=0.92`, `COMBO=1.05` (antes 0.22/0.42/0.75/0.875).
+- **Sincronización:** cada anim de ataque del Humano ahora dura exactamente su recuperación. En `_iniciar_anim_ataque()` se calcula `_attack_anim_speed_scale = duracion_natural / recovery` y se aplica a `visual.speed_scale`; `_attack_anim_timer = _attack_timer`. Los fps del `.tres` (`jugador_frames.tres`) quedan como base editable (la distorsión depende del recovery, no del recurso).
+- **Combo "Remate"** ahora reproduce `attack_full` (secuencia 1-6) en vez de `attack1`, para que los 6 frames llenen el recovery de 1.05s (con 3 frames se veía cámara lenta).
+- **Feedback:** whiff sigue multiplicando la recuperación (`WHIFF_RECOVERY_MULT`); el recovery que se estira después del inicio del ataque queda cubierto por la cola de animación existente.
+- **Verificación:** import limpio, smoke limpio, autotest **FALLOS = 0**.
+
+### Hitboxes proporcionales (Plan B)
+- **Formas:** humano 110×190, lobo 150×140, oso 190×215, murciélago 85×70 (`collider_size` en cada `forms/*.gd`).
+- **Enemigos** (`config_por_tipo`): cultista 100×130, arquero 90×155, chamán 90×170 (antes todos compartían un tamaño genérico).
+
+### Hitboxes de ataque editables desde el Inspector (usuario, 11/09)
+- **Pedido ("Exponer todo al Inspector", alcance "Solo hitboxes"):** la geometría de las hitboxes de ataque vivía hardcodeada en `forma.gd`/`forms/*.gd` y en los dicts de `combos` → el usuario no podía ajustarla desde el editor.
+- **Solución:** renacen `resources/formas/*.tres` (Resource con script de la forma). Ahora aportan datos reales y editables en el Inspector:
+  - `forma.gd`: `@export special_range`, `special_size`, `special_knockback`, `heavy_knockback` (antes literales). `perform_heavy()` usa `heavy_knockback`.
+  - `humano.gd`/`lobo.gd`/`oso.gd`: `perform_special()` usa `special_*` export (oso tenía `enable_melee(Vector2(390,210), 234.0, ..., 320.0)` inline; queda en sus exports + `.tres`). El especial del Murciélago es proyectil (`fire_projectile()`), así que NO lleva special geometry.
+  - `player.gd`: `const FORMAS` precarga los `.tres` (ya no `script.new()`); `herramienta_nivel.gd` idem (`SCRIPTS_FORMAS`, sin `.new()`).
+- **Formato del `.tres`:** `[gd_resource ... script_class="Humano"]` + `[ext_resource]` del script + `[resource]` con SOLO los valores de golpe (attack/heavy/special + knockbacks + `combos`). El resto del balance sigue en el `_init()` del `.gd` — no hay duplicación.
+- **Verificación:** import limpio, smoke limpio, autotest **FALLOS = 0**; `diag_formas` sigue con los 2 fallos baseline ("Lobo salta más alto", "Murciélago planea en el aire") — sin regresión.
+
+### Hitbox de enemigos acorde al sprite (usuario, 11/09)
+- **Problema:** en el Plan B de esta sesión los colliders de enemigos habían quedado chicos (cultista 100×130, arquero 90×155, chamán 90×170) frente a sprites a escala natural mucho más grandes → la hitbox cubría ~1/3 del cuerpo visible.
+- **Tamaños reales medidos (`Sprites/Enemigos/`):** gordo 127×380 (cultista), flaco 103×410 (arquero), chamán = polígono ~102×330.
+- **Fix (`enemy.gd::config_por_tipo`):** colliders = talla del sprite: cultista **127×380**, arquero **103×410**, chamán **102×330**. El chamán no usa sprite: su `Visual` conserva scale del tscn (3.64,5.89) y su base real queda en y≈65.4, así que `enemigo.gd` gana `@export collider_pies_y` (0 = usar base del tscn) y `enemy.gd::_ready` respeta ese offset para anclar los pies del collider.
+- **Verificación:** import limpio, smoke limpio, autotest **FALLOS = 0**; `diag_nivel1` baja de 6 a 3 fallos (rompibles/pickups/diálogos, conteos preexistentes de la escena, ajenos al collider) y el frag de enemigos (11 cultistas) pasa; `diag_nivel1prueba` sin solapes (0).
+
+### Recuperación de posición anti-NaN (Plan D)
+- **`enemy.gd`:** nuevo `var _ultima_pos_valida` + guard al inicio de `_physics_process`: si `velocity` o `global_position` no son finitos (colisión degenerada), restaura posición y zero-ea velocidad. Preventivo contra la cascada de NaN que rompía melee/rompibles/pickups en cornisas del TileMap.
+- **`enemy.gd`:** `@export limite_caida = 6000.0`, check `y > limite_caida` → `matar_por_caida()` (health=0 + `_morir()`), evita soft-lock si un enemigo cae al vacío.
+
+### Anti soft-lock de oleadas (Plan E)
+- **`encounter.gd`:** nuevo `_comprobar_limbos()` — enemigos vivos con `y > _arena_base_y + 400` → `matar_por_caida()`. Llamado en `_physics_process` tras `_actualizar_paredes_a_borde()`.
+- **`camera.gd`:** snap en `_ready()` a `player.global_position + desplazamiento` (evita cámara en esquina durante diálogo intro).
+
+### Pickups más grandes (Plan F)
+- `pickup.tscn` / `pickup_vida.tscn`: radio 11→26, rombo -10..10 → -20..20.
+
+### Animaciones más rápidas (Plan G)
+- `resources/jugador_frames.tres`: attack1 10→16 fps, attack2/attack_full 7→13 fps.
+
+### Pulido visual (Plan H)
+- **`player.gd`:** `TINT_ALPHA 0.45→1.0` con comentario: "La semi-transparencia 0.45 hacía que el self_modulate gris-azulado del Lobo x alfa diera azul oscuro." Ahora el tinte es `color.lerp(WHITE, 0.55)` a alpha 1.0.
+- **`pinchos.gd`:** `@export fraccion_zona_dano := 0.4`, killzone = `_kill_zone_size.y * fraccion` (antes +46px de aire sobre los pinchos).
+
+### Tests
+- **`autotest.gd`:** `_esperar_recuperacion` frames actualizados a 16/28/44/52; loop de "muere al recibir daño" con corte `en2.health <= 0` para evitar lecturas post-free.
+- **`diag_nivel1.gd` / `diag_nivel1prueba.gd`:** `ANCHO_COLLIDER_ENEMIGO = 100.0`; gap GrietaLobo 150–190 (con tallas actuales de colliders).
+- **`tests/diag_tinte.gd` NUEVO:** revisa por forma que `visual.modulate.a==1.0`, `self_modulate.a>0.9` y canales r,g,b>0.5 (luminoso). FALLOS=0.
+
+### Verificación
+- **Bug cornisa→NaN (root cause de 6 fallos):** en `main.tscn`, el TileMap tiene una cornisa en y≈789 en la zona de spawn del enemy. El test "muere al recibir daño" colocaba el enemigo en esa cornisa (x≈-438, y≈789) mientras el player reposaba en Ground (y≈861). El lunge de 420px tiraba al enemigo de la cornisa contra el player → colisión degenerada → NaN en `move_and_slide` → cascada de 6 fallos. **Fix:** guard anti-NaN en `enemy.gd` + reposicionar el enemigo en la misma base que el player (misma y, misma plataforma) en el test.
+- **Con fix:** FALLOS = 1 (solo el flaky conocido del murciélago special).
+- **diag_tinte:** FALLOS = 0 (el bug del "azul oscuro" no viene del tinte).
+- **Rompibles elevados (nivel1/2/main):** verificados con probe de raycast → todos están en sus posiciones correctas de diseño de nivel (sobre plataformas, techos, grietas). Solo los del piso plano (nivel1prueba y nivel1 spawn) fueron ajustados a y=936.5 en la sesión anterior.
+- Import limpio, smoke limpio.
+
 ## 🔴 Sesión 10/09 (3) — Sprites de ataque humano enlazados + enemigos a escala natural
 
 > Pedido del usuario: los sprites nuevos de la animación de ataque "no se ven" + integrar los sprites nuevos de enemigos (pendiente de la sesión previa).
@@ -75,7 +153,7 @@
 > Todo el código de juego fue **reconstruido desde cero** y alineado al **Documento de Concepto** (`Documento_de_Concepto_TP3_GRUPO9.pdf`, extraído con PyMuPDF a `temp/concepto.txt`). Las secciones de abajo con mecánicas viejas (enemigos/Encounter/Ben 10) son **historial**, no el estado actual.
 
 - **Título:** `config/name = "Spirit Keeper"` en `project.godot`.
-- **Formas (enum `Form` en player.gd):** `HUMAN(0)`, `LOBO(1)`, `OSO(2)`, `MURCIELAGO(3)`. Se cargan desde `scripts/forms/*.gd` vía `FORM_SCRIPTS` (preload + `.new()`) en `player.gd` — **NO hay `.tres` de formas** (se borraron el 13/08: eran envolturas vacías que solo apuntaban al script, los valores viven en el `_init()` de cada `.gd`).
+- **Formas (enum `Form` en player.gd):** `HUMAN(0)`, `LOBO(1)`, `OSO(2)`, `MURCIELAGO(3)`. **Desde 11/09 se cargan desde `resources/formas/{humano,lobo,oso,murcielago}.tres`** (Resource + script de `scripts/forms/*.gd`) vía `const FORMAS` en `player.gd` y `SCRIPTS_FORMAS` en `herramienta_nivel.gd`. Los `.tres` del 13/08 eran envolturas vacías y se borraron; los **nuevos** aportan datos reales editables en el Inspector: geometría de golpe (`attack/heavy/special_size+range`, `heavy/special_knockback`) y el `combos` (tamano/rango/dano/knockback). El resto de stats (velocidad, saltos, física, collider) sigue viviendo en el `_init()` de cada `.gd` (no duplicado en el `.tres`).
   - **Humano:** 520 px/s · melee balanceado · combo único "Remate" (J→K, 42).
   - **Lobo:** 560 px/s · salto alto (-500) · **doble salto (2 saltos)** · melee veloz · combo "Mordida".
   - **Oso:** 160 px/s (lento) · daño alto (30) · salto bajo (-420, gravedad 1.45×) · **rompe el Tronco** · combo "Garra".
@@ -265,9 +343,9 @@
 - **Pendiente:** los diálogos de `nivel1.tscn` (`DialogoIntro`/`DialogoCombate`/`DialogoLobo`) siguen con el texto que escribió Claude la sesión anterior — el usuario pidió que a partir de ahora se le consulte el texto exacto de cada diálogo antes de ponerlo (no escribir narrativa sin su aprobación). Falta reemplazarlos por el texto que el usuario provea.
 
 ### Build/Run y verificación
-- **(27/08b) Ruta real del ejecutable en esta máquina:** `Godot_v4.7.1-stable_win64.exe` en `Downloads` es en realidad una **carpeta** (no el .exe); el binario está adentro: `C:\Users\UNRaf_Libre\Downloads\Godot_v4.7.1-stable_win64.exe\Godot_v4.7.1-stable_win64_console.exe` (usar la variante `_console.exe` para que los `print()` de los tests salgan por stdout). Si un `& "...Godot...exe"` da "no se reconoce como cmdlet", es este problema — revisar con `Get-Item` si el path es `Directory` antes de asumir que el ejecutable se movió.
+- **Ruta real del ejecutable en esta máquina:** `C:\Users\Usuario\Downloads\Godot_v4.7-stable_win64_console.exe` (variante `_console.exe` para que los `print()` de los tests salgan por stdout). La máquina anterior (UNRaf_Libre) tenía el Godot en una subcarpeta — en esta (`Usuario`) el `.exe` está directo en `Downloads`.
 ```powershell
-$godot = "C:\Users\UNRaf_Libre\Downloads\Godot_v4.7.1-stable_win64.exe\Godot_v4.7.1-stable_win64_console.exe"
+$godot = "C:\Users\Usuario\Downloads\Godot_v4.7-stable_win64_console.exe"
 # import (regenera UIDs, registra class_name)
 & $godot --headless --import
 # smoke del juego
@@ -301,7 +379,7 @@ Esto significa que al evaluar cualquier decisión de diseño, primero preguntars
 **Todo elemento del juego (interfaz, personaje, objeto, nivel) debe poder moverse y modificarse desde el editor de Godot**, para que el usuario acomode el mundo y los niveles por su cuenta sin quedar atado al código.
 
 Normas prácticas para el asistente:
-- **No enterrar valores de gameplay/espaciales en constantes de scripts** que el usuario querrá tocar. Usar `@export` y layouts en `.tscn` (las posiciones de nodo ya son editables). Nota (13/08): decisión del usuario — eliminar los `.tres` de formas y enemigos y usar **scripts** (`FORM_SCRIPTS` en `player.gd`, `config_por_tipo` en `enemy.gd`), a pesar de que esto quita la edición de stats desde el editor. Los `.tres` SOLO se mantienen cuando aportan datos reales no triviales (como `jugador_frames.tres` con el SpriteFrames).
+- **No enterrar valores de gameplay/espaciales en constantes de scripts** que el usuario querrá tocar. Usar `@export` y layouts en `.tscn` (las posiciones de nodo ya son editables). Nota (13/08): decisión del usuario — eliminar los `.tres` de formas y enemigos y usar **scripts** (`FORM_SCRIPTS` en `player.gd`, `config_por_tipo` en `enemy.gd`), a pesar de que esto quita la edición de stats desde el editor. Los `.tres` SOLO se mantienen cuando aportan datos reales no triviales (como `jugador_frames.tres` con el SpriteFrames). **Matiz (11/09):** revivieron `resources/formas/*.tres` como portadores de los datos de hitbox (geometría de golpe + combos) porque el usuario pidió editar eso desde el Inspector; no son envolturas vacías, llevan datos propios. Regla vigente: usar `.tres` **solo cuando aportan datos editables no triviales**.
 - Antes de hardcodear un valor, preguntarse: *"¿lo querrá mover el usuario desde el editor?"* Si la respuesta es sí → exportado/recurso/escena. Pero los `.tres` que son meras envolturas de un script (sin datos propios) se deben evitar.
 - Los datos que ya viven en `.tscn` (posiciones, tamaños de colisión, `tipo` de enemigo, colores de rompibles) **no se deben replicar en código**; la escena es la fuente.
 - Pendiente de migrar a edición desde editor: **las olas** de `encounter.gd` (datos → recursos/escenas). **(RESUELTO 16/08:** implementado con `WaveOla` editable en el inspector + enemigos manuales en el editor — ver sección "Sesión 16/08 (b)".)**
@@ -680,7 +758,7 @@ tests/
 
 ## Notas / Lecciones Aprendidas
 
-- **(13/08) Los `.tres` que son meras envolturas de un script (solo `script = ExtResource(...)` sin datos propios) se pueden borrar y cargar el script directo:** los 4 `.tres` de formas (`resources/formas/*.tres`) eran así; se reemplazaron en `player.gd` por `const FORM_SCRIPTS = [preload("...humano.gd"), ...]` + `script.new()` en `_ready()`. Los `.tres` de enemigos SÍ tenían datos (stats); se hardcodearon en `enemy.gd::config_por_tipo(tipo)` y se eliminaron, con `@export var tipo` seteado en `main.tscn` y en los tests (`en.tipo = "cultista"` ANTES de `add_child` para que `_ready()` arme el `enemy_data`). Beneficio: menos recursos que reimportan y rompen UIDs/`AtlasTexture`; costo: los stats ya no se editan desde el inspector del editor. Regla: usar `.tres` solo cuando aportan datos reales (p.ej. `jugador_frames.tres`).
+- **(13/08) Los `.tres` que son meras envolturas de un script (solo `script = ExtResource(...)` sin datos propios) se pueden borrar y cargar el script directo:** los 4 `.tres` de formas (`resources/formas/*.tres`) eran así; se reemplazaron en `player.gd` por `const FORM_SCRIPTS = [preload("...humano.gd"), ...]` + `script.new()` en `_ready()`. **Reversión parcial el 11/09:** los `.tres` de formas volvieron (`resources/formas/*.tres`) pero AHORA con datos propios (geometría de golpe + `combos` editables desde el Inspector); `player.gd` usa `const FORMAS`. Los `.tres` de enemigos SÍ tenían datos (stats); se hardcodearon en `enemy.gd::config_por_tipo(tipo)` y se eliminaron, con `@export var tipo` seteado en `main.tscn` y en los tests (`en.tipo = "cultista"` ANTES de `add_child` para que `_ready()` arme el `enemy_data`). Beneficio: menos recursos que reimportan y rompen UIDs/`AtlasTexture`; costo: los stats ya no se editan desde el inspector del editor. Regla: usar `.tres` solo cuando aportan datos reales (p.ej. `jugador_frames.tres`, y desde 11/09 las hitboxes de formas).
 - **(13/08) Los `.tres` generados "a mano" no necesitan esperar al editor:** el `SpriteFrames` (`resources/jugador_frames.tres`) se puede escribir directamente como texto con `ext_resource` de texturas (sin UID, solo `path`) + `sub_resource AtlasTexture` con `region` por frame + lista `animations`. Godot lo reimporta solo. Escribir un script generador `--script` puede colgar con timeout si no termina; verificar después si se creó el archivo.
 - **(13/08) Al pasar un `Sprite2D` a `AnimatedSprite2D`:** mantener el **mismo nombre de nodo** (`Sprite2D`) para que las rutas `$Sprite2D` y `get_node_or_null("Sprite2D/Tint")` sigan funcionando. Si se elimina el `Tint` hijo, el código debe usar `visual.self_modulate` (cae en el `else`) en vez de `tint.modulate`. El flip horizontal es `visual.flip_h = facing < 0`.
 - **(13/08) CAUSA REAL de "no se ve el personaje": las `AtlasTexture` de un `.tres` escrito a mano pierden la referencia a su textura al reimportar** (quedan frames vacíos, el `AnimatedSprite2D` no muestra nada pero no da error; la colisión `CollisionShape2D` sí funciona, por eso "los enemigos lo detectan"). La solución robusta: generar el `SpriteFrames` **por script** incrustando cada frame como `ImageTexture` (con `ImageTexture.create_from_image(imagen.get_region(...))`), NO usar `AtlasTexture` con `ext_resource` de textura. Verificación: `sf.get_frame_texture(anim,0).get_image() != null` y contar píxeles opacos. El "self_modulate verde" NO era la causa (solo un tinte).

@@ -413,13 +413,13 @@ position = Vector2(38300, 990)
 position = Vector2(38200, 650)
 
 [node name="Rompible1" parent="." instance=ExtResource("11_romp")]
-position = Vector2(38900, 940)
+position = Vector2(38900, 936.5)
 
 [node name="Rompible2" parent="." instance=ExtResource("11_romp")]
-position = Vector2(39150, 940)
+position = Vector2(39150, 936.5)
 
 [node name="Rompible3" parent="." instance=ExtResource("11_romp")]
-position = Vector2(39400, 940)
+position = Vector2(39400, 936.5)
 
 [node name="PickupTesoroRomp" parent="." instance=ExtResource("12_pick")]
 position = Vector2(39000, 860)

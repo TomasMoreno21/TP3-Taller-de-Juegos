@@ -18,8 +18,11 @@ func _init() -> void:
 	heavy_size = Vector2(150, 95)
 	heavy_combo_steps = 2
 	special_damage = 14
+	special_size = Vector2(210, 120)
+	special_range = 180.0
+	special_knockback = 220.0
 	color = Color(0.58, 0.64, 0.75)
-	collider_size = Vector2(210, 160)
+	collider_size = Vector2(360, 233)
 	camera_lookahead_mult = 1.15
 	shake_strength = 4.0
 	transform_duration = 8.0
@@ -39,7 +42,7 @@ func _init() -> void:
 	landing_squash = 0.14
 	mult_recuperacion = 0.85
 	lunge_light = 110.0
-	melee_sticky = 950.0
+	melee_sticky = 0.0
 	combos = [
 		{"nombre": "Mordida", "secuencia": ["light", "heavy"], "dano": 26, "knockback": 240.0, "tamano": Vector2(180, 102), "rango": 102.0},
 	]
@@ -67,4 +70,4 @@ func perform_light(player: CharacterBody2D, step: int) -> void:
 
 
 func perform_special(player: CharacterBody2D) -> void:
-	player.enable_melee(Vector2(210, 120), 180.0, special_damage, 220.0)
+	player.enable_melee(special_size, special_range, special_damage, special_knockback)

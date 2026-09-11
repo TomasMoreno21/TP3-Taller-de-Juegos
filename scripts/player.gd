@@ -25,7 +25,7 @@ const APEX_THRESHOLD := 48.0
 const APEX_GRAVITY_MULT := 0.82
 const APEX_CORE_THRESHOLD := 22.0
 const APEX_CORE_MULT := 0.58
-const TINT_ALPHA := 0.45
+const TINT_ALPHA := 1.0  # antes 0.45; hacer self_modulate x form fue reportado como "azul oscuro"
 const COMBO_WINDOW := 1.1
 const LINEA_ESPESOR := 40.0
 const ENERGIA_MAX := 100.0
@@ -34,10 +34,10 @@ const ENERGIA_REGEN := 5.0
 const ENERGIA_KILL := 20.0
 const ENERGIA_PICKUP := 30.0
 const ENERGIA_RESPAWN := 50.0
-const RECOVERY_LIGHT := 0.275
-const RECOVERY_HEAVY := 0.5
-const RECOVERY_SPECIAL := 0.75
-const RECOVERY_COMBO := 0.875
+const RECOVERY_LIGHT := 0.28
+const RECOVERY_HEAVY := 0.52
+const RECOVERY_SPECIAL := 0.92
+const RECOVERY_COMBO := 1.05
 const MELEE_STICKY_REACH := 240.0
 const MELEE_STICKY_PIVOT := 28.0
 const MELEE_STICKY_SPEED_MULT := 0.85
@@ -83,6 +83,7 @@ var _buffered_attack := ""
 var _attack_anim_timer := 0.0
 var _attack_anim_actual := "attack1"
 var _attack_anim_cola: Array[String] = []
+var _attack_anim_speed_scale := 1.0
 var _was_blocking := false
 var _was_on_floor := false
 var _fall_impact := 0.0
@@ -150,18 +151,18 @@ var _platform_snap_cd: float = 0.0
 const PASOS_INTERVALO := 0.18
 var _pasos_timer := 0.0
 
-const FORM_SCRIPTS := [
-	preload("res://scripts/forms/humano.gd"),
-	preload("res://scripts/forms/lobo.gd"),
-	preload("res://scripts/forms/oso.gd"),
-	preload("res://scripts/forms/murcielago.gd"),
+const FORMAS := [
+	preload("res://resources/formas/humano.tres"),
+	preload("res://resources/formas/lobo.tres"),
+	preload("res://resources/formas/oso.tres"),
+	preload("res://resources/formas/murcielago.tres"),
 ]
 
 
 func _ready() -> void:
 	add_to_group("player")
-	for script in FORM_SCRIPTS:
-		forms.append(script.new())
+	for forma in FORMAS:
+		forms.append(forma)
 	health = VIDA_MAX
 	_spawn_position = global_position
 	_base_sprite_scale = Vector2(absf(visual.scale.x), visual.scale.y)
@@ -193,9 +194,15 @@ func _physics_process(delta: float) -> void:
 		if _attack_air_buffer <= 0.0:
 			_attack_air_buffer_type = ""
 
-	var dir := 0.0 if dialogo_bloquea else Input.get_axis("move_left", "move_right")
-	if absf(dir) < 0.35:
-		dir = 0.0
+	var cmd_axis := Input.get_axis("move_left", "move_right")
+	if absf(cmd_axis) < 0.35:
+		cmd_axis = 0.0
+	if dialogo_bloquea or _trepando:
+		cmd_axis = 0.0
+	# Durante el ataque solo se puede girar (cambiar de lado), no desplazarse.
+	if _attacking and cmd_axis != 0.0:
+		facing = 1 if cmd_axis > 0 else -1
+	var dir := 0.0 if _attacking else cmd_axis
 	if dialogo_bloquea:
 		dir = 0.0
 	if _trepando:
@@ -272,7 +279,7 @@ func _physics_process(delta: float) -> void:
 	var max_fall := MAX_FALL_SPEED if not gliding else (lerpf(300.0, 520.0, prog_fall) if current_form == Form.MURCIELAGO else 380.0)
 	velocity.y = min(velocity.y + g * delta, max_fall)
 	if gliding:
-		var dir_glide := 0.0 if dialogo_bloquea else Input.get_axis("move_left", "move_right")
+		var dir_glide := 0.0 if (dialogo_bloquea or _attacking) else Input.get_axis("move_left", "move_right")
 		if absf(dir_glide) < 0.35:
 			dir_glide = 0.0
 		if dir_glide != 0.0:
@@ -579,7 +586,7 @@ func _ejecutar_finisher(data: Forma, combo: Dictionary) -> void:
 	_punch_sprite(0.45)
 	attack_performed.emit("combo", combo.get("nombre", "Combo"))
 	if current_form == Form.HUMAN:
-		_iniciar_anim_ataque("attack1")
+		_iniciar_anim_ataque("attack_full")
 	if DisplayServer.get_name() != "headless":
 		var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
 		p.global_position = global_position + Vector2(facing * 30, -20)
@@ -599,23 +606,17 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	# ImÃ¡n suave al enemigo mÃ¡s cercano si estÃ¡s un poco lejos
 	var objetivo := _buscar_enemigo_homing(200.0)
 	if objetivo != null:
+		var dir_enemigo := signf(objetivo.global_position.x - global_position.x)
 		var dist := global_position.distance_to(objetivo.global_position)
 		var alcance_real := range + size.x * 0.5
 		var faltante := dist - alcance_real
-		var dir_enemigo := signf(objetivo.global_position.x - global_position.x)
 		if dir_enemigo != 0 and absf(faltante) < 80.0 and faltante > 8.0:
 			if dir_enemigo != facing:
 				facing = int(dir_enemigo)
 				_aplicar_facing()
-			var empuje := clampf(faltante * 0.55, 18.0, 65.0)
-			velocity.x += dir_enemigo * empuje
 		elif dir_enemigo != 0 and faltante <= 8.0 and dir_enemigo != facing:
 			facing = int(dir_enemigo)
 			_aplicar_facing()
-	if _current_attack_type == "light":
-		velocity.x += facing * data.lunge_light
-	elif _current_attack_type == "heavy" or _current_attack_type == "combo":
-		velocity.x += facing * data.lunge_heavy
 	_hit_applied = false
 	_current_attack_damage = forms[current_form].attack_damage if damage < 0 else damage
 	_current_attack_knockback = knockback
@@ -1146,7 +1147,9 @@ func _iniciar_anim_ataque(anim: String) -> void:
 	_attack_anim_cola.clear()
 	_attack_anim_cola.append(anim)
 	_attack_anim_actual = anim
-	_attack_anim_timer = _duracion_anim(anim)
+	_attack_anim_timer = _attack_timer
+	_attack_anim_speed_scale = _duracion_anim(anim) / maxf(_attack_timer, 0.01)
+	visual.speed_scale = _attack_anim_speed_scale
 	visual.play(anim)
 
 
@@ -1154,13 +1157,14 @@ func _cancelar_anim_ataque() -> void:
 	_attack_anim_cola.clear()
 	_attack_anim_timer = 0.0
 	_attack_anim_actual = "attack1"
+	_attack_anim_speed_scale = 1.0
 
 
 func _update_animacion() -> void:
 	_aplicar_facing()
-# Ataques del Humano con cola propia: cada grupo de frames completa su
-	# duración aunque la recuperación del golpe ya haya terminado.
-	# Light -> attack1 (1-3), Heavy -> attack2 (4-6), Special -> attack_full (1-6).
+# Ataques del Humano con cola propia: la anim se estira (speed_scale) para
+	# durar exactamente la recuperación del golpe. Light -> attack1 (1-3),
+	# Heavy -> attack2 (4-6), Special/Combo -> attack_full (1-6).
 	if current_form == Form.HUMAN and _attack_anim_cola.size() > 0:
 		_attack_anim_timer -= get_physics_process_delta_time()
 		if _attack_anim_timer <= 0.0:
@@ -1176,7 +1180,7 @@ func _update_animacion() -> void:
 			var anim := _attack_anim_cola[0]
 			if visual.animation != anim:
 				visual.play(anim)
-			visual.speed_scale = 1.0
+			visual.speed_scale = _attack_anim_speed_scale
 		return
 	if _trepando:
 		if visual.animation != "climb":
