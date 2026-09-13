@@ -31,6 +31,16 @@ var _look_offset := Vector2.ZERO
 @export var suavizado_descenso_extendido := 4.0  # qué tan suave entra/sale ese offset extra
 @export var look_stick_amplitud := 220.0  # px máximos que desplaza la cámara el stick derecho
 @export var look_stick_suavizado := 5.0  # suavizado del desplazamiento del stick derecho
+# Anticipación de salto: predice el pico del arco y lo encuadra con curva suave
+@export var gravedad_referencia := 980.0
+@export var anticip_apex_max := 110.0  # px máximos que sube el encuadre al predecir el pico
+@export var anticip_apex_umbral := -120.0  # velocidad vertical (vy) que dispara la anticipación
+@export var anticip_apex_factor := 0.5  # fracción del pico calculado que se acomoda
+@export var suavizado_apex := 3.0  # suavizado al subir; al bajar reusa suavizado_bajada
+
+var _apex_look := 0.0
+var _shake_dir := Vector2.ZERO
+var _shake_rot_amplitud := 0.0
 
 
 func _ready() -> void:
@@ -63,9 +73,18 @@ func _process(delta: float) -> void:
 		_shake_timer -= delta
 		var t := clampf(_shake_timer / 0.15, 0.0, 1.0)
 		var cur_strength := _shake_strength * (t * t)
-		offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * cur_strength + _look_offset
+		if _shake_dir == Vector2.ZERO:
+			offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * cur_strength + _look_offset
+		else:
+			var perp := Vector2(-_shake_dir.y, _shake_dir.x)
+			var despl := _shake_dir * cur_strength + perp * randf_range(-1, 1) * cur_strength * 0.6
+			offset = despl + _look_offset
+		if _shake_rot_amplitud > 0.0:
+			rotation = rotation * (1.0 - minf(8.0 * delta, 1.0)) + deg_to_rad(randf_range(-_shake_rot_amplitud, _shake_rot_amplitud)) * t
 		if _shake_timer <= 0.0:
 			offset = _look_offset
+			_shake_dir = Vector2.ZERO
+			_shake_rot_amplitud = 0.0
 	else:
 		offset = _look_offset
 
@@ -103,10 +122,24 @@ func _physics_process(delta: float) -> void:
 			trepando = bool(tv)
 	var desp := Vector2(0, -180) if trepando else desplazamiento
 	var destino := (player as Node2D).global_position + desp
-	# (2) Ver 40px más arriba si saltas alto (vy < -300)
+	# (2) Anticipación de salto: predice el pico del arco según la gravedad
+	# de la forma activa y encuadra un poco más arriba con curva suave.
 	var vel_y: float = (player as Node2D).velocity.y
-	if vel_y < -300.0:
-		destino.y -= 40.0
+	var apex_objetivo := 0.0
+	if vel_y < anticip_apex_umbral:
+		var grav_mult := 1.0
+		if "forms" in player and "current_form" in player:
+			var f_apex = (player as Node).get("forms")[(player as Node).get("current_form")]
+			if f_apex != null and "gravity_scale" in f_apex:
+				var gs: Variant = f_apex.get("gravity_scale")
+				if gs != null:
+					grav_mult = float(gs)
+		var g_ef := gravedad_referencia * maxf(grav_mult, 0.1)
+		var pico := (-vel_y) * (-vel_y) / (2.0 * g_ef)
+		apex_objetivo = -minf(pico * anticip_apex_factor, anticip_apex_max)
+	var suav_apex := suavizado_apex if apex_objetivo < _apex_look else suavizado_bajada
+	_apex_look = lerpf(_apex_look, apex_objetivo, minf(suav_apex * delta, 1.0))
+	destino.y += _apex_look
 	# (3) Bajar 20px antes de caer fuerte (anticipa impacto)
 	var p_body := player as CharacterBody2D
 	if vel_y > 550.0 and not p_body.is_on_floor():
@@ -190,6 +223,9 @@ func modo_normal() -> void:
 		tw.tween_property(self, "global_position", dest, 0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
-func shake(strength: float = 8.0, duration: float = 0.15) -> void:
+func shake(strength: float = 8.0, duration: float = 0.15, dir: Vector2 = Vector2.ZERO) -> void:
 	_shake_timer = duration
 	_shake_strength = strength
+	_shake_dir = dir.normalized() if dir.length_squared() > 0.0 else Vector2.ZERO
+	if _shake_rot_amplitud <= 0.0:
+		_shake_rot_amplitud = clampf(strength * 0.12, 0.0, 0.75)

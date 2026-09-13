@@ -6,8 +6,9 @@
 script = ExtResource("1_forma")
 attack_range = 40.0
 attack_size = Vector2(110, 80)
-heavy_range = 120.0
+heavy_range = 45.0
 heavy_size = Vector2(140, 100)
+special_range = 50.0
 combos = Array[Dictionary]([{
 "dano": 38,
 "knockback": 260.0,

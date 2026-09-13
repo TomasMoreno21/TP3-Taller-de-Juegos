@@ -97,6 +97,7 @@ var _checkpoint_vida := VIDA_MAX
 var _checkpoint_energia := ENERGIA_MAX
 var _derrota_activa := false
 var _invuln_timer := 0.0
+var _invuln_sin_parpadeo := false
 var _cooldown_formas: Dictionary = {}
 const COOLDOWN_AGOTADA := 3.0
 const COOLDOWN_TRANSFORM := 1.8
@@ -140,6 +141,7 @@ var _platform_snap_cd: float = 0.0
 ## Offsets de volumen (dB) para el golpe pesado y el especial, aplicados sobre volumen_golpe_db.
 @export var volumen_golpe_pesado_db := 0.0
 @export var volumen_special_db := 0.0
+@export var invuln_transformacion := 0.55
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $Collision
@@ -312,7 +314,7 @@ func _physics_process(delta: float) -> void:
 				var cam := get_viewport().get_camera_2d()
 				if cam != null and cam.has_method("shake"):
 					var fuerza := clampf((_fall_impact - 600.0) / 400.0, 0.0, 1.0) * 3.0 + 2.0
-					cam.shake(fuerza, 0.12)
+					cam.shake(fuerza, 0.12, Vector2(0, 1))
 		_fall_impact = 0.0
 		_was_on_floor = true
 	else:
@@ -355,10 +357,12 @@ func _physics_process(delta: float) -> void:
 
 	if _invuln_timer > 0.0:
 		_invuln_timer -= delta
-		visual.visible = fmod(_invuln_timer, 0.16) < 0.08
+		if not _invuln_sin_parpadeo:
+			visual.visible = fmod(_invuln_timer, 0.16) < 0.08
 		if _invuln_timer <= 0.0:
 			visual.visible = true
 			_invuln_timer = 0.0
+			_invuln_sin_parpadeo = false
 
 	if _jump_buffer > 0.0:
 		_jump_buffer -= delta
@@ -693,9 +697,10 @@ func _check_attack_hits() -> void:
 			body.registrar_golpe(dmg)
 			_aplicar_knockback(body)
 		elif body.has_method("take_damage"):
+			var vivia: bool = not ("health" in body) or body.health > 0
 			body.take_damage(dmg, kb, facing)
-			if _current_attack_type == "combo" and "health" in body and body.health <= 0:
-				_freeze_slowmo(0.3, 0.4)
+			if vivia and "health" in body and body.health <= 0:
+				_freeze_slowmo(0.3 if _current_attack_type == "combo" else 0.22, 0.4)
 		_spark_golpe(body, idx)
 	var sonido_golpe: AudioStream = sonido_golpe_liviano if _current_attack_type == "light" else sonido_golpe_pesado
 	var audio_mgr := get_node_or_null("/root/AudioManager")
@@ -774,7 +779,7 @@ func _shake_por_tipo() -> void:
 				fuerza = forma.shake_golpe_pesado
 			"combo":
 				fuerza = forma.shake_golpe_combo
-		cam.shake(fuerza, 0.15)
+		cam.shake(fuerza, 0.15, Vector2(facing, 0))
 
 
 func _aplicar_knockback(body: Node2D) -> void:
@@ -1046,8 +1051,9 @@ func _transformar(nueva: int, forzar: bool = false) -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("punch"):
 		cam.punch(1.07)
-	if nueva == Form.HUMAN:
-		_particulas_regreso()
+	_particulas_regreso(data.color)
+	_invuln_timer = maxf(_invuln_timer, invuln_transformacion)
+	_invuln_sin_parpadeo = true
 	var audio_mgr_t := get_node_or_null("/root/AudioManager")
 	if audio_mgr_t != null:
 		audio_mgr_t.play_sfx(sonido_transformacion, volumen_transformacion_db)
@@ -1057,12 +1063,12 @@ func _transformar(nueva: int, forzar: bool = false) -> void:
 	health_changed.emit(health, VIDA_MAX)
 
 
-func _particulas_regreso() -> void:
+func _particulas_regreso(color: Color) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
 	p.global_position = global_position + Vector2(0, 20)
-	p.self_modulate = Color(0.4, 0.8, 0.9)
+	p.self_modulate = _tinte_forma(color)
 	get_tree().root.add_child(p)
 	p.restart()
 	p.emitting = true
@@ -1072,14 +1078,14 @@ func _zoom_transform(data: Forma) -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam != null:
 		cam.fijar_zoom(data.camera_zoom)
-	_flash_transformacion()
+	_flash_transformacion(data.color)
 
 
-func _flash_transformacion() -> void:
+func _flash_transformacion(color: Color) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	var overlay := ColorRect.new()
-	overlay.color = Color(1, 1, 1, 0.9)
+	overlay.color = _tinte_forma(color, 0.85)
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	var layer := CanvasLayer.new()
 	layer.layer = 100
@@ -1113,9 +1119,10 @@ func _apply_form() -> void:
 	blocking = false
 
 
-func _tinte_forma(color: Color) -> Color:
+func _tinte_forma(color: Color, alpha: float = 1.0) -> Color:
 	# Tinte sutil: mezcla el color de la forma con blanco para no oscurecer el sprite
-	return color.lerp(Color.WHITE, 0.55)
+	var tint := color.lerp(Color.WHITE, 0.55)
+	return Color(tint.r, tint.g, tint.b, alpha)
 
 
 func _aplicar_facing() -> void:
@@ -1282,16 +1289,17 @@ func take_damage(cantidad: int, _knockback: float = 0.0, _dir: int = 1) -> void:
 	_freeze_hitstop()
 	health_changed.emit(health, VIDA_MAX)
 	dano_recibido.emit(cantidad)
-	_shake_dano_recibido()
+	_shake_dano_recibido(_dir)
 	_invuln_timer = 0.55
+	_invuln_sin_parpadeo = false
 	_handle_death()
 
 
-func _shake_dano_recibido() -> void:
+func _shake_dano_recibido(dir: int = 1) -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam == null or not cam.has_method("shake"):
 		return
-	cam.shake(3.5, 0.12)
+	cam.shake(3.5, 0.12, Vector2(dir, 0))
 
 
 func heal_full() -> void:
@@ -1383,7 +1391,7 @@ func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 70
 		squash_y(0.18, 0.25)
 		var cam2 := get_viewport().get_camera_2d()
 		if cam2 != null and cam2.has_method("shake"):
-			cam2.shake(2.0, 0.08)
+			cam2.shake(2.0, 0.08, Vector2(-facing, 0))
 
 
 func _buscar_enemigo_homing(rango: float) -> Node2D:
