@@ -16,6 +16,7 @@ var _arena_tween: Tween
 var _descenso_t := 0.0
 var _offset_descenso := 0.0
 var _look_offset := Vector2.ZERO
+var _player_cache: Node2D
 
 @export var suavizado := 6.0
 @export var desplazamiento := Vector2(0, -220)
@@ -129,7 +130,7 @@ func _physics_process(delta: float) -> void:
 		global_position = global_position.lerp(_fija_pos, minf(suavizado * delta, 1.0))
 		return
 
-	var player := get_tree().get_first_node_in_group("player")
+	var player := _obtener_player()
 	if player == null:
 		return
 	var trepando: bool = false
@@ -287,3 +288,10 @@ func shake(strength: float = 8.0, duration: float = 0.15, dir: Vector2 = Vector2
 	_shake_dir = dir.normalized() if dir.length_squared() > 0.0 else Vector2.ZERO
 	if _shake_rot_amplitud <= 0.0:
 		_shake_rot_amplitud = clampf(strength * 0.12 * intensidad_shake, 0.0, 0.2)
+
+
+## Devuelve el player cacheado (evita el lookup de grupo por frame).
+func _obtener_player() -> Node2D:
+	if not is_instance_valid(_player_cache):
+		_player_cache = get_tree().get_first_node_in_group("player")
+	return _player_cache

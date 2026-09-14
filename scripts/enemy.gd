@@ -31,6 +31,7 @@ var _attack_timer := 0.0
 var _dir := -1
 var _attack_anim := ""
 var _attack_anim_timer := 0.0
+var _player_cache: Node2D
 var _stun_timer := 0.0
 var _stun_dir := 1
 var _reaction_tween: Tween
@@ -252,7 +253,7 @@ func _physics_process(delta: float) -> void:
 		_update_animacion()
 		move_and_slide()
 		return
-	var player := get_tree().get_first_node_in_group("player")
+	var player := _obtener_player()
 	if _attack_timer > 0.0:
 		_attack_timer -= delta
 	if _attack_anim_timer > 0.0:
@@ -324,12 +325,19 @@ func _physics_process(delta: float) -> void:
 
 
 func _mirar_jugador() -> void:
-	var player := get_tree().get_first_node_in_group("player")
+	var player := _obtener_player()
 	if player == null:
 		return
 	_dir = 1 if player.global_position.x > global_position.x else -1
 	if visual != null:
 		visual.scale.x = absf(visual.scale.x) * -_dir
+
+
+## Devuelve el player cacheado (evita el lookup de grupo por frame).
+func _obtener_player() -> Node2D:
+	if not is_instance_valid(_player_cache):
+		_player_cache = get_tree().get_first_node_in_group("player")
+	return _player_cache
 
 
 func _gap_x(player: Node2D) -> float:

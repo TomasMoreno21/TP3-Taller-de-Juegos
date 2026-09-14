@@ -8,6 +8,9 @@ var homing := false
 var homing_strength := 6.5
 var homing_range := 500.0
 var _life := 2.5
+var _cam: Camera2D
+var _homing_timer := 0.0
+const HOMING_TICK := 0.15  # cada cuánto re-busca el homing (evita lookup de grupo por frame)
 
 @onready var visual: Polygon2D = $Visual
 @onready var hitbox: CollisionShape2D = $Hitbox
@@ -20,10 +23,13 @@ func _ready() -> void:
 	collision_mask = (4 if enemy_shot else 2) | TERRAIN_LAYER
 	body_entered.connect(_on_body_entered)
 	monitoring = true
+	_cam = get_viewport().get_camera_2d()
 
 
 func _physics_process(delta: float) -> void:
-	if homing and not enemy_shot:
+	_homing_timer -= delta
+	if homing and not enemy_shot and _homing_timer <= 0.0:
+		_homing_timer = HOMING_TICK
 		var target: Node2D = _buscar_enemigo_cercano()
 		if target != null:
 			var to_target: Vector2 = target.global_position - global_position
@@ -81,11 +87,12 @@ func _es_energia(col: Object) -> bool:
 
 
 func _fuera_de_camara() -> bool:
-	var cam := get_viewport().get_camera_2d()
-	if cam == null:
+	if not is_instance_valid(_cam):
+		_cam = get_viewport().get_camera_2d()
+	if _cam == null:
 		return false
-	var view_size: Vector2 = get_viewport_rect().size / cam.zoom
-	var cam_pos: Vector2 = cam.global_position
+	var view_size: Vector2 = get_viewport_rect().size / _cam.zoom
+	var cam_pos: Vector2 = _cam.global_position
 	var half: Vector2 = view_size * 0.5 + Vector2(80, 80)
 	return global_position.x < cam_pos.x - half.x or global_position.x > cam_pos.x + half.x or global_position.y < cam_pos.y - half.y or global_position.y > cam_pos.y + half.y
 
