@@ -44,7 +44,7 @@
 
 ### Verificación + git
 - Import limpio, smoke limpio, `autotest` / `diag_golpe` / `diag_feedback` / `diag_formas` / `diag_nivel1prueba` → **FALLOS = 0**. Bench post-cambio idéntico (0.001–0.002 ms).
-- **SIN commit**: esperando decisión del usuario; se pregunta si conservar `tests/bench_opt.gd` (útil para futuras comparaciones) o descartarlo.
+- **Commit `fec859b`**: se conservó `tests/bench_opt.gd` (bench reutilizable para futuras comparaciones) y se incluyó en el commit. Los cambios quedaron pusheados junto con el Arzobispo en una sola entrega (el usuario eligió "un commit por bloque").
 
 ---
 
