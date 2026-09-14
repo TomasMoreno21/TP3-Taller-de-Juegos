@@ -1,0 +1,68 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/boss.gd" id="1_boss"]
+[ext_resource type="AudioStream" uid="uid://dlcjtacc8n7sr" path="res://assets/audio/sfx/golpe_enemigo.mp3" id="2_sonido"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cuerpo"]
+size = Vector2(170, 330)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_dano"]
+size = Vector2(260, 430)
+
+[node name="Jefe" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_boss")
+sonido_golpe = ExtResource("2_sonido")
+volumen_golpe_db = -16.0
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="Halo" type="Polygon2D" parent="Visual"]
+color = Color(0.28, 0.5, 0.32, 0.25)
+polygon = PackedVector2Array(-200, -76, -160, 0, 0, 20, 160, 0, 200, -76, 160, -152, 0, -172, -160, -152)
+
+[node name="Roba" type="Polygon2D" parent="Visual"]
+color = Color(0.23, 0.42, 0.27, 1)
+polygon = PackedVector2Array(-74, -68, -58, -228, -32, -300, 32, -300, 58, -228, 74, -68)
+
+[node name="Cintura" type="Polygon2D" parent="Visual"]
+color = Color(0.12, 0.2, 0.14, 1)
+polygon = PackedVector2Array(-60, -96, 60, -96, 60, -66, -60, -66)
+
+[node name="Mitra" type="Polygon2D" parent="Visual"]
+color = Color(0.35, 0.6, 0.4, 1)
+polygon = PackedVector2Array(-28, -300, 0, -392, 28, -300, 8, -300, 0, -340, -8, -300)
+
+[node name="Ojos" type="Node2D" parent="Visual"]
+
+[node name="IZQ" type="Polygon2D" parent="Visual/Ojos"]
+color = Color(1, 0.25, 0.15, 1)
+polygon = PackedVector2Array(-44, -342, -28, -342, -36, -326)
+
+[node name="DER" type="Polygon2D" parent="Visual/Ojos"]
+color = Color(1, 0.25, 0.15, 1)
+polygon = PackedVector2Array(28, -342, 44, -342, 36, -326)
+
+[node name="Aura" type="Polygon2D" parent="Visual"]
+visible = false
+color = Color(1, 1, 1, 1)
+polygon = PackedVector2Array(-280, -200, -224, -60, -160, 28, 0, 60, 160, 28, 224, -60, 280, -200)
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+position = Vector2(0, -165)
+shape = SubResource("RectangleShape2D_cuerpo")
+
+[node name="CuerpoDano" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 4
+
+[node name="Collision" type="CollisionShape2D" parent="CuerpoDano"]
+position = Vector2(0, -215)
+shape = SubResource("RectangleShape2D_dano")
+
+[node name="Sombra" type="Polygon2D" parent="."]
+z_index = -1
+position = Vector2(0, 22)
+color = Color(0, 0, 0, 0.25)
+polygon = PackedVector2Array(-120, 0, -80, 12, 0, 18, 80, 12, 120, 0, 80, -12, 0, -18, -80, -12)

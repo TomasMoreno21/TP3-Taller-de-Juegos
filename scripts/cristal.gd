@@ -5,10 +5,13 @@ signal cristal_destruido
 @export var cristal_color: Color = Color(0.62, 0.42, 0.92)
 @export var float_amplitude: float = 6.0
 @export var float_speed: float = 2.0
+# Cuántos golpes lo rompen y si solo el sónico del Murciélago puede. Tuneables
+# para reusar el cristal como escudo del jefe (ej: 2 golpes).
+@export var golpes_para_romper := 3
+@export var solo_murcielago := true
 
 var _roto := false
 var _golpes := 0
-const GOLPES_PARA_ROMPER := 3
 var _base_y := 0.0
 var _offset := 0.0
 
@@ -70,10 +73,10 @@ func take_damage(_cant: int, _kb: float = 0.0, _dir: int = 1) -> void:
 	if _roto:
 		return
 	var player := get_tree().get_first_node_in_group("player")
-	if player == null or int(player.get("current_form")) != 3:
+	if player == null or (solo_murcielago and int(player.get("current_form")) != 3):
 		return
 	_golpes += 1
-	if _golpes < GOLPES_PARA_ROMPER:
+	if _golpes < golpes_para_romper:
 		_flash_golpe()
 		return
 	_roto = true
@@ -111,7 +114,7 @@ func _flash_golpe() -> void:
 func _crack_visual() -> void:
 	if poly == null or not poly.visible:
 		return
-	var t := float(_golpes) / float(GOLPES_PARA_ROMPER)
+	var t := float(_golpes) / float(golpes_para_romper)
 	poly.modulate = Color(1, 1 - t * 0.15, 1 - t * 0.15)
 
 

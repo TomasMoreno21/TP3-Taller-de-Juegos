@@ -2,6 +2,63 @@
 
 ---
 
+## 🔴 Sesión 13/09 (8) — Jefe final "Arzobispo" (arena dedicada + barra de jefe)
+
+> El pilar del juego: pelea final contra el Arzobispo (entidad mayor del culto), arena dedicada `scenes/nivel_jefe.tscn`, ~5 min, 3 fases, contra óptima por forma NO bloqueante (invocados devuelven +20 energía y hay rompibles en la arena para sostener transformaciones). Diseño consensuado en sesión previa (se descartó el formato "fases obligatorias por forma" por riesgo de frustración con la energía). No hay commit aún: la optimización de la sesión (7) y este bloque están sin commitear, pendiente OK del usuario.
+
+### Implementado
+- **`scripts/boss.gd` + `scenes/jefe.tscn`:** vivo con `CharacterBody2D`, group "boss", señales `salud_cambio`/`fase_cambio`/`died`, API de Encounter (`preparar_ola()`/`activar()`). F1 100–66% suelo (embestida 810px con tele-telegraph, orbes en abanico 5 con `ABANICO`, sismo por piso + invocación de cultistas cada 16s); F2 66–33% aéreo (armadura + cristales escudo que SOLO rompe el Murciélago, 2 golpes c/u, +2 cultistas por oleada) → al romperlos cae y quedan 4.0s de ventana; F3 33–0% enfurecido (embestida rápida 3 recorridos, orbes dobles, sismo doble, ventana 0.9s tras cada patrón; Oso/Humano castigan, Lobo esquiva). Armadura F1 por umbral 17 (Oso la rompe). `take_damage` con tint, números flotantes, slow-mo y hitstop de muerte. Audio del rugido sintetizado por código (WAV 16-bit LCG) si no se asigna `sonido_roar`. **Arte:** polígonos minimalistas (Roba + Mitra + Ojos rojos + Halo + Aura de telegraph + Sombra), sin sprite, mismas reglas que el chamán.
+- **`scenes/nivel_jefe.tscn` + `scripts/nivel_jefe.gd`:** arena con `Encounter` (ArenaShape 980×700 → paredes en borde de pantalla), piso de piedra oscura, rompibles de recarga (3 cajas) + 2 calmas al inicio, `SetupProgresion nivel_minimo=4` (todas las formas), diálogo `jefe_intro`, e HUD que muestra la barra. Al morir el jefe → `victoria_jefe` ("¡RESCATASTE A TU HIJO!") con reintentar/menú.
+- **`scenes/victoria_jefe.tscn` + `scripts/victoria_jefe.gd`:** pantalla épica estilo `victoria.tscn` (tema púrpura/dorado).
+- **Barra de jefe en `scripts/hud.gd` + `scenes/hud.tscn`:** nodo `BossBar` propio arriba-centro (nombre, valor, ProgressBar sin %, 3 pips de fase), **FUERA del bloque `Bars`** (respeta la lección del HUD revertido). Conecta a `salud_cambio` (hp/max → fill + texto) y `fase_cambio` (color del fill: verde→púrpura→rojo; pips prendidos por fase). Se oculta al morir o si no hay jefe.
+- **`scripts/cristal.gd` parametrizado:** `@export golpes_para_romper` y `solo_murcielago` (defaults intactos → los cristales de niveles no cambian; el jefe usa 2 golpes y `solo_murcielago=true`).
+- **`scripts/console.gd`:** comando `jefe` → salta a la arena (test rápido).
+- **`data/dialogos.json`:** entrada `jefe_intro`. **`scripts/encounters/encounter.gd`:** fix defensivo en `_agregar_manual` (ver bugs).
+
+### Bugs reales encontrados (corregidos)
+- **Parse error latente en `boss.gd`:** `_centro_arena, _medio_arena = _datos_arena()` no es destructuring válido en GDScript → rompía la carga del script. Fix: `var arena := _datos_arena(); _centro_arena = arena[0]; _medio_arena = arena[1]`.
+- **`encounter.gd:_agregar_manual` crasheaba con el jefe:** `int(hijo.get("ola_asignada"))` → `int(null)` ("Nonexistent 'int' constructor") porque el jefe no tenía esa propiedad; el script se abortaba y el jefe nunca entraba en `_manuales` (la pelea no arrancaba). Fix defensivo (`var idx := int(val) if val is int else 0` + `maxi(idx,0)`) y además `@export var ola_asignada := 0` en `boss.gd`.
+- **Bucle aéreo infinito al pasar a fase 3:** `_forzar_aereo` quedaba `true` tras la F2; al llegar a F3 el jefe entraba a `_ronda_aerea` siempre (while de F2 terminaba al instante y `continue` la re-ejecutaba) → se quedaba flotando sin atacar jamás. Fix: la rama TRES de `_cambiar_fase` ahora resetea `_forzar_aereo=false` y `_armadura_activa=false`.
+- **Off-by-one real en `hud.gd:_on_boss_fase`:** el enum es `Fase { UNO=0, DOS=1, TRES=2 }` pero el HUD hacía `match 1,2,3` y pips `i <= fase-1` → el color/pips de barra quedaban corridos. Fix: `match 0,1,2` + `i <= fase`. (También se corrigió el test que usaba `_cambiar_fase(2/3)` con literales; ahora usa `boss.Fase.DOS/TRES`.)
+
+### Verificación
+- Import limpio, smoke limpio; suite completa en verde → `autotest` 0, `diag_golpe` 0, `diag_feedback` 0, `diag_formas` 0, `diag_nivel1prueba` 0 y **nuevo `tests/diag_jefe.gd` FALLOS=0** (activación por Encounter, barra visible, armadura por umbral, cristales que ignoran al Humano y se rompen con el Murciélago, muerte, señal `died`, barra oculta). Leak al salir de headless es el cosmético preexistente.
+- **Pendientes:** (a) commitear la optimización de la sesión (7) y decidir si conservar `tests/bench_opt.gd`; (b) commit del Arzobispo (preguntar mensaje); (c) probar en ventana: ritmo/energía, legibilidad de patrones, barra y dificultad.
+
+---
+
+## 🔴 Sesión 13/09 (7) — Optimización: medición real + higiene CPU
+
+> 4º ítem de la lista (juice fino ✓, feedback de daño ✓, HUD revertido, optimización ✓). Premisa cumplida: **medir antes de tocar** (regla del usuario). Se creó un bench temporal (`tests/bench_opt.gd`, SceneTree) que spawna N enemigos activos junto al player y mide el frame de física con el monitor `Performance.TIME_PHYSICS_PROCESS`.
+
+### Medición (headless, 600 ticks)
+- baseline (enemigos del nivel): **0.001 ms/física** por tick
+- +25 enemigos: **0.001 ms**
+- +50 enemigos: **0.002 ms**
+- → **No hay cuello de botella de CPU medible en física/AI.** El costo real del juego estaría del lado del RENDER (draw calls/GPU), que headless no mide; si algún día hay perf issues en ventana, mirar render primero.
+
+### Cambios aplicados (higiene CPU, sin cambio visual)
+- `enemy.gd`: nuevo `_player_cache` + `_obtener_player()` (cache con `is_instance_valid`); reemplaza los 2 lookups `get_first_node_in_group("player")` por frame en `_physics_process`/`_mirar_jugador`. La de `_morir` (1 vez por muerte) se dejó igual.
+- `camera.gd`: mismo patrón `_player_cache`/`_obtener_player()` para el lookup de cada `_physics_process`.
+- `projectile.gd`: `_cam` cacheada en `_ready` (con re-búsqueda si muere); homing re-busca objetivo cada `HOMING_TICK = 0.15s` en vez de por frame (`_homing_timer`).
+
+### Verificación + git
+- Import limpio, smoke limpio, `autotest` / `diag_golpe` / `diag_feedback` / `diag_formas` / `diag_nivel1prueba` → **FALLOS = 0**. Bench post-cambio idéntico (0.001–0.002 ms).
+- **SIN commit**: esperando decisión del usuario; se pregunta si conservar `tests/bench_opt.gd` (útil para futuras comparaciones) o descartarlo.
+
+---
+
+## 🔴 Sesión 13/09 (6) — Mejora de HUD REVERTIDA (decisión del usuario)
+
+> Se implementaron las opciones A (panel de forma activa) y C (energía baja con tint) elegidas por el usuario, y luego **se revirtió TODO el bloque por pedido explícito** (`git checkout -- scripts/hud.gd scenes/hud.tscn`; esos cambios nunca se commiteó, el último commit sigue siendo `778861e`). El código no quedó incorporado.
+
+### Lección (registrar y no repetir)
+- **Las barras de vida/espíritu del HUD son columnas VERTICALES a todo el alto del panel izquierdo.** Cualquier elemento que se meta en esa columna (panel de forma, cap, etc.) recorta su altura y rompe la organización visual validada por el usuario. Si en el futuro se quiere mostrar la forma activa u otra info junto a las barras, **consultar antes** cómo integrarlo sin alterar la altura/ancho de las barras, o usar nodos por fuera del bloque `Bars` (p.ej. labels sueltos) — NO meter contenedores extra en `Bars/Columna`.
+- Antes de ajustar layouts validados (offsets de `Bars`, `ProgLabel`, `SelLabel`), confirmar con el usuario; él prefiere la organización "líneas verticales" original.
+- Lo que sí quedó intacto y aprobado de sesiones anteriores: juice fino y feedback de daño del jugador (commits `14aec73`, `778861e`).
+
+---
+
 ## 🔴 Sesión 13/09 (5) — Feedback de daño del jugador
 
 > 2º ítem de la lista (juice fino ✓, feedback de daño ✓; faltan: mejora de HUD y optimización). El objetivo era darle al jugador la misma claridad de impacto que ya tenían los enemigos (números flotantes, tint, squash), sin tocar la sensación actual (hitstop_dano = 0 deliberado desde la lección 13/09 combate).
@@ -865,6 +922,11 @@ tests/
 ---
 
 ## Notas / Lecciones Aprendidas
+
+- **(13/09, jefe) Enum vs literales: `enum Fase { UNO, DOS, TRES }` vale 0/1/2, no 1/2/3.** Al testear el jefe con `_cambiar_fase(3)` (valor inexistente) el match no corría la rama TRES, `fase` quedaba en 3, y `_umbral_actual()` devolvía el umbral de F1 (17) → el golpe fatal se absorbía y el jefe nunca moría. Además el HUD tenía un **bug real por lo mismo**: `_on_boss_fase` hacía `match 1,2,3` + `pips: i <= fase-1`, con lo que colores y pips de la barra quedaban corridos una fase (se veía verde en lugar de púrpura, etc.). **Regla:** al consumir un enum ajeno, usar los símbolos (`boss.Fase.TRES`) o los valores reales (0/1/2), nunca literales supuestos.
+- **(13/09, jefe) `int(hijo.get("propiedad"))` crashea con "Nonexistent 'int' constructor" si la propiedad no existe** (`get` → `null`): el Encounter rompía el `_agregar_manual` cuando el enemigo manual no tenía `ola_asignada` (el jefe) y el script abortaba silenciosamente → la pelea nunca arrancaba. Hacerlo defensivo (`var val = hijo.get(...); var idx := int(val) if val is int else 0`).
+- **(13/09, jefe) GDScript no acepta `a, b = funcion()`** (destructuring de array de a dos sin corchetes): parse error en `boss.gd` que impedía cargar el script. Usar `var arr := funcion()` y leer índices, o `[a, b] = funcion()`.
+- **(13/09, jefe) Una transición de fase puede dejar máquina de estados infinita:** al pasar de F2 (aéreo, `_forzar_aereo=true`) a F3, si no se resetea `_forzar_aereo=false` en la rama de F3 el jefe entraba al bucle `_ronda_aerea` → continúa → re-entra → nunca atacaba en el suelo. Regla: toda flag que activa un ciclo temporal debe resetearse en las transiciones de estado que la dejan obsoleta.
 
 - **(13/08) Los `.tres` que son meras envolturas de un script (solo `script = ExtResource(...)` sin datos propios) se pueden borrar y cargar el script directo:** los 4 `.tres` de formas (`resources/formas/*.tres`) eran así; se reemplazaron en `player.gd` por `const FORM_SCRIPTS = [preload("...humano.gd"), ...]` + `script.new()` en `_ready()`. **Reversión parcial el 11/09:** los `.tres` de formas volvieron (`resources/formas/*.tres`) pero AHORA con datos propios (geometría de golpe + `combos` editables desde el Inspector); `player.gd` usa `const FORMAS`. Los `.tres` de enemigos SÍ tenían datos (stats); se hardcodearon en `enemy.gd::config_por_tipo(tipo)` y se eliminaron, con `@export var tipo` seteado en `main.tscn` y en los tests (`en.tipo = "cultista"` ANTES de `add_child` para que `_ready()` arme el `enemy_data`). Beneficio: menos recursos que reimportan y rompen UIDs/`AtlasTexture`; costo: los stats ya no se editan desde el inspector del editor. Regla: usar `.tres` solo cuando aportan datos reales (p.ej. `jugador_frames.tres`, y desde 11/09 las hitboxes de formas).
 - **(13/08) Los `.tres` generados "a mano" no necesitan esperar al editor:** el `SpriteFrames` (`resources/jugador_frames.tres`) se puede escribir directamente como texto con `ext_resource` de texturas (sin UID, solo `path`) + `sub_resource AtlasTexture` con `region` por frame + lista `animations`. Godot lo reimporta solo. Escribir un script generador `--script` puede colgar con timeout si no termina; verificar después si se creó el archivo.

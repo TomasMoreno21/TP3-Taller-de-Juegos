@@ -26,6 +26,14 @@ var _combo_base_pos: Vector2
 @onready var racha_box: VBoxContainer = $Racha
 @onready var racha_valor: Label = $Racha/Valor
 @onready var flash_dano: ColorRect = $FlashDano
+@onready var boss_bar: MarginContainer = $BossBar
+@onready var boss_fill: ProgressBar = $BossBar/Panel/Col/Envoltura/Fill
+@onready var boss_valor: Label = $BossBar/Panel/Col/Fila/Valor
+@onready var boss_pips: Array[PanelContainer] = [
+	$BossBar/Panel/Col/Pips/P1,
+	$BossBar/Panel/Col/Pips/P2,
+	$BossBar/Panel/Col/Pips/P3,
+]
 
 var _esp_cap_style: StyleBoxFlat
 var _flash_tween: Tween
@@ -33,6 +41,10 @@ var _energia_pulse: Tween
 var _energia_aviso_dado := false
 var _hp_delayed_tween: Tween
 var _esp_delayed_tween: Tween
+var _boss: Node2D
+var _boss_fill_style: StyleBoxFlat
+var _pip_on_style: StyleBox
+var _pip_off_style: StyleBox
 
 
 var _selector_refresh := 0.0
@@ -85,6 +97,7 @@ func _ready() -> void:
 	esp_bar.value = 100.0
 	_prog_refresh()
 	_connectar_player.call_deferred()
+	_conectar_boss.call_deferred()
 
 
 func _connectar_player() -> void:
@@ -103,8 +116,58 @@ func _connectar_player() -> void:
 	_actualizar_selector()
 
 
+# --- Barra del jefe (Arzobispo). Nodo propio arriba-centro, FUERA del bloque
+# --- "Bars" (lección de layout del 13/09): las columnas del HUD son verticales.
+
+func _conectar_boss() -> void:
+	var boss := get_tree().get_first_node_in_group("boss")
+	if boss == null or not ("salud_cambio" in boss):
+		return
+	_boss = boss
+	boss.salud_cambio.connect(_on_boss_salud)
+	boss.fase_cambio.connect(_on_boss_fase)
+	_boss_fill_style = boss_fill.get_theme_stylebox("fill").duplicate()
+	boss_fill.add_theme_stylebox_override("fill", _boss_fill_style)
+	_pip_on_style = boss_pips[0].get_theme_stylebox("panel")
+	_pip_off_style = boss_pips[2].get_theme_stylebox("panel")
+	if bool(boss.get("_activo")):
+		_boss_bar_mostrar(int(boss.get("health")), int(boss.get("vida_max")))
+	else:
+		boss_bar.visible = false
+
+
+func _boss_bar_mostrar(hp: int, max_hp: int) -> void:
+	boss_bar.visible = true
+	boss_fill.max_value = 1.0
+	boss_fill.value = clampf(float(hp) / float(max_hp), 0.0, 1.0)
+	boss_valor.text = str(hp)
+
+
+func _on_boss_salud(hp: int, max_hp: int) -> void:
+	_boss_bar_mostrar(hp, max_hp)
+	if hp <= 0:
+		boss_bar.visible = false
+
+
+func _on_boss_fase(fase: int) -> void:
+	# Los valores llegan del enum Fase del jefe (UNO=0, DOS=1, TRES=2).
+	if _boss_fill_style != null:
+		match fase:
+			0:
+				_boss_fill_style.bg_color = Color(0.35, 0.6, 0.42)
+			1:
+				_boss_fill_style.bg_color = Color(0.56, 0.34, 0.86)
+			2:
+				_boss_fill_style.bg_color = Color(0.8, 0.25, 0.2)
+	for i in boss_pips.size():
+		var style := _pip_on_style if i <= fase else _pip_off_style
+		if style != null:
+			boss_pips[i].add_theme_stylebox_override("panel", style)
+
+
 func _on_fragmentos(_total: int) -> void:
 	_prog_refresh()
+	_actualizar_selector()
 
 
 func _on_nivel(_nuevo: int) -> void:

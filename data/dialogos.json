@@ -149,6 +149,19 @@
 		"modo": "Zona",
 		"retraso": 0.6,
 		"una_vez": false,
-		"lineas": []
+		"lineas": [
+			"Ya estamos cerca de su guarida..."
+		]
+	},
+	"jefe_intro": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.8,
+		"una_vez": false,
+		"lineas": [
+			"Ahí está... el ARZOBISPO. La entidad que venera la secta.",
+			"Usá cada forma con cabeza: el Oso rompe su guardia, el Murciélago llega donde no podés, y el Lobo esquiva lo que nadie puede.",
+			"Los cultistas que invoca nos devuelven energía. ¡No aflojes!"
+		]
 	}
 }

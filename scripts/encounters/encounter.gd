@@ -93,7 +93,9 @@ func _agrupar_manuales() -> void:
 
 
 func _agregar_manual(hijo: Node) -> void:
-	var idx := int(hijo.get("ola_asignada"))
+	var val = hijo.get("ola_asignada")
+	var idx := int(val) if val is int else 0
+	idx = maxi(idx, 0)
 	while _manuales.size() <= idx:
 		_manuales.append([])
 	_manuales[idx].append(hijo)

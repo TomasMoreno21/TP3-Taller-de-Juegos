@@ -20,6 +20,7 @@ const COMANDOS := {
 	"dummy": "Crea un muñeco de entrenamiento delante del jugador.",
 	"zona1": "Viaja a la Zona 1.",
 	"zona2": "Viaja a la Zona 2 (nivel largo).",
+	"jefe": "Viaja a la arena del Arzobispo.",
 }
 
 
@@ -127,6 +128,9 @@ func _ejecutar(tokens: PackedStringArray) -> void:
 		"zona2":
 			get_tree().change_scene_to_file("res://scenes/nivel_2.tscn")
 			imprimir("Viajando a la Zona 2")
+		"jefe":
+			get_tree().change_scene_to_file("res://scenes/nivel_jefe.tscn")
+			imprimir("Viajando a la arena del Arzobispo")
 		_:
 			imprimir("Comando desconocido. Escribí 'help'.")
 

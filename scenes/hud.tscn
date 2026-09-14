@@ -63,6 +63,46 @@ corner_radius_top_right = 11
 corner_radius_bottom_right = 11
 corner_radius_bottom_left = 11
 
+[sub_resource type="StyleBoxFlat" id="panel_boss"]
+bg_color = Color(0.08, 0.09, 0.13, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6, 0.38, 0.78, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="bg_boss"]
+bg_color = Color(0.12, 0.12, 0.16, 0.92)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="fill_boss"]
+bg_color = Color(0.56, 0.34, 0.86, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="pip_on"]
+bg_color = Color(1, 0.85, 0.45, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="pip_off"]
+bg_color = Color(0.2, 0.2, 0.28, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
 [node name="Hud" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
@@ -260,3 +300,79 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0.75, 0.08, 0.08, 0)
+
+[node name="BossBar" type="MarginContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -330.0
+offset_top = 10.0
+offset_right = 330.0
+offset_bottom = 96.0
+mouse_filter = 2
+grow_horizontal = 2
+
+[node name="Panel" type="PanelContainer" parent="BossBar"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("panel_boss")
+
+[node name="Col" type="VBoxContainer" parent="BossBar/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Fila" type="HBoxContainer" parent="BossBar/Panel/Col"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Nombre" type="Label" parent="BossBar/Panel/Col/Fila"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.55, 1)
+theme_override_font_sizes/font_size = 19
+text = "ARZOBISPO"
+
+[node name="Valor" type="Label" parent="BossBar/Panel/Col/Fila"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 15
+text = "600"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Envoltura" type="Control" parent="BossBar/Panel/Col"]
+custom_minimum_size = Vector2(640, 26)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Fill" type="ProgressBar" parent="BossBar/Panel/Col/Envoltura"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/background = SubResource("bg_boss")
+theme_override_styles/fill = SubResource("fill_boss")
+max_value = 1.0
+value = 1.0
+show_percentage = false
+
+[node name="Pips" type="HBoxContainer" parent="BossBar/Panel/Col"]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="P1" type="PanelContainer" parent="BossBar/Panel/Col/Pips"]
+custom_minimum_size = Vector2(120, 8)
+layout_mode = 2
+theme_override_styles/panel = SubResource("pip_on")
+
+[node name="P2" type="PanelContainer" parent="BossBar/Panel/Col/Pips"]
+custom_minimum_size = Vector2(120, 8)
+layout_mode = 2
+theme_override_styles/panel = SubResource("pip_off")
+
+[node name="P3" type="PanelContainer" parent="BossBar/Panel/Col/Pips"]
+custom_minimum_size = Vector2(120, 8)
+layout_mode = 2
+theme_override_styles/panel = SubResource("pip_off")
