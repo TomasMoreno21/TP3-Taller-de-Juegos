@@ -23,4 +23,4 @@ extends Resource
 @export var lunge_alcance: float = 95.0
 @export var retrocede_dist: float = 0.0
 @export var proyectil_speed: float = 340.0
-@export var armadura_ataque: bool = true
+@export var armor_umbral: int = 0  # golpes por debajo de este daño NO interrumpen (0 = sin armadura)

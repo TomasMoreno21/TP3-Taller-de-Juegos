@@ -5,8 +5,8 @@ extends Forma
 func _init() -> void:
 	form_name = "Humano"
 	speed = 600.0
-	jump_velocity = -600.0
-	gravity_scale = 1.0
+	jump_velocity = -735.0
+	gravity_scale = 1.5
 	max_health = 100
 	attack_damage = 10
 	attack_range = 100.0
@@ -27,10 +27,11 @@ func _init() -> void:
 	hit_rotation = 7.0
 	landing_squash = 0.12
 	camera_zoom = Vector2.ONE
-	accel = 2600.0
-	friction = 2200.0
-	accel_air_mult = 0.75
-	jump_h_speed_mult = 0.75
+	accel = 4600.0
+	friction = 5000.0
+	accel_air_mult = 0.85
+	jump_h_speed_mult = 0.9
+	despegue_speed_mult = 0.9
 	coyote_time = 0.16
 	jump_buffer_time = 0.18
 	melee_sticky = 0.0

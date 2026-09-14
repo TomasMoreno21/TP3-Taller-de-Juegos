@@ -26,7 +26,7 @@ func _init() -> void:
 	transform_duration = 9.0
 	turn_tilt = 9.0
 	lean_angulo = 3.5
-	accel = 2400.0
+	accel = 3000.0
 	friction = 2000.0
 	accel_air_mult = 0.65
 	coyote_time = 0.14
@@ -34,6 +34,7 @@ func _init() -> void:
 	camera_zoom = Vector2(0.95, 0.95)
 	landing_squash = 0.06
 	mult_recuperacion = 1.8
+	recovery_early_fraccion = 0.4
 	melee_sticky = 0.0
 	step_up_max = 0.0
 	combos = [

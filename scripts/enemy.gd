@@ -14,6 +14,8 @@ const MAX_FALL_SPEED := 950.0
 @export var volumen_golpe_db := 0.0
 @export var perseguir_fuera_rango: bool = false  # los proyectiles se quedan donde spawnnean y atacan a rango
 @export var limite_caida := 6000.0
+@export var stun_tilt_angulo := 5.0          # inclinación de la pose de stun (grados)
+@export var stun_recuperar_tiempo := 0.06    # qué tan rápido vuelve a la vertical tras el stun
 
 const FRAMES_POR_TIPO := {
 	"cultista": preload("res://resources/enemigo1_frames.tres"),
@@ -30,6 +32,10 @@ var _dir := -1
 var _attack_anim := ""
 var _attack_anim_timer := 0.0
 var _stun_timer := 0.0
+var _stun_dir := 1
+var _reaction_tween: Tween
+var _stun_tween: Tween
+var _tint_tween: Tween
 var _windup_timer := 0.0
 var _lunge_timer := 0.0
 var _lunge_hit := false
@@ -65,6 +71,7 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.visual_scale = Vector2.ONE
 			d.offset_visual_x = 3.3
 			d.knockback_resist = 0.55
+			d.stun_duracion = 0.28
 		"arquero":
 			d.tipo_nombre = "Arquero"
 			d.max_health = 60
@@ -80,6 +87,7 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.visual_scale = Vector2.ONE
 			d.offset_visual_x = 5.3
 			d.knockback_resist = 0.45
+			d.stun_duracion = 0.3
 		"chaman":
 			d.tipo_nombre = "Chamán"
 			d.max_health = 155
@@ -97,6 +105,8 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.offset_visual_x = 0.0
 			d.visual_scale = Vector2.ONE
 			d.knockback_resist = 0.6
+			d.stun_duracion = 0.35
+			d.armor_umbral = 17  # solo golpes pesados (18+) rompen su ataque; Lobo/Murciélago no pueden
 	return d
 
 
@@ -381,6 +391,8 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
 		return
 	health -= cantidad
 	if visual != null:
+		if _tint_tween != null and _tint_tween.is_valid():
+			_tint_tween.kill()
 		visual.modulate = Color(1, 0.6, 0.6)
 		var base_scale := visual.scale
 		var sx := absf(base_scale.x)
@@ -410,23 +422,79 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
 	if audio_mgr != null:
 		# el sonido del cuerpo suena cuando la animación se des-congela (impacto visible)
 		audio_mgr.play_sfx_sincronizado(sonido_golpe, volumen_golpe_db)
-	var en_ataque := _windup_timer > 0.0 or _lunge_timer > 0.0
-	var armadura: bool = enemy_data != null and enemy_data.armadura_ataque and en_ataque
-	if knockback > 0.0 and not armadura:
-		var resist: float = enemy_data.knockback_resist if enemy_data != null else 1.0
-		velocity.x = dir * knockback * (1.0 - resist)
-		_stun_timer = 0.22
+	var umbral := enemy_data.armor_umbral if enemy_data != null else 0
+	var armadura: bool = umbral > 0 and cantidad < umbral
 	if not armadura:
+		var dur_stun: float = enemy_data.stun_duracion if enemy_data != null else 0.22
+		_stun_dir = 1 if dir == 0 else dir
+		_stun_timer = maxf(_stun_timer, dur_stun)
 		_windup_timer = 0.0
 		_lunge_timer = 0.0
-	await get_tree().create_timer(0.08).timeout
-	if is_instance_valid(visual):
-		visual.modulate = Color(1, 1, 1)
+		if knockback > 0.0:
+			var resist: float = enemy_data.knockback_resist if enemy_data != null else 1.0
+			velocity.x = dir * knockback * (1.0 - resist)
+		_pose_stun(dur_stun)
 	if health <= 0:
 		_morir()
+		return
+	# Con vida, espero a que termine el hitstop para fundir el tint rojo en paralelo
+	# a la reanudación (flash congelado durante el freeze).
+	await _esperar_fin_hitstop()
+	if is_instance_valid(visual):
+		# El tint rojo se funde cuando el hitstop termina (flash congelado durante el freeze).
+		_tint_tween = create_tween()
+		_tint_tween.tween_property(visual, "modulate", Color(1, 1, 1), 0.08)
+
+
+## Espera a que el hitstop global termine antes de fundir el tint: así el flash rojo
+## queda congelado durante el freeze y se desvanece en paralelo al reanudar.
+func _esperar_fin_hitstop() -> void:
+	if not is_instance_valid(visual):
+		return
+	# Un frame para que el atacante alcance a congelar (freeze tras take_damage).
+	await get_tree().process_frame
+	var hs := get_node_or_null("/root/Hitstop")
+	if hs == null:
+		await get_tree().create_timer(0.08).timeout
+		return
+	var congelado: bool = hs._restore_ms > 0 or Engine.time_scale == 0.0
+	if not congelado:
+		# Golpe sin hitstop (ej: proyectil): restauro directo.
+		await get_tree().create_timer(0.08).timeout
+		return
+	while (hs._restore_ms > 0 or Engine.time_scale == 0.0) and is_instance_valid(self):
+		await get_tree().process_frame
+
+
+## Reacción de stun: jitter del sprite en el impacto + inclinación hacia atrás
+## que sostiene durante todo el hitstun y vuelve suavemente al terminar.
+func _pose_stun(dur_stun: float) -> void:
+	if visual == null:
+		return
+	if _reaction_tween != null and _reaction_tween.is_valid():
+		_reaction_tween.kill()
+	if _stun_tween != null and _stun_tween.is_valid():
+		_stun_tween.kill()
+	var base_pos := visual.position
+	_reaction_tween = create_tween()
+	for i in range(2):
+		_reaction_tween.tween_property(visual, "position", base_pos + Vector2(_stun_dir * 3.0, 0.0), 0.022)
+		_reaction_tween.tween_property(visual, "position", base_pos - Vector2(_stun_dir * 3.0, 0.0), 0.022)
+	_reaction_tween.tween_property(visual, "position", base_pos, 0.02)
+	var tilt := deg_to_rad(-stun_tilt_angulo) * signf(_stun_dir)
+	_stun_tween = create_tween()
+	_stun_tween.tween_property(visual, "rotation", tilt, 0.05).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_stun_tween.tween_interval(maxf(dur_stun, 0.05))
+	_stun_tween.tween_property(visual, "rotation", 0.0, stun_recuperar_tiempo).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _morir() -> void:
+	if _reaction_tween != null and _reaction_tween.is_valid():
+		_reaction_tween.kill()
+	if _stun_tween != null and _stun_tween.is_valid():
+		_stun_tween.kill()
+	if _tint_tween != null and _tint_tween.is_valid():
+		_tint_tween.kill()
 	var player := get_tree().get_first_node_in_group("player")
 	if player != null and player.has_method("on_enemy_killed"):
 		(player as Node2D).on_enemy_killed()

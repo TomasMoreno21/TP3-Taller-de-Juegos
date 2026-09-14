@@ -19,18 +19,29 @@ var _look_offset := Vector2.ZERO
 @export var desplazamiento := Vector2(0, -220)
 @export var suavizado_zoom := 5.0
 @export var lookahead := 0.28    # anticipación de cámara según velocidad horizontal
-@export var lookahead_umbral := 80.0    # velocidad (px/s) recién pasada la cual empieza el adelanto
+@export var lookahead_umbral := 100.0    # velocidad (px/s) recién pasada la cual empieza el adelanto
+@export var lookahead_ataque := 140.0    # adelanto fijo (px) hacia el facing mientras se ataca
 @export var suavizado_lookahead := 3.0  # qué tan suave entra y sale el adelanto
-@export var deadzone_horizontal := 12.0  # zona muerta en X (evita temblor al estar quieto)
-@export var deadzone_vertical := 150.0  # salto dentro de este rango casi no mueve la cámara al subir
+@export var deadzone_horizontal := 24.0  # zona muerta en X (traga micro-correcciones, evita temblor)
+@export var deadzone_vertical := 200.0  # salto dentro de este rango casi no mueve la cámara al subir (pico Humano=184)
 @export var seguimiento_vertical_leve := 0.15  # cuánto sí se mueve dentro de la deadzone al subir
-@export var suavizado_subida := 1.8  # al subir: lento
+@export var suavizado_subida := 2.2  # al subir: lento
 @export var suavizado_bajada := 7.0  # al bajar: brusco y rápido
 @export var tiempo_descenso_extendido := 0.7  # segundos planeando/bajando para anticipar abajo
 @export var offset_descenso_extendido := 420.0  # px que baja más la cámara en descenso prolongado
 @export var suavizado_descenso_extendido := 4.0  # qué tan suave entra/sale ese offset extra
 @export var look_stick_amplitud := 220.0  # px máximos que desplaza la cámara el stick derecho
 @export var look_stick_suavizado := 5.0  # suavizado del desplazamiento del stick derecho
+@export var intensidad_shake := 1.0  # multiplicador global del shake (0 = desactivado; accesibilidad)
+# Restauración al suelo: al aterrizar en la misma línea de piso que antes del
+# salto, recentra rápido a la altura recordada (anti-bob / sin deriva vertical).
+@export var restaurar_suelo := true
+@export var restaura_tolerancia := 12.0  # px de diferencia de altura para considerar "mismo piso"
+@export var restaura_ventana := 0.15  # s que dura el recentrado tras aterrizar
+# Zoom por velocidad: aporte único y acotado (disciplina de zoom transversal).
+@export var zoom_velocidad_min := 200.0  # velocidad (px/s) a la que empieza a alejar
+@export var zoom_velocidad_rango := 450.0  # rango de velocidad hasta el alejamiento máximo
+@export var zoom_velocidad_max := 0.05  # alejamiento máximo por velocidad (antes 0.08)
 # Anticipación de salto: predice el pico del arco y lo encuadra con curva suave
 @export var gravedad_referencia := 980.0
 @export var anticip_apex_max := 110.0  # px máximos que sube el encuadre al predecir el pico
@@ -41,6 +52,10 @@ var _look_offset := Vector2.ZERO
 var _apex_look := 0.0
 var _shake_dir := Vector2.ZERO
 var _shake_rot_amplitud := 0.0
+var _shake_duracion := 0.15
+var _suelo_y := INF
+var _restaura_t := 0.0
+var _vuelo_previo := false
 
 
 func _ready() -> void:
@@ -71,8 +86,8 @@ func _process(delta: float) -> void:
 	_look_offset = _look_offset.lerp(look_dir * look_stick_amplitud, minf(look_stick_suavizado * delta, 1.0))
 	if _shake_timer > 0.0:
 		_shake_timer -= delta
-		var t := clampf(_shake_timer / 0.15, 0.0, 1.0)
-		var cur_strength := _shake_strength * (t * t)
+		var t := clampf(_shake_timer / _shake_duracion, 0.0, 1.0) if _shake_duracion > 0.0 else 1.0
+		var cur_strength := _shake_strength * (t * t) * intensidad_shake
 		if _shake_dir == Vector2.ZERO:
 			offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * cur_strength + _look_offset
 		else:
@@ -153,13 +168,22 @@ func _physics_process(delta: float) -> void:
 		var f = (player as Node).get("forms")[(player as Node).get("current_form")]
 		if f != null and "camera_lookahead_mult" in f:
 			look_mult = f.get("camera_lookahead_mult")
-	var objetivo_la := clampf(maxf(absf(vel_x) - lookahead_umbral, 0.0) * lookahead * look_mult * signf(vel_x), -160.0, 160.0)
+	# Al atacar el adelanto se congela hacia el facing del golpe (legibilidad en
+	# combate: no sigue empujando junto a la velocidad de movimiento).
+	var atacando: bool = false
+	var atacando_dir := 0.0
+	if "_attacking" in (player as Node) and "facing" in (player as Node):
+		atacando = bool((player as Node).get("_attacking"))
+		if atacando:
+			atacando_dir = signf(float((player as Node).get("facing")))
+	var objetivo_la := clampf(atacando_dir * lookahead_ataque, -160.0, 160.0) if atacando \
+		else clampf(maxf(absf(vel_x) - lookahead_umbral, 0.0) * lookahead * look_mult * signf(vel_x), -160.0, 160.0)
 	_lookahead_actual = lerpf(_lookahead_actual, objetivo_la, minf(suavizado_lookahead * delta, 1.0))
 	destino.x += _lookahead_actual
 	if absf(destino.x - global_position.x) < deadzone_horizontal:
 		destino.x = global_position.x
-	# (1) Zoom por velocidad: 200→0, 650→0.08 (0.92)
-	var extra_zoom := clampf((absf(vel_x) - 200.0) / 450.0, 0.0, 1.0) * 0.08
+	# (1) Zoom por velocidad: min→0, min+rango→máx (aporte único y acotado).
+	var extra_zoom := clampf((absf(vel_x) - zoom_velocidad_min) / zoom_velocidad_rango, 0.0, 1.0) * zoom_velocidad_max
 	_zoom_velocidad = 1.0 - extra_zoom
 	# Vertical asimétrico: subir lento (deadzone + suavizado bajo), bajar brusco (7) o suave si planea (4) — trepando enfoca vertical
 	var dz_vert := 40.0 if trepando else deadzone_vertical
@@ -188,6 +212,26 @@ func _physics_process(delta: float) -> void:
 	var objetivo_offset := offset_descenso_extendido if _descenso_t >= tiempo_descenso_extendido else 0.0
 	_offset_descenso = lerpf(_offset_descenso, objetivo_offset, minf(suavizado_descenso_extendido * delta, 1.0))
 	destino.y += _offset_descenso
+
+	# (10) Restauración al suelo: si al aterrizar la altura es la misma que la
+	# del piso del que se salió (dentro de la tolerancia), recentra rápido a esa
+	# línea recordada en vez de quedar derivado por el apex del salto.
+	if not trepando:
+		var target_suelo := (player as Node2D).global_position.y + desp.y
+		if p_body.is_on_floor():
+			if _vuelo_previo and restaurar_suelo and absf(target_suelo - _suelo_y) <= restaura_tolerancia:
+				_restaura_t = restaura_ventana
+			if _restaura_t > 0.0:
+				destino.y = _suelo_y
+				suavizado_y = maxf(suavizado_y, suavizado_bajada)
+				_restaura_t = maxf(_restaura_t - delta, 0.0)
+			else:
+				_suelo_y = target_suelo
+			_vuelo_previo = false
+		else:
+			_vuelo_previo = true
+			if _suelo_y == INF:
+				_suelo_y = target_suelo
 
 	global_position.x = lerpf(global_position.x, destino.x, minf(suavizado * delta, 1.0))
 	global_position.y = lerpf(global_position.y, destino.y, minf(suavizado_y * delta, 1.0))
@@ -225,7 +269,8 @@ func modo_normal() -> void:
 
 func shake(strength: float = 8.0, duration: float = 0.15, dir: Vector2 = Vector2.ZERO) -> void:
 	_shake_timer = duration
+	_shake_duracion = duration
 	_shake_strength = strength
 	_shake_dir = dir.normalized() if dir.length_squared() > 0.0 else Vector2.ZERO
 	if _shake_rot_amplitud <= 0.0:
-		_shake_rot_amplitud = clampf(strength * 0.12, 0.0, 0.75)
+		_shake_rot_amplitud = clampf(strength * 0.12 * intensidad_shake, 0.0, 0.2)

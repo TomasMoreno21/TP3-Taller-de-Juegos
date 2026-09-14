@@ -2,6 +2,79 @@
 
 ---
 
+## 🔴 Sesión 13/09 — Game feel del combate (Bloque 1) + research de referencias
+
+> Research cerrado (~35 fuentes: Capcom/Final Fight, SoR2/4, Shredder's, SF4/GG counter-hits, DMC5 frame data, Smash, Bayonetta, Viewtiful Joe, Arkham, Sekiro/Sifu, Punch-Out, MK11, DBFZ, TMNT paper, y más). Decisión del usuario: implementar **Bloques 1+2**, con `1e` (hitstop de daño recibido) + `2d` (flash sincro) + early-exit liberando **movimiento + salto + chain**. **Launch/juggle (1d) QUITADO del alcance.** Commit inicial del bloque: `0f0e7e1`.
+
+### Bloque 1 implementado (esta sesión)
+- **1a — Interrupción total (Capcom "el 1er golpe siempre interrumpe"):** eliminado el gate `armadura_ataque` de `enemigo.gd` (era una hiper-armadura global agregada el 01/09 para evitar el lock infinito). Todos los golpes ahora cancelan windup/lunge. **Compensación por el riesgo de re-lock infinito (lección 01/09):** el chamán conserva armadura **por umbral** (`@export armor_umbral` = 17): golpes < 17 no lo interrumpen (Humano attack 10, Lobo 6/10/14, Murciélago 8/14/15, Oso attack 16) y ≥ 17 lo rompen (Humano heavy 18+, Oso heavy 24+/special 32, combos) → Lobo/Murciélago no pueden interrumpirlo, rol de formas reforzado. El resto de tipos: `armor_umbral = 0` (sin armadura).
+- **1b — Stun con dirección + reacción física:** `_stun_dir` (dirección del impacto) + jitter del sprite (2 oscilaciones de 3px) + inclinación hacia atrás `-8° * sign(dir)` que se sostiene todo el hitstun y vuelve con TRANS_BACK (`_pose_stun()` con `_reaction_tween`/`_stun_tween` propios, matados en `_morir`). `stun_duracion` por tipo: cultista 0.28 / arquero 0.3 / chamán 0.35.
+- **1c — CONTRA-GOLPE retirado (usuario, 13/09):** implementado (daño ×1.5, chispas doradas, texto, tope 1 por enemigo) y luego **borrado por completo** a pedido del usuario ("que no pase eso"): se revirtieron los exports `counter_dano_mult`/`counter_stun` de `player.gd`, `puede_contra_atacarse()` y `_counter_usado` de `enemy.gd`, `_contra_fx`/`_flash_contra` y `play_sfx_pitch`. El sistema queda sin ninguna compensación especial por pegar durante el viento: solo interrupción normal.
+- **1e — Fix feedback por daño recibido (Hollow Knight):** `const HITSTOP_DANO 0.05` → `@export hitstop_dano := 0.0` (ya no se congela el tiempo al recibir daño; queda shake + flash + invuln).
+- **Tests:** +3 asserts de armadura chamán (sin contra) en `autotest.gd`; **diag_golpe.gd arreglado** (buscaba un nodo `Cultista1` inexistente → colgaba; ahora instancia `enemy.tscn`); **diag_formas.gd** "Lobo salta más alto" → corregido a "Lobo tiene doble salto" (Humano salta más alto, -600 vs -540).
+- **Verificación:** import limpio, smoke limpio, `autotest`/`diag_golpe`/`diag_formas`/`diag_feedback` **FALLOS = 0**.
+
+### Bloque 2 implementado (esta sesión, ¡ya no está pendiente!)
+- **2a — Early-exit extendido (Capcom/DMC5):** nuevo `@export recovery_early_fraccion` en `forma.gd` (Humano 0.35 / Lobo 0.35 / Oso 0.25 / Murciélago 0.4). Al pasar el umbral del recovery se libera desplazamiento horizontal y glide (`_early_liberado`); el salto ya estaba libre. **Chain inmediato:** en pasos intermedios (no-finisher) con ataque encolado (`_buffered_attack`/`_attack_air_buffer_type`), el recovery se comprime a 0.03s; el recovery largo queda solo en el finisher del combo/remate. Umbral calculado en `enable_melee` sobre `recovery * mult_recuperacion`.
+- **2b — Whiff:** `WHIFF_RECOVERY_MULT 1.25` → `@export whiff_recovery_mult := 1.15`.
+- **2c — Hitstop por peso (Hollow Knight) + multigolpe (SOR2):** `_hitstop_por_tipo()` ya no congela (solo calcula); el freeze se aplica en `_check_attack_hits` escalado por `_factor_peso(primer)` = `clampf(max_health/75, 0.85, 1.4)` → cultista 1.0 / arquero 0.85 / chamán 1.4; si se golpean 2+ enemigos, ×0.8 (no se multiplica la lentitud). `_factor_peso` es null-safe (sin `enemy_data` → 1.0).
+- **2d — Flash sincronizado:** en `enemy.gd::take_damage` el tint rojo ya no se resetea con un timer de 0.08s: `_esperar_fin_hitstop()` espera 1 frame (deja arrancar el freeze), detecta `Hitstop._restore_ms`/`Engine.time_scale==0`, espera a que termine el freeze y **recién ahí** funde a blanco con tween 0.08s (`_tint_tween`, matado en `_morir`). El flash queda congelado durante el hitstop y se desvanece al reanudar. En daño letal la muerte es inmediata (sin esperar el fade), así no se atrasa `_morir()`.
+- **Tests:** +9 asserts de Bloque 2 en `autotest.gd` (fracción early-exit por forma, whiff, `_factor_peso` con nodos reales de `enemy.tscn` por tipo). Lección: `_factor_peso` usa `"enemy_data" in body`, así que un `Node2D` con `set()` dinámico no sirve para testear → usar nodo de `enemy.tscn` real.
+- **Verificación:** import limpio, smoke limpio, `autotest` FALLOS = 0 (9 nuevos), `diag_golpe`/`diag_feedback`/`diag_formas` FALLOS = 0.
+- **Post-bloque (usuario):** hitbox del Lobo **360×233 → 360×160** (perfil "bajo y agachado" de 27/08): techo más bajo (recibe menos golpes) y vuelve a caber en huecos bajos/GrietaLobo. `_apply_form` ya re-ancla el collider y reposiciona el visual solo.
+
+### Preexistencias conocidas (NO tocar salvo que se pida)
+- **`diag_encuentro.gd` falla en base** (1 FAIL "Todos los enemigos de la ola murieron/liberados"): test con timing frágil — cuenta 30 physics frames en lugar de esperar la muerte real (tween de muerte 0.4s + freeze 0.09s + `queue_free`). Verificado: falla idéntico en el commit `0f0e7e1` sin los cambios del Bloque 2.
+- **`diag_hud.gd` crashea en base** (`Node not found: Bars/Rows/HpRow/HpBar`): paths stale del HUD viejo (el HUD nuevo usa otra estructura). Verificado: falla idéntico en base. 
+- Bloque 3 (hitstop selectivo) sigue fuera de alcance.
+
+---
+
+## 🔴 Sesión 13/09 (2) — Game feel de movimiento y salto (plan completo aplicado)
+
+> Mismo método que el del combate: audit del código + research profundo (~17 fuentes: frame data de SMB1/SMB3/Meat Boy/Limbo/Sonic/Celeste, DiGRA "Operationalising the Game Feel of Jumping", Designing a 2D Jump, Double Fine/Raz, jump-arc calculators por outcome, tunning de game-feel gamedev, SoR4 patch notes y reviews del Ben 10: Alien Force original) → propuesta en bloques → decisiones del usuario → implementación completa. Decisiones del usuario: **solo sentir (sin tocar alturas)**, doble salto **solo Lobo**, aire Humano **0.9 + empujón de despegue**, **fast-fall fuera**, micro-cámara 2.2, y las dos palancas extra del análisis profundo: **fall_g 1.8** y **accel_air_mult 0.85**.
+
+### Diagnóstico (medido con la física real)
+- Humano/Lobo: apex 0.61/0.67s (banda pesada; referencia 0.25–0.45s) y **todas las formas frenan más lento de lo que aceleran** (stop>start = "derrapa", al revés de la ley Celeste). Oso ya era el pesado correcto (0.27s); Murciélago flota de identidad. Las alturas (184/181px) son restricción de diseño de nivel (`diag_nivel1prueba`: `RISE_HUMANO 135 / RISE_LOBO 235`, gaps 250/420).
+
+### Cambios aplicados
+- **`forma.gd`:** nuevo `@export despegue_speed_mult` (0 = off). En `try_jump`, si el jugador salta con input direccional y el mult > 0, arranca a `dir*speed*mult` (estilo Limbo / Raz 80–90% de speed) sin pasar el tope aéreo (`max_h`).
+- **`humano.gd`:** `jump_velocity -600→-735`, `gravity_scale 1.0→1.5` (apex 0.61→0.50s; altura intacta: 735²/2·1470 ≈ 184px), `accel 2600→4600` (tope ~0.13s), `friction 2200→5000` (frena ~0.12s), `accel_air_mult 0.75→0.85`, `jump_h_speed_mult 0.75→0.9`, `despegue_speed_mult 0.9`.
+- **`lobo.gd`:** `jump_velocity -540→-660`, `gravity_scale 0.82→1.22` (apex 0.67→0.55s), `accel 4200→5200`, `friction 3600→5200`. Doble salto + zip intacto.
+- **`oso.gd`:** `friction 1400→2100` (menos derrape; sigue el pesado lento).
+- **`murcielago.gd`:** `accel 2400→3000`. Identidad de flotar/planeo intacta.
+- **`player.gd`:** `FALL_GRAVITY_MULT 1.6→1.8` (más peso al caer; ratio dentro de rango, Celeste ~2).
+- **`camera.gd`:** `suavizado_subida 1.8→2.2` (acompaña el pop).
+- **No tocado:** cut ×0.42 (release, rampeado con vy), apex hang escalonado, coyote/buffer generosos, doble salto único de Lobo, alturas de salto (restricción de nivel), `herramienta_nivel` (sigue con `GRAVITY * gravity_scale`), fast-fall (descartado por decisión).
+
+### Verificación
+- Import limpio, smoke limpio, `autotest` **FALLOS = 0** (incluye 2a/2b/2c), `diag_formas`/`diag_golpe`/`diag_feedback` **FALLOS = 0**, `diag_nivel1prueba` **FALLOS = 0** ("toda plataforma es alcanzable… inalcanzables=0") → el nivel sigue alcanzable con la física nueva.
+- Asserts de "Lobo salta más alto que el Oso" siguen verdes (Lobo -660 < Oso -410).
+- Pendiente: commit/push a cargo del usuario (Blocques 1+2 + hitbox Lobo + este retune siguen en el working tree).
+
+---
+
+## 🔴 Sesión 13/09 (3) — Cámara: plan C1–C5 aplicado (deadzones, restauración al suelo, lookahead en combate, shake, zoom y límites)
+
+> Mismo método que combate/movimiento: audit de `camera.gd` + research (Game Developer "Camera Logic in a 2D Platformer", Odd Verdure "restoration/anti-bob", Coding Quests "ejes separados + centro en combate", Solana Garden "juice caps: zoom punch 150–250ms, FOV en sprint, shake chico") → propuesta en bloques → **usuario aprobó C1–C5 completo** → implementación + verificación.
+
+### Cambios aplicados
+- **C1 — deadzone vertical 150→200** (`camera.gd`): supera el pico del salto Humano (184px) para que un salto de rutina casi no mueva el encuadre. Nueva **restauración al suelo**: con las palancas `restaurar_suelo` (on), `restaura_tolerancia` (12px) y `restaura_ventana` (0.15s); si al aterrizar la altura coincide con la del piso del que se salió, recentra rápido (tira con `suavizado_bajada`) a la línea recordada en vez de quedar derivado por el apex (anti-bob en escaleras: la tolerancia es chica justamente para NO re-centrar al subir/bajar de plataformas).
+- **C2 — lookahead**: `deadzone_horizontal 12→24`, `lookahead_umbral 80→100` (más correcciones "pegadas" antes de empujar), y **congelar lookahead al atacar** (`lookahead_ataque=140px` hacia el facing del golpe, leído vía `_attacking`/`facing` del player) → legibilidad en combate sin el empuje de la velocidad.
+- **C3 — shake**: la envolvente ahora se normaliza por la **duración real** pasada (`_shake_duracion`, antes estaba anclada a `/0.15`); rotación clamp **0.75→0.2 rad** (rotación es lo más nauseógeno); nuevo `@export intensidad_shake := 1.0` global (0 = desactivado, accesibilidad), aplicado a offset + rotación.
+- **C4 — disciplina de zoom**: `extra_zoom` pasa a `zoom_velocidad_max 0.05` (era 0.08) con umbral/rango exportables (`zoom_velocidad_min 200 / zoom_velocidad_rango 450`); **quitado el `sprint_zoom_out=0.04` + `sprint_min_speed=420` del Lobo** (duplicado con el zoom por velocidad) → Lobo en sprint ahora llega a ~0.93 en vez de ~0.83 de zoom-out. Revisado `projectile.gd:87`: `_fuera_de_camara()` ya usa `cam.zoom` para el rect visible → correcto con zoom dinámico, sin cambios. La palanca `@export sprint_zoom_out` de `forma.gd` (y `_sprint_zoom` de `player.gd`) se conservan por si el usuario quiere re-activar el efecto desde el editor.
+- **C5 — límites reales** (seteados en el nodo Camara de cada nivel, editables en editor; antes el diag `limit_right < 1e8` pasaba vacíamente con el default Godot de 10M):
+  - `nivel1prueba`: x 0..44000, y -700..1100.
+  - `nivel1`: x -1600..17200, y -700..1100 (spawn en -248 visible).
+  - `nivel2`: x -3000..16000, y -1500..7600 (encierra spawn 5421,3511 y santuario 3965,6948).
+  - `main.tscn` no se tocó (extensión incierta; la cámara ya tiene offset propio).
+
+### Verificación
+- Import limpio, smoke limpio, `autotest` **FALLOS = 0**, `diag_formas`/`diag_golpe`/`diag_feedback` **FALLOS = 0**, `diag_nivel1prueba` **FALLOS = 0** (alcanzabilidad intacta; "cámara con límites seteados" ahora es real).
+- Pendiente: commit/push a cargo del usuario (sigue todo acumulado del 13/09: Bloque 1+2, hitbox Lobo, retune movimiento/salto y este plan de cámara).
+
+---
+
 ## 🔴 Sesión 11/09 — Gameplay rebalanceado + fix colisiones + pulido visual
 
 > Pedido del usuario: lista de mejoras de gameplay (bloqueo de movimiento al atacar, hitboxes proporcionales, orbes grandes, rompibles a pecho, animaciones más rápidas, cámara al inicio, enemigo de oleada que desaparece, azul oscuro). Aprobado todo junto.

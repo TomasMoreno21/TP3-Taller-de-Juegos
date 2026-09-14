@@ -32,6 +32,13 @@ func _init() -> void:
 	_check(_player.forms[2].attack_damage > _player.forms[1].attack_damage, "Oso pega más fuerte que el Lobo")
 	_check(_player.forms[1].jump_velocity < _player.forms[2].jump_velocity, "Lobo salta más alto que el Oso")
 
+	# --- Bloque 2: early-exit por forma + whiff recovery ---
+	_check(absf(_player.forms[0].recovery_early_fraccion - 0.35) < 0.001, "2a: Humano early-exit 0.35")
+	_check(absf(_player.forms[1].recovery_early_fraccion - 0.35) < 0.001, "2a: Lobo early-exit 0.35")
+	_check(absf(_player.forms[2].recovery_early_fraccion - 0.25) < 0.001, "2a: Oso early-exit 0.25")
+	_check(absf(_player.forms[3].recovery_early_fraccion - 0.4) < 0.001, "2a: Murciélago early-exit 0.4")
+	_check(absf(_player.whiff_recovery_mult - 1.15) < 0.001, "2b: whiff recovery mult = 1.15")
+
 	# --- Vida compartida: transformar NO resetea la vida ---
 	_player.take_damage(30)
 	await process_frame
@@ -149,6 +156,18 @@ func _init() -> void:
 	_check(ark.projectile == true, "Enemigos: arquero dispara proyectil")
 	_check(cham.max_health > cult.max_health, "Enemigos: chamán resistente tiene más vida que el cultista")
 
+	# --- Bloque 2: hitstop por peso del enemigo (2c) ---
+	for combo_peso in [["cultista", 1.0], ["arquero", 0.85], ["chaman", 1.4]]:
+		var en_c2: Node2D = preload("res://scenes/enemy.tscn").instantiate()
+		en_c2.tipo = combo_peso[0]
+		_scene.add_child(en_c2)
+		await _wait_frames(2)
+		var esperado_c2 := float(combo_peso[1])
+		var got_c2: float = _player._factor_peso(en_c2)
+		_check(absf(got_c2 - esperado_c2) < 0.001, "2c: hitstop peso %s = %.2f (era %.2f)" % [combo_peso[0], esperado_c2, got_c2])
+		en_c2.queue_free()
+	await _wait_frames(2)
+
 	var en := preload("res://scenes/enemy.tscn").instantiate()
 	en.tipo = "cultista"
 	_scene.add_child(en)
@@ -164,6 +183,29 @@ func _init() -> void:
 	Input.action_release("attack")
 	await _esperar_recuperacion("light")
 	_check(en.health < hp_en, "Enemigos: el melee del humano daña al sectario (%d -> %d)" % [hp_en, en.health])
+	_limpiar_enemigos()
+
+	# --- Armadura por umbral: un golpe ligero NO interrumpe al chamán en windup ---
+	var en_ch := preload("res://scenes/enemy.tscn").instantiate()
+	en_ch.tipo = "chaman"
+	_scene.add_child(en_ch)
+	en_ch.global_position = _player.global_position + Vector2(60, 0)
+	await _wait_frames(10)
+	_player.global_position = en_ch.global_position - Vector2(28, 0)
+	_player.facing = 1
+	_player.velocity = Vector2.ZERO
+	await physics_frame
+	en_ch.set("_windup_timer", 0.6)
+	var hp_cham_antes: int = en_ch.health
+	Input.action_press("attack")
+	await physics_frame
+	await physics_frame
+	await physics_frame
+	Input.action_release("attack")
+	await _wait_frames(3)
+	_check(en_ch.health < hp_cham_antes, "Armadura chamán: el golpe ligero igual hace daño (%d -> %d)" % [hp_cham_antes, en_ch.health])
+	_check(float(en_ch.get("_stun_timer")) == 0.0, "Armadura chamán: el golpe ligero NO lo interrumpe (stun=0)")
+	_check(float(en_ch.get("_windup_timer")) > 0.0, "Armadura chamán: conserva su telegrafo")
 	_limpiar_enemigos()
 
 	# --- Melee: el Lobo daña a un enemigo real (bug 27/08: attack_range=90 no alcanzaba

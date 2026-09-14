@@ -18,7 +18,8 @@ func _init() -> void:
 	_check(player.forms[3].form_name == "Murciélago", "Forma 3 = Murciélago")
 	_check(player.forms[1].speed > player.forms[0].speed, "Lobo más rápido que Humano")
 	_check(player.forms[2].speed < player.forms[1].speed, "Oso más lento que Lobo")
-	_check(player.forms[1].jump_velocity < player.forms[0].jump_velocity, "Lobo salta más alto")
+	_check(player.forms[1].jumps > player.forms[0].jumps, "Lobo tiene doble salto")
+	_check(player.forms[1].jump_velocity < player.forms[2].jump_velocity, "Lobo salta más alto que el Oso")
 	_check(player.forms[2].attack_damage > player.forms[1].attack_damage, "Oso pega más fuerte")
 
 	# Vida compartida

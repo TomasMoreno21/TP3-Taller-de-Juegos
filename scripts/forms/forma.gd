@@ -56,6 +56,7 @@ var _jumps_usados := 0
 @export var friction: float = 2200.0
 @export var accel_air_mult: float = 0.65
 @export var jump_h_speed_mult: float = 1.0   # velocidad horizontal máx en el aire (1.0 = igual que en el piso)
+@export var despegue_speed_mult: float = 0.0 # arranca el salto a esta fracción de speed si hay input direccional (0 = off)
 @export var coyote_time: float = 0.14
 @export var jump_buffer_time: float = 0.18
 @export var step_up_max: float = 48.0     # altura máx (px) que sube solo al caminar contra un borde
@@ -74,6 +75,9 @@ var _jumps_usados := 0
 @export var lunge_light: float = 70.0
 @export var lunge_heavy: float = 150.0
 @export var melee_sticky: float = 0.0               # persecución al enemigo durante el golpe activo (0 = golpe estático)
+# Early-exit (Capcom): al pasar este % del recovery se libera movimiento/salto/chain.
+# El recovery largo queda solo en el finisher del combo (0 = early-exit desactivado).
+@export var recovery_early_fraccion: float = 0.35
 
 
 func tick(_player: CharacterBody2D, _delta: float) -> void:
@@ -101,6 +105,10 @@ func try_jump(player: CharacterBody2D) -> void:
 	player.velocity.y = jump_velocity * (1.0 + 0.08 * vel_factor)
 	var max_h := speed * jump_h_speed_mult
 	player.velocity.x = clampf(player.velocity.x, -max_h, max_h)
+	if despegue_speed_mult > 0.0:
+		var dir_jump := Input.get_axis("move_left", "move_right")
+		if absf(dir_jump) > 0.1:
+			player.velocity.x = clampf(dir_jump * speed * despegue_speed_mult, -max_h, max_h)
 	player.set("_salto_aereo_limitado", true)
 	if player.has_method("stretch_y"):
 		player.stretch_y(0.18, 0.2)

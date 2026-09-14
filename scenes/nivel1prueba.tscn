@@ -33,6 +33,10 @@ size = Vector2(44400, 401)
 position = Vector2(100, 862)
 
 [node name="Camara" type="Camera2D" parent="."]
+limit_left = 0
+limit_top = -700
+limit_right = 44000
+limit_bottom = 1100
 script = ExtResource("2_cam")
 
 [node name="SetupProgresion" type="Node" parent="."]

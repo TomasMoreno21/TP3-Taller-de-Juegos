@@ -17,7 +17,7 @@ const GLIDE_FALL_MULTIPLIER := 0.22
 const COYOTE_TIME := 0.14
 const JUMP_BUFFER_TIME := 0.18
 const JUMP_CUT_MULTIPLIER := 0.42
-const FALL_GRAVITY_MULT := 1.6
+const FALL_GRAVITY_MULT := 1.8
 const TURN_BOOST := 2.2
 const TURN_BOOST_AIR := 1.6
 const FRICTION_AIR_MULT := 0.7
@@ -45,7 +45,7 @@ const HITSTOP_LIGHT := 0.035
 const HITSTOP_HEAVY := 0.07
 const HITSTOP_SPECIAL := 0.09
 const HITSTOP_COMBO := 0.11
-const HITSTOP_DANO := 0.05
+@export var hitstop_dano := 0.0  # hitstop al recibir daño (0 = nada: solo shake + flash)
 const VIDA_MAX := 100
 
 var forms: Array[Forma] = []
@@ -62,7 +62,7 @@ var _attack_timer := 0.0
 var _hit_applied := false
 var _whiff_applied := false
 var _whiff_grace := 0.0
-const WHIFF_RECOVERY_MULT := 1.25
+@export var whiff_recovery_mult := 1.15
 const WHIFF_GRACE_TIME := 0.06
 var _current_attack_damage := 0
 var _current_attack_knockback := 0.0
@@ -80,6 +80,9 @@ var _combo_timer := 0.0
 var _racha := 0
 var _racha_timer := 0.0
 var _buffered_attack := ""
+
+var _early_exit_umbral := 0.0   # duración límite del recovery (segundos) para liberar movimiento/chain
+var _early_liberado := false     # se true al pasar el umbral: movimiento/libre aunque el recovery siga
 var _attack_anim_timer := 0.0
 var _attack_anim_actual := "attack1"
 var _attack_anim_cola: Array[String] = []
@@ -202,9 +205,10 @@ func _physics_process(delta: float) -> void:
 	if dialogo_bloquea or _trepando:
 		cmd_axis = 0.0
 	# Durante el ataque solo se puede girar (cambiar de lado), no desplazarse.
+	# El early-exit (pasar el umbral de recovery) libera el desplazamiento aunque siga recuperando.
 	if _attacking and cmd_axis != 0.0:
 		facing = 1 if cmd_axis > 0 else -1
-	var dir := 0.0 if _attacking else cmd_axis
+	var dir := 0.0 if (_attacking and not _early_liberado) else cmd_axis
 	if dialogo_bloquea:
 		dir = 0.0
 	if _trepando:
@@ -281,7 +285,7 @@ func _physics_process(delta: float) -> void:
 	var max_fall := MAX_FALL_SPEED if not gliding else (lerpf(300.0, 520.0, prog_fall) if current_form == Form.MURCIELAGO else 380.0)
 	velocity.y = min(velocity.y + g * delta, max_fall)
 	if gliding:
-		var dir_glide := 0.0 if (dialogo_bloquea or _attacking) else Input.get_axis("move_left", "move_right")
+		var dir_glide := 0.0 if (dialogo_bloquea or (_attacking and not _early_liberado)) else Input.get_axis("move_left", "move_right")
 		if absf(dir_glide) < 0.35:
 			dir_glide = 0.0
 		if dir_glide != 0.0:
@@ -423,6 +427,16 @@ func _handle_attack(delta: float) -> void:
 
 	if _attacking and _attack_timer > 0.0:
 		_attack_timer -= delta
+		if _early_exit_umbral > 0.0 and _attack_timer <= _early_exit_umbral:
+			var es_finisher: bool = _current_attack_type == "combo" \
+				or _current_attack_type == "special" \
+				or (_current_attack_type == "light" and _light_step >= forms[current_form].light_combo_steps) \
+				or (_current_attack_type == "heavy" and _heavy_step >= forms[current_form].heavy_combo_steps)
+			if not es_finisher and (_buffered_attack != "" or _attack_air_buffer_type != ""):
+				# Chain casi inmediato (DMC5): en pasos intermedios el próximo golpe sale al instante.
+				_attack_timer = minf(_attack_timer, 0.03)
+			elif not _early_liberado:
+				_early_liberado = true
 		_buffer_durante_recuperacion()
 		if _attack_timer <= 0.0:
 			end_attack()
@@ -606,7 +620,10 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	_whiff_applied = false
 	_whiff_grace = 0.0
 	var data: Forma = forms[current_form]
-	_attack_timer = _recovery_for(_current_attack_type) * data.mult_recuperacion
+	var rec := _recovery_for(_current_attack_type) * data.mult_recuperacion
+	_attack_timer = rec
+	_early_exit_umbral = rec * data.recovery_early_fraccion
+	_early_liberado = false
 	# ImÃ¡n suave al enemigo mÃ¡s cercano si estÃ¡s un poco lejos
 	var objetivo := _buscar_enemigo_homing(200.0)
 	if objetivo != null:
@@ -651,6 +668,7 @@ func _recovery_for(attack_type: String) -> float:
 
 func end_attack() -> void:
 	_attacking = false
+	_early_liberado = false
 	_hit_applied = false
 	attack_area.monitoring = false
 	attack_hitbox.disabled = true
@@ -679,7 +697,7 @@ func _check_attack_hits() -> void:
 			_whiff_grace += get_physics_process_delta_time()
 			if _whiff_grace >= WHIFF_GRACE_TIME:
 				_whiff_applied = true
-				_attack_timer *= WHIFF_RECOVERY_MULT
+				_attack_timer *= whiff_recovery_mult
 		return
 	var mult_tercer := 1.0
 	if _current_attack_type == "light" and _light_step == forms[current_form].light_combo_steps:
@@ -707,6 +725,13 @@ func _check_attack_hits() -> void:
 	_hit_applied = true
 	_registrar_golpe_racha()
 	var dur_hitstop := _hitstop_por_tipo()
+	if dur_hitstop > 0.0 and not objetivos.is_empty():
+		# Hitstop por peso (Hollow Knight): los enemigos pesados congelan más.
+		var peso := _factor_peso(objetivos[0])
+		if objetivos.size() >= 2:
+			peso *= 0.8  # multigolpe (SOR2): pegar a varios no multiplica la lentitud
+		dur_hitstop *= peso
+	_freeze_hitstop(dur_hitstop)
 	_zoom_punch_por_tipo()
 	_shake_por_tipo()
 	if audio_mgr != null:
@@ -735,13 +760,24 @@ func _hitstop_por_tipo() -> float:
 		dur *= 1.25
 	elif current_form == Form.LOBO:
 		dur *= 0.85
-	if dur <= 0.0:
-		return 0.0
-	_freeze_hitstop(dur)
 	return dur
 
 
-func _freeze_hitstop(duracion: float = HITSTOP_DANO) -> void:
+## Factor de hitstop según el peso del enemigo golpeado (null-safe: 1.0 sin datos).
+func _factor_peso(body: Node2D) -> float:
+	if body == null or not ("enemy_data" in body):
+		return 1.0
+	var ed: Resource = body.get("enemy_data")
+	if ed == null or ed.get("max_health") == null:
+		return 1.0
+	return clampf(float(ed.max_health) / 75.0, 0.85, 1.4)
+
+
+func _freeze_hitstop(duracion: float = -1.0) -> void:
+	if duracion < 0.0:
+		duracion = hitstop_dano
+	if duracion <= 0.0:
+		return
 	var hs = get_node_or_null("/root/Hitstop")
 	if hs != null and hs.has_method("freeze"):
 		hs.freeze(duracion)
