@@ -11,6 +11,8 @@ var _punch_scale := 1.0
 var _tilt := 0.0
 var _lookahead_actual := 0.0
 var _zoom_velocidad := 1.0
+var _framing_scale := 1.0
+var _arena_tween: Tween
 var _descenso_t := 0.0
 var _offset_descenso := 0.0
 var _look_offset := Vector2.ZERO
@@ -103,8 +105,8 @@ func _process(delta: float) -> void:
 	else:
 		offset = _look_offset
 
-	# Zoom por velocidad (1) + punch
-	var objetivo := _zoom_objetivo * _punch_scale * _zoom_velocidad
+	# Zoom por velocidad (1) + punch + encuadre de arena
+	var objetivo := _zoom_objetivo * _punch_scale * _zoom_velocidad * _framing_scale
 	if zoom.distance_to(objetivo) > 0.0001:
 		zoom = zoom.lerp(objetivo, minf(suavizado_zoom * delta, 1.0))
 	else:
@@ -265,6 +267,17 @@ func modo_normal() -> void:
 		var dest := player.global_position + desplazamiento
 		var tw := create_tween()
 		tw.tween_property(self, "global_position", dest, 0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+
+## Encuadre de arena: aleja la cámara un toque (escala < 1) al entrar a una arena
+## para leer el escenario y vuelve suave al zoom normal. Multiplicador aparte:
+## no estorba al zoom punch/golpes (que recuperan por su cuenta).
+func encuadre_arena(escala_out: float = 0.96, duracion: float = 0.7) -> void:
+	if _arena_tween != null and _arena_tween.is_valid():
+		_arena_tween.kill()
+	_arena_tween = create_tween()
+	_arena_tween.tween_property(self, "_framing_scale", escala_out, 0.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_arena_tween.tween_property(self, "_framing_scale", 1.0, duracion).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 
 
 func shake(strength: float = 8.0, duration: float = 0.15, dir: Vector2 = Vector2.ZERO) -> void:

@@ -46,6 +46,8 @@ const HITSTOP_HEAVY := 0.07
 const HITSTOP_SPECIAL := 0.09
 const HITSTOP_COMBO := 0.11
 @export var hitstop_dano := 0.0  # hitstop al recibir daño (0 = nada: solo shake + flash)
+@export var slowmo_transformacion := 0.18  # s de cámara lenta al transformarse (0 = off)
+@export var slowmo_transformacion_escala := 0.4  # escala del tiempo mientras transforma
 const VIDA_MAX := 100
 
 var forms: Array[Forma] = []
@@ -704,6 +706,7 @@ func _check_attack_hits() -> void:
 		mult_tercer = 1.5
 	elif _current_attack_type == "heavy" and _heavy_step == forms[current_form].heavy_combo_steps:
 		mult_tercer = 1.5
+	var critico := mult_tercer > 1.0 or _current_attack_type == "combo"
 	for idx in range(mini(objetivos.size(), 2)):
 		var body: Node2D = objetivos[idx]
 		var dmg := _current_attack_damage
@@ -716,7 +719,7 @@ func _check_attack_hits() -> void:
 			_aplicar_knockback(body)
 		elif body.has_method("take_damage"):
 			var vivia: bool = not ("health" in body) or body.health > 0
-			body.take_damage(dmg, kb, facing)
+			body.take_damage(dmg, kb, facing, critico)
 			if vivia and "health" in body and body.health <= 0:
 				_freeze_slowmo(0.3 if _current_attack_type == "combo" else 0.22, 0.4)
 		_spark_golpe(body, idx)
@@ -1087,6 +1090,8 @@ func _transformar(nueva: int, forzar: bool = false) -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("punch"):
 		cam.punch(1.07)
+	if slowmo_transformacion > 0.0:
+		_freeze_slowmo(slowmo_transformacion, slowmo_transformacion_escala)
 	_particulas_regreso(data.color)
 	_invuln_timer = maxf(_invuln_timer, invuln_transformacion)
 	_invuln_sin_parpadeo = true

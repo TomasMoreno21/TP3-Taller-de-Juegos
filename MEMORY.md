@@ -2,6 +2,26 @@
 
 ---
 
+## 🔴 Sesión 13/09 (4) — Juice fino de combate (daño flotante, slow-mo de transformación, encuadre de arena)
+
+> Primer ítem del pedido del usuario ("vayamos uno por uno y lo testeo"): el resto de la lista (feedback de daño del jugador, mejora de HUD, optimización) queda pendiente. Lo que este bloque hace es pulir lo que YA estaba hilado de sesiones previas (hitstop por peso, slow-mo de kill/finisher/cierre de arena, zoom punch por tipo, shake, sonido sincro).
+
+### Cambios aplicados
+- **Daño flotante mejorado** (`enemy.gd`): se reemplazó el `Label` básico por `_mostrar_dano(cantidad, critico, murio)`:
+  - **Outline** (borde negro, legibilidad sobre fondo oscuro), `z_index 12`.
+  - **Críticos diferenciados**: `take_damage` ahora acepta `critico: bool = false`; `player.gd` lo pasa cuando el golpe es **finisher** (`mult_tercer 1.5` en 3er/último paso de light/heavy) o **combo** (`_current_attack_type == "combo"`). Color naranja, letra 27px vs 21, subida 46px/0.75s vs 30px/0.55s.
+  - **Kills**: color dorado y mismo tamaño grande que crítico.
+  - **Pop de escala** al aparecer (1.6→1.0 con `TRANS_BACK`) y dispersión x ±16 / y -60..-44.
+  - Las demás llamadas a `take_damage` (proyectiles, terreno, enemigos) siguen con `critico=false` por defecto.
+- **Slow-mo de transformación** (`player.gd`): nuevos `@export slowmo_transformacion := 0.18` (0 = off) y `slowmo_transformacion_escala := 0.4`; en `_transformar`, junto al `cam.punch(1.07)` ya existente, se llama `_freeze_slowmo(...)` → momento de "poder" con la escala de tiempo (usa el `Hitstop` autoload que ya tienen kill/finisher).
+- **Encuadre de arena** (`camera.gd` + `encounter.gd`): nuevo método `camera.encuadre_arena(escala_out=0.96, duracion=0.7)` con multiplicador aparte `_framing_scale` (no estorba al zoom punch/golpes); en `_empezar()` del encounter se llama tras `modo_arena` con los `@export zoom_encuadre_arena`/`zoom_encuadre_duracion` del Inspector → zoom-out suave al entrar para leer el escenario y retorno. Guard con `has_method` (no rompe si la cámara no lo tiene).
+
+### Verificación
+- Import limpio, smoke limpio, `autotest` **FALLOS = 0**, `diag_golpe`/`diag_feedback`/`diag_nivel1prueba` **FALLOS = 0**.
+- **Sin commit** (esperando el testeo del usuario; el último commit fue `25884d8`).
+
+---
+
 ## 🔴 Sesión 13/09 — Game feel del combate (Bloque 1) + research de referencias
 
 > Research cerrado (~35 fuentes: Capcom/Final Fight, SoR2/4, Shredder's, SF4/GG counter-hits, DMC5 frame data, Smash, Bayonetta, Viewtiful Joe, Arkham, Sekiro/Sifu, Punch-Out, MK11, DBFZ, TMNT paper, y más). Decisión del usuario: implementar **Bloques 1+2**, con `1e` (hitstop de daño recibido) + `2d` (flash sincro) + early-exit liberando **movimiento + salto + chain**. **Launch/juggle (1d) QUITADO del alcance.** Commit inicial del bloque: `0f0e7e1`.

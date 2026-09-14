@@ -22,6 +22,10 @@ const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 @export var altura_pared := 9000.0  # tan alto que no se puede saltar por arriba
 @export var separacion_pared := 60.0  # holgura fuera de arena_medio_ancho (si no es borde de pantalla)
 
+# Encuadre al entrar: zoom-out suave (escala < 1) para leer el escenario y vuelta.
+@export var zoom_encuadre_arena := 0.96
+@export var zoom_encuadre_duracion := 0.7
+
 var estado: int = Estado.INACTIVE
 var _ola_idx := -1
 var _vivos_ola := 0
@@ -116,6 +120,8 @@ func _empezar() -> void:
 	_mostrar_bounds()
 	if camara != null and camara.has_method("modo_arena"):
 		camara.modo_arena(arena_center)
+	if camara != null and camara.has_method("encuadre_arena"):
+		camara.encuadre_arena(zoom_encuadre_arena, zoom_encuadre_duracion)
 	_ola_idx = -1
 	_siguiente_ola()
 

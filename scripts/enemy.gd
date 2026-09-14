@@ -386,10 +386,11 @@ func _disparar(player: Node2D) -> void:
 	destino.add_child(proj)
 
 
-func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
+func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: bool = false) -> void:
 	if health <= 0:
 		return
 	health -= cantidad
+	var murio := health <= 0
 	if visual != null:
 		if _tint_tween != null and _tint_tween.is_valid():
 			_tint_tween.kill()
@@ -406,18 +407,7 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
 		tw2.tween_property(visual, "scale", Vector2(signo * sx * 1.15, sy * 0.85), 0.05)
 		tw2.tween_property(visual, "scale", Vector2(signo * sx, sy), 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		if DisplayServer.get_name() != "headless":
-			var lbl := Label.new()
-			lbl.text = str(cantidad)
-			lbl.add_theme_font_size_override("font_size", 22)
-			lbl.add_theme_color_override("font_color", Color(1, 0.85, 0.3))
-			lbl.z_index = 10
-			var scn: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
-			scn.add_child(lbl)
-			lbl.global_position = global_position + Vector2(randf_range(-12, 12), -50)
-			var tw3 := lbl.create_tween()
-			tw3.tween_property(lbl, "global_position:y", lbl.global_position.y - 32, 0.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-			tw3.parallel().tween_property(lbl, "modulate:a", 0.0, 0.6)
-			tw3.tween_callback(lbl.queue_free)
+			_mostrar_dano(cantidad, critico, murio)
 	var audio_mgr := get_node_or_null("/root/AudioManager")
 	if audio_mgr != null:
 		# el sonido del cuerpo suena cuando la animación se des-congela (impacto visible)
@@ -444,6 +434,36 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
 		# El tint rojo se funde cuando el hitstop termina (flash congelado durante el freeze).
 		_tint_tween = create_tween()
 		_tint_tween.tween_property(visual, "modulate", Color(1, 1, 1), 0.08)
+
+
+## Also muestra la cifra de daño flotando sobre el enemigo: pop de escala al
+## golpear, subida más larga en críticos/remates y outline para legibilidad.
+func _mostrar_dano(cantidad: int, critico: bool, murio: bool) -> void:
+	var fuerte := critico or murio
+	var lbl := Label.new()
+	lbl.text = str(cantidad)
+	var tam := 27 if fuerte else 21
+	lbl.add_theme_font_size_override("font_size", tam)
+	lbl.add_theme_constant_override("outline_size", maxi(4, tam / 5))
+	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.75))
+	if murio:
+		lbl.add_theme_color_override("font_color", Color(1, 0.92, 0.55))
+	elif critico:
+		lbl.add_theme_color_override("font_color", Color(1, 0.6, 0.18))
+	else:
+		lbl.add_theme_color_override("font_color", Color(1, 0.85, 0.3))
+	lbl.z_index = 12
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	destino.add_child(lbl)
+	lbl.scale = Vector2(1.6, 1.6)
+	lbl.global_position = global_position + Vector2(randf_range(-16, 16), randf_range(-60, -44))
+	var subida := 46.0 if fuerte else 30.0
+	var dur := 0.75 if fuerte else 0.55
+	var tw := lbl.create_tween()
+	tw.tween_property(lbl, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(lbl, "global_position:y", lbl.global_position.y - subida, dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, dur)
+	tw.tween_callback(lbl.queue_free)
 
 
 ## Espera a que el hitstop global termine antes de fundir el tint: así el flash rojo
