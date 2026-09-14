@@ -48,6 +48,9 @@ const HITSTOP_COMBO := 0.11
 @export var hitstop_dano := 0.0  # hitstop al recibir daño (0 = nada: solo shake + flash)
 @export var slowmo_transformacion := 0.18  # s de cámara lenta al transformarse (0 = off)
 @export var slowmo_transformacion_escala := 0.4  # escala del tiempo mientras transforma
+@export var tint_dano := Color(1.0, 0.28, 0.28)  # tinte del sprite al recibir daño
+@export var tint_dano_duracion := 0.11  # s que tarda en volver al color normal
+@export var dano_flotante := true  # número de daño recibido sobre el jugador
 const VIDA_MAX := 100
 
 var forms: Array[Forma] = []
@@ -93,6 +96,7 @@ var _was_blocking := false
 var _was_on_floor := false
 var _fall_impact := 0.0
 var _sprite_tween: Tween
+var _tint_tween: Tween
 var _turn_prev_facing := 0
 var _base_sprite_scale := Vector2.ONE
 var _spawn_position := Vector2.ZERO
@@ -1331,6 +1335,10 @@ func take_damage(cantidad: int, _knockback: float = 0.0, _dir: int = 1) -> void:
 	health_changed.emit(health, VIDA_MAX)
 	dano_recibido.emit(cantidad)
 	_shake_dano_recibido(_dir)
+	_flash_tint_dano()
+	stretch_y(-0.12, 0.14)
+	if dano_flotante and DisplayServer.get_name() != "headless":
+		_mostrar_dano_recibido(cantidad)
 	_invuln_timer = 0.55
 	_invuln_sin_parpadeo = false
 	_handle_death()
@@ -1341,6 +1349,32 @@ func _shake_dano_recibido(dir: int = 1) -> void:
 	if cam == null or not cam.has_method("shake"):
 		return
 	cam.shake(3.5, 0.12, Vector2(dir, 0))
+
+
+func _flash_tint_dano() -> void:
+	if _tint_tween != null and _tint_tween.is_valid():
+		_tint_tween.kill()
+	visual.modulate = tint_dano
+	_tint_tween = create_tween()
+	_tint_tween.tween_property(visual, "modulate", Color.WHITE, tint_dano_duracion)
+
+
+func _mostrar_dano_recibido(cantidad: int) -> void:
+	var lbl := Label.new()
+	lbl.text = "-" + str(cantidad)
+	lbl.add_theme_font_size_override("font_size", 22)
+	lbl.add_theme_constant_override("outline_size", 4)
+	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.35, 0.3))
+	lbl.z_index = 12
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	destino.add_child(lbl)
+	var pos := visual.global_position + Vector2(randf_range(-14, 14), -96)
+	lbl.global_position = pos
+	var tw := lbl.create_tween()
+	tw.tween_property(lbl, "global_position:y", pos.y - 26, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(lbl.queue_free)
 
 
 func heal_full() -> void:

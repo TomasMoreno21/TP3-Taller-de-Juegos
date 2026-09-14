@@ -2,6 +2,21 @@
 
 ---
 
+## 🔴 Sesión 13/09 (5) — Feedback de daño del jugador
+
+> 2º ítem de la lista (juice fino ✓, feedback de daño ✓; faltan: mejora de HUD y optimización). El objetivo era darle al jugador la misma claridad de impacto que ya tenían los enemigos (números flotantes, tint, squash), sin tocar la sensación actual (hitstop_dano = 0 deliberado desde la lección 13/09 combate).
+
+### Cambios aplicados (`scripts/player.gd`)
+- **Tint rojo breve** al recibir daño: `@export tint_dano := Color(1, 0.28, 0.28)` y `tint_dano_duracion := 0.11`. Se aplica sobre `visual.modulate` (con tween propio `_tint_tween`, kill del previo), así **no pisa** el tinte de forma (`self_modulate` en `_apply_form`). Reemplaza a la nada; el parpadeo de invuln sigue igual (`visible`).
+- **Número de daño recibido** sobre el jugador (`_mostrar_dano_recibido`): Label rojo 22px con outline negro, subida 26px/0.5s y fade, mismo patrón que `_mostrar_dano` de `enemy.gd`. Gateado por `@export dano_flotante := true` y por headless.
+- **Squeeze de golpe**: `stretch_y(-0.12, 0.14)` al impactar (movimiento corporal además del shake direccional de cámara que ya existía).
+
+### Verificación + git
+- Import limpio (el único warning es un leak del plugin `herramienta_nivel/plugin.gd` en `_exit_tree`, preexistente y cosmético). Smoke limpio, `autotest` / `diag_golpe` / `diag_feedback` / `diag_nivel1prueba` / `diag_formas` → **FALLOS = 0**.
+- **SIN commit**: esperando testeo del usuario (el último commit fue `14aec73`).
+
+---
+
 ## 🔴 Sesión 13/09 (4) — Juice fino de combate (daño flotante, slow-mo de transformación, encuadre de arena)
 
 > Primer ítem del pedido del usuario ("vayamos uno por uno y lo testeo"): el resto de la lista (feedback de daño del jugador, mejora de HUD, optimización) queda pendiente. Lo que este bloque hace es pulir lo que YA estaba hilado de sesiones previas (hitstop por peso, slow-mo de kill/finisher/cierre de arena, zoom punch por tipo, shake, sonido sincro).
