@@ -2,7 +2,18 @@
 
 ---
 
-## 🔴 Sesión 13/09 (8) — Jefe final "Arzobispo" (arena dedicada + barra de jefe)
+## 🔴 Sesión 14/09 (9) — Rediseño del jefe: "presidencial" flotante (ritual de 3 barreras)
+
+> **NUEVO DISEÑO DEL JEFE (pedido explícito del usuario, reemplaza a la sesión (8)):** el Arzobispo ya NO pelea en el suelo/aire. **Preside la pelea FLOTANDO ARRIBA Y ATRÁS** (z bajo, paleta oscura, dominando la pantalla; nunca se le pega al cuerpo). Para dañarlo hay que completar el **ritual de 3 barreras que se repite en ciclos**: (1) **LEGIÓN** — matar la ronda de cultistas que le dan escudo (invulnerable); (2) **CRISTALES** — romper sus cristales de energía (solo sónico del Murciélago); (3) **ZONA MARCADA** — baja una zona brillante al alcance del jugador y la marca rota entre 3 slots; pegarle ahí hace daño real. Cada ciclo completo endurece el siguiente (más cultistas `legion_base+vuelta+fase`, ventana de zona más corta `6.5-0.7*vuelta`, orbes más frecuentes). La vida (66%/33%) solo corrompe el color (Fase.DOS/TRES) y el ritmo; la barra del HUD sigue igual (pips de fase).
+
+### Implementado (14/09)
+- **`scripts/boss.gd` reescrito (~620 líneas):** FSM de gates `_gate ∈ inactivo|legion|cristales|zona` con corrutina `_ronda()` encadenando `_gate_legion() → _gate_cristales() → _gate_zona()`. Flotación por lerp en `_physics_process` (`_hover`: sigue un poco al jugador ±230px con sway sinusoidal, y=`_piso_y-altura_vuelo`=260). Escudo = `_shield_active` (absorbe todo golpe al cuerpo con "·"). Orbes de presión mientras LEGIÓN/CRISTALES (`_intervalo_orbe = 2.2 - fase*0.3 - vuelta*0.15`). `take_damage` reaplicado solo con guiada por escudo; la zona reenvía `_golpe_en_zona()` → daño real `dano_zona=60` por golpe, toques por vuelta `toques_base_zona+vuelta`. **El cuerpo SIEMPRE con collider apagado** (`_colisionar` eliminado, `collider.set_deferred("disabled", true)` en `_ready`) → la única superficie golpeable es la zona.
+- **`scenes/jefe.tscn`:** se quitaron `CuerpoDano` (ya no hay daño por contacto); nuevos nodos `ZonaGolpe` (StaticBody2D con script en **`scripts/zona_jefe.gd`**, capa 2, `visible=false`, pos base `(0,150)` respecto al jefe → queda a ~990px, alcance de melee/salto) con `ZonaShape`/`Anillo`/`Dardo`, y `Visual/Tentaculo` (Polygon2D beam que baja del jefe a la zona). Anillo como anillo poligonal generado por código (`_anillo_poligono`).
+- **Fix real bug latente:** `cristal.gd::take_damage` solo aceptaba 3 parámetros pero `player.gd::_check_attack_hits` la llama con 4 (`dmg,kb,facing,critico`) → **los cristales eran imposibles de romper en el juego real** (error en runtime). Ahora firma `(cant, kb=0, dir=1, critico=false)`.
+- **`tests/diag_jefe.gd` reescrito:** 18 checks del ciclo completo (flotación y=916, escudo absorbe 30, Legión de 2 muere, cristales rompen con sónico, escudo cae, zona hace -60, muerte + `died` + barra se oculta). **FALLOS=0.**
+
+### Pendiente
+- **Probar en ventana** (ritmo del ritual, alcance/legibilidad de la zona marcada, talla del jefe en pantalla). Ajustar `zona` y/slots desde el Inspector si la zona no se llega bien.
 
 > El pilar del juego: pelea final contra el Arzobispo (entidad mayor del culto), arena dedicada `scenes/nivel_jefe.tscn`, ~5 min, 3 fases, contra óptima por forma NO bloqueante (invocados devuelven +20 energía y hay rompibles en la arena para sostener transformaciones). Diseño consensuado en sesión previa (se descartó el formato "fases obligatorias por forma" por riesgo de frustración con la energía). Committeado: optimización `fec859b`, Arzobispo `f5086cb`, notas de decisión `c542f75` (aún sin push).
 
@@ -922,6 +933,9 @@ tests/
 ---
 
 ## Notas / Lecciones Aprendidas
+
+- **(14/09) Contrato de daño del melee del jugador = `take_damage(cant, kb=0, dir=1, critico=false)` (4 args).** `_check_attack_hits` en `player.gd` la llama SIEMPRE con 4 argumentos contra cualquier body detectado (`get_overlapping_bodies`). Todo objetivo golpeable (enemigo, cristal, rompible, zona del jefe, dummy) DEBE aceptar esa firma; si solo acepta 3, el golpe falla en runtime sin señal de error clara (lagrimeando: "no le pego"). Esto rompió en silencio la barrera de cristales del jefe (los cristales eran inrompibles in-game; el autotest lo pasaba porque llamaba `take_damage(30)` directo). **Regla:** testear objetivos golpeables invocando el `take_damage` CON 4 args o, mejor, golpeándolos con el melee del jugador.
+- **(14/09) Un jefe "de fondo" (flotando atrás/arriba) necesita solo UNA superficie golpeable:** se desactiva el collider del cuerpo para siempre y la zona/weakpoint es un `StaticBody2D` aparte. El melee del player solo detecta `bodies` (no `Area2D`), así que la zona DEBE ser un body para ser golpeable.
 
 - **(13/09, jefe) Enum vs literales: `enum Fase { UNO, DOS, TRES }` vale 0/1/2, no 1/2/3.** Al testear el jefe con `_cambiar_fase(3)` (valor inexistente) el match no corría la rama TRES, `fase` quedaba en 3, y `_umbral_actual()` devolvía el umbral de F1 (17) → el golpe fatal se absorbía y el jefe nunca moría. Además el HUD tenía un **bug real por lo mismo**: `_on_boss_fase` hacía `match 1,2,3` + `pips: i <= fase-1`, con lo que colores y pips de la barra quedaban corridos una fase (se veía verde en lugar de púrpura, etc.). **Regla:** al consumir un enum ajeno, usar los símbolos (`boss.Fase.TRES`) o los valores reales (0/1/2), nunca literales supuestos.
 - **(13/09, jefe) `int(hijo.get("propiedad"))` crashea con "Nonexistent 'int' constructor" si la propiedad no existe** (`get` → `null`): el Encounter rompía el `_agregar_manual` cuando el enemigo manual no tenía `ola_asignada` (el jefe) y el script abortaba silenciosamente → la pelea nunca arrancaba. Hacerlo defensivo (`var val = hijo.get(...); var idx := int(val) if val is int else 0`).

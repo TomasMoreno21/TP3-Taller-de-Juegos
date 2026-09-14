@@ -84,7 +84,7 @@ shape = SubResource("RectangleShape2D_arena_jefe")
 
 [node name="Enemies" parent="Encounter"]
 [node name="Arzobispo" parent="Encounter/Enemies" instance=ExtResource("7_jefe")]
-position = Vector2(3100, 30)
+position = Vector2(0, 130)
 
 [node name="Hud" parent="." instance=ExtResource("8_hud")]
 visible = false

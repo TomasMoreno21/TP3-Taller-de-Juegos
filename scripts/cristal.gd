@@ -69,7 +69,7 @@ func _diamante_poligono(ax: float, ay: float) -> PackedVector2Array:
 	return PackedVector2Array([Vector2(0, -ay), Vector2(ax, 0), Vector2(0, ay), Vector2(-ax, 0)])
 
 
-func take_damage(_cant: int, _kb: float = 0.0, _dir: int = 1) -> void:
+func take_damage(_cant: int, _kb: float = 0.0, _dir: int = 1, _critico: bool = false) -> void:
 	if _roto:
 		return
 	var player := get_tree().get_first_node_in_group("player")
