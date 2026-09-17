@@ -91,7 +91,7 @@ func _ejecutar(tokens: PackedStringArray) -> void:
 				var nom := tokens[1].to_lower()
 				var idx := index_forma(nom)
 				if idx >= 0:
-					_player.current_form = idx
+					_player._transformar(idx, true)
 					imprimir("Forma cambiada a %s" % nom)
 				else:
 					imprimir("Forma desconocida: %s" % nom)
@@ -114,7 +114,7 @@ func _ejecutar(tokens: PackedStringArray) -> void:
 			get_node("/root/Progresion").set_nivel(4)
 			imprimir("Todas las transformaciones desbloqueadas")
 		"kill":
-			_player.current_form = 0
+			_player._transformar(0, true)
 			imprimir("Vuelto a Humano")
 		"dummy":
 			var d: Node2D = (load("res://scenes/dummy_entrenamiento.tscn") as PackedScene).instantiate()
@@ -126,7 +126,7 @@ func _ejecutar(tokens: PackedStringArray) -> void:
 			get_tree().change_scene_to_file("res://scenes/main.tscn")
 			imprimir("Viajando a la Zona 1")
 		"zona2":
-			get_tree().change_scene_to_file("res://scenes/nivel_2.tscn")
+			get_tree().change_scene_to_file("res://scenes/nivel2.tscn")
 			imprimir("Viajando a la Zona 2")
 		"jefe":
 			get_tree().change_scene_to_file("res://scenes/nivel_jefe.tscn")
@@ -143,7 +143,7 @@ func index_forma(nombre: String) -> int:
 			return 1
 		"oso":
 			return 2
-		"murcielago", "murcielago":
+		"murcielago", "murciélago":
 			return 3
 	return -1
 

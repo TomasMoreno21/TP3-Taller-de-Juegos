@@ -63,6 +63,7 @@ func _disparar() -> void:
 	if una_vez and _disparado:
 		return
 	if lineas.is_empty():
+		_disparado = true
 		return
 	# Solo se muestra una vez por partida (persiste aunque el jugador muera y
 	# la escena se recargue; Progresion es un autoload y no se reinicia).

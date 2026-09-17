@@ -68,7 +68,7 @@ func _on_cristal_destruido() -> void:
 		if barrera_poly != null:
 			barrera_poly.modulate = Color(0.9, 0.75, 1.0)
 			tw.parallel().tween_property(barrera_poly, "modulate", Color(0.45, 0.3, 0.65, 0.55), 0.18)
-	if _destruidos >= 3:
+	if _destruidos >= _cristales().size():
 		_abrir_animado()
 
 

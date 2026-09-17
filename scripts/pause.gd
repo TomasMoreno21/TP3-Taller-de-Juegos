@@ -117,7 +117,6 @@ func _on_boton_pressed(i: int) -> void:
 
 func _reiniciar_nivel() -> void:
 	get_tree().paused = false
-	get_node("/root/Progresion").reset()
 	get_tree().reload_current_scene()
 
 

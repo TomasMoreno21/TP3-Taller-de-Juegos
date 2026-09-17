@@ -18,7 +18,12 @@ func _process(_delta: float) -> void:
 	if _slow_restore_ms > 0 and Time.get_ticks_msec() >= _slow_restore_ms:
 		_slow_restore_ms = 0
 		_slow_scale = 1.0
-		Engine.time_scale = 1.0
+		if _restore_ms <= 0:
+			Engine.time_scale = 1.0
+
+
+func esta_congelado() -> bool:
+	return _restore_ms > 0
 
 
 func freeze(duracion: float = 0.04) -> void:

@@ -26,7 +26,7 @@ func play_sfx_sincronizado(stream: AudioStream, volume_db: float = 0.0, esperar:
 		play_sfx(stream, volume_db)
 		return
 	var hs := get_node_or_null("/root/Hitstop")
-	if hs == null or not hs.has_signal("descongelado"):
+	if hs == null or not hs.has_signal("descongelado") or not hs.has_method("esta_congelado") or not hs.esta_congelado():
 		play_sfx(stream, volume_db)
 		return
 	await hs.descongelado

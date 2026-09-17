@@ -107,7 +107,7 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.visual_scale = Vector2.ONE
 			d.knockback_resist = 0.6
 			d.stun_duracion = 0.35
-			d.armor_umbral = 17  # solo golpes pesados (18+) rompen su ataque; Lobo/Murciélago no pueden
+			d.armor_umbral = 18  # solo golpes pesados (18+) rompen su ataque; Lobo/Murciélago no pueden
 	return d
 
 

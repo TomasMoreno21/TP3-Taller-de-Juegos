@@ -52,9 +52,10 @@ acento_volumen_db = -2.0
 position = Vector2(-248, 800)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
+position = Vector2(1, 0)
 limit_left = -1600
 limit_top = -700
-limit_right = 17200
+limit_right = 25647
 limit_bottom = 1100
 script = ExtResource("2_cam")
 
@@ -291,7 +292,7 @@ spawn_telegrafiado = true
 ritual_duracion = 0.5
 
 [node name="EncounterB" parent="." unique_id=1662278058 instance=ExtResource("9_enc")]
-position = Vector2(17446, 743)
+position = Vector2(18198.916, 736.793)
 
 [node name="Enemy1" parent="EncounterB" unique_id=422124019 instance=ExtResource("10_enemy")]
 position = Vector2(-227.36035, 181.69836)
@@ -303,43 +304,9 @@ position = Vector2(267.63965, 188.69836)
 spawn_telegrafiado = true
 ritual_duracion = 0.6
 
-[node name="EncounterC" parent="." unique_id=1798637985 instance=ExtResource("9_enc")]
-position = Vector2(4050, 1444)
-
-[node name="ArenaShape" parent="EncounterC/Arena" index="0"]
-scale = Vector2(1.2, 1)
-
-[node name="Enemy1" parent="EncounterC" unique_id=2004167285 instance=ExtResource("10_enemy")]
-position = Vector2(-140, 0)
-spawn_telegrafiado = true
-ritual_duracion = 0.3
-
-[node name="Enemy2" parent="EncounterC" unique_id=2095962334 instance=ExtResource("10_enemy")]
-position = Vector2(140, 0)
-spawn_telegrafiado = true
-ritual_duracion = 0.5
-
-[node name="Enemy3" parent="EncounterC" unique_id=1473634744 instance=ExtResource("10_enemy")]
-ola_asignada = 1
-spawn_telegrafiado = true
-ritual_duracion = 0.4
-
 [node name="DialogoZona2" parent="." unique_id=2100000001 instance=ExtResource("8_dialog")]
 position = Vector2(5319, 781)
 dialogo_id = "n1_zona2"
-
-[node name="EncounterD" parent="." unique_id=2100000002 instance=ExtResource("9_enc")]
-position = Vector2(6800, 1444)
-
-[node name="Enemy1" parent="EncounterD" unique_id=2100000003 instance=ExtResource("10_enemy")]
-position = Vector2(-140, 0)
-spawn_telegrafiado = true
-ritual_duracion = 0.3
-
-[node name="Enemy2" parent="EncounterD" unique_id=2100000004 instance=ExtResource("10_enemy")]
-position = Vector2(140, 0)
-spawn_telegrafiado = true
-ritual_duracion = 0.6
 
 [node name="Plataforma6" type="StaticBody2D" parent="." unique_id=2100000005]
 position = Vector2(15199, 797)
@@ -732,6 +699,4 @@ position = Vector2(23250, 819)
 
 [editable path="EncounterA"]
 [editable path="EncounterB"]
-[editable path="EncounterC"]
-[editable path="EncounterD"]
 [editable path="EncounterE"]

@@ -210,6 +210,12 @@ func _init() -> void:
 
 	# --- Melee: el Lobo daña a un enemigo real (bug 27/08: attack_range=90 no alcanzaba
 	# el collider de 210px de ancho del propio Lobo, quedaba "whiffeando") ---
+	# Reposiciona a piso despejado: el collider ancho del Lobo (360px) puede quedar
+	# bloqueado por geometría cercana si se transforma donde estaba el chamán de la
+	# prueba anterior (a solo 28px).
+	_player.global_position = Vector2(-350, 900)
+	_player.velocity = Vector2.ZERO
+	await _wait_frames(10)
 	_console._ejecutar(PackedStringArray(["form", "lobo"]))
 	await process_frame
 	var en_lobo := preload("res://scenes/enemy.tscn").instantiate()
@@ -331,6 +337,7 @@ func _init() -> void:
 	_console.toggle()
 	_progresion().reset()
 	var lvl: CanvasLayer = _scene.get_node("LevelUp")
+	lvl.set("_pendientes", 0)  # descarta niveles en cola de tests previos (bloque 18/09)
 	lvl.call("cerrar")
 	await process_frame
 	var desbloqueos: Array[String] = []
@@ -489,8 +496,17 @@ func _funcion_tronco() -> void:
 	await _esperar_recuperacion("special")
 	_check(is_instance_valid(tronco), "Interact: humano NO rompe el tronco")
 
-	# Oso: el special sí lo rompe
+	# Oso: el special sí lo rompe. El collider ancho del Oso (470px) se solaparía con
+	# el del tronco (200px) si se transforma parado a 130px de distancia y quedaría
+	# bloqueado (_transformar aborta sobre geometría solapada); se transforma lejos,
+	# despejado, y recién después se reposiciona junto al tronco (igual que caminar
+	# hasta él ya transformado).
+	_player.global_position = Vector2(-600, 900)
+	_player.velocity = Vector2.ZERO
+	await _wait_frames(5)
 	_console._ejecutar(PackedStringArray(["form", "oso"]))
+	await process_frame
+	_player.global_position = tronco.global_position - Vector2(130, 0)
 	_player.velocity = Vector2.ZERO
 	_player.facing = 1
 	await physics_frame

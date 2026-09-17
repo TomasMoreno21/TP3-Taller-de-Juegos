@@ -3,6 +3,7 @@ extends CanvasLayer
 const OptionScene := preload("res://scenes/levelup_option.tscn")
 
 var _open := false
+var _pendientes := 0
 var _opciones: Array = []
 var _indice := 0
 var _slots: Array[PanelContainer] = []
@@ -35,6 +36,7 @@ func esta_abierto() -> bool:
 
 func abrir() -> void:
 	if _open:
+		_pendientes += 1
 		return
 	_build_opciones()
 	_indice = 0
@@ -50,6 +52,10 @@ func cerrar() -> void:
 		return
 	_open = false
 	panel.visible = false
+	if _pendientes > 0:
+		_pendientes -= 1
+		abrir()
+		return
 	if pausar_al_abrir:
 		get_tree().paused = false
 

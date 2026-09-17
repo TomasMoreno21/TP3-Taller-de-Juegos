@@ -46,6 +46,7 @@ func _on_boton_pressed(i: int) -> void:
 		0:
 			_reintentar()
 		1:
+			get_tree().paused = false
 			get_tree().change_scene_to_file(SCENE_MENU)
 
 

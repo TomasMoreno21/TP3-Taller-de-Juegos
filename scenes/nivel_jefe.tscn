@@ -1,11 +1,11 @@
-[gd_scene format=3 load_steps=16]
+[gd_scene format=3 uid="uid://b6wd3a0lf08ax"]
 
 [ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="2_cam"]
 [ext_resource type="PackedScene" uid="uid://ssvmlcpooygw" path="res://scenes/fondo_bosque.tscn" id="3_fondo"]
-[ext_resource type="Script" path="res://scripts/setup_progresion_nivel.gd" id="4_setup"]
+[ext_resource type="Script" uid="uid://c20i4wytflcth" path="res://scripts/setup_progresion_nivel.gd" id="4_setup"]
 [ext_resource type="PackedScene" uid="uid://x0o25yeqfgsm" path="res://scenes/encounter.tscn" id="5_enc"]
-[ext_resource type="Script" path="res://scripts/nivel_jefe.gd" id="6_niveljefe"]
+[ext_resource type="Script" uid="uid://bwvbj2bycs3nq" path="res://scripts/nivel_jefe.gd" id="6_niveljefe"]
 [ext_resource type="PackedScene" path="res://scenes/jefe.tscn" id="7_jefe"]
 [ext_resource type="PackedScene" uid="uid://dkyk8avpptlls" path="res://scenes/hud.tscn" id="8_hud"]
 [ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="9_pause"]
@@ -21,81 +21,79 @@ size = Vector2(9200, 200)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_jefe"]
 size = Vector2(980, 700)
 
-[node name="NivelJefe" type="Node2D"]
+[node name="NivelJefe" type="Node2D" unique_id=157071022]
 script = ExtResource("6_niveljefe")
 
-[node name="Player" parent="." instance=ExtResource("1_player")]
+[node name="Player" parent="." unique_id=1861947130 instance=ExtResource("1_player")]
 position = Vector2(350, 860)
 
-[node name="Camara" type="Camera2D" parent="."]
+[node name="Camara" type="Camera2D" parent="." unique_id=985519331]
 limit_left = 0
 limit_top = -700
 limit_right = 10400
 limit_bottom = 1100
 script = ExtResource("2_cam")
 
-[node name="SetupProgresion" type="Node" parent="."]
+[node name="SetupProgresion" type="Node" parent="." unique_id=1027730487]
 script = ExtResource("4_setup")
 nivel_minimo = 4
 
-[node name="FondoBosque" parent="." instance=ExtResource("3_fondo")]
+[node name="FondoBosque" parent="." unique_id=794215151 instance=ExtResource("3_fondo")]
 visible = false
 
-[node name="Piso" type="StaticBody2D" parent="."]
+[node name="Piso" type="StaticBody2D" parent="." unique_id=699220115]
 position = Vector2(4600, 1100)
 
-[node name="PisoVisual" type="Polygon2D" parent="Piso"]
+[node name="PisoVisual" type="Polygon2D" parent="Piso" unique_id=323803502]
 color = Color(0.2, 0.18, 0.27, 1)
 polygon = PackedVector2Array(-4600, -100, 4600, -100, 4600, 100, -4600, 100)
 
-[node name="LineaSuperior" type="Polygon2D" parent="Piso"]
+[node name="LineaSuperior" type="Polygon2D" parent="Piso" unique_id=949387143]
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-4600, -100, 4600, -100, 4600, -84, -4600, -84)
 
-[node name="PisoCollision" type="CollisionShape2D" parent="Piso"]
-position = Vector2(0, 100)
+[node name="PisoCollision" type="CollisionShape2D" parent="Piso" unique_id=855132670]
+position = Vector2(2, 1)
 shape = SubResource("RectangleShape2D_piso")
 
-[node name="DialogoIntro" parent="." instance=ExtResource("12_dialog")]
+[node name="DialogoIntro" parent="." unique_id=2086547178 instance=ExtResource("12_dialog")]
 position = Vector2(500, 900)
 dialogo_id = "jefe_intro"
 
-[node name="PickupCalma1" parent="." instance=ExtResource("14_pick")]
+[node name="PickupCalma1" parent="." unique_id=1639011544 instance=ExtResource("14_pick")]
 position = Vector2(750, 940)
 
-[node name="PickupCalma2" parent="." instance=ExtResource("14_pick")]
+[node name="PickupCalma2" parent="." unique_id=314348362 instance=ExtResource("14_pick")]
 position = Vector2(1050, 940)
 
-[node name="Rompible1" parent="." instance=ExtResource("13_romp")]
+[node name="Rompible1" parent="." unique_id=1188803197 instance=ExtResource("13_romp")]
 position = Vector2(6400, 983)
 
-[node name="Rompible2" parent="." instance=ExtResource("13_romp")]
+[node name="Rompible2" parent="." unique_id=757073103 instance=ExtResource("13_romp")]
 position = Vector2(7000, 983)
 
-[node name="Rompible3" parent="." instance=ExtResource("13_romp")]
+[node name="Rompible3" parent="." unique_id=1500454370 instance=ExtResource("13_romp")]
 position = Vector2(7600, 983)
 
-[node name="Encounter" parent="." instance=ExtResource("5_enc")]
+[node name="Encounter" parent="." unique_id=1219823109 instance=ExtResource("5_enc")]
 position = Vector2(5200, 970)
 
-[node name="Arena" parent="Encounter"]
-[node name="ArenaShape" parent="Encounter/Arena"]
-shape = SubResource("RectangleShape2D_arena_jefe")
-
-[node name="Enemies" parent="Encounter"]
-[node name="Arzobispo" parent="Encounter/Enemies" instance=ExtResource("7_jefe")]
+[node name="Arzobispo" parent="Encounter/Enemies" parent_id_path=PackedInt32Array(1219823109, 223207692) index="0" unique_id=641933076 instance=ExtResource("7_jefe")]
 position = Vector2(0, 130)
 
-[node name="Hud" parent="." instance=ExtResource("8_hud")]
+[node name="ArenaShape" parent="Encounter/Arena" index="0"]
+shape = SubResource("RectangleShape2D_arena_jefe")
+
+[node name="Hud" parent="." unique_id=2014128999 instance=ExtResource("8_hud")]
 visible = false
 
-[node name="Pause" parent="." instance=ExtResource("9_pause")]
+[node name="Pause" parent="." unique_id=148645925 instance=ExtResource("9_pause")]
 visible = false
 
-[node name="LevelUp" parent="." instance=ExtResource("10_levelup")]
+[node name="LevelUp" parent="." unique_id=2040631456 instance=ExtResource("10_levelup")]
 visible = false
 
-[node name="Consola" parent="." instance=ExtResource("11_cons")]
+[node name="Consola" parent="." unique_id=1846535058 instance=ExtResource("11_cons")]
 visible = false
 
 [editable path="Encounter"]

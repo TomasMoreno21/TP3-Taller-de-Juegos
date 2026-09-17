@@ -52,5 +52,4 @@ func _on_boton_pressed(i: int) -> void:
 
 func _reintentar() -> void:
 	get_tree().paused = false
-	get_node("/root/Progresion").reset()
 	get_tree().change_scene_to_file(SCENE_NIVEL_JEFE)

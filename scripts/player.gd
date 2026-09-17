@@ -510,6 +510,7 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 			_current_attack_type = "light"
 			if airborne:
 				_heavy_step = 0
+				_light_step = 0
 				data.perform_jump_attack(self, false)
 				_play_attack_fx("light", 1)
 				_punch_sprite(0.15)
@@ -533,6 +534,7 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 			_current_attack_type = "heavy"
 			if airborne:
 				_light_step = 0
+				_heavy_step = 0
 				_cancelar_anim_ataque()
 				data.perform_jump_attack(self, true)
 				_play_attack_fx("heavy", 1)
@@ -1070,7 +1072,7 @@ func _handle_transform() -> void:
 func _transformar(nueva: int, forzar: bool = false) -> void:
 	if not forzar and _cooldown_transform > 0.0:
 		return
-	if nueva == current_form or _forma_en_cooldown(nueva):
+	if nueva == current_form or (not forzar and _forma_en_cooldown(nueva)):
 		return
 	var data_nueva: Forma = forms[nueva]
 	var prev_size: Vector2 = (collision_shape.shape as RectangleShape2D).size
@@ -1102,7 +1104,8 @@ func _transformar(nueva: int, forzar: bool = false) -> void:
 	var audio_mgr_t := get_node_or_null("/root/AudioManager")
 	if audio_mgr_t != null:
 		audio_mgr_t.play_sfx(sonido_transformacion, volumen_transformacion_db)
-	_cooldown_transform = COOLDOWN_TRANSFORM
+	if not forzar:
+		_cooldown_transform = COOLDOWN_TRANSFORM
 	form_changed.emit(data.form_name)
 	forma_selectada_cambiada.emit(nueva)
 	health_changed.emit(health, VIDA_MAX)
@@ -1327,16 +1330,18 @@ func _handle_death() -> void:
 	get_tree().paused = true
 
 
-func take_damage(cantidad: int, _knockback: float = 0.0, _dir: int = 1) -> void:
-	if god_mode or blocking or _invuln_timer > 0.0:
+func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
+	if god_mode or blocking or _invuln_timer > 0.0 or _dialogo_bloquea_input():
 		return
 	health -= cantidad
 	_freeze_hitstop()
 	health_changed.emit(health, VIDA_MAX)
 	dano_recibido.emit(cantidad)
-	_shake_dano_recibido(_dir)
+	_shake_dano_recibido(dir)
 	_flash_tint_dano()
 	stretch_y(-0.12, 0.14)
+	if knockback > 0.0:
+		velocity.x = dir * knockback
 	if dano_flotante and DisplayServer.get_name() != "headless":
 		_mostrar_dano_recibido(cantidad)
 	_invuln_timer = 0.55

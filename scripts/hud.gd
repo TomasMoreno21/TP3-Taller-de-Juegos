@@ -190,6 +190,9 @@ func _forma_nueva(nuevo_nivel: int) -> String:
 	var form_idx := nuevo_nivel - 1
 	if form_idx <= 0:
 		return ""
+	var prog: Node = get_node("/root/Progresion")
+	if prog != null and not prog.forma_desbloqueada(form_idx):
+		return ""
 	var player := get_tree().get_first_node_in_group("player")
 	if player != null and player.forms.size() > form_idx:
 		return str(player.forms[form_idx].form_name)

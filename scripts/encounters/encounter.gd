@@ -208,8 +208,8 @@ func _comprobar_limbos() -> void:
 	for e in _spawned:
 		if is_instance_valid(e) and e.health > 0 and e.global_position.y > _arena_base_y + margen:
 			e.matar_por_caida()
-	for grupo in _manuales:
-		for e in grupo:
+	if _ola_idx >= 0 and _ola_idx < _manuales.size():
+		for e in _manuales[_ola_idx]:
 			if is_instance_valid(e) and e.health > 0 and e.global_position.y > _arena_base_y + margen:
 				e.matar_por_caida()
 

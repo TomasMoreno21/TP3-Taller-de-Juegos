@@ -39,7 +39,7 @@ func _init() -> void:
 	await process_frame
 	await process_frame
 
-	var nivel2: Node = load("res://scenes/nivel_2.tscn").instantiate()
+	var nivel2: Node = load("res://scenes/nivel2.tscn").instantiate()
 	root.add_child(nivel2)
 	current_scene = nivel2
 	await process_frame

@@ -12,7 +12,7 @@ func _check(cond: bool, msg: String) -> void:
 
 
 func _init() -> void:
-	var zona: Node = load("res://scenes/nivel_2.tscn").instantiate()
+	var zona: Node = load("res://scenes/nivel2.tscn").instantiate()
 	root.add_child(zona)
 	await process_frame
 	await process_frame
