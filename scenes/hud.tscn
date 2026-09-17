@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://dkyk8avpptlls"]
+[gd_scene load_steps=10 format=3 uid="uid://dkyk8avpptlls"]
 
 [ext_resource type="Script" uid="uid://c1q7pellu6xgj" path="res://scripts/hud.gd" id="1_hud"]
 
@@ -102,6 +102,18 @@ corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
+
+[sub_resource type="Gradient" id="grad_vineta"]
+offsets = PackedFloat32Array(0, 0.6, 1)
+colors = PackedColorArray(0.75, 0.08, 0.08, 0, 0.75, 0.08, 0.08, 0, 0.75, 0.08, 0.08, 0.65)
+
+[sub_resource type="GradientTexture2D" id="tex_vineta"]
+gradient = SubResource("grad_vineta")
+width = 512
+height = 512
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
 
 [node name="Hud" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -300,6 +312,18 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0.75, 0.08, 0.08, 0)
+
+[node name="VinetaVida" type="TextureRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("tex_vineta")
+expand_mode = 1
+stretch_mode = 0
+modulate = Color(1, 1, 1, 0)
 
 [node name="BossBar" type="MarginContainer" parent="."]
 visible = false

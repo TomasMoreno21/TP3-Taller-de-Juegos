@@ -26,6 +26,13 @@ var _combo_base_pos: Vector2
 @onready var racha_box: VBoxContainer = $Racha
 @onready var racha_valor: Label = $Racha/Valor
 @onready var flash_dano: ColorRect = $FlashDano
+@onready var vineta_vida: TextureRect = $VinetaVida
+
+@export var vineta_umbral := 0.3  # fracción de vida (0-1) a partir de la cual aparece la viñeta
+@export var vineta_pulso_velocidad := 2.4
+@export var vineta_alpha_min := 0.35
+@export var vineta_alpha_max := 0.9
+@export var vineta_fade_dur := 0.4
 @onready var boss_bar: MarginContainer = $BossBar
 @onready var boss_fill: ProgressBar = $BossBar/Panel/Col/Envoltura/Fill
 @onready var boss_valor: Label = $BossBar/Panel/Col/Fila/Valor
@@ -45,6 +52,9 @@ var _boss: Node2D
 var _boss_fill_style: StyleBoxFlat
 var _pip_on_style: StyleBox
 var _pip_off_style: StyleBox
+var _vineta_activa := false
+var _vineta_severidad := 0.0
+var _vineta_fade_tween: Tween
 
 
 var _selector_refresh := 0.0
@@ -55,6 +65,11 @@ func _process(delta: float) -> void:
 		if _selector_refresh <= 0.0:
 			_selector_refresh = 0.15
 			_actualizar_selector()
+	if _vineta_activa:
+		var vel := vineta_pulso_velocidad * (1.0 + _vineta_severidad)
+		var t := Time.get_ticks_msec() * 0.001 * vel
+		var onda := (sin(t) + 1.0) * 0.5
+		vineta_vida.modulate.a = lerpf(vineta_alpha_min, vineta_alpha_max, onda) * lerpf(0.5, 1.0, _vineta_severidad)
 
 func _ready() -> void:
 	visible = true
@@ -322,6 +337,7 @@ func _texto_ataque(_attack_type: String, _step: Variant) -> String:
 
 
 func _on_health_changed(hp: int, max_hp: int) -> void:
+	_actualizar_vineta(hp, max_hp)
 	hp_bar.max_value = max_hp
 	hp_bar.value = hp
 	if hp_bar_delayed != null:
@@ -336,6 +352,22 @@ func _on_health_changed(hp: int, max_hp: int) -> void:
 			if _hp_delayed_tween != null and _hp_delayed_tween.is_valid():
 				_hp_delayed_tween.kill()
 			hp_bar_delayed.value = hp
+
+
+func _actualizar_vineta(hp: int, max_hp: int) -> void:
+	if vineta_vida == null or max_hp <= 0 or vineta_umbral <= 0.0:
+		return
+	var frac: float = float(hp) / float(max_hp)
+	var activa := hp > 0 and frac <= vineta_umbral
+	_vineta_severidad = clampf(1.0 - frac / vineta_umbral, 0.0, 1.0)
+	if activa == _vineta_activa:
+		return
+	_vineta_activa = activa
+	if not activa:
+		if _vineta_fade_tween != null and _vineta_fade_tween.is_valid():
+			_vineta_fade_tween.kill()
+		_vineta_fade_tween = create_tween()
+		_vineta_fade_tween.tween_property(vineta_vida, "modulate:a", 0.0, vineta_fade_dur)
 
 
 func _on_dano_recibido(_cantidad: int) -> void:
