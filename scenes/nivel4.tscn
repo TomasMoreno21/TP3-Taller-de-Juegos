@@ -1,0 +1,176 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="1_player"]
+[ext_resource type="Script" path="res://scripts/camera.gd" id="2_cam"]
+[ext_resource type="Script" path="res://scripts/setup_progresion_nivel.gd" id="3_setup"]
+[ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="4_dialog"]
+[ext_resource type="PackedScene" path="res://scenes/pickup.tscn" id="5_pick"]
+[ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="6_check"]
+[ext_resource type="PackedScene" path="res://scenes/encounter.tscn" id="7_enc"]
+[ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="8_enemy"]
+[ext_resource type="PackedScene" path="res://scenes/cristal.tscn" id="9_cristal"]
+[ext_resource type="PackedScene" path="res://scenes/rompible.tscn" id="10_romp"]
+[ext_resource type="PackedScene" path="res://scenes/santuario.tscn" id="11_sant"]
+[ext_resource type="PackedScene" path="res://scenes/salida_nivel.tscn" id="12_salida"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="13_hud"]
+[ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="14_pause"]
+[ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="15_levelup"]
+[ext_resource type="PackedScene" path="res://scenes/console.tscn" id="16_cons"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_piso1"]
+size = Vector2(2700, 400)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_piso2"]
+size = Vector2(5500, 400)
+
+[node name="Nivel4" type="Node2D"]
+
+[node name="SetupProgresion" type="Node" parent="."]
+script = ExtResource("3_setup")
+nivel_minimo = 4
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(-150, 800)
+
+[node name="Camara" type="Camera2D" parent="."]
+position = Vector2(0, 0)
+limit_left = -300
+limit_top = -700
+limit_right = 9700
+limit_bottom = 2100
+script = ExtResource("2_cam")
+
+[node name="Piso1" type="StaticBody2D" parent="."]
+position = Vector2(1050, 1192)
+
+[node name="Piso1Visual" type="Polygon2D" parent="Piso1"]
+color = Color(0.3, 0.34, 0.42, 1)
+polygon = PackedVector2Array(-1350, -200, 1350, -200, 1350, 200, -1350, 200)
+
+[node name="Piso1Collision" type="CollisionShape2D" parent="Piso1"]
+shape = SubResource("RectangleShape2D_piso1")
+
+[node name="Piso2" type="StaticBody2D" parent="."]
+position = Vector2(6950, 1900)
+
+[node name="Piso2Visual" type="Polygon2D" parent="Piso2"]
+color = Color(0.22, 0.26, 0.34, 1)
+polygon = PackedVector2Array(-2750, -200, 2750, -200, 2750, 200, -2750, 200)
+
+[node name="Piso2Collision" type="CollisionShape2D" parent="Piso2"]
+shape = SubResource("RectangleShape2D_piso2")
+
+[node name="DialogoIntro" parent="." instance=ExtResource("4_dialog")]
+position = Vector2(0, 800)
+dialogo_id = "n4_intro"
+modo = "Automatico"
+
+[node name="Pickup1" parent="." instance=ExtResource("5_pick")]
+position = Vector2(300, 930)
+
+[node name="Pickup2" parent="." instance=ExtResource("5_pick")]
+position = Vector2(550, 930)
+
+[node name="EncounterA" parent="." instance=ExtResource("7_enc")]
+position = Vector2(1100, 800)
+
+[node name="Enemy1" parent="EncounterA" instance=ExtResource("8_enemy")]
+position = Vector2(-220, 190)
+
+[node name="Enemy2" parent="EncounterA" instance=ExtResource("8_enemy")]
+position = Vector2(280, 190)
+
+[node name="Enemy3" parent="EncounterA" instance=ExtResource("8_enemy")]
+position = Vector2(30, 190)
+tipo = "arquero"
+
+[node name="CheckpointCombate1" parent="." instance=ExtResource("6_check")]
+position = Vector2(1500, 900)
+
+[node name="DialogoMurcielago" parent="." instance=ExtResource("4_dialog")]
+position = Vector2(1900, 800)
+dialogo_id = "n4_murcielago"
+
+[node name="CheckpointAbismo" parent="." instance=ExtResource("6_check")]
+position = Vector2(2250, 900)
+
+[node name="CheckpointGlideLanding" parent="." instance=ExtResource("6_check")]
+position = Vector2(4400, 1608)
+
+[node name="DialogoAbismo" parent="." instance=ExtResource("4_dialog")]
+position = Vector2(4600, 1508)
+dialogo_id = "n4_abismo"
+
+[node name="CristalA" parent="." instance=ExtResource("9_cristal")]
+position = Vector2(5200, 1678)
+
+[node name="CristalB" parent="." instance=ExtResource("9_cristal")]
+position = Vector2(5260, 1678)
+
+[node name="Rompible1" parent="." instance=ExtResource("10_romp")]
+position = Vector2(5450, 1644.5)
+
+[node name="Pickup3" parent="." instance=ExtResource("5_pick")]
+position = Vector2(5650, 1638)
+
+[node name="EncounterB" parent="." instance=ExtResource("7_enc")]
+position = Vector2(6100, 1508)
+
+[node name="Enemy1" parent="EncounterB" instance=ExtResource("8_enemy")]
+position = Vector2(-220, 190)
+
+[node name="Enemy2" parent="EncounterB" instance=ExtResource("8_enemy")]
+position = Vector2(80, 190)
+
+[node name="Enemy3" parent="EncounterB" instance=ExtResource("8_enemy")]
+position = Vector2(340, 190)
+tipo = "arquero"
+
+[node name="CheckpointCombate2" parent="." instance=ExtResource("6_check")]
+position = Vector2(6800, 1608)
+
+[node name="DialogoCoro" parent="." instance=ExtResource("4_dialog")]
+position = Vector2(7000, 1508)
+
+[node name="CristalC" parent="." instance=ExtResource("9_cristal")]
+position = Vector2(7300, 1678)
+
+[node name="CristalD" parent="." instance=ExtResource("9_cristal")]
+position = Vector2(7400, 1678)
+
+[node name="CristalE" parent="." instance=ExtResource("9_cristal")]
+position = Vector2(7500, 1678)
+
+[node name="EncounterFirma" parent="." instance=ExtResource("7_enc")]
+position = Vector2(7400, 1508)
+
+[node name="Enemy1" parent="EncounterFirma" instance=ExtResource("8_enemy")]
+position = Vector2(-150, 190)
+
+[node name="Enemy2" parent="EncounterFirma" instance=ExtResource("8_enemy")]
+position = Vector2(150, 190)
+
+[node name="CheckpointFirma" parent="." instance=ExtResource("6_check")]
+position = Vector2(7900, 1608)
+
+[node name="Pickup4" parent="." instance=ExtResource("5_pick")]
+position = Vector2(8500, 1638)
+
+[node name="DialogoFinal" parent="." instance=ExtResource("4_dialog")]
+position = Vector2(8800, 1508)
+dialogo_id = "n4_final"
+
+[node name="Santuario" parent="." instance=ExtResource("11_sant")]
+position = Vector2(9300, 1598)
+
+[node name="SalidaNivel" parent="." instance=ExtResource("12_salida")]
+position = Vector2(9500, 1508)
+siguiente_escena = "res://scenes/nivel5.tscn"
+
+[node name="Hud" parent="." instance=ExtResource("13_hud")]
+
+[node name="Pause" parent="." instance=ExtResource("14_pause")]
+
+[node name="LevelUp" parent="." instance=ExtResource("15_levelup")]
+
+[node name="Consola" parent="." instance=ExtResource("16_cons")]

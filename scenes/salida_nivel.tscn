@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/salida_nivel.gd" id="1_salida"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_salida"]
+size = Vector2(80, 300)
+
+[node name="SalidaNivel" type="Area2D"]
+collision_layer = 0
+collision_mask = 4
+script = ExtResource("1_salida")
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_salida")
+
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(0.8, 0.7, 0.3, 0.55)
+polygon = PackedVector2Array(-40, -150, 40, -150, 40, 150, -40, 150)

@@ -163,5 +163,82 @@
 			"Usá cada forma con cabeza: el Oso rompe su guardia, el Murciélago llega donde no podés, y el Lobo esquiva lo que nadie puede.",
 			"Los cultistas que invoca nos devuelven energía. ¡No aflojes!"
 		]
+	},
+	"n3_intro": {
+		"hablante": "Amuleto",
+		"modo": "Automatico",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	},
+	"n3_oso": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": []
+	},
+	"n3_guardian": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": []
+	},
+	"n3_final": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": []
+	},
+	"n4_intro": {
+		"hablante": "Amuleto",
+		"modo": "Automatico",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	},
+	"n4_murcielago": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": []
+	},
+	"n4_abismo": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": []
+	},
+	"n4_final": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": []
+	},
+	"n5_intro": {
+		"hablante": "Amuleto",
+		"modo": "Automatico",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": []
+	},
+	"n5_pruebas": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": []
+	},
+	"n5_umbral": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": []
 	}
 }
