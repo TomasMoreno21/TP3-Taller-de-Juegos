@@ -27,10 +27,10 @@ var health: int = 40
 var _activo := true
 var _telegraph_timer := 0.0
 var _ritual: Polygon2D
-var _attack_timer := 0.0
-var _dir := -1
 var _attack_anim := ""
 var _attack_anim_timer := 0.0
+var _attack_anim_idx := -1
+var _dir := -1
 var _player_cache: Node2D
 var _stun_timer := 0.0
 var _stun_dir := 1
@@ -72,7 +72,7 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.visual_scale = Vector2.ONE
 			d.offset_visual_x = 3.3
 			d.knockback_resist = 0.55
-			d.stun_duracion = 0.28
+			d.stun_duracion = 0.35
 		"arquero":
 			d.tipo_nombre = "Arquero"
 			d.max_health = 60
@@ -88,7 +88,7 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.visual_scale = Vector2.ONE
 			d.offset_visual_x = 5.3
 			d.knockback_resist = 0.45
-			d.stun_duracion = 0.3
+			d.stun_duracion = 0.4
 		"chaman":
 			d.tipo_nombre = "Chamán"
 			d.max_health = 155
@@ -366,9 +366,26 @@ func _update_animacion() -> void:
 		animated.play(nombre)
 
 
-func _reproducir_animacion_ataque(nombre: String) -> void:
-	_attack_anim = nombre
+func _reproducir_animacion_ataque(tipo: String) -> void:
+	_attack_anim = tipo
 	_attack_anim_timer = 0.35
+	if DisplayServer.get_name() != "headless":
+		animated.visible = true
+		if _attack_anim_idx == 0:
+			animated.play("attack1")
+		elif _attack_anim_idx == 1:
+			animated.play("attack2")
+		else:
+			# Selección aleatoria al inicio: 0 = ataque1, 1 = ataque2
+			if _attack_anim_idx < 0:
+				_attack_anim_idx = randi() % 2
+				if _attack_anim_idx == 0:
+					animated.play("attack1")
+				else:
+					animated.play("attack2")
+			else:
+				animated.play(_attack_anim)
+		_attack_anim_timer = 0.35
 
 
 func _usar_proyectil() -> bool:

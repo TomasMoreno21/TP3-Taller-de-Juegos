@@ -6,7 +6,7 @@ func _init() -> void:
 	form_name = "Murciélago"
 	speed = 380.0
 	jump_velocity = -400.0
-	gravity_scale = 0.42
+	gravity_scale = 0.50
 	max_health = 100
 	attack_damage = 8
 	attack_range = 90.0

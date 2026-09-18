@@ -150,7 +150,7 @@ var _platform_snap_cd: float = 0.0
 ## Offsets de volumen (dB) para el golpe pesado y el especial, aplicados sobre volumen_golpe_db.
 @export var volumen_golpe_pesado_db := 0.0
 @export var volumen_special_db := 0.0
-@export var invuln_transformacion := 0.55
+@export var invuln_transformacion := 0.8
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $Collision
@@ -814,17 +814,17 @@ func _shake_por_tipo() -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam == null or not cam.has_method("shake"):
 		return
-	var fuerza := 2.5
+	var fuerza := 3.0
 	if current_form >= 0 and current_form < forms.size():
 		var forma: Forma = forms[current_form]
 		match _current_attack_type:
 			"light":
-				fuerza = forma.shake_golpe_ligero
+				fuerza = forma.shake_golpe_ligero + 0.5
 			"heavy":
-				fuerza = forma.shake_golpe_pesado
+				fuerza = forma.shake_golpe_pesado + 0.5
 			"combo":
-				fuerza = forma.shake_golpe_combo
-		cam.shake(fuerza, 0.15, Vector2(facing, 0))
+				fuerza = forma.shake_golpe_combo + 0.5
+	cam.shake(fuerza, 0.15, Vector2(facing, 0))
 
 
 func _aplicar_knockback(body: Node2D) -> void:
@@ -1334,7 +1334,7 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
 	if god_mode or blocking or _invuln_timer > 0.0 or _dialogo_bloquea_input():
 		return
 	health -= cantidad
-	_freeze_hitstop()
+	_freeze_hitstop(HITSTOP_LIGHT)
 	health_changed.emit(health, VIDA_MAX)
 	dano_recibido.emit(cantidad)
 	_shake_dano_recibido(dir)
@@ -1353,7 +1353,7 @@ func _shake_dano_recibido(dir: int = 1) -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam == null or not cam.has_method("shake"):
 		return
-	cam.shake(3.5, 0.12, Vector2(dir, 0))
+	cam.shake(4.0, 0.12, Vector2(dir, 0))
 
 
 func _flash_tint_dano() -> void:

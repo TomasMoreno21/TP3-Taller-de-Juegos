@@ -22,11 +22,11 @@ var _player_cache: Node2D
 @export var desplazamiento := Vector2(0, -220)
 @export var suavizado_zoom := 5.0
 @export var lookahead := 0.28    # anticipación de cámara según velocidad horizontal
-@export var lookahead_umbral := 100.0    # velocidad (px/s) recién pasada la cual empieza el adelanto
+@export var lookahead_umbral := 80.0    # velocidad (px/s) recién pasada la cual empieza el adelanto
 @export var lookahead_ataque := 140.0    # adelanto fijo (px) hacia el facing mientras se ataca
 @export var suavizado_lookahead := 3.0  # qué tan suave entra y sale el adelanto
-@export var deadzone_horizontal := 24.0  # zona muerta en X (traga micro-correcciones, evita temblor)
-@export var deadzone_vertical := 200.0  # salto dentro de este rango casi no mueve la cámara al subir (pico Humano=184)
+@export var deadzone_horizontal := 32.0  # zona muerta en X (traga micro-correcciones, evita temblor)
+@export var deadzone_vertical := 40.0  # salto dentro de este rango casi no mueve la cámara al subir (pico Humano=184)
 @export var seguimiento_vertical_leve := 0.15  # cuánto sí se mueve dentro de la deadzone al subir
 @export var suavizado_subida := 2.2  # al subir: lento
 @export var suavizado_bajada := 7.0  # al bajar: brusco y rápido
