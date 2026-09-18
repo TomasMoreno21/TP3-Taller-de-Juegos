@@ -29,6 +29,7 @@ var _telegraph_timer := 0.0
 var _ritual: Polygon2D
 var _attack_anim := ""
 var _attack_anim_timer := 0.0
+var _attack_timer := 0.0
 var _attack_anim_idx := -1
 var _dir := -1
 var _player_cache: Node2D
