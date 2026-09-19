@@ -14,9 +14,9 @@ enum Form { HUMAN, LOBO, OSO, MURCIELAGO }
 const GRAVITY := 980.0
 const MAX_FALL_SPEED := 950.0
 const GLIDE_FALL_MULTIPLIER := 0.22
-const COYOTE_TIME := 0.14
-const JUMP_BUFFER_TIME := 0.18
-const JUMP_CUT_MULTIPLIER := 0.42
+const COYOTE_TIME := 0.14  # base; overridden per form in _init()
+const JUMP_BUFFER_TIME := 0.18  # base; overridden per form in _init()
+const JUMP_CUT_MULTIPLIER := 0.42  # base; overridden per form in _init()
 const FALL_GRAVITY_MULT := 1.8
 const TURN_BOOST := 2.2
 const TURN_BOOST_AIR := 1.6
@@ -257,7 +257,7 @@ func _physics_process(delta: float) -> void:
 			_jump_buffer = data.jump_buffer_time
 	if not dialogo_bloquea and Input.is_action_just_released("jump") and velocity.y < 0.0:
 		var t := clampf(velocity.y / data.jump_velocity, 0.0, 1.0)
-		velocity.y *= lerpf(0.85, JUMP_CUT_MULTIPLIER, t)
+		velocity.y *= lerpf(0.85, data.jump_cut_multiplier, t)
 
 	var g: float = GRAVITY * data.gravity_scale
 	if _gravity_override >= 0.0:

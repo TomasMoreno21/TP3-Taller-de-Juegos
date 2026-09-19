@@ -59,6 +59,7 @@ var _jumps_usados := 0
 @export var despegue_speed_mult: float = 0.0 # arranca el salto a esta fracción de speed si hay input direccional (0 = off)
 @export var coyote_time: float = 0.14
 @export var jump_buffer_time: float = 0.18
+@export var jump_cut_multiplier: float = 0.42
 @export var step_up_max: float = 48.0     # altura máx (px) que sube solo al caminar contra un borde
 
 # Game feel de cámara por forma.

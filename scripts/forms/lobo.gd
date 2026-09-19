@@ -32,9 +32,12 @@ func _init() -> void:
 	accel = 5200.0
 	friction = 5200.0
 	accel_air_mult = 0.85
-	coyote_time = 0.16
+	coyote_time = 0.18
 	jump_buffer_time = 0.20
-	step_up_max = 64.0
+	coyote_time = 0.18
+	jump_buffer_time = 0.20
+	var jump_cut_multiplier := 0.35
+	step_up_max = 48.0
 	camera_zoom = Vector2(0.94, 0.94)
 	var sprint_zoom_out := 0.3
 	var sprint_min_speed := 300.0
