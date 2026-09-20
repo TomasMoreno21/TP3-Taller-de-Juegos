@@ -28,6 +28,7 @@
 [ext_resource type="PackedScene" uid="uid://65wfbu1kb774" path="res://scenes/noche.tscn" id="26_dr8ev"]
 [ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="27_46iir"]
 [ext_resource type="PackedScene" uid="uid://bhxju6lap2tcq" path="res://scenes/unlock_forma.tscn" id="28_unlock"]
+[ext_resource type="PackedScene" path="res://scenes/salida_nivel.tscn" id="29_salida"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
 size = Vector2(27003, 401)
@@ -425,7 +426,10 @@ dialogo_id = "n1_santuario"
 
 [node name="Santuario" parent="." unique_id=1856516154 instance=ExtResource("11_sant")]
 position = Vector2(25125, 888)
-activar_victoria = true
+
+[node name="SalidaNivel" parent="." instance=ExtResource("29_salida")]
+position = Vector2(25325, 800)
+siguiente_escena = "res://scenes/nivel2.tscn"
 
 [node name="Hud" parent="." unique_id=643194512 instance=ExtResource("12_hud")]
 visible = false

@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="2_player"]
 [ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="3_cam"]
 [ext_resource type="PackedScene" uid="uid://c1w7l3sant0r4" path="res://scenes/santuario.tscn" id="4_sant"]
+[ext_resource type="PackedScene" path="res://scenes/salida_nivel.tscn" id="30_salida"]
 [ext_resource type="PackedScene" uid="uid://dkyk8avpptlls" path="res://scenes/hud.tscn" id="5_hud"]
 [ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="6_pause"]
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="7_levelup"]
@@ -51,7 +52,10 @@ layer_0/tile_data = PackedInt32Array(589818, 131072, 3, 655354, 131072, 3, 72089
 
 [node name="Santuario" parent="." unique_id=1856516154 instance=ExtResource("4_sant")]
 position = Vector2(3965, 6948)
-activar_victoria = true
+
+[node name="SalidaNivel" parent="." instance=ExtResource("30_salida")]
+position = Vector2(4135, 6860)
+siguiente_escena = "res://scenes/nivel3.tscn"
 
 [node name="Hud" parent="." unique_id=643194512 instance=ExtResource("5_hud")]
 visible = false

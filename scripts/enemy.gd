@@ -172,7 +172,25 @@ func preparar_ola() -> void:
 	_colision(false)
 
 
+## Apoya los pies del collider sobre el piso más cercano (corrección máx. 120 px):
+## evita enemigos incrustados en el terreno o flotando por posiciones puestas a mano.
+func ajustar_al_suelo() -> void:
+	if collide_shape == null or not (collide_shape.shape is RectangleShape2D):
+		return
+	var pies: float = collide_shape.position.y + collide_shape.shape.size.y * 0.5
+	var query := PhysicsRayQueryParameters2D.create(
+		global_position + Vector2(0.0, -150.0), global_position + Vector2(0.0, 250.0), 1)
+	var hit := get_world_2d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return
+	var objetivo: float = hit.position.y - pies
+	if absf(objetivo - global_position.y) <= 120.0:
+		global_position.y = objetivo
+		velocity = Vector2.ZERO
+
+
 func activar() -> void:
+	ajustar_al_suelo()
 	if spawn_telegrafiado:
 		_telegraph_timer = maxf(ritual_duracion, 0.05)
 		_mostrar_circulo_ritual()

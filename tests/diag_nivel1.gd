@@ -69,7 +69,9 @@ func _init() -> void:
 	_check(solapes == 0, "Nivel1: ningún par de enemigos de la misma ola arranca con colliders superpuestos (%d casos)" % solapes)
 
 	var santuario := nivel.get_node_or_null("Santuario")
-	_check(santuario != null and santuario.activar_victoria, "Nivel1: santuario final con victoria")
+	_check(santuario != null, "Nivel1: santuario final presente")
+	var salida := nivel.get_node_or_null("SalidaNivel")
+	_check(salida != null and String(salida.siguiente_escena) == "res://scenes/nivel2.tscn", "Nivel1: salida apunta a nivel2.tscn")
 	var consola := nivel.get_node_or_null("Consola")
 	_check(consola != null, "Nivel1: consola instanciada")
 
