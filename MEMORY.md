@@ -2,6 +2,19 @@
 
 ---
 
+## 🟢 Sesión 22/09 — Cámara del Lobo: "se mueve demasiado, apenas hace zoom para atrás"
+
+> Petición del usuario: al moverte como Lobo, la cámara "se mueve demasiado", "apenas hace zoom para atrás" y "tras un tiempito se tira un poquito para atrás". Criterio explícito: **gameplay fluido, sin saltos fuertes de cámara**.
+
+### Opción A aplicada (recomendada; la que cumple el criterio)
+- **`lobo.gd:26`** `camera_lookahead_mult 1.15 → 0.9`: el adelanto de cámara con la velocidad bruta del lobo (690 px/s) quedaba clavado en ~160px casi todo el tiempo (el lobo era el único con lookahead > humano 1.0). Bajarlo a 0.9 lo deja por debajo del humano → la cámara "se asienta" y no persigue tanto.
+- **`camera.gd:47`** `zoom_velocidad_max 0.05 → 0.075`: el zoom-out por velocidad era el más chico del dataset y, combinado con el `sprint_zoom_out` del lobo, el alejamiento "apenas se notaba". Un escalón más de aporte único y acotado (disciplina de zoom transversal, NUNCA volver al 0.08 viejo) hace perceptible el alejamiento al correr sin romper la suavidad transversal.
+- **Verificación:** import limpio, smoke sin errores, **autotest FALLOS = 0**. Ambos son `@export` editables en el Inspector (regla: nada hardcodeado).
+
+### LECCIÓN DURA de esta sesión (NO repetir)
+**NO editar de memoria: el disco es la única verdad.** Esta sesión tuve reads/greps mezclados y "archivos fantasma" (`_ATTACK_SPEED_LOBO`, `mult_early_exit`, commits a workdirs/paths inexistentes) que me hicieron dar vueltas en falso y proponer fixes a código que no existía en disco. Regla operativa a partir de ahora: (1) **una sola fuente de verdad** (read tool puro, sin mezclar con bash); (2) confirmar el path absoluto real del repo antes de cualquier grep/edit; (3) si un grep devuelve algo sin referencia en otro lado, **releer en limpio** antes de editar, no asumir.
+
+
 ## 🟢 Sesión 21/09 — Integración de sprites de ataque (Lobo) y AFK (Cultista) en verde
 
 > Petición explícita del usuario: "añadilas esas animaciones — el lobo al atacar hace esa animación rápida; los cultistas al estar quietos también". Se aplicó SOLO a recursos, sin tocar el código de combate (player.gd ya tenía la rama para `lobo_attack`).
