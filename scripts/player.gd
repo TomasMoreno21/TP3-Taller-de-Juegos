@@ -1267,6 +1267,9 @@ func _update_animacion() -> void:
 			anim = "murci_volar"
 		elif visual.sprite_frames.has_animation("murci_run"):
 			anim = "murci_run"
+	elif current_form == Form.LOBO and _attacking and visual.sprite_frames.has_animation("lobo_attack"):
+		anim = "lobo_attack"
+		visual.speed_scale = 1.4
 	elif current_form == Form.LOBO and quieto and visual.sprite_frames.has_animation("lobo_idle"):
 		anim = "lobo_idle"
 	elif current_form == Form.LOBO and visual.sprite_frames.has_animation("lobo_run"):

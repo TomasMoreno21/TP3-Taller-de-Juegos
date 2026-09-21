@@ -45,7 +45,7 @@ func _init() -> void:
 	await process_frame
 	var player2: Node2D = nivel2.get_node("Player")
 	player2.god_mode = false
-	player2.global_position = Vector2(0, 5000)
+	player2.global_position = Vector2(0, 20000)  # > limite_caida (12000)
 	for i in 3:
 		await physics_frame
 	await process_frame

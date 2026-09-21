@@ -4,7 +4,6 @@
 [ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="2_player"]
 [ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="3_cam"]
 [ext_resource type="PackedScene" uid="uid://c1w7l3sant0r4" path="res://scenes/santuario.tscn" id="4_sant"]
-[ext_resource type="PackedScene" path="res://scenes/salida_nivel.tscn" id="30_salida"]
 [ext_resource type="PackedScene" uid="uid://dkyk8avpptlls" path="res://scenes/hud.tscn" id="5_hud"]
 [ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="6_pause"]
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="7_levelup"]
@@ -19,6 +18,9 @@
 [ext_resource type="Script" uid="uid://2touvx3gobc5" path="res://scripts/herramienta_nivel.gd" id="16_herramienta"]
 [ext_resource type="Script" uid="uid://cui53h2x6gwlf" path="res://scripts/enemigos/enemigo.gd" id="17_roi11"]
 [ext_resource type="PackedScene" uid="uid://cr2s0l8k2s5l4" path="res://scenes/rompible.tscn" id="18_gjjf1"]
+[ext_resource type="PackedScene" path="res://scenes/salida_nivel.tscn" id="30_salida"]
+[ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="31_pick"]
+[ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="32_dtg"]
 
 [sub_resource type="Resource" id="Resource_h4t55"]
 script = ExtResource("17_roi11")
@@ -37,7 +39,7 @@ nivel_minimo = 4
 formas_forzadas = Array[int]([0, 1, 3])
 
 [node name="Player" parent="." unique_id=1763988589 instance=ExtResource("2_player")]
-position = Vector2(6446, 5393)
+position = Vector2(-14034, -37743)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
 position = Vector2(2, 8)
@@ -53,7 +55,7 @@ layer_0/tile_data = PackedInt32Array(589818, 131072, 3, 655354, 131072, 3, 72089
 [node name="Santuario" parent="." unique_id=1856516154 instance=ExtResource("4_sant")]
 position = Vector2(3965, 6948)
 
-[node name="SalidaNivel" parent="." instance=ExtResource("30_salida")]
+[node name="SalidaNivel" parent="." unique_id=1567461188 instance=ExtResource("30_salida")]
 position = Vector2(4135, 6860)
 siguiente_escena = "res://scenes/nivel3.tscn"
 
@@ -576,3 +578,40 @@ position = Vector2(3501, -988)
 
 [node name="Rompible6" parent="." unique_id=917328464 instance=ExtResource("18_gjjf1")]
 position = Vector2(3593, -906)
+
+[node name="Pickup1" parent="." unique_id=2112665036 instance=ExtResource("31_pick")]
+position = Vector2(6220, 5550)
+
+[node name="Pickup2" parent="." unique_id=464127985 instance=ExtResource("31_pick")]
+position = Vector2(5570, 5550)
+
+[node name="Pickup3" parent="." unique_id=683797833 instance=ExtResource("31_pick")]
+position = Vector2(6120, 5550)
+
+[node name="Pickup4" parent="." unique_id=2101227707 instance=ExtResource("31_pick")]
+position = Vector2(-520, 4640)
+
+[node name="Pickup5" parent="." unique_id=679684242 instance=ExtResource("31_pick")]
+position = Vector2(2050, 4056)
+
+[node name="Pickup6" parent="." unique_id=344931999 instance=ExtResource("31_pick")]
+position = Vector2(4000, 4312)
+
+[node name="Pickup7" parent="." unique_id=2048023012 instance=ExtResource("31_pick")]
+position = Vector2(-660, 4640)
+
+[node name="DialogoIntro" parent="." unique_id=122008778 instance=ExtResource("32_dtg")]
+position = Vector2(6320, 5442)
+dialogo_id = "p1_intro"
+
+[node name="DialogoCombate" parent="." unique_id=2143550590 instance=ExtResource("32_dtg")]
+position = Vector2(6030, 5442)
+dialogo_id = "p1_combate"
+
+[node name="DialogoPlataformas" parent="." unique_id=726323920 instance=ExtResource("32_dtg")]
+position = Vector2(7505, 3390)
+dialogo_id = "p1_plataformas"
+
+[node name="DialogoSantuario" parent="." unique_id=38420734 instance=ExtResource("32_dtg")]
+position = Vector2(4300, 4370)
+dialogo_id = "p1_santuario"

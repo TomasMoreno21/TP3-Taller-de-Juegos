@@ -26,11 +26,14 @@ func _init() -> void:
 	_check(player.health == player.VIDA_MAX, "curar no supera la vida máxima")
 
 	# --- Caso 2: al morir un enemigo se suelta el orbe (55%, probamos varias muertes) ---
+	# El enemigo muere LEJOS del player: si cayera sobre él el orbe se recolectaría
+	# al instante y nunca "quedaría en la escena" (causa de falsos negativos aleatorios).
 	var solto := false
 	for i in 40:
 		if solto:
 			break
 		var en: Node2D = preload("res://scenes/enemy.tscn").instantiate()
+		en.global_position = Vector2(4000, 4000)
 		root.add_child(en)
 		en.health = 1
 		en._activo = true

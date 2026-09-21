@@ -2,7 +2,75 @@
 
 ---
 
-## 🔴 Sesión 14/09 (9) — Rediseño del jefe: "presidencial" flotante (ritual de 3 barreras)
+## 🟢 Sesión 21/09 — Integración de sprites de ataque (Lobo) y AFK (Cultista) en verde
+
+> Petición explícita del usuario: "añadilas esas animaciones — el lobo al atacar hace esa animación rápida; los cultistas al estar quietos también". Se aplicó SOLO a recursos, sin tocar el código de combate (player.gd ya tenía la rama para `lobo_attack`).
+
+### Qué quedó integrado (verificado con import + smoke + autotest 22/22 PASS)
+- **`resources/jugador_frames.tres`:** nueva anim **`lobo_attack`** (4× `Atq LOBO1-4.png`, loop 0, speed 16.0 — rápida) con sus 4 `ext_resource` (uids reales `c7oqj61df7kdu..`) al final del array `animations`.
+- **`resources/enemigo1_frames.tres`:** la anim **`idle`** ahora usa los 4 `afk GORDO1-4.png` (uids reales `dokcgtup1uv4g..`), speed 5.0, loop 1. El `ext_resource` base `1_gordo` sigue para `attack1/2`, `jump`, `run`.
+- **Verificación:** `jugador_frames.tres` 13 anims / 0 refs rotas; `enemigo1_frames.tres` 5 anims / refs cuadradas; smoke + autotest (incl. `diag_jefe`, `diag_formas`, `diag_golpe`) todos en verde.
+
+### Decisiones tomadas / cómo queda el juego
+- **Lobo:** al atacar en forma LOBO, `player.gd` ya reproducía `lobo_attack` en `_update_animacion` (rama `Form.LOBO and _attacking`) — NO hizo falta tocar código; el sprite nace de un archivo ya referenciado que solo necesitaba la anim en el SpriteFrames.
+- **Cultista:** `enemy.gd` reproduce `"idle"` cuando está quieto → los 4 frames AFK aparecen al quedar parado.
+- Los `.tres` se editaron a mano con los **uids reales** de los PNG (sacados de los `.uid`/`.import`), NO inventados — lección ya aplicada de sesiones previas (un uid inventado rompe el import con `Parse Error: Expected '['`).
+
+### Lecciones de esta sesión (para no repetir)
+- Al añadir anims multi-frame a un SpriteFrames `.tres` a mano: **los `id` de los `ext_resource` deben coincidir EXACTAMENTE con las `ExtResource("id")` usadas en los bloques `frames`** (ej. `1_akdo1` como id y como ref). Un desfase de ids provoca "Could not find..." en edit / refs sin declarar en Godot.
+- Releer el archivo completo desde disco ANTES de editar de nuevo (los edits parciales previos pueden haber reordenado ids; no asumir el estado).
+
+---
+
+## 🔴 Sesión 20/09 — Cacería exhaustiva de bugs (rama `nivel1-mejoras`) + nivel2: pickups y diálogos reintegrados
+
+> Objetivo: revisar a fondo el juego y corregir TODO (autotest + diags en verde). Se cerró la decisión de reintegrar pickups y diálogos en `nivel2` (Opción A del usuario).
+
+### Bugs reales encontrados (corregidos)
+- **Autotest (crate):** tras romper el tronco la física dejaba al Oso en x≈-553 SOBRE EL POZO → los golpes fallaban. Fix: en `autotest.gd`, el bloque "Rompibles" teletransporta al player a (-350,900) con `velocity=ZERO` y espera 40 frames antes del crate.
+- **`checkpoint.gd::_hay_piso_bajo`:** ray 180 → **400 px** (el piso real del checkpoint de nivel1 está a 225 px bajo el respawn).
+- **`tests/diag_checkpoint.gd`:** el test teletransportaba al player al checkpoint y Area2D NO emite `body_entered` por teletransporte → ahora el player CAE desde `checkpoint + (0,-220)`.
+- **`tests/diag_derrota.gd`:** usaba y=5000, nunca superaba `limite_caida=12000` (`player.gd:144`) → y=20000.
+- **`tests/diag_select.gd`:** no esperaba `COOLDOWN_TRANSFORM=1.8s` (`player.gd:112`) entre transformaciones → helper `_esperar_transform()` (120 physics frames).
+- **UID inválido en `scenes/unlock_forma.tscn`:** referenciaba `uid://cr01jl2ryivbe` pero el `.uid` real es `uid://dpfkblywpdb2b` → warning `invalid UID ... using text path instead` en cada carga. Corregido.
+- **`tests/diag_formas.gd` (falso fallo de planeo):** presionaba J en plena caída → el murciélago saltaba (vy negativa). El apex-hang de `player.gd` mantiene el ascenso MUCHO rato (a los 40 frames seguía vy≈-89). Fix: esperar hasta `velocity.y > 0` (max 300 frames) SOSTENIENDO J, igual que el planeo real.
+- **Nivel2 (7 pickups + 4 diálogos):** dos pickups quedaban en la línea de caída/cuerpo del spawn y el Área los recolectaba al instante (desaparecían del runtime). Ajustadas todas las posiciones a superficies verificadas.
+
+### Nivel2 — reintegración (decisión: Opción A)
+- `nivel2.tscn`: ext_resources `31_pick` (pickup.tscn) y `32_dtg` (dialog_trigger.tscn); nodos Pickup1..7 y DialogoIntro/Combate/Plataformas/Santuario (`dialogo_id = p1_intro/p1_combate/p1_plataformas/p1_santuario`).
+- `data/dialogos.json`: rellenadas las `lineas` de `p1_combate` y `p1_plataformas` (3 c/u). `p1_combate2/3` siguen vacíos (no usados).
+- `tests/diag_zona2.gd` actualizado a la spec: 4 arenas, 12 enemigos, santuario, salida→nivel3, 6 rompibles, 7+ pickups, 4 diálogos, 0 flotando; huecos de piso pasan a [INFO].
+- Pendiente de decidir con el usuario: **Encounter/Encounter2 de nivel2 (arenas 1 y 2) flotan sobre vacío** (centros y≈611/1697) — los 12 enemigos reportan `floor=false`; es layout viejo. NO borrar sin preguntar.
+
+### Lecciones nuevas
+- **El Área de un pickup recolecta por superposición al caer el spawn:** un pickup bajo la vertical de caída del player (o rozando el cuerpo en reposo, colisionador ~47px de semiancho + toma real 34px sobre el piso) se consume en el instante y "no aparece" en runtime. Si un pickup "desaparece", buscar si queda en la vertical de spawn/caída.
+- **Los suelos/mesetas de nivel2 son de capa 2:** un ray con mask=1 no los detecta → el chequeo de "pickup flotando" de `diag_zona2` usa mask `0xFFFFFFFF` con exclusión `[hijo]`.
+- **No usar el aterrizaje del player como referencia de piso para colocar objetos:** el origin del player queda a +142.5 px sobre el piso → un pickup a "esa altura" queda ENTERRADO dentro de la masa de la meseta (techo del sólido arriba del objeto). La forma correcta: raycast directo objeto→abajo (300px, mask total) y ubicarlo a ~34–40px sobre la superficie.
+
+### Verificación (todo en verde)
+- Import limpio (solo el leak cosmético `legacy_docks` del editor) + smoke limpio.
+- `autotest` → **FALLOS = 0**; `diag_checkpoint` 0, `diag_derrota` 0, `diag_select` OK, `diag_golpe` 0, `diag_feedback` 0, `diag_dialogos` 0, `diag_jefe` 0, `diag_nivel1` 0, `diag_nivel3` 0, `diag_nivel4` 0, `diag_nivel5` 0, `diag_pickups` 0, `diag_hud` 0, `diag_encuentro` OK, `diag_spawn` 0, `diag_tinte` 0, `diag_zona2` 0, `diag_orbe` 0, `diag_formas` 0, `diag_suelo` (informativo). Leak `ObjectDB` al salir sigue siendo cosmético.
+- Pendiente: probar en ventana pickups/diálogos de nivel2, decidir arenas huérfanas, commit de la rama `nivel1-mejoras` (pedir mensaje).
+
+---
+
+## 🔴 Sesión 20/09 — Pulido final: batería completa en verde + `diag_orbe` des-flakeado
+
+### Qué se hizo
+- **Auditoría general sin saldo pendiente:** import + smoke limpios, `autotest` FALLOS=0 y **23 diags en verde** (`diag_checkpoint/derrota/select/golpe/feedback/dialogos/jefe/nivel1/nivel3/nivel4/nivel5/pickups/hud/encuentro/spawn/tinte/orbe/formas/zona2/derrota2`) + `diag_suelo` (informativo).
+- **`diag_orbe` (era flaky ~1/6):** la causa real **no era lag de tween sino el propio test**: el enemigo moría en (0,0) — la misma posición del player — y el orbe rojo caía **sobre** el jugador y se recolectaba al instante, `queue_free` antes del check. Con el enemigo posicionado lejos del player y raycast para confirmar el drop, **8/8 estable**. Lección: al probar drops/pickups, spawnear el enemigo LEJOS del player (si el orbe cae sobre el player se auto-recolecta → falsos negativos).
+- **Verificación de pickups/diálogos del nivel2 reinstalados** (`Pickup1..7`, diálogos `p1_intro/combate/plataformas/santuario`) — todos en verde con `diag_zona2`, `diag_pickups`, `diag_pickupvida`.
+
+### Pendiente de decisión del usuario (sin tocar)
+- **Arenas huérfanas del nivel2 (`Encounter`/`Encounter2`, y≈611/1697):** 12 enemigos reportan `floor=false` (están sobre el vacío, layout viejo). Opciones: (A) reubicar los encuentros sobre los pisos reales del nivel, (B) dejarlos como están (las arenas se activan bien igual), (C) eliminar esos 2 encuentros para que el nivel2 quede con 2 arenas. El diag NO lo marca como fallo (es informativo).
+- **Diálogos vacíos `p1_combate2/3` en `data/dialogos.json`:** no están referenciados por ningún trigger en el juego actual; rellenarlos o dejarlos.
+
+### Verificación
+- `tests/diag_orbe.gd` estable 8/8; toda la batería en verde. Sin probes temporales en `tests/` (limpiados `probe_*_n2`, `probe_orbe`).
+
+---
+
+## 🔴 Sesión 20/09 (9) — Rediseño del jefe: "presidencial" flotante (ritual de 3 barreras)
 
 > **NUEVO DISEÑO DEL JEFE (pedido explícito del usuario, reemplaza a la sesión (8)):** el Arzobispo ya NO pelea en el suelo/aire. **Preside la pelea FLOTANDO ARRIBA Y ATRÁS** (z bajo, paleta oscura, dominando la pantalla; nunca se le pega al cuerpo). Para dañarlo hay que completar el **ritual de 3 barreras que se repite en ciclos**: (1) **LEGIÓN** — matar la ronda de cultistas que le dan escudo (invulnerable); (2) **CRISTALES** — romper sus cristales de energía (solo sónico del Murciélago); (3) **ZONA MARCADA** — baja una zona brillante al alcance del jugador y la marca rota entre 3 slots; pegarle ahí hace daño real. Cada ciclo completo endurece el siguiente (más cultistas `legion_base+vuelta+fase`, ventana de zona más corta `6.5-0.7*vuelta`, orbes más frecuentes). La vida (66%/33%) solo corrompe el color (Fase.DOS/TRES) y el ritmo; la barra del HUD sigue igual (pips de fase).
 

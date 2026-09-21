@@ -92,6 +92,39 @@
 			"No vemos el lugar seguro desde acá, usa el joystick derecho para mover la cámara."
 		]
 	},
+	"n1_arquero": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": [
+			"Cuidado: ese cultista empuñó un arco. Sus flechas duelen.",
+			"Esquivá el proyectil cuando lo veas venir o bloqueá en el momento justo.",
+			"Atacalo entre disparo y disparo, y no dejes que te empuje contra el abismo."
+		]
+	},
+	"n1_lobo_uso": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": [
+			"Este abismo es demasiado ancho para cruzarlo con tu forma humana.",
+			"Convocá al Lobo y usá su doble salto: un primer brinco largo y un segundo en el aire.",
+			"Si caés, pinchás. Transformate y volá sobre las púas."
+		]
+	},
+	"n1_fragil": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": false,
+		"lineas": [
+			"Esas tablas viejas ceden apenas las pisás.",
+			"Si seguís el camino alto con las plataformas de piedra vas más seguro.",
+			"Pero si apurás el paso sobre la madera, encontrás un premio en la mitad."
+		]
+	},
 	"p1_intro": {
 		"hablante": "Amuleto",
 		"modo": "Automatico",
@@ -114,7 +147,11 @@
 		"modo": "Zona",
 		"retraso": 0.6,
 		"una_vez": false,
-		"lineas": []
+		"lineas": [
+			"Esa tribuna está custodiada por tres cultistas en bloque.",
+			"El Lobo perfila mejor que el Humano contra varios: no te dejes encerrar.",
+			"Si la energía flaquea, quedaron almas flotando por la arena."
+		]
 	},
 	"p1_combate2": {
 		"hablante": "Amuleto",
@@ -135,7 +172,11 @@
 		"modo": "Zona",
 		"retraso": 0.6,
 		"una_vez": false,
-		"lineas": []
+		"lineas": [
+			"El viento cortó el camino en tablas podridas: ceden apenas las pisás.",
+			"Cruzalas de a una con carrerita y saltá antes de que caigan.",
+			"En la tabla del medio hay un alma escondida, si te animás a buscarla."
+		]
 	},
 	"p1_lobo": {
 		"hablante": "Amuleto",

@@ -33,10 +33,14 @@ func _init() -> void:
 	# Planeo del murciélago
 	player.current_form = 3
 	player.global_position = Vector2(200, 100)
-	player.velocity = Vector2(0, 50)
-	await physics_frame
+	player.velocity = Vector2(0, 0)
 	Input.action_press("jump")
-	await physics_frame
+	# El planeo ocurre en la caída del salto (velocidad.Y > 0);
+	# el apex-hang hace el ascenso muy lento, así que esperamos a caer.
+	for i in 300:
+		await physics_frame
+		if player.velocity.y > 0.0:
+			break
 	var gliding: bool = player.forms[3].is_gliding(player)
 	_check(gliding, "Murciélago planea en el aire con J sostenido")
 	Input.action_release("jump")

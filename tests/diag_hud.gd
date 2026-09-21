@@ -11,8 +11,8 @@ func _init() -> void:
 	var hud = scene.get_node("Hud")
 	var player = scene.get_node("Player")
 
-	var hp_bar = hud.get_node("Bars/Rows/HpRow/HpBar")
-	var esp_bar = hud.get_node("Bars/Rows/EspRow/EspBar")
+	var hp_bar = hud.get_node("Bars/Rows/HpRow/HpBarStack/HpBar")
+	var esp_bar = hud.get_node("Bars/Rows/EspRow/EspBarStack/EspBar")
 
 	player.take_damage(30)
 	await process_frame

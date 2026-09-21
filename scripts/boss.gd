@@ -522,12 +522,15 @@ func _disparar_orb(to_player: Vector2, ang: float, dmg: int, speed: float) -> vo
 	var dir := Vector2(base.x * c - base.y * s, base.x * s + base.y * c)
 	var proj := PROYECTIL_SCENE.instantiate()
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
-	destino.add_child(proj)
-	proj.global_position = global_position + Vector2(0, -120)
+	# enemy_shot se resuelve en _ready del proyectil (define la mask). Debe
+	# setearse ANTES de add_child o el orb no golpea al jugador (y puede golpear
+	# aliados). Ver projectile.gd.
 	proj.set("direction", dir.normalized())
 	proj.set("speed", speed)
 	proj.set("damage", dmg)
 	proj.set("enemy_shot", true)
+	destino.add_child(proj)
+	proj.global_position = global_position + Vector2(0, -120)
 
 
 func _ritual_entrada() -> void:

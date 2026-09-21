@@ -1,7 +1,10 @@
 extends StaticBody2D
 
 @export var required_form: int = 2
-@export var interact_range: float = 220.0
+# El rango es centro a centro y el collider del Oso es muy ancho: collider Oso
+# 470 px + tronco 200 px = mínimo 335 px de distancia entre centros para tocar.
+# Con 220 el tronco era irrompible (softlock de nivel3).
+@export var interact_range: float = 380.0
 
 var destroyed := false
 var _t := 0.0

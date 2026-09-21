@@ -25,13 +25,26 @@ func _ready() -> void:
 
 
 func _on_body_entered(body: Node2D) -> void:
-	if body.has_method("actualizar_checkpoint"):
-		body.actualizar_checkpoint(global_position + offset_respawn)
+	if not body.has_method("actualizar_checkpoint"):
+		return
+	# Solo guarda si el respawn queda apoyado en suelo: evita guardar un punto
+	# donde reaparecerías flotando/cayendo (mala colocación en el editor). Si no
+	# hay piso, el checkpoint sigue apagado y se vuelve a intentar al re-entrar.
+	if not _hay_piso_bajo(global_position + offset_respawn):
+		return
+	body.actualizar_checkpoint(global_position + offset_respawn)
 	if not _activado:
 		_activado = true
 		_pintar(true)
 		activado.emit()
 		_burst()
+
+
+## Raycast corto hacia abajo (capa 1 = terreno) para validar el respawn.
+func _hay_piso_bajo(pos: Vector2) -> bool:
+	var space := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.create(pos, pos + Vector2(0, 400.0), 1, [self])
+	return not space.intersect_ray(query).is_empty()
 
 
 func _pintar(encendido: bool) -> void:

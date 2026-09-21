@@ -36,11 +36,11 @@ func _init() -> void:
 	jump_buffer_time = 0.20
 	coyote_time = 0.18
 	jump_buffer_time = 0.20
-	var jump_cut_multiplier := 0.35
+	jump_cut_multiplier = 0.35
 	step_up_max = 48.0
 	camera_zoom = Vector2(0.94, 0.94)
-	var sprint_zoom_out := 0.3
-	var sprint_min_speed := 300.0
+	sprint_zoom_out = 0.3
+	sprint_min_speed = 300.0
 	turn_tilt_cam = 0.06
 	landing_squash = 0.14
 	mult_recuperacion = 0.85

@@ -31,7 +31,7 @@ func _init() -> void:
 	accel_air_mult = 0.65
 	coyote_time = 0.16
 	jump_buffer_time = 0.18
-	var jump_cut_multiplier := 0.20
+	jump_cut_multiplier = 0.20
 	camera_zoom = Vector2(0.95, 0.95)
 	landing_squash = 0.06
 	mult_recuperacion = 1.8

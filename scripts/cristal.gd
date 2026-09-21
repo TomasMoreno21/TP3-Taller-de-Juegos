@@ -52,6 +52,10 @@ func _actualizar_visual() -> void:
 
 
 func _process(_delta: float) -> void:
+	if _roto:
+		# Congelar la animación de flote: de lo contrario sobrescribe el fade
+		# (modulate.a) y escala del tween de destrucción en take_damage.
+		return
 	if visual_root == null:
 		return
 	var t := Time.get_ticks_msec() * 0.001 * float_speed + _offset

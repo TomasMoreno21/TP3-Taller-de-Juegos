@@ -122,16 +122,8 @@ position = Vector2(5900, 3138)
 [node name="CheckpointPuente1Pre" parent="." unique_id=995158287 instance=ExtResource("check")]
 position = Vector2(4300, 3100)
 
-[node name="PlataformaFragil1" parent="." unique_id=2032464090 instance=ExtResource("fragil")]
-position = Vector2(3064, 3212)
-tiempo_temblor = 0.8
-
 [node name="PlataformaFragil2" parent="." unique_id=864463980 instance=ExtResource("fragil")]
 position = Vector2(3304, 3212)
-tiempo_temblor = 0.8
-
-[node name="PlataformaFragil3" parent="." unique_id=422886543 instance=ExtResource("fragil")]
-position = Vector2(3544, 3212)
 tiempo_temblor = 0.8
 
 [node name="PlataformaFragil4" parent="." unique_id=1706065378 instance=ExtResource("fragil")]
@@ -139,7 +131,7 @@ position = Vector2(3784, 3212)
 tiempo_temblor = 0.8
 
 [node name="Pickup8" parent="." unique_id=1047912727 instance=ExtResource("pick")]
-position = Vector2(3424, 3126)
+position = Vector2(4024, 3069)
 
 [node name="CheckpointPuente1Post" parent="." unique_id=29221242 instance=ExtResource("check")]
 position = Vector2(2800, 3100)

@@ -23,12 +23,14 @@ func _init() -> void:
 	await physics_frame
 	await physics_frame
 	Input.action_release("transform")
+	await _esperar_transform()
 	_check(player.current_form == 1,
 		"T sin usar Q antes transforma directo a Lobo. Es: " + str(player.current_form))
 	Input.action_press("transform")
 	await physics_frame
 	await physics_frame
 	Input.action_release("transform")
+	await _esperar_transform()
 	_check(player.current_form == 0,
 		"T de nuevo revierte a Humano. Es: " + str(player.current_form))
 
@@ -45,6 +47,7 @@ func _init() -> void:
 	await physics_frame
 	await physics_frame
 	Input.action_release("transform")
+	await _esperar_transform()
 	_check(player.current_form == 1,
 		"T confirma y transforma a Lobo. Es: " + str(player.current_form))
 
@@ -53,6 +56,7 @@ func _init() -> void:
 	await physics_frame
 	await physics_frame
 	Input.action_release("transform")
+	await _esperar_transform()
 	_check(player.current_form == 0 and player.forma_seleccionada == 0,
 		"T de nuevo revierte a Humano sin pasar por Q. Es: " + str(player.current_form))
 
@@ -65,6 +69,7 @@ func _init() -> void:
 	await physics_frame
 	await physics_frame
 	Input.action_release("transform")
+	await _esperar_transform()
 	Input.action_press("form_next")
 	await physics_frame
 	await physics_frame
@@ -73,6 +78,7 @@ func _init() -> void:
 	await physics_frame
 	await physics_frame
 	Input.action_release("transform")
+	await _esperar_transform()
 	_check(player.current_form == 2,
 		"T transforma directo de Lobo a Oso. Es: " + str(player.current_form))
 
@@ -109,6 +115,12 @@ func _init() -> void:
 		quit(0)
 	else:
 		quit(1)
+
+
+# El cooldown de transformación es 1.8s: hay que esperarlo entre toques de T.
+func _esperar_transform() -> void:
+	for i in 120:
+		await physics_frame
 
 
 func _write_formas(player: Node) -> void:

@@ -37,6 +37,7 @@ script = ExtResource("2_cam")
 [node name="SetupProgresion" type="Node" parent="." unique_id=1027730487]
 script = ExtResource("4_setup")
 nivel_minimo = 4
+formas_forzadas = Array[int]([0, 1, 2, 3])
 
 [node name="FondoBosque" parent="." unique_id=794215151 instance=ExtResource("3_fondo")]
 visible = false

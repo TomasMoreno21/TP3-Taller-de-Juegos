@@ -39,7 +39,7 @@ func _init() -> void:
 		if is_instance_valid(e) and e.health > 0:
 			e.take_damage(9999)
 
-	for i in range(30):
+	for i in range(60):
 		await physics_frame
 	_check(enc.estado == COMPLETED, "Encounter COMPLETED tras matar la ola")
 

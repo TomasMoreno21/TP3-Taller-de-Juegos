@@ -35,7 +35,7 @@ func _init() -> void:
 	coyote_time = 0.14
 	jump_buffer_time = 0.18
 	coyote_time = 0.14
-	var jump_cut_multiplier := 0.42
+	jump_cut_multiplier = 0.42
 	melee_sticky = 0.0
 	combos = [
 		{"nombre": "Remate", "secuencia": ["light", "heavy"], "dano": 38, "knockback": 260.0, "tamano": Vector2(162, 114), "rango": 126.0},

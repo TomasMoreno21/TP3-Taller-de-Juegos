@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bhxju6lap2tcq"]
 
-[ext_resource type="Script" uid="uid://cr01jl2ryivbe" path="res://scripts/unlock_forma.gd" id="1_unlock_script"]
+[ext_resource type="Script" uid="uid://dpfkblywpdb2b" path="res://scripts/unlock_forma.gd" id="1_unlock_script"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_unlock"]
 size = Vector2(150, 400)

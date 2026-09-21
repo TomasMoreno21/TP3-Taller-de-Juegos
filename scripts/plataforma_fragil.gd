@@ -35,7 +35,7 @@ func _physics_process(delta: float) -> void:
 		Fase.ESPERA:
 			var player: Node2D = get_tree().get_first_node_in_group("player")
 			if player is CharacterBody2D and player.is_on_floor():
-				if _rect_toca(_rect_propio(), player):
+				if _pisa_plataforma(player):
 					_fase = Fase.TEMBLOR
 		Fase.TEMBLOR:
 			_t += delta
@@ -76,21 +76,35 @@ func _rect_propio() -> Rect2:
 	return Rect2(_shape.global_position - s * 0.5, s)
 
 
-## Overlap determinista con el collider del player (patrón de pinchos).
-func _rect_toca(a: Rect2, body: Node2D) -> bool:
+## El jugador debe estar PISANDO la plataforma (sus pies ~ sobre el tope de la
+## caja), no rozarla por el costado parado en otra superficie: el overlap con
+## el rect COMPLETO del collider daba falsos positivos (player 190x318 / oso
+## 470x324 vs plataformas finas) y la rompía apoyándose en su lateral.
+func _pisa_plataforma(body: Node2D) -> bool:
+	var b := _rect_body(body)
+	if b == Rect2():
+		return false
+	var a := _rect_propio()
+	var tope := a.position.y
+	var pies := b.position.y + b.size.y
+	if pies < tope - 8.0 or pies > tope + 6.0:
+		return false
+	return a.position.x < b.end.x and b.position.x < a.end.x
+
+
+## Rect global del collider del body (patrón de pinchos).
+func _rect_body(body: Node2D) -> Rect2:
 	var csc := _csc_de(body)
 	if csc == null or csc.shape == null:
-		return false
+		return Rect2()
 	var s: Vector2
 	if csc.shape is RectangleShape2D:
 		s = csc.shape.size
 	elif csc.shape is CapsuleShape2D:
 		s = Vector2(csc.shape.radius * 2.0, csc.shape.height)
 	else:
-		return false
-	var b := Rect2(body.global_position + csc.position - s * 0.5, s)
-	# Tolera el contacto exacto borde a borde (el piso "roza" el top de la plataforma).
-	return a.grow(6.0).intersects(b)
+		return Rect2()
+	return Rect2(body.global_position + csc.position - s * 0.5, s)
 
 
 func _csc_de(body: Node2D) -> CollisionShape2D:

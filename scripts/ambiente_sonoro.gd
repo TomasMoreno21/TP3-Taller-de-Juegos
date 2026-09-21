@@ -20,7 +20,11 @@ func _ready() -> void:
 		var stream: AudioStream = capas_loop[i]
 		if stream == null:
 			continue
-		if "loop" in stream:
+		if stream is AudioStreamWAV:
+			# AudioStreamWAV no expone `loop` (usa loop_mode); sin esto una capa
+			# en WAV termina y no cicla como el resto de las capas.
+			stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		elif "loop" in stream:
 			stream.loop = true
 		var player := AudioStreamPlayer.new()
 		player.stream = stream

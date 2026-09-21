@@ -3,7 +3,7 @@ extends Area2D
 ## Colocable en el editor: elegir `forma` (0=Humano, 1=Lobo, 2=Oso, 3=Murciélago).
 ## Se da una sola vez por partida (Progresion es autoload, persiste al morir/reintentar).
 
-@export var forma: int = 1
+@export_enum("Humano:0", "Lobo:1", "Oso:2", "Murcielago:3") var forma: int = 1
 @export var una_vez := true
 
 var _dado := false

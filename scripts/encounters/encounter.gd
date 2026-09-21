@@ -31,6 +31,8 @@ var _ola_idx := -1
 var _vivos_ola := 0
 var _manuales: Array[Array] = []
 var _spawned: Array[Node] = []
+# Un solo `died` conectado por enemigo, anotado con la ola a la que pertenece.
+var _conectados := {}
 var _bounds: Array[CollisionShape2D] = []
 var _arena_base_y := 0.0  # borde inferior del rect Arena (ancla el piso de las paredes)
 
@@ -52,10 +54,13 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	# Mientras pelea, las paredes acompañan el borde visible de la cámara
 	# (así el escenario de combate es toda la pantalla aunque cambie el zoom).
-	if estado == Estado.RUNNING and paredes_en_borde_pantalla:
-		_actualizar_paredes_a_borde()
-		if estado == Estado.RUNNING:
-			_comprobar_limbos()
+	if estado == Estado.RUNNING:
+		if paredes_en_borde_pantalla:
+			_actualizar_paredes_a_borde()
+		# Los limbos se chequean SIEMPRE que haya pelea (no solo con paredes a
+		# borde de pantalla): si un enemigo cae a un pozo debe morir y despejar
+		# la ola, o la arena queda bloqueada para siempre.
+		_comprobar_limbos()
 
 
 # --- Público (tests / consola) ---
@@ -76,6 +81,19 @@ func _liberar_enemigos() -> void:
 			n.queue_free()
 	_spawned.clear()
 	_manuales.clear()
+
+
+## Devuelve la arena a un estado INACTIVE rearmado, sin perder a los enemigos
+## todavía vivos de sus olas (los muertos no reviven). Se usa al reaparecer
+## tras morir DENTRO de un combate: sin esto el encounter quedaba RUNNING y la
+## cámara fija al centro, con el jugador fuera de encuadre.
+func reiniciar() -> void:
+	estado = Estado.INACTIVE
+	_ola_idx = -1
+	_vivos_ola = 0
+	_ocultar_bounds()
+	_agrupar_manuales()
+	_preparar_manuales()
 
 
 # --- Interno ---
@@ -102,12 +120,23 @@ func _agregar_manual(hijo: Node) -> void:
 
 
 func _preparar_manuales() -> void:
-	for grupo in _manuales:
-		for e in grupo:
+	for i in _manuales.size():
+		for e in _manuales[i]:
 			if e.has_method("preparar_ola"):
 				e.preparar_ola()
 			if e.has_signal("died"):
-				e.died.connect(_on_enemy_died)
+				_conectar_died(e, i)
+
+
+## Conecta una sola vez el `died` de un enemigo y lo anota con la ola a la que
+## pertenece. `_on_enemy_died(ola_tag)` descarta muertes de otra ola: si dos
+## enemigos mueren en el mismo frame, solo el que cierra la ola actual resuelve,
+## y la siguiente ola no se descuenta ni se salta (doble _siguiente_ola).
+func _conectar_died(e: Node, ola_idx: int) -> void:
+	var key := e.get_instance_id()
+	if not _conectados.has(key):
+		e.died.connect(_on_enemy_died.bind(ola_idx))
+	_conectados[key] = ola_idx
 
 
 func _on_body_entered(body: Node) -> void:
@@ -149,15 +178,17 @@ func _lanzar_ola(idx: int) -> void:
 	if idx < _manuales.size():
 		for e in _manuales[idx]:
 			if is_instance_valid(e):
+				if e.has_signal("died"):
+					_conectar_died(e, idx)
 				e.activar()
 				_vivos_ola += 1
 	if idx < olas.size():
-		_vivos_ola += _spawnear_auto(olas[idx])
+		_vivos_ola += _spawnear_auto(olas[idx], idx)
 	if _vivos_ola <= 0:
 		_ola_resuelta()
 
 
-func _spawnear_auto(ola: WaveOla) -> int:
+func _spawnear_auto(ola: WaveOla, ola_idx: int) -> int:
 	if ola.cantidad <= 0:
 		return 0
 	for i in range(ola.cantidad):
@@ -166,8 +197,8 @@ func _spawnear_auto(ola: WaveOla) -> int:
 		e.set("spawn_telegrafiado", true)
 		add_child(e)
 		e.global_position = _posicion_spawn(i, ola, ola.cantidad)
+		_conectar_died(e, ola_idx)
 		e.activar()
-		e.died.connect(_on_enemy_died)
 		_spawned.append(e)
 	return ola.cantidad
 
@@ -181,9 +212,11 @@ func _posicion_spawn(i: int, ola: WaveOla, total: int) -> Vector2:
 	return arena_center + Vector2(desvio, ola.offset.y)
 
 
-func _on_enemy_died() -> void:
+func _on_enemy_died(ola_tag: int) -> void:
+	if ola_tag != _ola_idx or estado != Estado.RUNNING:
+		return
 	_vivos_ola -= 1
-	if estado == Estado.RUNNING and _vivos_ola <= 0:
+	if _vivos_ola <= 0:
 		if _ola_idx + 1 >= _total_olas():
 			_slowmo_cierre()
 		_siguiente_ola()

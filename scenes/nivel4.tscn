@@ -28,6 +28,7 @@ size = Vector2(5500, 400)
 [node name="SetupProgresion" type="Node" parent="."]
 script = ExtResource("3_setup")
 nivel_minimo = 4
+formas_forzadas = Array[int]([0, 1, 2, 3])
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(-150, 800)

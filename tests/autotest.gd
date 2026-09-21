@@ -281,6 +281,11 @@ func _init() -> void:
 	# --- Rompibles: 3 golpes (el fragmento lo da el alma al recogerla, ver pickup) ---
 	_console._ejecutar(PackedStringArray(["form", "humano"]))
 	await process_frame
+	# La ruptura del tronco deja al Oso desplazado por la física hasta sobre el
+	# pozo (x < -450): sin piso los golpes whiffean. Se vuelve al piso de prueba.
+	_player.global_position = Vector2(-350, 900)
+	_player.velocity = Vector2.ZERO
+	await _wait_frames(40)
 	var crate: Node2D = preload("res://scenes/rompible.tscn").instantiate()
 	_scene.add_child(crate)
 	crate.global_position = _player.global_position + Vector2(40, 0)
@@ -496,20 +501,22 @@ func _funcion_tronco() -> void:
 	await _esperar_recuperacion("special")
 	_check(is_instance_valid(tronco), "Interact: humano NO rompe el tronco")
 
-	# Oso: el special sí lo rompe. El collider ancho del Oso (470px) se solaparía con
-	# el del tronco (200px) si se transforma parado a 130px de distancia y quedaría
-	# bloqueado (_transformar aborta sobre geometría solapada); se transforma lejos,
-	# despejado, y recién después se reposiciona junto al tronco (igual que caminar
-	# hasta él ya transformado).
-	_player.global_position = Vector2(-600, 900)
-	_player.velocity = Vector2.ZERO
-	await _wait_frames(5)
+	# Transformar a Oso PARADO junto al tronco haría abortar _transformar (el
+	# collider nuevo se solapa con el del tronco: 470px + 200px). Se apaga la
+	# colisión del tronco un instante, se transforma en el mismo piso despejado
+	# y se reactiva; después se reposiciona (la física los separa sin problema).
+	tronco.set_deferred("collision_layer", 0)
+	tronco.set_deferred("collision_mask", 0)
+	await _wait_frames(4)
 	_console._ejecutar(PackedStringArray(["form", "oso"]))
 	await process_frame
-	_player.global_position = tronco.global_position - Vector2(130, 0)
+	_check(int(_player.current_form) == 2, "Interact: se transformó en Oso")
+	tronco.set_deferred("collision_layer", 1)
+	tronco.set_deferred("collision_mask", 1)
+	_player.global_position = tronco.global_position - Vector2(140, 0)
 	_player.velocity = Vector2.ZERO
 	_player.facing = 1
-	await physics_frame
+	await _wait_frames(4)
 	Input.action_press("special")
 	await physics_frame
 	await physics_frame

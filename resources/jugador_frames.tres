@@ -32,6 +32,10 @@
 [ext_resource type="Texture2D" uid="uid://crlr17bq04ki3" path="res://Sprites/Jugador y Transformaciones/Pj atq 4.png" id="30_atq4"]
 [ext_resource type="Texture2D" uid="uid://deb44sae1e6j2" path="res://Sprites/Jugador y Transformaciones/Pj atq 5.png" id="31_atq5"]
 [ext_resource type="Texture2D" uid="uid://cpwpko102fm" path="res://Sprites/Jugador y Transformaciones/Pj atq 6.png" id="32_atq6"]
+[ext_resource type="Texture2D" uid="uid://c7oqj61df7kdu" path="res://Sprites/Jugador y Transformaciones/Atq LOBO1.png" id="33_atql1"]
+[ext_resource type="Texture2D" uid="uid://bgsvn4wn51or" path="res://Sprites/Jugador y Transformaciones/Atq LOBO2.png" id="34_atql2"]
+[ext_resource type="Texture2D" uid="uid://bgkq6t6pn56xv" path="res://Sprites/Jugador y Transformaciones/Atq LOBO3.png" id="35_atql3"]
+[ext_resource type="Texture2D" uid="uid://bkahqgv255ay8" path="res://Sprites/Jugador y Transformaciones/Atq LOBO4.png" id="36_atql4"]
 
 [resource]
 animations = [{
@@ -101,6 +105,23 @@ animations = [{
 "loop": 1,
 "name": &"idle",
 "speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("33_atql1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("34_atql2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("35_atql3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("36_atql4")
+}],
+"loop": 0,
+"name": &"lobo_attack",
+"speed": 16.0
 }, {
 "frames": [{
 "duration": 1.0,

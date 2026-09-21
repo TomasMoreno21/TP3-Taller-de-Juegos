@@ -55,6 +55,22 @@ func _reintentar() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if player != null and player.has_method("tiene_checkpoint") and player.has_method("reaparecer_en_checkpoint") and player.tiene_checkpoint():
 		player.reaparecer_en_checkpoint()
+		_restaurar_post_muerte()
 		queue_free()
 	else:
 		get_tree().reload_current_scene()
+
+
+## Al morir DENTRO de una arena, el encounter queda RUNNING y la cámara fija al
+## centro del combate: al reaparecer el jugador quedaba fuera de encuadre con
+## la pelea a medias (y bloqueada). Se resetean las arenas a INACTIVE y se
+## restaura la cámara normal para volver al checkpoint limpio.
+func _restaurar_post_muerte() -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if player != null:
+		var cam := player.get_viewport().get_camera_2d()
+		if cam != null and cam.has_method("modo_normal"):
+			cam.modo_normal()
+	for e in get_tree().get_nodes_in_group("encounter"):
+		if e.has_method("reiniciar"):
+			e.reiniciar()

@@ -30,6 +30,8 @@ func _init() -> void:
 
 	var total_enemigos := 0
 	var arenas := 0
+	var arqueros := 0
+	var chamanes := 0
 	for hijo in nivel.get_children():
 		if String(hijo.name).begins_with("Encounter"):
 			arenas += 1
@@ -38,12 +40,21 @@ func _init() -> void:
 				if "tipo" in sub and "ola_asignada" in sub:
 					en_arena += 1
 					total_enemigos += 1
+					match String(sub.tipo):
+						"cultista":
+							pass
+						"arquero":
+							arqueros += 1
+						"chaman":
+							chamanes += 1
 			print("  [INFO] ", hijo.name, ": estado=", hijo.estado,
 				" enemigos=", en_arena,
 				" arena_center=", hijo.arena_center,
 				" medio_ancho=", snappedf(hijo.arena_medio_ancho, 0.1))
-	_check(arenas == 5, "Nivel1: 5 arenas de encuentro (hay %d)" % arenas)
-	_check(total_enemigos == 11, "Nivel1: 11 cultistas en total (hay %d)" % total_enemigos)
+	_check(arenas == 3, "Nivel1: 3 arenas de encuentro (hay %d)" % arenas)
+	_check(total_enemigos == 9, "Nivel1: 9 enemigos en total (hay %d)" % total_enemigos)
+	_check(arqueros >= 2, "Nivel1: hay arqueros (flechador) para enseñar proyectiles (%d)" % arqueros)
+	_check(chamanes >= 1, "Nivel1: hay un chamán como mini-jefe final (%d)" % chamanes)
 
 	# Enemigos de la misma ola no deben arrancar con colliders superpuestos
 	# (bug 27/08: colliders anchos causaban depenetración violenta).
@@ -85,14 +96,16 @@ func _init() -> void:
 			pickups += 1
 		if String(hijo.name).begins_with("Dialogo"):
 			dialogos += 1
-	_check(rompibles == 7, "Nivel1: 7 rompibles (hay %d)" % rompibles)
-	_check(pickups == 10, "Nivel1: 10 pickups dedicados (hay %d)" % pickups)
-	_check(dialogos == 6, "Nivel1: 6 diálogos (hay %d)" % dialogos)
+	_check(rompibles == 6, "Nivel1: 6 rompibles (hay %d)" % rompibles)
+	_check(pickups == 17, "Nivel1: 17 pickups dedicados (hay %d)" % pickups)
+	_check(dialogos == 9, "Nivel1: 9 diálogos (hay %d)" % dialogos)
 
 	# Suelo continuo, salvo el pozo intencional de la Introducción (x 448-608).
+	# Se verifica el rango COMPLETO del nivel (hasta el Santuario / límite de
+	# cámara) para detectar huecos físicos accidentales en las zonas finales.
 	var huecos_inesperados := 0
 	var x := 0.0
-	while x <= 15950.0:
+	while x <= 25647.0:
 		var dentro_del_pozo := x > 428.0 and x < 628.0
 		var params := PhysicsPointQueryParameters2D.new()
 		params.position = Vector2(x, 1000.0)
@@ -103,6 +116,21 @@ func _init() -> void:
 			print("  [AVISO] sin suelo en x=", x)
 		x += 100.0
 	_check(huecos_inesperados == 0, "Nivel1: piso continuo salvo el pozo de Introducción (%d huecos inesperados)" % huecos_inesperados)
+
+	# Cada trigger de diálogo debe apuntar a un id que exista en dialogos.json:
+	# si el id no está, al dispararse el diálogo quedaría en blanco.
+	var datos_json := {}
+	var f := FileAccess.open("res://data/dialogos.json", FileAccess.READ)
+	if f != null:
+		datos_json = JSON.parse_string(f.get_as_text())
+	var dialogos_rotos := 0
+	for hijo in nivel.get_children():
+		if String(hijo.name).begins_with("Dialogo"):
+			var id_dialogo: String = String(hijo.get("dialogo_id"))
+			if id_dialogo.is_empty() or not datos_json.has(id_dialogo):
+				dialogos_rotos += 1
+				print("  [AVISO] ", hijo.name, " apunta a dialogo_id inexistente: '", id_dialogo, "'")
+	_check(dialogos_rotos == 0, "Nivel1: todos los triggers de diálogo apuntan a ids existentes en dialogos.json (%d rotos)" % dialogos_rotos)
 
 	# GrietaLobo: el hueco entre el techo y el piso debe dejar pasar a Lobo
 	# agachado (160px). 05/09: al reubicar GrietaLobo cerca del marker de diálogo

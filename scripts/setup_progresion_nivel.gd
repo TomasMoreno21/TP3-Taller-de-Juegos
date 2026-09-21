@@ -1,10 +1,11 @@
 extends Node
 ## Configura la progresión al iniciar un nivel: fuerza un nivel mínimo y/o
 ## una lista de formas desbloqueadas (configurable desde el editor).
-## Si `formas_forzadas` queda vacía, el nivel usa la regla estándar por nivel.
+## Para el Nivel 1: Humanos empieza siempre, Lobo se desbloquea al recolectar 5 fragmentos,
+## y Oso/Murciélago requieren progresión normal.
 
 @export var nivel_minimo := 1          # si el nivel traído es menor, se sube a este
-@export var formas_forzadas: Array[int] = []  # indices de Form (Humano=0, Lobo=1, Oso=2, Murciélago=3)
+@export var formas_forzadas: Array[int] = [0]  # 0=Humano siempre; Lobo desbloquea al recolectar fragmentos
 
 
 func _ready() -> void:

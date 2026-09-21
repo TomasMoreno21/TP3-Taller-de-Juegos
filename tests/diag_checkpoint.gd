@@ -15,16 +15,16 @@ func _check(cond: bool, msg: String) -> void:
 
 
 func _init() -> void:
-	var nivel: Node = load("res://scenes/nivel1prueba.tscn").instantiate()
+	var nivel: Node = load("res://scenes/nivel1.tscn").instantiate()
 	root.add_child(nivel)
 	current_scene = nivel
 	for i in 4:
 		await process_frame
 
 	var player: Node2D = nivel.get_node_or_null("Player")
-	_check(player != null, "Nivel de prueba: Player presente")
-	var checkpoint: Node = nivel.get_node_or_null("Checkpoint1")
-	_check(checkpoint != null, "Checkpoint1 instanciado en el nivel")
+	_check(player != null, "Nivel 1: Player presente")
+	var checkpoint: Node = nivel.get_node_or_null("Checkpoint")
+	_check(checkpoint != null, "Checkpoint instanciado en el nivel 1")
 
 	if player == null or checkpoint == null:
 		quit(_fallos)
@@ -32,9 +32,13 @@ func _init() -> void:
 
 	_check(not player.tiene_checkpoint(), "Al inicio no hay checkpoint guardado")
 
-	# Activar el checkpoint: ponemos al player encima del Area2D para disparar body_entered.
-	checkpoint.global_position = player.global_position
-	for i in 3:
+	# Activar el checkpoint: el player CAE desde arriba encima del Area2D. Un
+	# teletransporte directo no dispara body_entered (overlap sin transición),
+	# y mover el checkpoint lo despega del piso (la validación de suelo del
+	# respawn lo rechaza con razón: no debe guardar un punto flotante).
+	player.global_position = checkpoint.global_position + Vector2(0, -220)
+	player.velocity = Vector2.ZERO
+	for i in 30:
 		await physics_frame
 	_check(player.tiene_checkpoint(), "Al tocar el checkpoint, tiene_checkpoint es true")
 
