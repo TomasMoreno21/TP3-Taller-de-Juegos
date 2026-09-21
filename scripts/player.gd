@@ -630,6 +630,11 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	var data: Forma = forms[current_form]
 	var rec := _recovery_for(_current_attack_type) * data.mult_recuperacion
 	_attack_timer = rec
+	# El lobo usa la misma cola que el humano: _iniciar_anim_ataque estira la
+	# anim con speed_scale para que los 4 frames de lobo_attack duren
+	# exactamente la recuperación -> se ve completa (no se corta al 1er frame).
+	if current_form == Form.LOBO and visual.sprite_frames.has_animation("lobo_attack"):
+		_iniciar_anim_ataque("lobo_attack")
 	_early_exit_umbral = rec * data.recovery_early_fraccion
 	_early_liberado = false
 	# ImÃ¡n suave al enemigo mÃ¡s cercano si estÃ¡s un poco lejos
@@ -1220,7 +1225,7 @@ func _update_animacion() -> void:
 # Ataques del Humano con cola propia: la anim se estira (speed_scale) para
 	# durar exactamente la recuperación del golpe. Light -> attack1 (1-3),
 	# Heavy -> attack2 (4-6), Special/Combo -> attack_full (1-6).
-	if current_form == Form.HUMAN and _attack_anim_cola.size() > 0:
+	if _attack_anim_cola.size() > 0:
 		_attack_anim_timer -= get_physics_process_delta_time()
 		if _attack_anim_timer <= 0.0:
 			if _attack_anim_cola.size() > 1:
