@@ -14,6 +14,17 @@
 [ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="13_pause"]
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="14_levelup"]
 [ext_resource type="PackedScene" path="res://scenes/console.tscn" id="15_cons"]
+[ext_resource type="Texture2D" path="res://Sprites/Elementos/3 Objects/Grass/1.png" id="29_deco_grass1"]
+[ext_resource type="Texture2D" path="res://Sprites/Elementos/3 Objects/Grass/6.png" id="30_deco_grass6"]
+[ext_resource type="Texture2D" path="res://Sprites/Elementos/3 Objects/Bushes/3.png" id="31_deco_bush3"]
+[ext_resource type="Texture2D" path="res://Sprites/Elementos/3 Objects/Bushes/5.png" id="32_deco_bush5"]
+[ext_resource type="Texture2D" path="res://Sprites/Elementos/3 Objects/Stones/2.png" id="33_deco_stone2"]
+[ext_resource type="Texture2D" path="res://Sprites/Elementos/3 Objects/Stones/4.png" id="34_deco_stone4"]
+[ext_resource type="Texture2D" path="res://Sprites/Elementos/3 Objects/Trees/2.png" id="35_deco_tree2"]
+[ext_resource type="Texture2D" path="res://Sprites/Elementos/3 Objects/Willows/1.png" id="36_deco_willow1"]
+[ext_resource type="Texture2D" path="res://Sprites/Elementos/3 Objects/Fence/1.png" id="37_deco_fence1"]
+[ext_resource type="Texture2D" path="res://Sprites/Elementos/3 Objects/Boxes/3.png" id="38_deco_boxes3"]
+[ext_resource type="Texture2D" path="res://Sprites/Elementos/3 Objects/Boxes/6.png" id="39_deco_boxes6"]
 [ext_resource type="PackedScene" path="res://scenes/enredadera.tscn" id="16_enredadera"]
 [ext_resource type="PackedScene" uid="uid://bf8ohs7pjg025" path="res://scenes/pinchos.tscn" id="17_pinchos"]
 [ext_resource type="Script" uid="uid://c20i4wytflcth" path="res://scripts/setup_progresion_nivel.gd" id="18_setup"]
@@ -777,7 +788,182 @@ position = Vector2(18375, 793)
 [node name="Checkpoint3" parent="." unique_id=1097156044 instance=ExtResource("27_46iir")]
 position = Vector2(21600, 847)
 
-[editable path="EncounterA"]
+[node name="DecoracionNivel1" type="Node2D" parent="."]
+
+[node name="FondoBosqueNoche" type="Node2D" parent="DecoracionNivel1"]
+
+[node name="Arbol1" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(900, 980)
+z_index = -2
+texture = ExtResource("30_tree2")
+scale = Vector2(1.4, 1.4)
+
+[node name="Arbol2" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(4850, 985)
+z_index = -2
+texture = ExtResource("30_tree2")
+flip_h = true
+scale = Vector2(1.6, 1.6)
+
+[node name="Arbol3" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(9200, 988)
+z_index = -2
+texture = ExtResource("30_tree2")
+scale = Vector2(1.3, 1.3)
+
+[node name="Arbol4" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(14000, 982)
+z_index = -2
+texture = ExtResource("30_tree2")
+flip_h = true
+scale = Vector2(1.5, 1.5)
+
+[node name="Arbol5" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(19500, 986)
+z_index = -2
+texture = ExtResource("30_tree2")
+scale = Vector2(1.35, 1.35)
+
+[node name="Arbol6" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(25000, 984)
+z_index = -2
+texture = ExtResource("30_tree2")
+flip_h = true
+scale = Vector2(1.55, 1.55)
+
+[node name="Sauce1" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(2300, 850)
+z_index = -2
+texture = ExtResource("31_willow1")
+
+[node name="Sauce2" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(7100, 930)
+z_index = -2
+texture = ExtResource("31_willow1")
+flip_h = true
+scale = Vector2(1.25, 1.25)
+
+[node name="Sauce3" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(11400, 900)
+z_index = -2
+texture = ExtResource("31_willow1")
+
+[node name="Sauce4" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(16500, 958)
+z_index = -2
+texture = ExtResource("31_willow1")
+flip_h = true
+scale = Vector2(1.15, 1.15)
+
+[node name="Sauce5" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(22500, 940)
+z_index = -2
+texture = ExtResource("31_willow1")
+
+[node name="Sauce6" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(25500, 980)
+z_index = -2
+texture = ExtResource("31_willow1")
+flip_h = true
+
+[node name="ArbustoFondo1" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(3700, 990)
+z_index = -2
+texture = ExtResource("32_bush5")
+
+[node name="ArbustoFondo2" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(12300, 995)
+z_index = -2
+texture = ExtResource("32_bush5")
+flip_h = true
+scale = Vector2(1.3, 1.3)
+
+[node name="ArbustoFondo3" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(17500, 992)
+z_index = -2
+texture = ExtResource("32_bush5")
+
+[node name="ArbustoFondo4" type="Sprite2D" parent="DecoracionNivel1/FondoBosqueNoche"]
+position = Vector2(20800, 945)
+z_index = -2
+texture = ExtResource("32_bush5")
+flip_h = true
+
+[node name="PrimerPlano" type="Node2D" parent="DecoracionNivel1"]
+
+[node name="Cesped1" type="Sprite2D" parent="DecoracionNivel1/PrimerPlano"]
+position = Vector2(650, 1012)
+z_index = 1
+texture = ExtResource("29_grass1")
+
+[node name="Cesped2" type="Sprite2D" parent="DecoracionNivel1/PrimerPlano"]
+position = Vector2(1450, 1006)
+z_index = 1
+texture = ExtResource("29_grass1")
+flip_h = true
+
+[node name="Cesped3" type="Sprite2D" parent="DecoracionNivel1/PrimerPlano"]
+position = Vector2(3200, 1014)
+z_index = 1
+texture = ExtResource("29_grass1")
+
+[node name="Cesped4" type="Sprite2D" parent="DecoracionNivel1/PrimerPlano"]
+position = Vector2(5200, 1018)
+z_index = 1
+texture = ExtResource("29_grass1")
+
+[node name="Cesped5" type="Sprite2D" parent="DecoracionNivel1/PrimerPlano"]
+position = Vector2(6600, 1010)
+z_index = 1
+texture = ExtResource("29_grass1")
+
+[node name="Cesped6" type="Sprite2D" parent="DecoracionNivel1/PrimerPlano"]
+position = Vector2(7800, 1006)
+z_index = 1
+texture = ExtResource("29_grass1")
+flip_h = true
+
+[node name="Cesped7" type="Sprite2D" parent="DecoracionNivel1/PrimerPlano"]
+position = Vector2(9800, 1012)
+z_index = 1
+texture = ExtResource("29_grass1")
+
+[node name="Cesped8" type="Sprite2D" parent="DecoracionNivel1/PrimerPlano"]
+position = Vector2(11700, 1008)
+z_index = 1
+texture = ExtResource("29_grass1")
+
+[node name="Cesped9" type="Sprite2D" parent="DecoracionNivel1/PrimerPlano"]
+position = Vector2(13200, 1016)
+z_index = 1
+texture = ExtResource("29_grass1")
+flip_h = true
+
+[node name="ArbustoCerca1" type="Sprite2D" parent="DecoracionNivel1/PrimerPlano"]
+position = Vector2(15600, 1014)
+z_index = 1
+texture = ExtResource("33_bush3")
+
+[node name="ArbustoCerca2" type="Sprite2D" parent="DecoracionNivel1/PrimerPlano"]
+position = Vector2(18700, 1012)
+z_index = 1
+texture = ExtResource("33_bush3")
+
+[node name="ArbustoCerca3" type="Sprite2D" parent="DecoracionNivel1/PrimerPlano"]
+position = Vector2(21050, 1002)
+z_index = 1
+texture = ExtResource("33_bush3")
+
+[node name="Piedra1" type="Sprite2D" parent="DecoracionNivel1/PrimerPlano"]
+position = Vector2(23900, 1014)
+z_index = 1
+texture = ExtResource("34_stone4")
+
+[node name="Piedra2" type="Sprite2D" parent="DecoracionNivel1/PrimerPlano"]
+position = Vector2(25200, 1010)
+z_index = 1
+texture = ExtResource("34_stone4")
+flip_h = true
 [editable path="EncounterB"]
 [editable path="EncounterC"]
 [editable path="EncounterD"]

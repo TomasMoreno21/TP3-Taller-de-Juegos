@@ -23,6 +23,10 @@ func _init() -> void:
 	special_knockback = 220.0
 	color = Color(0.58, 0.64, 0.75)
 	collider_size = Vector2(360, 160)
+	# Las patas de los PNG del lobo caen unos px por debajo de la base del collider;
+	# flight_lift eleva el sprite (todas las anims: idle/AFK, run, attack) a la misma
+	# altura, dejando al lobo siempre por encima del piso. Ajustable en el Inspector.
+	flight_lift = 8.0
 	camera_lookahead_mult = 0.9
 	shake_strength = 4.0
 	transform_duration = 8.0

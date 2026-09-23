@@ -46,6 +46,7 @@ const HITSTOP_HEAVY := 0.07
 const HITSTOP_SPECIAL := 0.09
 const HITSTOP_COMBO := 0.11
 @export var hitstop_dano := 0.0  # hitstop al recibir daño (0 = nada: solo shake + flash)
+@export var lobo_landing_squash_extra := 1.4  # multiplicador squash al aterrizar como Lobo (item 18)
 @export var slowmo_transformacion := 0.18  # s de cámara lenta al transformarse (0 = off)
 @export var slowmo_transformacion_escala := 0.4  # escala del tiempo mientras transforma
 @export var tint_dano := Color(1.0, 0.28, 0.28)  # tinte del sprite al recibir daño
@@ -895,6 +896,10 @@ func _squash_landing(data: Forma, impacto: float) -> void:
 	var amt := data.landing_squash
 	if amt <= 0.0 or impacto <= 0.0:
 		return
+	if current_form == Form.LOBO:
+		# Squash propio del Lobo (item 18): el aterrizaje del Lobo se siente
+		# mír reforzado que el genérico — editable desde el inspector del player.
+		amt *= lobo_landing_squash_extra
 	var factor := clampf(impacto / 600.0, 0.3, 1.0)
 	squash_y(amt * factor, 0.18)
 
