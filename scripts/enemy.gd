@@ -42,6 +42,7 @@ var _windup_timer := 0.0
 var _lunge_timer := 0.0
 var _lunge_hit := false
 var _ultima_pos_valida := Vector2.ZERO
+var _melee_anim := ""
 
 @onready var visual: Node2D = $Visual
 @onready var poly: Polygon2D = $Visual/Poly
@@ -329,7 +330,8 @@ func _physics_process(delta: float) -> void:
 		elif gap <= enemy_data.attack_range:
 			if enemy_data.windup_tiempo > 0.0:
 				_windup_timer = enemy_data.windup_tiempo
-				_reproducir_animacion_ataque("attack1")
+				_melee_anim = "attack1" if randf() < 0.5 else "attack2"
+				_reproducir_animacion_ataque(_melee_anim)
 				_attack_anim_timer = enemy_data.windup_tiempo + enemy_data.lunge_tiempo + 0.12
 			else:
 				_ataque_melee(player)
@@ -412,7 +414,9 @@ func _usar_proyectil() -> bool:
 
 
 func _ataque_melee(player: Node2D) -> void:
-	_reproducir_animacion_ataque("attack1")
+	if _melee_anim.is_empty():
+		_melee_anim = "attack1" if randf() < 0.5 else "attack2"
+	_reproducir_animacion_ataque(_melee_anim)
 	player.take_damage(enemy_data.attack_damage, 0.0, _dir)
 
 
