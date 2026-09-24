@@ -1166,3 +1166,10 @@ El usuario pidió que el combate no se sienta "tocar un botón y hacer daño sos
 - **Verificación final:** smoke `--headless --quit-after 5` limpio, `diag_nivel1prueba` **fallos=0**, autotest **FALLOS=2** (baseline exacto). Godot 4.7 en `C:\Users\Usuario\Downloads\Godot_v4.7-stable_win64_console.exe`.
 - **Pendiente (no elegido hoy):** sonido procedural + rumble (A) y arco de ataque visual vía `_play_attack_fx` (B). Suenan complementarios si el usuario quiere más jugo después.
 - **⚠️ REGLA ABSOLUTA (09/09, usuario enojado): NO tocar NADA del nivel (escenas como `nivel1.tscn`/`nivel2.tscn`, scripts de nivel, plataformas, pinchos, decoración) salvo pedido EXPLÍCITO del usuario.** Antes de editar cualquier `.tscn` de un nivel hay que (1) preguntarle si quiere el cambio, (2) NO correr smoke/editor que pueda rescribir el archivo (una corrida headless re-guardó `nivel1.tscn` y **borró sus movimientos manuales de plataformas en el editor** — las posiciones/rotaciones que él mueve desde el inspector se pierden si otro proceso rescribe el archivo). Si hay que tocar un nivel, respaldar primero `Copy-Item` a `%TEMP%` y restaurar con esas ediciones. `MEMORY.md` y scripts de sistema/combate SÍ se pueden tocar; los niveles NO.
+
+## Sesion 16/09 — expansion de nivel1 en main
+- Se trabajo en rama feature/decoracion-nivel1-vida, luego fast-forward a main (no hay divergencia; merge base = 29d454d).
+- Anadido tramo hasta x~62500 (+27k px) con sistema: recompensa/con enemigos -> parkour de pinchos (pitch 162) -> enredadera -> parkour+enredadera, intercalando ZONAS DE RESPIRO vacias (pasillos planos caminables sin enemigos ni pinchos, con un pickup al ras del piso) cada ~2 secciones, segun pedido explicito.
+- SalidaNivel movida a Vector2(62500,860) -> res://scenes/nivel2.tscn. Verificado: import --headless OK, smoke OK, autotest FALLOS=0.
+- Leccion aplicada: los edits acumulados des-sincronizan los offsets de lectura; la unica verdad es el disco (grep nativo de 1 linea) + corre el autotest. No editar de memoria.
+- Pendiente: expandir nivel2.tscn con el mismo sistema.

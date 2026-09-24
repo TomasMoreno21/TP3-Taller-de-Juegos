@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <title>TileSet cueva vectorial — 6x6 tiles de 32px (grilla)</title>
+  <defs>
+    <clipPath id="cell"><rect width="192" height="192"/></clipPath>
+  </defs>
+
+  <!-- Fondo transparente: cada tile ocupa 32x32 -->
+
+  <!-- ============ FILA 0 ============ -->
+  <!-- (0,0) Pared solida -->
+  <g>
+    <rect x="0" y="0" width="32" height="32" fill="#3b4650"/>
+    <path d="M0,4 L32,4 L32,32 L0,32 Z" fill="#4a5a66"/>
+    <path d="M0,4 L32,4 L32,10 L0,10 Z" fill="#566878"/>
+    <path d="M4,0 L6,0 L6,4 Z" fill="#2b333c"/>
+    <path d="M14,0 L17,0 L17,4 Z" fill="#2b333c"/>
+    <path d="M24,0 L27,0 L27,4 Z" fill="#2b333c"/>
+  </g>
+  <!-- (1,0) Pared borde izq -->
+  <g>
+    <rect x="32" y="0" width="32" height="32" fill="#3b4650"/>
+    <path d="M32,4 L64,4 L64,32 L32,32 Z" fill="#4a5a66"/>
+    <path d="M32,4 L64,4 L64,10 L32,10 Z" fill="#566878"/>
+    <path d="M32,6 L34,6 L34,12 Z" fill="#2b333c"/>
+    <path d="M32,18 L34,18 L34,24 Z" fill="#2b333c"/>
+  </g>
+  <!-- (2,0) Techo (colision abajo) -->
+  <g>
+    <rect x="64" y="0" width="32" height="32" fill="#33404c"/>
+    <path d="M64,0 L96,0 L96,14 L64,14 Z" fill="#4a5a66"/>
+    <path d="M64,24 L96,24 L96,32 L64,32 Z" fill="#3f4d59"/>
+    <path d="M64,14 L96,14 L96,17 L64,17 Z" fill="#2b333c"/>
+    <path d="M72,0 L75,0 L75,6 Z" fill="#2b333c"/>
+    <path d="M84,0 L86,0 L86,6 Z" fill="#2b333c"/>
+  </g>
+  <!-- (3,0) Suelo (colision arriba) -->
+  <g>
+    <rect x="96" y="0" width="32" height="32" fill="#7a6a5c"/>
+    <path d="M96,0 L128,0 L128,8 L96,8 Z" fill="#8b7a6a"/>
+    <path d="M96,26 L128,26 L128,32 L96,32 Z" fill="#5f5145"/>
+    <path d="M96,8 L128,8 L128,12 L96,12 Z" fill="#2b333c"/>
+    <path d="M102,0 L105,0 L105,5 Z" fill="#c9b9a5"/>
+    <path d="M116,0 L119,0 L119,5 Z" fill="#c9b9a5"/>
+  </g>
+  <!-- (4,0) Suelo relleno -->
+  <g>
+    <rect x="128" y="0" width="32" height="32" fill="#7a6a5c"/>
+    <path d="M128,26 L160,26 L160,32 L128,32 Z" fill="#5f5145"/>
+    <path d="M128,8 L160,8 L160,12 L128,12 Z" fill="#2b333c"/>
+    <path d="M134,0 L137,0 L137,6 Z" fill="#c9b9a5"/>
+    <path d="M148,0 L151,0 L151,6 Z" fill="#c9b9a5"/>
+  </g>
+  <!-- (5,0) Estalactita (sin colision) -->
+  <g>
+    <rect x="160" y="0" width="32" height="32" fill="#33404c"/>
+    <path d="M166,0 L168,0 L168,10 Z" fill="#566878"/>
+    <path d="M176,0 L178,0 L178,8 Z" fill="#566878"/>
+    <path d="M186,0 L188,0 L188,12 Z" fill="#566878"/>
+    <path d="M168,10 L176,10 L176,13 L168,13 Z" fill="#4a5a66"/>
+  </g>
+
+  <!-- ============ FILA 1 ============ -->
+  <!-- (0,1) Esquina TL -->
+  <g>
+    <rect x="0" y="32" width="32" height="32" fill="#3b4650"/>
+    <path d="M0,32 L32,32 L32,64 L0,64 Z" fill="#4a5a66"/>
+    <path d="M0,32 L6,32 L6,38 Z" fill="#566878"/>
+    <path d="M10,36 L32,36 L32,40 L10,40 Z" fill="#2b333c"/>
+  </g>
+  <!-- (1,1) Roca relleno oscuro (sin colision) -->
+  <g>
+    <rect x="32" y="32" width="32" height="32" fill="#33404c"/>
+    <path d="M36,32 L46,32 L46,38 Z" fill="#42525f"/>
+    <path d="M52,40 L62,40 L62,48 Z" fill="#42525f"/>
+    <path d="M40,48 L50,48 L50,56 Z" fill="#42525f"/>
+  </g>
+  <!-- (2,1) Roca relleno (sin colision) -->
+  <g>
+    <rect x="64" y="32" width="32" height="32" fill="#3b4650"/>
+    <path d="M68,32 L78,32 L78,40 Z" fill="#4a5a66"/>
+    <path d="M84,44 L94,44 L94,52 Z" fill="#4a5a66"/>
+    <path d="M70,52 L84,52 L84,58 Z" fill="#4a5a66"/>
+  </g>
+  <!-- (3,1) Borde cueva->tierra -->
+  <g>
+    <rect x="96" y="32" width="32" height="32" fill="#7a6a5c"/>
+    <path d="M96,44 L128,44 L128,64 L96,64 Z" fill="#6f6052"/>
+    <g>
+      <!-- pasto arriba -->
+      <rect x="96" y="36" width="32" height="8" fill="#2e4a2e"/>
+      <path d="M96,36 L102,32 L104,36 Z" fill="#3d6440"/>
+      <path d="M104,36 L108,32 L110,36 Z" fill="#3d6440"/>
+      <path d="M114,36 L118,32 L120,36 Z" fill="#3d6440"/>
+    </g>
+    <path d="M100,44 L104,44 L104,52 L100,52 Z" fill="#8b7a6a"/>
+  </g>
+  <!-- (4,1) Fondo oscuro cueva -->
+  <g>
+    <rect x="128" y="32" width="32" height="32" fill="#1d242b"/>
+    <path d="M132,32 L136,36 Z M140,32 L146,32 L140,38 Z" fill="#141a20"/>
+  </g>
+  <!-- (5,1) Estalagmita (colision) -->
+  <g>
+    <rect x="160" y="32" width="32" height="32" fill="#3b4650"/>
+    <path d="M170,60 L174,44 L178,60 Z" fill="#4a5a66"/>
+    <path d="M182,60 L184,50 L186,60 Z" fill="#566878"/>
+  </g>
+</svg>
