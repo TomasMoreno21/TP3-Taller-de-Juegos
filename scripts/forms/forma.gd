@@ -10,6 +10,10 @@ extends Resource
 
 var _jumps_usados := 0
 
+# Conexión de golpes: segundos desde que se inicia el ataque hasta que el daño
+# puede conectar (ventana de impacto alineada al pleno swing).
+@export var melee_hit_delay: float = 0.05
+
 # Combo ligero (repetición de J)
 @export var attack_damage: int = 10
 @export var attack_range: float = 26.0
@@ -47,7 +51,6 @@ var _jumps_usados := 0
 @export var shake_golpe_pesado: float = 12.0
 @export var shake_golpe_combo: float = 15.0
 @export var transform_duration: float = 14.0
-@export var turn_tilt: float = 0.0
 @export var lean_angulo: float = 3.0   # inclinación leve del sprite según velocidad (grados)
 
 # Inercia de movimiento (Ítem 5): aceleración al arrancar (más alto = más ágil)

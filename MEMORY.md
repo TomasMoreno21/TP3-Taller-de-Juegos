@@ -2,6 +2,35 @@
 
 ---
 
+## 🟢 Sesión 24/09 — Step-up por tiles arreglado (causa raíz) + conexión de golpes (ventana de impacto)
+
+> Dos bloques: (1) el escalón automático por tiles "no subía" los TileMaps del nivel real; (2) usuario pidió "mejorar la conexión de golpes y la forma en que los enemigos reaccionan" → eligió **solo conexión de golpes**.
+
+### Step-up (bug de los tilemaps)
+- **Causa raíz encontrada (NO era el collider 190×318):** `_try_step_up()` usaba `test_move(Transform2D(0, Vector2.ZERO), ...)` → test_move interpreta ese transform como **ABS**OLUTO, o sea consultaba colisiones en el origen del mundo (x=0,y=0), no en la posición del player. En el nivel real (lejos del origen) el escalón NUNCA se detectaba. Verificado con física headless (`tests/diag_stepup5.gd`): player en x=9000 → identidad=true, `Transform2D(0, player.global_position)`=false.
+- **Fix:** `_try_step_up()` (player.gd L1514-1550) usa `global_transform.translated(...)` para `sobre`/`hueco`/`vertical` y `test_move(global_transform, facing*...)`. **Lo mismo está roto en `_try_platform_snap` (L1558-1579), trepado (L1658-1731) y `muro_lobo.gd`** — pendiente de arreglar (avisa al usuario).
+- **Fluidez:** se anticipa el escalón dentro del avance del frame (`max(vel.x,130)*delta+2`) en vez de esperar contacto a 1px, y `_step_up_cd` 0.12→0.03. Diag nuevo `tests/diag_stepup.gd`: 1/2/4px + escalera de 3 peldaños → STEPUP-FALLOS=0. `step_up_max` por forma: humano 48, lobo 48, oso 32, **murciélago 0 (no sube)**.
+- **Dato útil del collider runtime:** la posición real del `Collision` del player es `(-2,-16.5)` (las formas la reconfiguran en `_init`, no `-4.5` del tscn). Borde inferior = `y + position.y + 159` (= `y + 142.5`).
+
+### Conexión de golpes (decisión del usuario: "solo conexión")
+- **Nuevo `@export melee_hit_delay` en `forma.gd`** (editable en Inspector): segundos desde iniciar el ataque hasta que el daño puede conectarse (ventana de impacto alineada al pleno swing). Valores por forma en cada `_init()`: Humano 0.06, Lobo 0.04, Oso 0.11, Murciélago 0.06. Default 0.05.
+- **`player.gd`:** `_hit_delay` se setea en `enable_melee` (usa `data.melee_hit_delay`) y se consume al inicio de `_check_attack_hits` antes de leer bodies → el golpe ya no conecta en el frame exacto de presionar la tecla.
+- **`autotest.gd`:** el test del Remate (J→K, 38 dmg) asumía conexión al frame exacto → ahora espera hasta 24 frames hasta que conecta antes de medir.
+
+### Verificación
+- Import limpio, smoke limpio, autotest FALLOS=0, diag_golpe/feedback/formas OK, diag_stepup STEPUP-FALLOS=0.
+- Pendiente: arreglar `test_move(absoluto)` en `_try_platform_snap`/trepado/muro_lobo; commitear step-up + conexión (preguntar mensaje).
+
+### Continuación 24/09 — Flinch caricaturesco + sin tilt de giro + game feel por racha
+- **Flinch caricaturesco (enemy.gd):** `_pose_stun` rediseñado: congela el frame de la animación al impacto (`_anim_congelada` + `animated.pause()`), corte seco hacia adelante (`flinch_adelanto_px` 12, ida/rebase con TRANS_QUAD), inclinación hacia atrás `stun_tilt_angulo` **5°→14°** sostenida todo el hitstun, y al terminar `_reanudar_flinch()` = `animated.play()` + "pop" de escala (`flinch_pop_escala` 1.12, TRANS_BACK). `_update_animacion` no reinicia mientras `_anim_congelada`. El chamán (sin AnimatedSprite, collage de polígonos) recibe inclinación/pop/corte pero no frame congelado (correcto). Los sprites `GraveRobber_hurt.png`/`SteamMan_hurt.png` (pack de 48px) NO se usan: no calzan con los sprites actuales a escala natural (127×380/103×410) — descartados.
+- **Decisión usuario (importante): "que las animaciones ni los personajes se tosquen al atacar":** se eliminó TODO tilt de giro del sprite del player al girar para atacar (girar y pegar atrás ya NO tuerca el sprite). Se borraron `_snap_turn()` y el export `turn_tilt` de `forma.gd` + asignaciones en las 4 formas. Se MANTIENE `turn_tilt_cam` (inclinación de cámara). Reglas a futuro: **nada de rotaciones/torceduras de sprite al atacar; el flinch de daño puede rotar un poco (aprobado) pero las rotaciones se consultan antes de agregar**.
+- **Game feel (player.gd, todo @export):** hitstop escalado por el golpe que cierra combo (`hitstop_tercer_mult` 1.2) y por racha; zoom punch por tipo (`zoom_heavy_mult`/`zoom_special_mult`/`zoom_combo_mult`); shake ahora incluye el especial (`shake_special` 16) y el tercer golpe (`shake_tercer_mult` 1.3).
+- **Daño recibido (player.gd):** pausa de impacto según fuerza (`hitstop_dano` base, `hitstop_dano_pesado` 0.06 si `cantidad >= hitstop_dano_umbral` 20); nuevo `_recoil_dano()` = reculada direccional + micro-temblor SIN rotación (respeta la decisión de arriba); números de daño escalan de 22 a 34 px según cantidad.
+- **Feedback por racha (opción elegida):** al llegar a racha 3/5 suben hitstop (`racha_hitstop_3/5` 1.15/1.3), zoom punch (`racha_zoom_3/5` 1.03/1.06) y el spark (`racha_spark_3/5` 1.35/1.7, vía `_racha_feedback_mult()`/`racha_spark_escala()`); `hud.gd` agrega `_pop_racha` (pop de escala del tick de racha al alcanzar 3 y 5). 
+- **Verificación:** smoke limpio, autotest FALLOS=0, diag_golpe/feedback/formas/hud OK.
+
+---
+
 ## 🟢 Sesión 22/09 — Cámara del Lobo: "se mueve demasiado, apenas hace zoom para atrás"
 
 > Petición del usuario: al moverte como Lobo, la cámara "se mueve demasiado", "apenas hace zoom para atrás" y "tras un tiempito se tira un poquito para atrás". Criterio explícito: **gameplay fluido, sin saltos fuertes de cámara**.

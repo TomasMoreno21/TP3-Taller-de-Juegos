@@ -14,8 +14,13 @@ const MAX_FALL_SPEED := 950.0
 @export var volumen_golpe_db := 0.0
 @export var perseguir_fuera_rango: bool = false  # los proyectiles se quedan donde spawnnean y atacan a rango
 @export var limite_caida := 6000.0
-@export var stun_tilt_angulo := 5.0          # inclinación de la pose de stun (grados)
+@export var stun_tilt_angulo := 14.0         # inclinación de la pose de stun (grados)
 @export var stun_recuperar_tiempo := 0.06    # qué tan rápido vuelve a la vertical tras el stun
+# Flinch caricaturesco: corte seco hacia adelante, pop de escala al reanudar y
+# congelación del frame de la animación durante el hitstun.
+@export var flinch_adelanto_px := 12.0        # px que se adelanta el cuerpo en el impacto
+@export var flinch_pop_escala := 1.12         # escala del "pop" al recuperar la pose
+@export var flinch_congela_anim := true       # congela la animación en el frame del impacto
 
 const FRAMES_POR_TIPO := {
 	"cultista": preload("res://resources/enemigo1_frames.tres"),
@@ -35,6 +40,7 @@ var _dir := -1
 var _player_cache: Node2D
 var _stun_timer := 0.0
 var _stun_dir := 1
+var _anim_congelada := false
 var _reaction_tween: Tween
 var _stun_tween: Tween
 var _tint_tween: Tween
@@ -376,6 +382,8 @@ func _gap_x(player: Node2D) -> float:
 func _update_animacion() -> void:
 	if animated == null or not animated.visible:
 		return
+	if _anim_congelada:
+		return
 	var nombre := "idle"
 	if _attack_anim_timer > 0.0:
 		nombre = _attack_anim
@@ -534,26 +542,57 @@ func _esperar_fin_hitstop() -> void:
 		await get_tree().process_frame
 
 
-## Reacción de stun: jitter del sprite en el impacto + inclinación hacia atrás
-## que sostiene durante todo el hitstun y vuelve suavemente al terminar.
-func _pose_stun(dur_stun: float) -> void:
+## Reacción de flinch (estilo caricaturesco): congelo la animación en el frame del
+## impacto, hago un corte seco hacia adelante, inclino el cuerpo hacia atrás durante
+## todo el hitstun y al recuperar la pose hago un "pop" de escala.
+func _pose_stun(dur_stun: float, _fuerza: float = 1.0) -> void:
 	if visual == null:
 		return
 	if _reaction_tween != null and _reaction_tween.is_valid():
 		_reaction_tween.kill()
 	if _stun_tween != null and _stun_tween.is_valid():
 		_stun_tween.kill()
+	if _tint_tween != null and _tint_tween.is_valid():
+		_tint_tween.kill()
 	var base_pos := visual.position
+	var base_scale := visual.scale
+	var signo := signf(base_scale.x)
+	if signo == 0.0:
+		signo = 1.0
+	# Congelo el frame de la animación al impacto: el cuerpo "se detiene" y reacciona.
+	if animated != null and animated.visible and flinch_congela_anim:
+		_anim_congelada = true
+		animated.pause()
+	# Corte seco: el cuerpo se adelanta bruscamente en la dirección del golpe y
+	# vuelve en rebote (adelante y atrás, como un golpe de dibujo animado).
+	var dir_flex := Vector2(signf(_stun_dir) * flinch_adelanto_px, 0.0)
 	_reaction_tween = create_tween()
-	for i in range(2):
-		_reaction_tween.tween_property(visual, "position", base_pos + Vector2(_stun_dir * 3.0, 0.0), 0.022)
-		_reaction_tween.tween_property(visual, "position", base_pos - Vector2(_stun_dir * 3.0, 0.0), 0.022)
-	_reaction_tween.tween_property(visual, "position", base_pos, 0.02)
+	_reaction_tween.tween_property(visual, "position", base_pos + dir_flex, 0.03)
+	_reaction_tween.tween_property(visual, "position", base_pos - dir_flex * 0.5, 0.05).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_reaction_tween.tween_property(visual, "position", base_pos, 0.05).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# Inclinación hacia atrás (rechazo) que se sostiene todo el hitstun y vuelve suave.
 	var tilt := deg_to_rad(-stun_tilt_angulo) * signf(_stun_dir)
 	_stun_tween = create_tween()
 	_stun_tween.tween_property(visual, "rotation", tilt, 0.05).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_stun_tween.tween_interval(maxf(dur_stun, 0.05))
+	_stun_tween.tween_callback(_reanudar_flinch.bind(base_scale))
 	_stun_tween.tween_property(visual, "rotation", 0.0, stun_recuperar_tiempo).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## Al terminar el hitstun: suelto la congelación del frame y hago un "pop" de escala
+## que devuelve el cuerpo a su tamaño base con un rebote.
+func _reanudar_flinch(base_scale: Vector2) -> void:
+	if visual == null:
+		return
+	if animated != null and animated.visible and _anim_congelada:
+		_anim_congelada = false
+		animated.play()
+	var signo := signf(base_scale.x)
+	if signo == 0.0:
+		signo = 1.0
+	var tw := create_tween()
+	tw.tween_property(visual, "scale", Vector2(signo * absf(base_scale.x) * flinch_pop_escala, base_scale.y * flinch_pop_escala), 0.06)
+	tw.tween_property(visual, "scale", base_scale, 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _morir() -> void:

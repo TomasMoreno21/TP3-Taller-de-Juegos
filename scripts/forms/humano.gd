@@ -8,6 +8,7 @@ func _init() -> void:
 	jump_velocity = -735.0
 	gravity_scale = 1.5
 	max_health = 100
+	melee_hit_delay = 0.06
 	attack_damage = 10
 	attack_range = 40.0
 	attack_size = Vector2(110, 80)
@@ -23,7 +24,6 @@ func _init() -> void:
 	color = Color(0.42, 0.62, 0.36)
 	collider_size = Vector2(190, 318)
 	shake_strength = 5.0
-	turn_tilt = 9.0
 	hit_rotation = 7.0
 	landing_squash = 0.12
 	camera_zoom = Vector2.ONE

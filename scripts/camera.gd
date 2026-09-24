@@ -44,7 +44,7 @@ var _player_cache: Node2D
 # Zoom por velocidad: aporte único y acotado (disciplina de zoom transversal).
 @export var zoom_velocidad_min := 200.0  # velocidad (px/s) a la que empieza a alejar
 @export var zoom_velocidad_rango := 450.0  # rango de velocidad hasta el alejamiento máximo
-@export var zoom_velocidad_max := 0.075  # alejamiento máximo por velocidad (antes 0.05; el lobo no se notaba)
+@export var zoom_velocidad_max := 0.02  # alejamiento máximo por velocidad
 # Anticipación de salto: predice el pico del arco y lo encuadra con curva suave
 @export var gravedad_referencia := 980.0
 @export var anticip_apex_max := 110.0  # px máximos que sube el encuadre al predecir el pico

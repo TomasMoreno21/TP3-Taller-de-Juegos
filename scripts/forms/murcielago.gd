@@ -8,6 +8,7 @@ func _init() -> void:
 	jump_velocity = -400.0
 	gravity_scale = 0.50
 	max_health = 100
+	melee_hit_delay = 0.06
 	attack_damage = 8
 	attack_range = 90.0
 	attack_size = Vector2(110, 70)
@@ -24,7 +25,6 @@ func _init() -> void:
 	flight_lift = 30.0
 	camera_lookahead_mult = 1.0
 	transform_duration = 9.0
-	turn_tilt = 9.0
 	lean_angulo = 3.5
 	accel = 3000.0
 	friction = 2000.0

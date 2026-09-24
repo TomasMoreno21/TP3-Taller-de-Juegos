@@ -9,6 +9,7 @@ func _init() -> void:
 	gravity_scale = 1.22
 	jumps = 2
 	max_health = 100
+	melee_hit_delay = 0.04
 	attack_damage = 6
 	attack_range = 205.0
 	attack_size = Vector2(140, 85)
@@ -30,7 +31,6 @@ func _init() -> void:
 	camera_lookahead_mult = 0.9
 	shake_strength = 4.0
 	transform_duration = 8.0
-	turn_tilt = 9.0
 	lean_angulo = 4.5
 	hit_zoom = 1.025
 	accel = 5200.0
@@ -43,7 +43,7 @@ func _init() -> void:
 	jump_cut_multiplier = 0.35
 	step_up_max = 48.0
 	camera_zoom = Vector2(0.94, 0.94)
-	sprint_zoom_out = 0.3
+	sprint_zoom_out = 0.1
 	sprint_min_speed = 300.0
 	turn_tilt_cam = 0.06
 	landing_squash = 0.14

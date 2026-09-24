@@ -13,6 +13,7 @@ func _init() -> void:
 	jump_velocity = -410.0
 	gravity_scale = 1.55
 	max_health = 100
+	melee_hit_delay = 0.11
 	attack_damage = 16
 	attack_range = 120.0
 	attack_size = Vector2(168, 132)
@@ -30,7 +31,6 @@ func _init() -> void:
 	collider_size = Vector2(470, 324)
 	camera_lookahead_mult = 0.65
 	shake_strength = 14.0
-	turn_tilt = 9.0
 	lean_angulo = 2.0
 	hit_zoom = 1.05
 	transform_duration = 10.0

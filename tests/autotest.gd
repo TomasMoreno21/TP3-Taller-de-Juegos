@@ -107,7 +107,11 @@ func _init() -> void:
 	await physics_frame
 	await physics_frame
 	Input.action_release("heavy")
-	await physics_frame
+	# Espera a que el Remate conecte (ventana de impacto del heavy) y solo mide su daño.
+	for i in range(24):
+		await physics_frame
+		if e_combo.health < hp_tras_j:
+			break
 	var remate_dmg: int = hp_tras_j - e_combo.health
 	_check(remate_dmg == 38, "J→K ejecuta el Remate (38 dmg, fue %d)" % remate_dmg)
 	await _esperar_recuperacion("combo")

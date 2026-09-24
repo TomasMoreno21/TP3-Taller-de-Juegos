@@ -55,6 +55,7 @@ var _pip_off_style: StyleBox
 var _vineta_activa := false
 var _vineta_severidad := 0.0
 var _vineta_fade_tween: Tween
+var _racha_tween: Tween
 
 
 var _selector_refresh := 0.0
@@ -242,8 +243,23 @@ func _on_racha_changed(cantidad: int) -> void:
 	if cantidad >= 2:
 		racha_valor.text = str(cantidad)
 		racha_box.visible = true
+		if cantidad == 3 or cantidad == 5:
+			_pop_racha(cantidad)
 	else:
 		racha_box.visible = false
+
+
+## Pop de escala del indicador de racha al alcanzar hitos de combo (3 y 5).
+func _pop_racha(cantidad: int) -> void:
+	if racha_box == null:
+		return
+	if _racha_tween != null and _racha_tween.is_valid():
+		_racha_tween.kill()
+	var base := Vector2.ONE * (1.0 if cantidad == 3 else 1.2)
+	racha_box.scale = base * 0.7
+	_racha_tween = create_tween()
+	_racha_tween.tween_property(racha_box, "scale", base * 1.15, 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_racha_tween.tween_property(racha_box, "scale", base, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _on_forma_selectada(_index: int) -> void:

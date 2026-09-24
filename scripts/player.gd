@@ -46,6 +46,27 @@ const HITSTOP_HEAVY := 0.07
 const HITSTOP_SPECIAL := 0.09
 const HITSTOP_COMBO := 0.11
 @export var hitstop_dano := 0.0  # hitstop al recibir daño (0 = nada: solo shake + flash)
+@export var hitstop_dano_pesado := 0.06     # pausa extra al recibir un golpe fuerte (>= umbral)
+@export var hitstop_dano_umbral := 20       # daño mínimo para considerarlo golpe fuerte
+@export var recoil_sprite := 8.0            # px que empuja el sprite hacia atrás al recibir daño
+@export var temblor_dano := 0.13            # s que dura el micro-temblor del sprite (sin rotar)
+@export var dano_flotante_size_base := 22   # tamaño del número de daño recibido
+@export var dano_flotante_size_max := 34    # tamaño máximo según la cantidad de daño
+@export var dano_flotante_umbral := 30      # daño para alcanzar el tamaño máximo
+@export var zoom_heavy_mult := 1.025        # zoom punch extra en golpes pesados
+@export var zoom_special_mult := 1.04       # zoom punch extra en el golpe especial
+@export var zoom_combo_mult := 1.05         # zoom punch extra en el golpe que cierra combo
+@export var shake_special := 16.0           # fuerza del shake para el golpe especial
+@export var shake_tercer_mult := 1.3        # multiplicador de shake en el golpe que cierra combo
+@export var hitstop_tercer_mult := 1.2      # multiplicador de hitstop en el golpe que cierra combo
+# Feedback por racha de combos: al llegar a 3 y a 5 golpes seguidos, suben
+# zoom punch, hitstop y el tamaño del spark (0 = sin extras en ese umbral).
+@export var racha_zoom_3 := 1.03            # zoom punch extra al llegar a racha 3
+@export var racha_zoom_5 := 1.06            # zoom punch extra al llegar a racha 5
+@export var racha_hitstop_3 := 1.15         # multiplicador de hitstop al llegar a racha 3
+@export var racha_hitstop_5 := 1.3          # multiplicador de hitstop al llegar a racha 5
+@export var racha_spark_3 := 1.35           # escala del spark al llegar a racha 3
+@export var racha_spark_5 := 1.7            # escala del spark al llegar a racha 5
 @export var lobo_landing_squash_extra := 1.4  # multiplicador squash al aterrizar como Lobo (item 18)
 @export var slowmo_transformacion := 0.18  # s de cámara lenta al transformarse (0 = off)
 @export var slowmo_transformacion_escala := 0.4  # escala del tiempo mientras transforma
@@ -66,6 +87,7 @@ var blocking := false
 var _attacking := false
 var _attack_timer := 0.0
 var _hit_applied := false
+var _hit_delay := 0.0
 var _whiff_applied := false
 var _whiff_grace := 0.0
 @export var whiff_recovery_mult := 1.15
@@ -98,6 +120,7 @@ var _was_on_floor := false
 var _fall_impact := 0.0
 var _sprite_tween: Tween
 var _tint_tween: Tween
+var _recoil_tween: Tween
 var _turn_prev_facing := 0
 var _base_sprite_scale := Vector2.ONE
 var _spawn_position := Vector2.ZERO
@@ -299,14 +322,14 @@ func _physics_process(delta: float) -> void:
 			var m := 1.35 if current_form == Form.MURCIELAGO else 1.1
 			var a := 0.9 if current_form == Form.MURCIELAGO else 0.6
 			velocity.x = move_toward(velocity.x, dir_glide * data.speed * m, data.accel * a * delta)
-	if is_on_floor() and not _trepando and absf(velocity.x) > 10.0:
+	if is_on_floor() and not _trepando and absf(velocity.x) > 2.0:
 		_try_step_up()
 	move_and_slide()
 	if not is_on_floor() and velocity.y > 0.0:
 		_try_platform_snap()
 	if _trepando:
 		pass
-	elif is_on_wall() and is_on_floor() and absf(velocity.x) > 10.0:
+	elif is_on_wall() and is_on_floor() and absf(velocity.x) > 2.0:
 		_try_step_up()
 	if is_on_floor() and velocity.y > 0:
 		velocity.y = 0
@@ -629,6 +652,7 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	_whiff_applied = false
 	_whiff_grace = 0.0
 	var data: Forma = forms[current_form]
+	_hit_delay = data.melee_hit_delay
 	var rec := _recovery_for(_current_attack_type) * data.mult_recuperacion
 	_attack_timer = rec
 	# El lobo usa la misma cola que el humano: _iniciar_anim_ataque estira la
@@ -697,6 +721,10 @@ func _make_rect_polygon(size: Vector2) -> PackedVector2Array:
 func _check_attack_hits() -> void:
 	if not _attacking or _hit_applied:
 		return
+	if _hit_delay > 0.0:
+		# Ventana de impacto: el daño aún no puede conectar (pleno swing).
+		_hit_delay -= get_physics_process_delta_time()
+		return
 	var bodies := attack_area.get_overlapping_bodies()
 	var objetivos: Array[Node2D] = []
 	for b in bodies:
@@ -746,9 +774,13 @@ func _check_attack_hits() -> void:
 		if objetivos.size() >= 2:
 			peso *= 0.8  # multigolpe (SOR2): pegar a varios no multiplica la lentitud
 		dur_hitstop *= peso
+	if mult_tercer > 1.0:
+		dur_hitstop *= hitstop_tercer_mult
+	var racha_mult := _racha_feedback_mult()
+	dur_hitstop *= racha_mult
 	_freeze_hitstop(dur_hitstop)
-	_zoom_punch_por_tipo()
-	_shake_por_tipo()
+	_zoom_punch_por_tipo(mult_tercer)
+	_shake_por_tipo(mult_tercer)
 	if audio_mgr != null:
 		var vol := volumen_golpe_db
 		if _current_attack_type == "heavy":
@@ -804,19 +836,48 @@ func _freeze_slowmo(duracion: float, escala: float) -> void:
 		hs.slowmo(duracion, escala)
 
 
-func _zoom_punch_por_tipo() -> void:
+## Escala el feedback según la racha de combos: retorna un multiplicador de hitstop
+## (1.0 sin racha) y la escala extra del spark se obtiene con `racha_spark_escala()`.
+func _racha_feedback_mult() -> float:
+	if _racha >= 5 and racha_hitstop_5 > 1.0:
+		return racha_hitstop_5
+	if _racha >= 3 and racha_hitstop_3 > 1.0:
+		return racha_hitstop_3
+	return 1.0
+
+
+func racha_spark_escala() -> float:
+	if _racha >= 5:
+		return racha_spark_5
+	if _racha >= 3:
+		return racha_spark_3
+	return 1.0
+
+
+func _zoom_punch_por_tipo(mult_tercer: float = 1.0) -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam == null or not cam.has_method("punch"):
 		return
 	var escala := 1.02
 	if current_form >= 0 and current_form < forms.size():
 		escala = forms[current_form].hit_zoom
+	match _current_attack_type:
+		"heavy":
+			escala *= zoom_heavy_mult
+		"special":
+			escala *= zoom_special_mult
+		"combo":
+			escala *= zoom_combo_mult
+	if mult_tercer > 1.0:
+		escala *= zoom_combo_mult
+	if _racha >= 5 and racha_zoom_5 > 1.0:
+		escala *= racha_zoom_5
+	elif _racha >= 3 and racha_zoom_3 > 1.0:
+		escala *= racha_zoom_3
 	cam.punch(escala)
 
 
-func _shake_por_tipo() -> void:
-	if _current_attack_type != "light" and _current_attack_type != "heavy" and _current_attack_type != "combo":
-		return
+func _shake_por_tipo(mult_tercer: float = 1.0) -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam == null or not cam.has_method("shake"):
 		return
@@ -830,6 +891,10 @@ func _shake_por_tipo() -> void:
 				fuerza = forma.shake_golpe_pesado + 0.5
 			"combo":
 				fuerza = forma.shake_golpe_combo + 0.5
+			"special":
+				fuerza = shake_special
+	if mult_tercer > 1.0:
+		fuerza *= shake_tercer_mult
 	cam.shake(fuerza, 0.15, Vector2(facing, 0))
 
 
@@ -851,7 +916,8 @@ func _spark_golpe(body: Node2D, idx: int) -> void:
 	if current_form >= 0 and current_form < forms.size():
 		tinte = forms[current_form].color
 	p.self_modulate = tinte
-	p.amount = 6
+	p.amount = int(6 * racha_spark_escala())
+	p.scale = Vector2.ONE * racha_spark_escala()
 	get_tree().root.add_child(p)
 	p.restart()
 	p.emitting = true
@@ -928,14 +994,6 @@ func stretch_y(amount: float, duration: float) -> void:
 
 func apply_zip(impulso: float) -> void:
 	velocity.x = facing * absf(impulso)
-
-
-func _snap_turn(tilt: float) -> void:
-	if tilt <= 0.0:
-		return
-	visual.rotation = deg_to_rad(-tilt) * facing
-	var tw := create_tween()
-	tw.tween_property(visual, "rotation", 0.0, 0.18).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 func _mostrar_fantasma_forma(idx: int) -> void:
@@ -1188,7 +1246,6 @@ func _aplicar_facing() -> void:
 	var data: Forma = forms[current_form]
 	if facing != _turn_prev_facing:
 		_turn_prev_facing = facing
-		_snap_turn(data.turn_tilt)
 		if data.turn_tilt_cam > 0.0:
 			var cam := get_viewport().get_camera_2d()
 			if cam != null and cam.has_method("tilt"):
@@ -1347,12 +1404,17 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
 	if god_mode or blocking or _invuln_timer > 0.0 or _dialogo_bloquea_input():
 		return
 	health -= cantidad
-	_freeze_hitstop(HITSTOP_LIGHT)
+	# Golpe fuerte = más daño = más pausa de impacto (y el cel el umbral queda sin pausa).
+	var dur := hitstop_dano
+	if cantidad >= hitstop_dano_umbral and hitstop_dano_pesado > dur:
+		dur = hitstop_dano_pesado
+	_freeze_hitstop(dur)
 	health_changed.emit(health, VIDA_MAX)
 	dano_recibido.emit(cantidad)
 	_shake_dano_recibido(dir)
 	_flash_tint_dano()
 	stretch_y(-0.12, 0.14)
+	_recoil_dano(dir)
 	if knockback > 0.0:
 		velocity.x = dir * knockback
 	if dano_flotante and DisplayServer.get_name() != "headless":
@@ -1360,6 +1422,23 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
 	_invuln_timer = 0.55
 	_invuln_sin_parpadeo = false
 	_handle_death()
+
+
+## Rechazo direccional del sprite (empuja contra la dirección del golpe) sin rotar,
+## con un micro-temblor corto al impacto y vuelta elástica.
+func _recoil_dano(dir: int) -> void:
+	if recoil_sprite <= 0.0:
+		return
+	if _recoil_tween != null and _recoil_tween.is_valid():
+		_recoil_tween.kill()
+	var base := visual.position
+	visual.position = base + Vector2(-dir * recoil_sprite, 0)
+	_recoil_tween = create_tween()
+	if temblor_dano > 0.0:
+		var mitad: float = temblor_dano * 0.5
+		_recoil_tween.tween_property(visual, "position", base + Vector2(-dir * recoil_sprite * 0.25, 0), mitad)
+		_recoil_tween.tween_property(visual, "position", base, temblor_dano)
+	_recoil_tween.tween_property(visual, "position", base, 0.06).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _shake_dano_recibido(dir: int = 1) -> void:
@@ -1380,7 +1459,8 @@ func _flash_tint_dano() -> void:
 func _mostrar_dano_recibido(cantidad: int) -> void:
 	var lbl := Label.new()
 	lbl.text = "-" + str(cantidad)
-	lbl.add_theme_font_size_override("font_size", 22)
+	var tam := int(lerpf(float(dano_flotante_size_base), float(dano_flotante_size_max), clampf(float(cantidad) / float(dano_flotante_umbral), 0.0, 1.0)))
+	lbl.add_theme_font_size_override("font_size", tam)
 	lbl.add_theme_constant_override("outline_size", 4)
 	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
 	lbl.add_theme_color_override("font_color", Color(1.0, 0.35, 0.3))
@@ -1523,20 +1603,33 @@ func _try_step_up() -> void:
 		return
 	if absf(velocity.x) < 4.0 and absf(Input.get_axis("move_left", "move_right")) < 0.15:
 		return
-	if not test_move(Transform2D(0, Vector2.ZERO), Vector2(facing * 1.0, 0)):
+	# Anticipa: detecta el escalón DENTRO del avance de este frame (o ya pegado),
+	# para subir antes de chocar y no perder velocidad. No espera contacto exacto.
+	var avance := maxf(absf(velocity.x), 130.0) * get_physics_process_delta_time() + 2.0
+	if not test_move(global_transform, Vector2(facing * avance, 0)):
 		return
-	for h in [8.0, 16.0, 24.0, 32.0, 48.0]:
+	for h in [1.0, 2.0, 4.0, 8.0, 16.0, 24.0, 32.0, 48.0]:
 		if h > max_h:
 			break
-		var up := Transform2D(0, Vector2.ZERO).translated(Vector2(0, -h))
-		if test_move(up, Vector2(facing * 12, 0)):
+		# Probar "pararse sobre el escalón": en frente y a h px de altura.
+		# test_move usa un transform ABSOLUTO (posición real en el mundo), así que
+		# siempre se parte de global_transform, nunca de Transform2D(0, Vector2.ZERO).
+		var sobre := global_transform.translated(Vector2(facing * 6.0, -h))
+		if test_move(sobre, Vector2(0, 0)):
 			continue
-		if test_move(up, Vector2(0, 0)):
+		# Verifica que delante hay piso a esa altura (no un hueco): lanza hacia abajo.
+		var hueco := sobre.translated(Vector2(0, -1.0))
+		if not test_move(hueco, Vector2(0, 24.0)):
+			continue
+		# Espacio libre subiendo justo desde la posición actual.
+		var vertical := global_transform.translated(Vector2(0, -h))
+		if test_move(vertical, Vector2(facing * 6.0, 0)):
 			continue
 		global_position.y -= h
-		velocity.x = facing * maxf(absf(velocity.x), 140.0)
-		_step_up_cd = 0.12
-		_emitir_polvo(0.4)
+		if h >= 8.0:
+			velocity.x = facing * maxf(absf(velocity.x), 140.0)
+			_emitir_polvo(0.4)
+		_step_up_cd = 0.03
 		return
 
 
