@@ -52,7 +52,7 @@ acentos = Array[AudioStream]([ExtResource("22_amb_buho"), ExtResource("23_amb_lo
 acento_volumen_db = -2.0
 
 [node name="Player" parent="." unique_id=1763988589 instance=ExtResource("1_player")]
-position = Vector2(29745, 2442)
+position = Vector2(-61, 852)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
 position = Vector2(1, 0)
