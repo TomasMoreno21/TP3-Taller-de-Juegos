@@ -138,7 +138,6 @@ var _cooldown_transform := 0.0
 var _special_cooldown := 0.0
 var _transform_buffer: float = 0.0
 const TRANSFORM_BUFFER_TIME := 0.15
-var _idle_breath_t := 0.0
 var _trepando: bool = false
 var _enredadera_actual: Area2D = null
 var _trepado_cooldown: float = 0.0
@@ -334,7 +333,6 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor() and velocity.y > 0:
 		velocity.y = 0
 	_sprint_zoom(data)
-	_actualizar_respiracion_idle(delta, data)
 
 	if is_on_floor():
 		_salto_aereo_limitado = false
@@ -1665,18 +1663,6 @@ func _try_coleccion_borde() -> void:
 			velocity.y = minf(velocity.y, 80.0)
 			_platform_snap_cd = 0.12
 			return
-
-
-func _actualizar_respiracion_idle(delta: float, _data: Forma) -> void:
-	if _sprite_tween != null and _sprite_tween.is_valid():
-		return
-	if not is_on_floor() or absf(velocity.x) > 10.0 or _attacking or blocking:
-		_idle_breath_t = 0.0
-		return
-	_idle_breath_t += delta
-	var breath := sin(_idle_breath_t * 1.4) * 0.012
-	var base := Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1)
-	visual.scale = base * Vector2(1.0, 1.0 + breath)
 
 
 func _handle_enredadera(delta: float) -> void:
