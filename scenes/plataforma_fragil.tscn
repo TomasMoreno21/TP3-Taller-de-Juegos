@@ -1,17 +1,17 @@
-[gd_scene format=3 load_steps=4]
+[gd_scene format=3 uid="uid://il1swgxuxxa0"]
 
-[ext_resource type="Script" path="res://scripts/plataforma_fragil.gd" id="1_fragil"]
+[ext_resource type="Script" uid="uid://breg4iajp2ggu" path="res://scripts/plataforma_fragil.gd" id="1_fragil"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_col"]
-size = Vector2(160, 24)
+size = Vector2(246, 24)
 
-[node name="PlataformaFragil" type="StaticBody2D"]
-collision_layer = 1
+[node name="PlataformaFragil" type="StaticBody2D" unique_id=1774485046]
 script = ExtResource("1_fragil")
 
-[node name="Collision" type="CollisionShape2D" parent="."]
+[node name="Collision" type="CollisionShape2D" parent="." unique_id=1058677889]
+position = Vector2(43, 0)
 shape = SubResource("RectangleShape2D_col")
 
-[node name="Visual" type="Polygon2D" parent="."]
+[node name="Visual" type="Polygon2D" parent="." unique_id=1602068498]
 color = Color(0.72, 0.56, 0.38, 1)
 polygon = PackedVector2Array(-80, -12, 80, -12, 80, 12, -80, 12)

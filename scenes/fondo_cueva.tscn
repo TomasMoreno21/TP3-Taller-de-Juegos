@@ -1,0 +1,83 @@
+[gd_scene format=3 uid="uid://brxhgshnil6nd"]
+
+[ext_resource type="Script" path="res://scripts/capa_cueva.gd" id="1_capa"]
+
+[node name="FondoCueva" type="ParallaxBackground" unique_id=2100000601]
+layer = -10
+
+[node name="Sombra" type="ParallaxLayer" parent="." unique_id=2100000611]
+motion_scale = Vector2(0.08, 1)
+script = ExtResource("1_capa")
+tipo = "sombra"
+color_a = Color(0.05, 0.062, 0.09, 1)
+color_b = Color(0.02, 0.025, 0.04, 1)
+semilla = 3
+ancho_total = 22000.0
+centro_x = 6200.0
+y_techo = -1500.0
+y_fondo = 7600.0
+
+[node name="Pared" type="ParallaxLayer" parent="." unique_id=2100000612]
+motion_scale = Vector2(0.22, 1)
+script = ExtResource("1_capa")
+tipo = "pared"
+color_a = Color(0.08, 0.095, 0.14, 1)
+color_b = Color(0.2, 0.28, 0.42, 1)
+semilla = 7
+ancho_total = 22000.0
+centro_x = 6200.0
+y_techo = -1500.0
+y_fondo = 7600.0
+
+[node name="Estalactitas" type="ParallaxLayer" parent="." unique_id=2100000613]
+motion_scale = Vector2(0.38, 1)
+script = ExtResource("1_capa")
+tipo = "estalactitas"
+color_a = Color(0.062, 0.078, 0.12, 1)
+color_b = Color(0.048, 0.06, 0.095, 1)
+densidad = 1.1
+semilla = 11
+ancho_total = 22000.0
+centro_x = 6200.0
+y_techo = -1500.0
+y_fondo = 7600.0
+
+[node name="Pilares" type="ParallaxLayer" parent="." unique_id=2100000614]
+motion_scale = Vector2(0.6, 1)
+script = ExtResource("1_capa")
+tipo = "pilares"
+color_a = Color(0.048, 0.062, 0.098, 1)
+color_b = Color(0.06, 0.078, 0.12, 1)
+y_base = 7000.0
+densidad = 1.15
+semilla = 13
+ancho_total = 22000.0
+centro_x = 6200.0
+y_techo = -1500.0
+y_fondo = 7600.0
+
+[node name="Estalagmitas" type="ParallaxLayer" parent="." unique_id=2100000615]
+motion_scale = Vector2(0.8, 1)
+script = ExtResource("1_capa")
+tipo = "estalagmitas"
+color_a = Color(0.038, 0.055, 0.088, 1)
+color_b = Color(0.045, 0.065, 0.1, 1)
+y_base = 7100.0
+semilla = 17
+ancho_total = 22000.0
+centro_x = 6200.0
+y_techo = -1500.0
+y_fondo = 7600.0
+
+[node name="Agua" type="ParallaxLayer" parent="." unique_id=2100000616]
+motion_scale = Vector2(1, 1)
+script = ExtResource("1_capa")
+tipo = "agua"
+color_a = Color(0.05, 0.075, 0.13, 1)
+color_b = Color(0.18, 0.3, 0.5, 1)
+y_base = 6900.0
+semilla = 19
+ancho_total = 22000.0
+centro_x = 6200.0
+y_techo = -1500.0
+y_fondo = 7600.0

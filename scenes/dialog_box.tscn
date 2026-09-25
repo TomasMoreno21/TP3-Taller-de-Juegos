@@ -27,6 +27,18 @@ border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.3, 0.34, 0.3, 1)
 
+[sub_resource type="StyleBoxFlat" id="panel_tip"]
+bg_color = Color(0.05, 0.09, 0.12, 0.85)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.55, 0.7, 0.9)
+
 [node name="Dialogo" type="CanvasLayer"]
 script = ExtResource("1_dialogo")
 
@@ -91,3 +103,41 @@ theme_override_colors/font_color = Color(0.65, 0.7, 0.75, 1)
 theme_override_font_sizes/font_size = 13
 text = "▼ X para continuar · X para saltar"
 horizontal_alignment = 2
+
+[node name="Tip" type="PanelContainer" parent="."]
+visible = false
+anchor_left = 0.5
+anchor_top = 0.0
+anchor_right = 0.5
+anchor_bottom = 0.0
+offset_left = -450.0
+offset_top = 16.0
+offset_right = 450.0
+offset_bottom = 16.0
+grow_horizontal = 2
+grow_vertical = 1
+theme_override_styles/panel = SubResource("panel_tip")
+
+[node name="Margin" type="MarginContainer" parent="Tip"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="Tip/Margin"]
+layout_mode = 2
+
+[node name="Nombre" type="Label" parent="Tip/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.55, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "Amuleto"
+horizontal_alignment = 1
+
+[node name="Texto" type="Label" parent="Tip/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.93, 0.95, 1)
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
+horizontal_alignment = 1

@@ -28,7 +28,7 @@ func _init() -> void:
 	# flight_lift eleva el sprite (todas las anims: idle/AFK, run, attack) a la misma
 	# altura, dejando al lobo siempre por encima del piso. Ajustable en el Inspector.
 	flight_lift = 8.0
-	camera_lookahead_mult = 0.9
+	camera_lookahead_mult = 1.1
 	shake_strength = 4.0
 	transform_duration = 8.0
 	lean_angulo = 4.5
@@ -43,7 +43,7 @@ func _init() -> void:
 	jump_cut_multiplier = 0.35
 	step_up_max = 48.0
 	camera_zoom = Vector2(0.94, 0.94)
-	sprint_zoom_out = 0.1
+	sprint_zoom_out = 0.16
 	sprint_min_speed = 300.0
 	turn_tilt_cam = 0.06
 	landing_squash = 0.14

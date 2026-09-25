@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://glifoayuda1"]
+
+[ext_resource type="Script" path="res://scripts/glifo_ayuda.gd" id="1_glifo"]
+
+[node name="GlifoAyuda" type="Node2D"]
+scale = Vector2(1, 1)
+script = ExtResource("1_glifo")

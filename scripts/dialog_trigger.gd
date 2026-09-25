@@ -2,7 +2,7 @@ extends Area2D
 
 ## Disparador de diálogo colocable en el editor: narrativa o tutorial de mecánicas.
 ## Modo "Zona": habla cuando el jugador entra al área. Modo "Automatico": habla solo al cargar la escena.
-## Si `dialogo_id` está setedo, las líneas/hablante/modo/retraso/una_vez se cargan desde
+## Si `dialogo_id` está seteado, las líneas/hablante/modo/retraso/una_vez se cargan desde
 ## res://data/dialogos.json (la entrada del dict debe existir). Los exports de abajo quedan
 ## como fallback/definición para triggers sin id.
 
@@ -15,6 +15,7 @@ static var _cache_cargado := false
 @export var lineas: PackedStringArray = []
 @export var hablante: String = "Amuleto"
 @export_enum("Zona", "Automatico") var modo: String = "Zona"
+@export_enum("Narrativa", "Tip") var tipo: String = "Narrativa"
 @export var una_vez := true
 @export var retraso := 0.6
 
@@ -37,6 +38,7 @@ func _cargar_dialogo_por_id() -> void:
 	lineas = PackedStringArray(entrada.get("lineas", []))
 	hablante = str(entrada.get("hablante", hablante))
 	modo = str(entrada.get("modo", modo))
+	tipo = str(entrada.get("tipo", tipo)).capitalize()
 	una_vez = bool(entrada.get("una_vez", una_vez))
 	retraso = float(entrada.get("retraso", retraso))
 
@@ -78,4 +80,7 @@ func _disparar() -> void:
 		if una_vez:
 			prog.marcar_dialogo_visto(dialogo_id)
 	_disparado = true
-	get_node("/root/Dialogo").mostrar(Array(lineas), hablante)
+	if tipo == "Tip":
+		get_node("/root/Dialogo").mostrar_tip(Array(lineas), hablante)
+	else:
+		get_node("/root/Dialogo").mostrar(Array(lineas), hablante)

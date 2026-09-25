@@ -18,3 +18,4 @@ shape = SubResource("RectangleShape2D_romp")
 position = Vector2(0.4999957, 10.000007)
 scale = Vector2(2.939394, 3.4615386)
 texture = ExtResource("1_u4k4r")
+texture_filter = 2

@@ -17,179 +17,185 @@
 		"hablante": "Amuleto",
 		"modo": "Automatico",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
-			"Humano... yo soy el protector de los espíritus del bosque.",
+			"Humano... yo soy el protector de los espÃ­ritus del bosque.",
 			"Este bosque tiene una guerra secreta con los cultistas.",
 			"Quieren apoderarse del bosque y toda la fuerza espiritual del mismo.",
-			"No entiendo por qué se llevaron a tu hijo, pero estoy seguro que no por buenos motivos.",
+			"No entiendo por quÃ© se llevaron a tu hijo, pero estoy seguro que no por buenos motivos.",
 			"Para derrotar a esos malditos, voy a prestarte de nuestro poder.",
-			"Movete con con joystick izquierdo y saltá con A.",
-			"X es tu golpe rápido, Y tu golpe fuerte."
+			"Movete con con joystick izquierdo y saltÃ¡ con A.",
+			"X es tu golpe rÃ¡pido, Y tu golpe fuerte."
 		]
 	},
 	"n1_combate": {
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
-			"Esperá... siento una presencia cerca. No estás solo.",
+			"EsperÃ¡... siento una presencia cerca. No estÃ¡s solo.",
 			"Preparate, Humano: vamos a tener que pelear.",
 			"Cuando los derrotes, puede que recuperemos los espiritus que asesinaron.",
-			"Si lo logramos, te los daré para que puedas curarte, te necesito vivo y tu hijo también"
+			"Si lo logramos, te los darÃ© para que puedas curarte, te necesito vivo y tu hijo tambiÃ©n"
 		]
 	},
 	"n1_lobo": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
-			"Este paso es muy angosto para tu forma humana.",
-			"Ya podés convocar al Lobo: presioná RT para seleccionar la forma, RB para transformarte.",
-			"Es más bajo, más ágil, y hasta puede saltar dos veces seguidas en el aire.",
-			"Ojo: la transformación consume energía. Si se agota, volvés a ser Humano."
+			"El Lobo es más bajo y ágil: usá su doble salto para este paso.",
+			"Seleccioná la forma con RT y transformate con RB. Ojo con la energía."
 		]
 	},
 	"n1_zona2": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
-			"Esos cultistas dejaron energia espiritual desperdigada por ahi.",
-			"También las dejaron en cajas para almacenarlas.",
-			"Rompe la caja a puños y recuperala, te ayudará a aumentar tu poder espiritual."
-			
+			"Esos cultistas dejaron energía espiritual en cajas. Rompelas a puños y recuperala."
 		]
 	},
 	"n1_zona3": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
-			"Veo que tenes buena agilidad, tal vez puedas usar esas enredaderas para avanzar.",
-			"Pulsa A para agarrarte y soltarte, movete con el joystick izquierdo."
+			"Usá esas enredaderas para avanzar: agarrate y soltate con A, movete con el palo izquierdo."
 		]
 	},
 	"n1_santuario": {
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
 			"Ya estamos cerca de su guarida..."
 		]
 	},
 	"n1-joystick": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
-			"No vemos el lugar seguro desde acá, usa el joystick derecho para mover la cámara."
+			"No vemos el lugar seguro desde acÃ¡, usa el joystick derecho para mover la cÃ¡mara."
 		]
 	},
 	"n1_arquero": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
-			"Cuidado: ese cultista empuñó un arco. Sus flechas duelen.",
-			"Esquivá el proyectil cuando lo veas venir o bloqueá en el momento justo.",
-			"Atacalo entre disparo y disparo, y no dejes que te empuje contra el abismo."
+			"Ese cultista dispara flechas: esquivá el proyectil o bloqueá en el momento justo.",
+			"Atacalo entre disparo y disparo."
 		]
 	},
 	"n1_lobo_uso": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
-			"Este abismo es demasiado ancho para cruzarlo con tu forma humana.",
-			"Convocá al Lobo y usá su doble salto: un primer brinco largo y un segundo en el aire.",
-			"Si caés, pinchás. Transformate y volá sobre las púas."
+			"Este abismo se cruza de Lobo: doble salto y volás sobre las púas."
 		]
 	},
 	"n1_fragil": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
-			"Esas tablas viejas ceden apenas las pisás.",
-			"Si seguís el camino alto con las plataformas de piedra vas más seguro.",
-			"Pero si apurás el paso sobre la madera, encontrás un premio en la mitad."
+			"Esas tablas viejas ceden apenas las pisás: corré y saltá antes de que caigan.",
+			"El camino alto de piedra es más seguro."
 		]
 	},
 	"p1_intro": {
 		"hablante": "Amuleto",
 		"modo": "Automatico",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
 			"Cuando los derrotes, puede que recuperemos los espiritus que asesinaron.",
-			"Si lo logramos, te los daré para que puedas curarte, te necesito vivo."
+			"Si lo logramos, te los darÃ© para que puedas curarte, te necesito vivo."
 		]
 	},
 	"p1_enredadera": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
-		"lineas": []
+		"una_vez": true,
+		"lineas": [
+			"De nuevo las enredaderas: agarrate con A para llegar a las plataformas altas."
+		]
 	},
 	"p1_combate": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
-			"Esa tribuna está custodiada por tres cultistas en bloque.",
-			"El Lobo perfila mejor que el Humano contra varios: no te dejes encerrar.",
-			"Si la energía flaquea, quedaron almas flotando por la arena."
+			"Tres cultistas en bloque: el Lobo perfila mejor y no te dejés encerrar.",
+			"Quedan almas flotando en la arena para recuperar energía."
 		]
 	},
 	"p1_combate2": {
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
-		"lineas": []
+		"una_vez": true,
+		"lineas": [
+			"Concentrate: esquivá y golpeá en los huecos."
+		]
 	},
 	"p1_combate3": {
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
-		"lineas": []
+		"una_vez": true,
+		"lineas": [
+			"Último grupo: no aflojes, ya está casi."
+		]
 	},
 	"p1_plataformas": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
-			"El viento cortó el camino en tablas podridas: ceden apenas las pisás.",
-			"Cruzalas de a una con carrerita y saltá antes de que caigan.",
-			"En la tabla del medio hay un alma escondida, si te animás a buscarla."
+			"Tablas podridas con el viento: cruzá de a una con carrerita y saltá antes de que caigan."
 		]
 	},
 	"p1_lobo": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
-		"lineas": []
+		"una_vez": true,
+		"lineas": [
+			"El Lobo es la forma más ágil: usalo para saltar estos tramos."
+		]
 	},
 	"p1_santuario": {
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
 			"Ya estamos cerca de su guarida..."
 		]
@@ -198,26 +204,29 @@
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.8,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": [
-			"Ahí está... el ARZOBISPO. La entidad que venera la secta.",
-			"Usá cada forma con cabeza: el Oso rompe su guardia, el Murciélago llega donde no podés, y el Lobo esquiva lo que nadie puede.",
-			"Los cultistas que invoca nos devuelven energía. ¡No aflojes!"
+			"AhÃ­ estÃ¡... el ARZOBISPO. La entidad que venera la secta.",
+			"UsÃ¡ cada forma con cabeza: el Oso rompe su guardia, el MurciÃ©lago llega donde no podÃ©s, y el Lobo esquiva lo que nadie puede.",
+			"Los cultistas que invoca nos devuelven energÃ­a. Â¡No aflojes!"
 		]
 	},
 	"n3_intro": {
 		"hablante": "Amuleto",
 		"modo": "Automatico",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": []
 	},
 	"n3_oso": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
 		"una_vez": true,
-		"lineas": []
+		"lineas": [
+			"Desbloqueaste al Oso: es lento pero no hay pared que le resista. Golpe fuerte para lo pesado."
+		]
 	},
 	"n3_guardian": {
 		"hablante": "Amuleto",
@@ -237,22 +246,28 @@
 		"hablante": "Amuleto",
 		"modo": "Automatico",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": []
 	},
 	"n4_murcielago": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
 		"una_vez": true,
-		"lineas": []
+		"lineas": [
+			"El Murciélago vuela: cruza por arriba donde las otras formas no llegan."
+		]
 	},
 	"n4_abismo": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
 		"una_vez": true,
-		"lineas": []
+		"lineas": [
+			"El Murciélago planea este abismo: mantene apretado para no caer."
+		]
 	},
 	"n4_final": {
 		"hablante": "Amuleto",
@@ -265,15 +280,18 @@
 		"hablante": "Amuleto",
 		"modo": "Automatico",
 		"retraso": 0.6,
-		"una_vez": false,
+		"una_vez": true,
 		"lineas": []
 	},
 	"n5_pruebas": {
+		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
 		"una_vez": true,
-		"lineas": []
+		"lineas": [
+			"Última sección: combiná las formas. Oso para barrer, Lobo para lo rápido, Murciélago para los abismos."
+		]
 	},
 	"n5_umbral": {
 		"hablante": "Amuleto",

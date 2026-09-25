@@ -1,6 +1,11 @@
+@tool
 extends Area2D
 ## Pinchos modulares: matan de un toque al jugador.
 ## Colocá varios o ajustá `cantidad`/`ancho` para cubrir la franja que necesites.
+##
+## En el EDITOR se dibuja un contorno semitransparente de la franja total y de la
+## zona de daño, y estirar el nodo con la herramienta de escala sincroniza
+## `ancho_pincho`/`alto` en vivo (WYSIWYG).
 
 @export var cantidad := 4       # cuántos pinchos en fila (modular)
 @export var ancho_pincho := 40.0 # ancho de cada pincho (px)
@@ -14,6 +19,7 @@ extends Area2D
 
 var _kill_zone_size := Vector2.ZERO
 var _hit_cd := 0.0
+var _editor_sync := true
 
 
 func _ready() -> void:
@@ -21,7 +27,59 @@ func _ready() -> void:
 	collision_layer = 0
 	collision_mask = 4
 	z_index = z_index_detras
+	if Engine.is_editor_hint():
+		queue_redraw()
+		return
 	_dibujar()
+
+
+# En el editor: (1) estirar el nodo con la herramienta de escala sincroniza los
+# exports (WYSIWYG: vuelvo scale a 1 y guardo el tamaño real en ancho/alto), y
+# (2) si cambian los exports (Inspector o escala) se redibuja el preview.
+func _process(_delta: float) -> void:
+	if not Engine.is_editor_hint():
+		return
+	if _editor_sync:
+		var s := scale
+		if s != Vector2.ONE:
+			_editor_sync = false
+			ancho_pincho = maxf(ancho_pincho * s.x, 1.0)
+			alto = maxf(alto * s.y, 4.0)
+			scale = Vector2.ONE
+			_editor_sync = true
+			queue_redraw()
+	var clave := _clave_visual()
+	if clave != _tmp:
+		_tmp = clave
+		queue_redraw()
+
+
+var _tmp := Vector3.ZERO
+
+
+func _clave_visual() -> Vector3:
+	return Vector3(cantidad, ancho_pincho, alto)
+
+
+# Preview editable en el editor: contorno semitransparente de la franja que vas a
+# tapar, zona de daño resaltada y guía de hundimiento (hasta dónde queda enterrado).
+func _draw() -> void:
+	if not Engine.is_editor_hint():
+		return
+	var ancho_total := maxf(cantidad * ancho_pincho, 10.0)
+	var alto_vis := maxf(alto, 10.0)
+	var alto_zona := alto_vis * clampf(fraccion_zona_dano, 0.0, 1.0)
+	# Franja total visible (asoma del terreno hacia arriba; y negativo arriba).
+	draw_rect(Rect2(-ancho_total * 0.5, -alto_vis, ancho_total, alto_vis), Color(1, 0.75, 0.2, 0.14), false, 2.0)
+	# Zona de daño: la porción superior (fair: tocar el tallo no mata).
+	draw_rect(Rect2(-ancho_total * 0.5, -alto_vis, ancho_total, alto_zona), Color(1, 0.2, 0.2, 0.35))
+	# Guía del hundimiento + línea de superficie: muestra cuánto queda tapado.
+	draw_line(Vector2(-ancho_total * 0.5, 0), Vector2(ancho_total * 0.5, 0), Color(0.9, 0.9, 0.9, 0.7), 2.0)
+	draw_rect(Rect2(-ancho_total * 0.5, 0, ancho_total, enterrado), Color(0.4, 0.3, 0.2, 0.18), false, 1.0)
+	# Divisiones de cada estaca.
+	for i in range(int(cantidad) + 1):
+		var x := -ancho_total * 0.5 + i * ancho_pincho
+		draw_line(Vector2(x, -alto_vis), Vector2(x, 0), Color(1, 0.8, 0.4, 0.25), 1.0)
 
 
 func _physics_process(delta: float) -> void:

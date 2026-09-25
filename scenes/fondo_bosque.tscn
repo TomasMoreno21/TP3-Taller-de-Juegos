@@ -24,6 +24,7 @@ motion_mirroring = Vector2(5777, 0)
 texture_repeat = 2
 position = Vector2(2885, 540)
 texture = ExtResource("1_tex1")
+texture_filter = 2
 
 [node name="Capa2" type="ParallaxLayer" parent="." unique_id=957162258]
 motion_scale = Vector2(0.08, 1)
@@ -33,6 +34,7 @@ motion_mirroring = Vector2(3772, 0)
 texture_repeat = 2
 position = Vector2(1896, 540)
 texture = ExtResource("2_tex2")
+texture_filter = 2
 
 [node name="Capa3" type="ParallaxLayer" parent="." unique_id=1575902628]
 motion_scale = Vector2(0.14, 1)
@@ -42,6 +44,7 @@ motion_mirroring = Vector2(4100, 0)
 texture_repeat = 2
 position = Vector2(2028, 623)
 texture = ExtResource("3_tex3")
+texture_filter = 2
 
 [node name="Capa4" type="ParallaxLayer" parent="." unique_id=616760487]
 motion_scale = Vector2(0.2, 1)
@@ -51,6 +54,7 @@ motion_mirroring = Vector2(3790, 0)
 texture_repeat = 2
 position = Vector2(1929, 481)
 texture = ExtResource("4_tex4")
+texture_filter = 2
 
 [node name="Capa5" type="ParallaxLayer" parent="." unique_id=1223057867]
 motion_scale = Vector2(0.28, 1)
@@ -60,6 +64,7 @@ motion_mirroring = Vector2(3908, 0)
 texture_repeat = 2
 position = Vector2(1952, 145)
 texture = ExtResource("5_tex5")
+texture_filter = 2
 
 [node name="Capa6" type="ParallaxLayer" parent="." unique_id=1544671824]
 motion_scale = Vector2(0.3, 1)
@@ -69,6 +74,7 @@ motion_mirroring = Vector2(2727, 0)
 texture_repeat = 2
 position = Vector2(1402, 539)
 texture = ExtResource("6_tex6")
+texture_filter = 2
 
 [node name="Capa7" type="ParallaxLayer" parent="." unique_id=1363217738]
 motion_scale = Vector2(0.52, 1.13)
@@ -78,6 +84,7 @@ motion_mirroring = Vector2(2969, 0)
 texture_repeat = 2
 position = Vector2(1865, 535)
 texture = ExtResource("7_tex7")
+texture_filter = 2
 
 [node name="Capa8" type="ParallaxLayer" parent="." unique_id=1846744976]
 motion_scale = Vector2(0.63, 1.212)
@@ -87,6 +94,7 @@ motion_mirroring = Vector2(4019, 0)
 texture_repeat = 2
 position = Vector2(1922, 96)
 texture = ExtResource("8_tex8")
+texture_filter = 2
 
 [node name="Capa9" type="ParallaxLayer" parent="." unique_id=780756554]
 motion_scale = Vector2(0.7, 1.167)
@@ -96,6 +104,7 @@ motion_mirroring = Vector2(3924, 0)
 texture_repeat = 2
 position = Vector2(1931, 791)
 texture = ExtResource("9_tex9")
+texture_filter = 2
 
 [node name="Capa10" type="ParallaxLayer" parent="." unique_id=819697361]
 motion_scale = Vector2(0.8, 1.143)
@@ -105,6 +114,7 @@ motion_mirroring = Vector2(3921, 0)
 texture_repeat = 2
 position = Vector2(1923, 926)
 texture = ExtResource("10_tex10")
+texture_filter = 2
 
 [node name="Capa11" type="ParallaxLayer" parent="." unique_id=298801497]
 motion_scale = Vector2(0.84, 1)
@@ -114,6 +124,7 @@ motion_mirroring = Vector2(5765, 0)
 texture_repeat = 2
 position = Vector2(2878, 1033)
 texture = ExtResource("11_tex11")
+texture_filter = 2
 
 [node name="Capa12" type="ParallaxLayer" parent="." unique_id=1528624012]
 motion_scale = Vector2(1, 1)
@@ -123,3 +134,4 @@ motion_mirroring = Vector2(5765, 0)
 texture_repeat = 2
 position = Vector2(2878, 968.5)
 texture = ExtResource("12_tex12")
+texture_filter = 2

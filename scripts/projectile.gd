@@ -5,12 +5,12 @@ var speed := 700.0
 var damage := 15
 var enemy_shot := false
 var homing := false
-var homing_strength := 6.5
-var homing_range := 500.0
+var homing_strength := 24.0
+var homing_range := 3000.0
 var _life := 2.5
 var _cam: Camera2D
 var _homing_timer := 0.0
-const HOMING_TICK := 0.15  # cada cuánto re-busca el homing (evita lookup de grupo por frame)
+const HOMING_TICK := 0.04  # cada cuánto re-busca el homing (evita lookup de grupo por frame)
 
 @onready var visual: Polygon2D = $Visual
 @onready var hitbox: CollisionShape2D = $Hitbox

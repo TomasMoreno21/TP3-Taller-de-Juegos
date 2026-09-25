@@ -9,6 +9,9 @@ enum Ruptura { DESTRUIR, CAER }
 @export var modo_ruptura := Ruptura.DESTRUIR
 @export var temblor_max := 3.0       # px de vaivén al temblar (crece hacia la ruptura)
 @export var gravedad_caida := 2400.0 # aceleración al caer (modo CAER)
+## Clave de persistencia: si queda vacía se genera sola (escena + ruta del nodo).
+## Ponerla a mano permite agrupar/referenciar plataformas de forma estable.
+@export var clave_persistencia := ""
 
 enum Fase { ESPERA, TEMBLOR, CAYENDO, ROTA }
 
@@ -17,6 +20,15 @@ var _t := 0.0
 var _vel_caida := 0.0
 var _visual: Polygon2D
 var _shape: CollisionShape2D
+
+
+func _clave() -> String:
+	if not clave_persistencia.is_empty():
+		return clave_persistencia
+	var escena: Node = get_tree().current_scene
+	if escena == null:
+		return str(get_path())
+	return "%s|%s" % [escena.scene_file_path, str(get_path())]
 
 
 func _ready() -> void:
@@ -28,6 +40,9 @@ func _ready() -> void:
 		_visual = _crear_visual_fallback()
 	if _shape == null:
 		_shape = _crear_collision_fallback()
+	var prog := get_node_or_null("/root/Progresion")
+	if prog != null and prog.plataforma_rota(_clave()):
+		_romper(true)
 
 
 func _physics_process(delta: float) -> void:
@@ -50,8 +65,16 @@ func _physics_process(delta: float) -> void:
 				queue_free()
 
 
-func _romper() -> void:
+func _romper(sin_animacion := false) -> void:
 	if _fase == Fase.ROTA:
+		return
+	var prog := get_node_or_null("/root/Progresion")
+	if prog != null:
+		prog.marcar_plataforma_rota(_clave())
+	if sin_animacion:
+		_shape.set_deferred("disabled", true)
+		_fase = Fase.ROTA
+		_visual.visible = false
 		return
 	_shape.set_deferred("disabled", true)
 	_visual.position.x = 0.0

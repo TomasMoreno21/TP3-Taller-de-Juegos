@@ -274,6 +274,10 @@ func _physics_process(delta: float) -> void:
 	if _stun_timer > 0.0:
 		# Hitstun: el enemigo no persigue ni ataca; el knockback se frena solo.
 		_stun_timer -= delta
+		if _stun_timer <= 0.0:
+			_anim_congelada = false
+			if animated != null and not animated.is_playing():
+				animated.play()
 		velocity.x = move_toward(velocity.x, 0.0, 180.0 * delta)
 		velocity.y = minf(velocity.y + GRAVITY * delta, MAX_FALL_SPEED)
 		_update_animacion()
@@ -383,7 +387,12 @@ func _update_animacion() -> void:
 	if animated == null or not animated.visible:
 		return
 	if _anim_congelada:
-		return
+		# Fallback anti-trabado: nunca quedarse congelada si no hay hitstun activo.
+		if _stun_timer <= 0.0:
+			_anim_congelada = false
+			animated.play()
+		else:
+			return
 	var nombre := "idle"
 	if _attack_anim_timer > 0.0:
 		nombre = _attack_anim
@@ -450,6 +459,9 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 	if visual != null:
 		if _tint_tween != null and _tint_tween.is_valid():
 			_tint_tween.kill()
+		# El flash queda congelado durante el hitstop automáticamente: los tweens
+		# no avanzan con `Engine.time_scale = 0`, así que el rojo sostiene el freeze
+		# y el fade reanuda al volver el tiempo (sin corrutinas que se pisen en racha).
 		visual.modulate = Color(1, 0.6, 0.6)
 		var base_scale := visual.scale
 		var sx := absf(base_scale.x)
@@ -483,11 +495,9 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 	if health <= 0:
 		_morir()
 		return
-	# Con vida, espero a que termine el hitstop para fundir el tint rojo en paralelo
-	# a la reanudación (flash congelado durante el freeze).
-	await _esperar_fin_hitstop()
+	# El tint se funde a blanco pasado un toque; el tween se congela durante el
+	# hitstop (time_scale 0) y reanuda al restaurar → flash congelado y fade bien.
 	if is_instance_valid(visual):
-		# El tint rojo se funde cuando el hitstop termina (flash congelado durante el freeze).
 		_tint_tween = create_tween()
 		_tint_tween.tween_property(visual, "modulate", Color(1, 1, 1), 0.08)
 
@@ -520,26 +530,6 @@ func _mostrar_dano(cantidad: int, critico: bool, murio: bool) -> void:
 	tw.tween_property(lbl, "global_position:y", lbl.global_position.y - subida, dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(lbl, "modulate:a", 0.0, dur)
 	tw.tween_callback(lbl.queue_free)
-
-
-## Espera a que el hitstop global termine antes de fundir el tint: así el flash rojo
-## queda congelado durante el freeze y se desvanece en paralelo al reanudar.
-func _esperar_fin_hitstop() -> void:
-	if not is_instance_valid(visual):
-		return
-	# Un frame para que el atacante alcance a congelar (freeze tras take_damage).
-	await get_tree().process_frame
-	var hs := get_node_or_null("/root/Hitstop")
-	if hs == null:
-		await get_tree().create_timer(0.08).timeout
-		return
-	var congelado: bool = hs._restore_ms > 0 or Engine.time_scale == 0.0
-	if not congelado:
-		# Golpe sin hitstop (ej: proyectil): restauro directo.
-		await get_tree().create_timer(0.08).timeout
-		return
-	while (hs._restore_ms > 0 or Engine.time_scale == 0.0) and is_instance_valid(self):
-		await get_tree().process_frame
 
 
 ## Reacción de flinch (estilo caricaturesco): congelo la animación en el frame del

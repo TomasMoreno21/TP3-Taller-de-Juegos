@@ -19,14 +19,15 @@ var _look_offset := Vector2.ZERO
 var _player_cache: Node2D
 
 @export var suavizado := 6.0
-@export var desplazamiento := Vector2(0, -220)
+@export var desplazamiento := Vector2(0, -160)
 @export var suavizado_zoom := 5.0
-@export var lookahead := 0.28    # anticipación de cámara según velocidad horizontal
+@export var lookahead := 0.32    # anticipación de cámara según velocidad horizontal
 @export var lookahead_umbral := 80.0    # velocidad (px/s) recién pasada la cual empieza el adelanto
 @export var lookahead_ataque := 140.0    # adelanto fijo (px) hacia el facing mientras se ataca
-@export var suavizado_lookahead := 3.0  # qué tan suave entra y sale el adelanto
+@export var lookahead_max := 240.0    # tope del adelanto horizontal (px); las formas más veloces ven más lejos
+@export var suavizado_lookahead := 5.0  # qué tan suave entra y sale el adelanto
 @export var deadzone_horizontal := 32.0  # zona muerta en X (traga micro-correcciones, evita temblor)
-@export var deadzone_vertical := 40.0  # salto dentro de este rango casi no mueve la cámara al subir (pico Humano=184)
+@export var deadzone_vertical := 70.0  # salto dentro de este rango casi no mueve la cámara al subir (pico Humano=184)
 @export var seguimiento_vertical_leve := 0.15  # cuánto sí se mueve dentro de la deadzone al subir
 @export var suavizado_subida := 2.2  # al subir: lento
 @export var suavizado_bajada := 7.0  # al bajar: brusco y rápido
@@ -49,7 +50,7 @@ var _player_cache: Node2D
 @export var gravedad_referencia := 980.0
 @export var anticip_apex_max := 110.0  # px máximos que sube el encuadre al predecir el pico
 @export var anticip_apex_umbral := -120.0  # velocidad vertical (vy) que dispara la anticipación
-@export var anticip_apex_factor := 0.5  # fracción del pico calculado que se acomoda
+@export var anticip_apex_factor := 0.3  # fracción del pico calculado que se acomoda
 @export var suavizado_apex := 3.0  # suavizado al subir; al bajar reusa suavizado_bajada
 
 var _apex_look := 0.0
@@ -179,8 +180,8 @@ func _physics_process(delta: float) -> void:
 		atacando = bool((player as Node).get("_attacking"))
 		if atacando:
 			atacando_dir = signf(float((player as Node).get("facing")))
-	var objetivo_la := clampf(atacando_dir * lookahead_ataque, -160.0, 160.0) if atacando \
-		else clampf(maxf(absf(vel_x) - lookahead_umbral, 0.0) * lookahead * look_mult * signf(vel_x), -160.0, 160.0)
+	var objetivo_la := clampf(atacando_dir * lookahead_ataque, -lookahead_max, lookahead_max) if atacando \
+		else clampf(maxf(absf(vel_x) - lookahead_umbral, 0.0) * lookahead * look_mult * signf(vel_x), -lookahead_max, lookahead_max)
 	_lookahead_actual = lerpf(_lookahead_actual, objetivo_la, minf(suavizado_lookahead * delta, 1.0))
 	destino.x += _lookahead_actual
 	if absf(destino.x - global_position.x) < deadzone_horizontal:

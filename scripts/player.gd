@@ -1553,7 +1553,8 @@ func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 70
 				dir_inicial = to_obj.normalized()
 		proj.set("homing", true)
 		proj.set("homing_range", 3000.0)
-		proj.set("homing_strength", 12.0)
+		# Teledirigido agresivo: giro fuerte constantemente hacia el objetivo.
+		proj.set("homing_strength", 30.0)
 	proj.set("direction", dir_inicial)
 	proj.set("speed", alcance)
 	proj.set("damage", forms[current_form].special_damage)

@@ -12,6 +12,8 @@ var combos_desbloqueados: Dictionary = {}
 var barreras_abiertas: Dictionary = {}
 ## Dialogos ya mostrados (persisten entre muertes; se limpian al resetear partida).
 var dialogos_vistos: Dictionary = {}
+## Plataformas fragiles ya rotas (por escena/posicion; persisten entre muertes y reinicios de nivel).
+var plataformas_rotas: Dictionary = {}
 ## Si no está vacía, las formas se desbloquean SOLO por esta lista (ignora el nivel).
 ## La setea cada nivel desde el editor (scripts/setup_progresion_nivel.gd).
 var formas_forzadas: Array = []
@@ -53,6 +55,7 @@ func reset() -> void:
 	combos_desbloqueados = {}
 	barreras_abiertas = {}
 	dialogos_vistos = {}
+	plataformas_rotas = {}
 	formas_forzadas = []
 	_extra_formas = {}
 	fragmentos_cambiado.emit(0)
@@ -115,3 +118,13 @@ func dialogo_visto(id: String) -> bool:
 ## Marca un diálogo como ya mostrado.
 func marcar_dialogo_visto(id: String) -> void:
 	dialogos_vistos[id] = true
+
+
+## True si la plataforma fragil con esa clave ya se rompio en esta partida.
+func plataforma_rota(clave: String) -> bool:
+	return plataformas_rotas.has(clave)
+
+
+## Registra una plataforma fragil como rota (persiste hasta reset()).
+func marcar_plataforma_rota(clave: String) -> void:
+	plataformas_rotas[clave] = true
