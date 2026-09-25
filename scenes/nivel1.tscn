@@ -27,7 +27,7 @@
 [ext_resource type="PackedScene" uid="uid://65wfbu1kb774" path="res://scenes/noche.tscn" id="26_dr8ev"]
 [ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="27_46iir"]
 [ext_resource type="PackedScene" uid="uid://bhxju6lap2tcq" path="res://scenes/unlock_forma.tscn" id="28_unlock"]
-[ext_resource type="PackedScene" uid="uid://il1swgxuxxa0" path="res://scenes/plataforma_fragil.tscn" id="29_2n16c"]
+[ext_resource type="PackedScene" path="res://scenes/plataforma_fragil.tscn" id="29_2n16c"]
 [ext_resource type="PackedScene" path="res://scenes/salida_nivel.tscn" id="29_salida"]
 [ext_resource type="PackedScene" uid="uid://glifoayuda1" path="res://scenes/glifo_ayuda.tscn" id="30_glifo"]
 
@@ -54,7 +54,7 @@ acentos = Array[AudioStream]([ExtResource("22_amb_buho"), ExtResource("23_amb_lo
 acento_volumen_db = -2.0
 
 [node name="Player" parent="." unique_id=1763988589 instance=ExtResource("1_player")]
-position = Vector2(-19, 815)
+position = Vector2(392, 845)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
 position = Vector2(1, 0)
@@ -69,13 +69,13 @@ tile_set = ExtResource("4_tileset")
 position = Vector2(8000, 1092)
 
 [node name="PisoVisual" type="Polygon2D" parent="Piso" unique_id=1712558488]
-position = Vector2(6987.4995, 108.50006)
-scale = Vector2(2.0388124, 2.0850003)
+position = Vector2(6983.9995, -49.499985)
+scale = Vector2(2.03925, 0.5049998)
 color = Color(0.16, 0.32, 0.18, 1)
 polygon = PackedVector2Array(-8000, -100, 8000, -100, 8000, 2.3250732, 8000, 100, -20.410156, 100, -8000, 100)
 
 [node name="PisoCollision" type="CollisionShape2D" parent="Piso" unique_id=2085221829]
-position = Vector2(6977, 100.5)
+position = Vector2(6936, 104)
 shape = SubResource("RectangleShape2D_piso")
 
 [node name="PlatDoble1" type="StaticBody2D" parent="." unique_id=863292461]

@@ -19,7 +19,7 @@ var _look_offset := Vector2.ZERO
 var _player_cache: Node2D
 
 @export var suavizado := 6.0
-@export var desplazamiento := Vector2(0, -160)
+@export var desplazamiento := Vector2(0, -313)
 @export var suavizado_zoom := 5.0
 @export var lookahead := 0.32    # anticipación de cámara según velocidad horizontal
 @export var lookahead_umbral := 80.0    # velocidad (px/s) recién pasada la cual empieza el adelanto
