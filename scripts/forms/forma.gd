@@ -119,6 +119,8 @@ func try_jump(player: CharacterBody2D) -> void:
 	if player.has_method("_emitir_polvo"):
 		player._emitir_polvo(0.6)
 	_jumps_usados += 1
+	if player.has_method("_sonido_salto"):
+		player._sonido_salto(_jumps_usados)
 	if _jumps_usados >= 2:
 		on_second_jump(player)
 

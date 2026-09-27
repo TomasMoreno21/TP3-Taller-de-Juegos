@@ -67,6 +67,13 @@ const HITSTOP_COMBO := 0.11
 @export var racha_hitstop_5 := 1.3          # multiplicador de hitstop al llegar a racha 5
 @export var racha_spark_3 := 1.35           # escala del spark al llegar a racha 3
 @export var racha_spark_5 := 1.7            # escala del spark al llegar a racha 5
+@export var spark_hundir_px := 14.0         # cuánto entra el spark en el cuerpo del enemigo desde su borde
+@export var swing_visible := true           ## estela (medialuna) de cada ataque cuerpo a cuerpo
+@export var swing_alpha := 0.7
+@export var swing_alcance := 1.05          ## radio de la medialuna respecto del alcance del golpe
+@export var swing_duracion := 0.13
+@export_range(0.05, 0.6) var swing_grosor := 0.3   ## grosor de la medialuna (fracción del radio)
+@export_range(0.0, 1.0) var spark_altura := 0.42  # altura del impacto dentro del hitbox (0 = arriba, 1 = pies); 0.42 ≈ puño
 @export var lobo_landing_squash_extra := 1.4  # multiplicador squash al aterrizar como Lobo (item 18)
 @export var slowmo_transformacion := 0.18  # s de cámara lenta al transformarse (0 = off)
 @export var slowmo_transformacion_escala := 0.4  # escala del tiempo mientras transforma
@@ -168,6 +175,52 @@ var _platform_snap_cd: float = 0.0
 @export var sonido_golpe_liviano: AudioStream
 @export var sonido_golpe_pesado: AudioStream
 @export var sonido_transformacion: AudioStream
+@export var sonido_swing: AudioStream = preload("res://assets/audio/sfx/gen/swing_1.wav")           ## "whoosh" de cada ataque cuerpo a cuerpo (suene o no el golpe)
+@export var sonido_swing_pesado: AudioStream = preload("res://assets/audio/sfx/gen/swing_pesado.wav")
+@export var volumen_swing_db := -12.0
+@export var sonido_muerte: AudioStream = preload("res://assets/audio/sfx/gen/muerte_jugador.wav")
+@export var muerte_duracion := 0.9          ## s de cámara lenta + oscurecido antes del panel de derrota (0 = directo)
+@export_range(0.05, 1.0) var muerte_slowmo_escala := 0.3
+
+@export_group("Sonidos de movimiento")
+## Pasos: suenan en los frames de la animación de correr en que el pie toca el suelo.
+@export var pasos_humano: Array[AudioStream] = [preload("res://assets/audio/sfx/gen/paso_humano_1.wav"), preload("res://assets/audio/sfx/gen/paso_humano_2.wav"), preload("res://assets/audio/sfx/gen/paso_humano_3.wav"), preload("res://assets/audio/sfx/gen/paso_humano_4.wav")]
+@export var pasos_lobo: Array[AudioStream] = [preload("res://assets/audio/sfx/gen/paso_lobo_1.wav"), preload("res://assets/audio/sfx/gen/paso_lobo_2.wav"), preload("res://assets/audio/sfx/gen/paso_lobo_3.wav"), preload("res://assets/audio/sfx/gen/paso_lobo_4.wav")]
+@export var pasos_oso: Array[AudioStream] = [preload("res://assets/audio/sfx/gen/paso_oso_1.wav"), preload("res://assets/audio/sfx/gen/paso_oso_2.wav"), preload("res://assets/audio/sfx/gen/paso_oso_3.wav"), preload("res://assets/audio/sfx/gen/paso_oso_4.wav")]
+@export var aleteos: Array[AudioStream] = [preload("res://assets/audio/sfx/gen/aleteo_1.wav"), preload("res://assets/audio/sfx/gen/aleteo_2.wav"), preload("res://assets/audio/sfx/gen/aleteo_3.wav")]
+@export var pasos_frames_humano := PackedInt32Array([1, 3])   ## frames de "run" con pie apoyado
+@export var pasos_frames_lobo := PackedInt32Array([1, 2])     ## "lobo_run": manos y patas (galope)
+@export var pasos_frames_oso := PackedInt32Array([0, 3])      ## "oso_caminar"
+@export var volumen_pasos_db := -15.0
+@export var volumen_pasos_oso_db := -9.0
+@export var volumen_aleteo_db := -16.0
+@export var oso_paso_shake := 1.2                             ## sacudida leve de cámara por pisada del Oso (0 = nada)
+@export var sonido_salto_humano: AudioStream = preload("res://assets/audio/sfx/gen/salto_humano.wav")
+@export var sonido_salto_lobo: AudioStream = preload("res://assets/audio/sfx/gen/salto_lobo.wav")
+@export var sonido_salto_oso: AudioStream = preload("res://assets/audio/sfx/gen/salto_oso.wav")
+@export var sonido_doble_salto: AudioStream = preload("res://assets/audio/sfx/gen/doble_salto.wav")
+@export var volumen_salto_db := -11.0
+@export var sonido_aterrizaje_suave: AudioStream = preload("res://assets/audio/sfx/gen/aterrizaje_suave.wav")
+@export var sonido_aterrizaje_fuerte: AudioStream = preload("res://assets/audio/sfx/gen/aterrizaje_fuerte.wav")
+@export var aterrizaje_umbral := 180.0                        ## velocidad de caída mínima para que suene
+@export var sonido_derrape: AudioStream = preload("res://assets/audio/sfx/gen/derrape.wav")
+@export var volumen_derrape_db := -14.0
+@export var sonido_liana_agarrar: AudioStream = preload("res://assets/audio/sfx/gen/liana_agarrar.wav")
+@export var liana_trepar: Array[AudioStream] = [preload("res://assets/audio/sfx/gen/liana_trepar_1.wav"), preload("res://assets/audio/sfx/gen/liana_trepar_2.wav"), preload("res://assets/audio/sfx/gen/liana_trepar_3.wav")]
+@export var sonido_liana_deslizar: AudioStream = preload("res://assets/audio/sfx/gen/liana_deslizar_loop.wav")   ## loop mientras baja rápido
+@export var sonido_liana_soltar: AudioStream = preload("res://assets/audio/sfx/gen/liana_soltar.wav")
+@export var volumen_liana_db := -12.0
+@export var liana_trepar_intervalo := 0.24
+@export_group("Sonidos de estado")
+@export var sonido_dano: AudioStream = preload("res://assets/audio/sfx/gen/dano_jugador.wav")
+@export var volumen_dano_db := -8.0
+@export var sonido_bloqueo: AudioStream = preload("res://assets/audio/sfx/gen/bloqueo.wav")
+@export var sonido_transformacion_bloqueada: AudioStream = preload("res://assets/audio/sfx/gen/transformacion_bloqueada.wav")
+@export var sonido_energia_agotada: AudioStream = preload("res://assets/audio/sfx/gen/energia_agotada.wav")
+@export var sonido_disparo: AudioStream = preload("res://assets/audio/sfx/gen/proyectil_disparo.wav")
+@export var volumen_estado_db := -10.0
+@export_group("")
+@export var volumen_muerte_db := -4.0
 @export var volumen_golpe_db := 0.0
 @export var volumen_transformacion_db := 0.0
 ## Offsets de volumen (dB) para el golpe pesado y el especial, aplicados sobre volumen_golpe_db.
@@ -182,8 +235,11 @@ var _platform_snap_cd: float = 0.0
 @onready var polvo: CPUParticles2D = $Polvo
 @onready var sombra: Polygon2D = $Sombra
 
-const PASOS_INTERVALO := 0.18
-var _pasos_timer := 0.0
+var _derrape_cd := 0.0
+var _t_sin_suelo := 0.0
+var _denegar_cd := 0.0
+var _liana_trepar_t := 0.0
+var _liana_loop: AudioStreamPlayer
 
 const FORMAS := [
 	preload("res://resources/formas/humano.tres"),
@@ -205,6 +261,10 @@ func _ready() -> void:
 	floor_max_angle = deg_to_rad(45.0)
 	wall_min_slide_angle = deg_to_rad(15.0)
 	_apply_form()
+	visual.frame_changed.connect(_on_frame_animacion)
+	_liana_loop = AudioStreamPlayer.new()
+	_liana_loop.stream = sonido_liana_deslizar
+	add_child(_liana_loop)
 
 
 func _physics_process(delta: float) -> void:
@@ -216,6 +276,9 @@ func _physics_process(delta: float) -> void:
 
 	var data: Forma = forms[current_form]
 	data.tick(self, delta)
+	_derrape_cd = maxf(_derrape_cd - delta, 0.0)
+	_t_sin_suelo = 0.0 if is_on_floor() else _t_sin_suelo + delta
+	_denegar_cd = maxf(_denegar_cd - delta, 0.0)
 	if _step_up_cd > 0.0:
 		_step_up_cd = maxf(_step_up_cd - delta, 0.0)
 	if _platform_snap_cd > 0.0:
@@ -251,11 +314,10 @@ func _physics_process(delta: float) -> void:
 			var boost := base_boost if dir * velocity.x < 0.0 else 1.0
 			if boost > 1.0 and absf(velocity.x) > 120.0 and is_on_floor():
 				if current_form == Form.LOBO:
-					if polvo != null:
-						polvo.direction = Vector2(-facing, -0.25)
-						polvo.initial_velocity_min = 90.0
-						polvo.initial_velocity_max = 160.0
-					_emitir_polvo(0.7)
+					_emitir_polvo(0.7, Vector2(-facing, -0.25))
+					if _derrape_cd <= 0.0:
+						_derrape_cd = 0.35
+						_sfx(sonido_derrape, volumen_derrape_db, 0.1)
 				else:
 					_emitir_polvo(0.4)
 			var air_mult := data.accel_air_mult if not is_on_floor() else 1.0
@@ -341,6 +403,7 @@ func _physics_process(delta: float) -> void:
 		if not _was_on_floor:
 			data.on_landing(self, _fall_impact)
 			_squash_landing(data, _fall_impact)
+			_sonido_aterrizaje(_fall_impact)
 			_emitir_polvo(0.5)
 			if _fall_impact > 600.0:
 				var cam := get_viewport().get_camera_2d()
@@ -402,10 +465,6 @@ func _physics_process(delta: float) -> void:
 			data.try_jump(self)
 			_jump_buffer = 0.0
 
-	_pasos_timer -= delta
-	if current_form != Form.MURCIELAGO and is_on_floor() and absf(velocity.x) > 0.5 and _pasos_timer <= 0.0:
-		_pasos_timer = PASOS_INTERVALO
-		_emitir_polvo(0.8)
 
 	if not dialogo_bloquea:
 		_handle_attack(delta)
@@ -906,10 +965,7 @@ func _spark_golpe(body: Node2D, idx: int) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
-	var px := body.global_position.x - facing * 10.0
-	if idx == 1:
-		px += facing * 8.0
-	p.global_position = Vector2(px, body.global_position.y - 12.0)
+	p.global_position = _punto_impacto(body) + Vector2(0.0, randf_range(-10.0, 10.0))
 	var tinte := Color(1, 0.9, 0.4, 0.95)
 	if current_form >= 0 and current_form < forms.size():
 		tinte = forms[current_form].color
@@ -921,9 +977,79 @@ func _spark_golpe(body: Node2D, idx: int) -> void:
 	p.emitting = true
 
 
-func _play_attack_fx(tipo: String, _step: int) -> void:
-	# El feedback visual del golpe (Polygon2D) se quitÃ³ en el rebuild; sin nodo, no hay FX.
-	pass
+## Punto donde el golpe "toca" al objetivo: el borde del cuerpo que mira al jugador
+## (hundido spark_hundir_px), a la altura del arma (spark_altura dentro del hitbox),
+## acotado a la zona donde se cruzan hitbox y collider. Sin collider → origen del objetivo.
+func _punto_impacto(body: Node2D) -> Vector2:
+	var cuerpo := Rect2()
+	for c in body.get_children():
+		if c is CollisionShape2D and (c as CollisionShape2D).shape != null and not (c as CollisionShape2D).disabled:
+			cuerpo = (c as CollisionShape2D).global_transform * (c as CollisionShape2D).shape.get_rect()
+			break
+	if cuerpo.size == Vector2.ZERO:
+		return body.global_position
+	var golpe: Rect2 = attack_hitbox.global_transform * attack_hitbox.shape.get_rect()
+	var cruce := golpe.intersection(cuerpo)
+	if cruce.size == Vector2.ZERO:
+		cruce = cuerpo
+	var borde := cuerpo.position.x if facing > 0 else cuerpo.end.x
+	var x := clampf(borde + facing * spark_hundir_px, cruce.position.x, cruce.end.x)
+	var y := clampf(golpe.position.y + golpe.size.y * spark_altura, cruce.position.y, cruce.end.y)
+	return Vector2(x, y)
+
+
+## Estela del golpe: medialuna vectorial del color de la forma que barre el alcance
+## real del hitbox. Pasos pares del combo barren al revés (de abajo hacia arriba).
+func _play_attack_fx(tipo: String, step: int) -> void:
+	if attack_hitbox.disabled or attack_hitbox.shape == null:
+		return
+	_sfx(sonido_swing_pesado if tipo in ["heavy", "combo"] else sonido_swing, volumen_swing_db, 0.1)
+	if not swing_visible or DisplayServer.get_name() == "headless":
+		return
+	# Alcance real en pantalla (el nodo del hitbox tiene escala propia).
+	var rect_golpe: Rect2 = attack_hitbox.global_transform * attack_hitbox.shape.get_rect()
+	var alcance := absf((rect_golpe.end.x if facing > 0 else rect_golpe.position.x) - global_position.x)
+	# Centro detrás del hombro y radio mayor al alcance: la medialuna queda más
+	# plana y por delante del cuerpo, barriendo la zona del golpe.
+	var atras := alcance * 0.45
+	var radio := clampf(alcance * swing_alcance + atras, 150.0, 480.0)
+	var grosor: float = swing_grosor * {"light": 1.0, "heavy": 1.3, "special": 1.5, "combo": 1.6}.get(tipo, 1.0)
+	var dur: float = swing_duracion * {"light": 1.0, "heavy": 1.2, "special": 1.3, "combo": 1.4}.get(tipo, 1.0)
+	var desde := deg_to_rad(-42.0)
+	var hasta := deg_to_rad(30.0)
+	if step % 2 == 0:
+		var tmp := desde
+		desde = hasta
+		hasta = tmp
+	var puntos := PackedVector2Array()
+	const N := 14
+	for i in N + 1:
+		var a := lerpf(desde, hasta, float(i) / N)
+		puntos.append(Vector2(cos(a) * facing, sin(a)) * radio)
+	for i in range(N, -1, -1):
+		var t := float(i) / N
+		# Borde interno: más grueso en el medio, afinado en las puntas.
+		var r := radio * (1.0 - grosor * sin(t * PI))
+		var a := lerpf(desde, hasta, t)
+		puntos.append(Vector2(cos(a) * facing, sin(a)) * r)
+	var arco := Polygon2D.new()
+	arco.polygon = puntos
+	var color: Color = forms[current_form].color.lerp(Color.WHITE, 0.35) if current_form < forms.size() else Color.WHITE
+	arco.color = Color(color, swing_alpha)
+	# Sin sombrear: la noche (CanvasModulate) no lo apaga.
+	var mat := CanvasItemMaterial.new()
+	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	arco.material = mat
+	arco.z_index = 2
+	arco.position = Vector2(-facing * atras, rect_golpe.position.y + rect_golpe.size.y * spark_altura - global_position.y)
+	add_child(arco)
+	arco.scale = Vector2.ONE * 0.85
+	var giro := 0.22 * facing * (1.0 if step % 2 == 1 else -1.0)
+	var tw := arco.create_tween().set_parallel(true)
+	tw.tween_property(arco, "scale", Vector2.ONE * 1.08, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(arco, "rotation", giro, dur)
+	tw.tween_property(arco, "modulate:a", 0.0, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.chain().tween_callback(arco.queue_free)
 
 
 func squash_y(amount: float, duration: float) -> void:
@@ -937,9 +1063,22 @@ func squash_y(amount: float, duration: float) -> void:
 	_sprite_tween.tween_property(visual, "scale:y", base.y, duration * 0.6)
 
 
-func _emitir_polvo(_escala: float) -> void:
-	if DisplayServer.get_name() == "headless":
+## escala: 0..1 (paso chico → aterrizaje fuerte). direccion != ZERO: polvo lateral
+## rápido (derrape del Lobo) solo para esta emisión.
+func _emitir_polvo(escala: float, direccion: Vector2 = Vector2.ZERO) -> void:
+	if DisplayServer.get_name() == "headless" or polvo == null:
 		return
+	var lateral := direccion != Vector2.ZERO
+	polvo.direction = direccion if lateral else Vector2.UP
+	polvo.initial_velocity_min = 90.0 if lateral else 30.0
+	polvo.initial_velocity_max = 160.0 if lateral else 80.0
+	polvo.scale_amount_min = lerpf(0.8, 2.0, escala)
+	polvo.scale_amount_max = lerpf(1.4, 3.2, escala)
+	# Sale de todo el ancho de apoyo de la forma (Oso/Lobo pisan más ancho que el Humano).
+	polvo.emission_rect_extents.x = collision_shape.shape.size.x * 0.25
+	# Los golpes de polvo fuertes (salto/aterrizaje) reinician aunque haya pasos en vuelo.
+	if escala >= 0.6:
+		polvo.restart()
 	polvo.emitting = true
 
 
@@ -1042,6 +1181,7 @@ func _handle_energia(delta: float) -> void:
 			_transformar(Form.HUMAN, true)
 			_cooldown_formas[agotada] = COOLDOWN_AGOTADA
 			transformacion_agotada.emit()
+			_sfx(sonido_energia_agotada, volumen_estado_db)
 	energia_changed.emit(energia)
 
 
@@ -1097,6 +1237,7 @@ func _handle_formas_cruceta() -> void:
 	if objetivo < 0:
 		return
 	if not _progresion().forma_desbloqueada(objetivo) or _forma_en_cooldown(objetivo):
+		_denegar_transformacion()
 		return
 	_transformar(objetivo)
 
@@ -1128,6 +1269,8 @@ func _handle_transform() -> void:
 	if forma_seleccionada == current_form:
 		_avanzar_seleccion()
 	if not _progresion().forma_desbloqueada(forma_seleccionada) or _forma_en_cooldown(forma_seleccionada):
+		if Input.is_action_just_pressed("transform"):
+			_denegar_transformacion()
 		return
 	var prev: int = current_form
 	_transformar(forma_seleccionada)
@@ -1150,6 +1293,7 @@ func _transformar(nueva: int, forzar: bool = false) -> void:
 	(collision_shape.shape as RectangleShape2D).size = prev_size
 	collision_shape.position = prev_pos
 	if bloqueado:
+		_denegar_transformacion()
 		return
 	forms[current_form].reset_form_state()
 	current_form = nueva
@@ -1391,6 +1535,51 @@ func _handle_death() -> void:
 	if health > 0 or god_mode or _derrota_activa:
 		return
 	_derrota_activa = true
+	if DisplayServer.get_name() == "headless" or muerte_duracion <= 0.0:
+		_mostrar_derrota()
+		return
+	_secuencia_muerte()
+
+
+## Antes del panel "HAS CAÍDO": cámara lenta, destello del jugador, estallido del
+## color de la forma y la pantalla que se oscurece hasta el mismo tono del panel.
+func _secuencia_muerte() -> void:
+	# Corta el parpadeo de invulnerabilidad del golpe letal: si no, el jugador puede
+	# quedar invisible justo cuando se congela la escena.
+	_invuln_timer = 0.0
+	visual.visible = true
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_sfx(sonido_muerte, volumen_muerte_db)
+	var hs := get_node_or_null("/root/Hitstop")
+	if hs != null:
+		hs.slowmo(muerte_duracion, muerte_slowmo_escala)
+	var cam := get_viewport().get_camera_2d()
+	if cam != null and cam.has_method("punch"):
+		cam.punch(1.08)
+	if cam != null and cam.has_method("shake"):
+		cam.shake(8.0, 0.25)
+	Burst.emitir(self, visual.global_position, forms[current_form].color, 26, 1.6)
+	visual.modulate = Color(3, 3, 3, 1)
+	var tw := create_tween()
+	tw.tween_property(visual, "modulate", Color(0.35, 0.35, 0.45, 1), muerte_duracion * 0.6)
+	var capa := CanvasLayer.new()
+	capa.layer = 94
+	var velo := ColorRect.new()
+	velo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	velo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	velo.color = Color(0, 0, 0, 0)
+	capa.add_child(velo)
+	get_tree().root.add_child(capa)
+	var tv := velo.create_tween().set_ignore_time_scale(true)
+	tv.tween_property(velo, "color:a", 0.6, muerte_duracion)
+	# Reloj real: la cámara lenta no debe estirar la espera.
+	await get_tree().create_timer(muerte_duracion, true, false, true).timeout
+	capa.queue_free()
+	_mostrar_derrota()
+
+
+func _mostrar_derrota() -> void:
 	var escena: PackedScene = load("res://scenes/derrota.tscn")
 	var derrota: CanvasLayer = escena.instantiate()
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
@@ -1399,9 +1588,12 @@ func _handle_death() -> void:
 
 
 func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
+	if blocking and not god_mode and _invuln_timer <= 0.0 and not _dialogo_bloquea_input():
+		_sfx(sonido_bloqueo, volumen_estado_db, 0.08)
 	if god_mode or blocking or _invuln_timer > 0.0 or _dialogo_bloquea_input():
 		return
 	health -= cantidad
+	_sfx(sonido_dano, volumen_dano_db, 0.08)
 	# Golpe fuerte = más daño = más pausa de impacto (y el cel el umbral queda sin pausa).
 	var dur := hitstop_dano
 	if cantidad >= hitstop_dano_umbral and hitstop_dano_pesado > dur:
@@ -1504,6 +1696,7 @@ func reaparecer_en_checkpoint() -> void:
 	health = _checkpoint_vida
 	energia = _checkpoint_energia
 	_derrota_activa = false
+	visual.modulate = Color.WHITE
 	_restaurar_forma(_checkpoint_forma)
 	_cancelar_anim_ataque()
 	blocking = false
@@ -1540,6 +1733,7 @@ func on_enemy_killed() -> void:
 
 
 func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 700.0) -> void:
+	_sfx(sonido_disparo, volumen_estado_db, 0.08)
 	var proj: Area2D = preload("res://scenes/projectile.tscn").instantiate()
 	proj.global_position = global_position + Vector2(facing * 90.0, -60.0) + pos_referencia
 	var dir_inicial := Vector2(facing, 0.0)
@@ -1710,6 +1904,7 @@ func _handle_enredadera(delta: float) -> void:
 			dir_y += 1
 		if Input.is_action_just_pressed("jump"):
 			var vy_prev: float = velocity.y
+			_sfx(sonido_liana_soltar, volumen_liana_db, 0.1)
 			_salir_enredadera()
 			_salto_enredadera = true
 			var jump_mult := 1.1 if dir_y < 0 or vy_prev < -40.0 else 1.0
@@ -1758,6 +1953,7 @@ func _handle_enredadera(delta: float) -> void:
 			var paso := clampf(dx, -260.0 * delta, 260.0 * delta)
 			if not test_move(Transform2D(0, Vector2.ZERO), Vector2(paso, 0)):
 				global_position.x += paso
+		_sonido_liana(dir_y, delta)
 		if dir_y != 0 and absf(velocity.y) > 20.0:
 			visual.skew = lerpf(visual.skew, deg_to_rad(3.0) * -dir_y, 6.0 * delta)
 		if dir_y != 0 and absf(velocity.y) > 80.0 and _vine_particulas_timer <= 0.0:
@@ -1803,10 +1999,13 @@ func _handle_enredadera(delta: float) -> void:
 			if not is_on_floor():
 				squash_y(0.12, 0.12)
 				_emitir_burst_hojas()
+			_sfx(sonido_liana_agarrar, volumen_liana_db, 0.1)
 			break
 
 
 func _salir_enredadera() -> void:
+	if _liana_loop != null:
+		_liana_loop.stop()
 	_trepando = false
 	_enredadera_actual = null
 	_gravity_override = -1.0
@@ -1822,3 +2021,110 @@ func _en_combate() -> bool:
 
 func _progresion() -> Node:
 	return get_node("/root/Progresion")
+
+
+# ------------------------------------------------------------ audio del jugador
+
+func _sfx(stream: AudioStream, volumen_db: float, variacion_tono: float = 0.0) -> void:
+	if stream == null:
+		return
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_sfx(stream, volumen_db, variacion_tono)
+
+
+func _sfx_de(lista: Array[AudioStream], volumen_db: float, variacion_tono: float = 0.08) -> void:
+	if not lista.is_empty():
+		_sfx(lista.pick_random(), volumen_db, variacion_tono)
+
+
+## Pasos en tiempo real: suenan (y levantan polvo) en los frames de la animación en
+## que el pie toca el suelo, así acompañan la velocidad real de la animación.
+func _on_frame_animacion() -> void:
+	if _trepando:
+		return
+	var anim := visual.animation
+	if anim == "murci_volar" or anim == "murci_run":
+		# El Murciélago no pisa: aletea al volar (y en el suelo, al avanzar).
+		if visual.frame == 0 and visual.speed_scale > 0.0 and (not is_on_floor() or absf(velocity.x) > 30.0):
+			_sfx_de(aleteos, volumen_aleteo_db)
+		return
+	# Tolerancia de coyote: los micro-despegues por irregularidades del terreno no cortan el paso.
+	var apoyado := is_on_floor() or (_t_sin_suelo < 0.25 and velocity.y > -60.0)
+	if not apoyado or absf(velocity.x) < 30.0:
+		return
+	var frames := PackedInt32Array()
+	var lista: Array[AudioStream] = []
+	var vol := volumen_pasos_db
+	var polvo_escala := 0.45
+	match anim:
+		"run":
+			frames = pasos_frames_humano
+			lista = pasos_humano
+		"lobo_run":
+			frames = pasos_frames_lobo
+			lista = pasos_lobo
+			vol -= 2.0
+			polvo_escala = 0.35
+		"oso_caminar":
+			frames = pasos_frames_oso
+			lista = pasos_oso
+			vol = volumen_pasos_oso_db
+			polvo_escala = 0.7
+		_:
+			return
+	if not frames.has(visual.frame):
+		return
+	_sfx_de(lista, vol)
+	_emitir_polvo(polvo_escala)
+	if anim == "oso_caminar" and oso_paso_shake > 0.0:
+		var cam := get_viewport().get_camera_2d()
+		if cam != null and cam.has_method("shake"):
+			cam.shake(oso_paso_shake, 0.08, Vector2(0, 1))
+
+
+## n = número de salto dentro del aire (1 = desde el suelo, 2 = doble salto).
+func _sonido_salto(n: int) -> void:
+	match current_form:
+		Form.MURCIELAGO:
+			_sfx_de(aleteos, volumen_aleteo_db + 4.0)
+		Form.LOBO:
+			_sfx(sonido_doble_salto if n >= 2 else sonido_salto_lobo, volumen_salto_db, 0.06)
+		Form.OSO:
+			_sfx(sonido_salto_oso, volumen_salto_db, 0.05)
+		_:
+			_sfx(sonido_doble_salto if n >= 2 else sonido_salto_humano, volumen_salto_db, 0.06)
+
+
+## Aterrizaje: más fuerte cuanto más rápido cae; el Oso siempre suena pesado.
+func _sonido_aterrizaje(impacto: float) -> void:
+	if impacto < aterrizaje_umbral or current_form == Form.MURCIELAGO:
+		return
+	var t := clampf((impacto - aterrizaje_umbral) / 900.0, 0.0, 1.0)
+	var fuerte := t > 0.55 or current_form == Form.OSO
+	_sfx(sonido_aterrizaje_fuerte if fuerte else sonido_aterrizaje_suave, lerpf(-18.0, -5.0, t), 0.06)
+
+
+## Liana: crujidos al trepar y un loop de roce mientras se desliza hacia abajo.
+func _sonido_liana(dir_y: int, delta: float) -> void:
+	var bajando := dir_y > 0 and velocity.y > 120.0
+	if bajando:
+		if not _liana_loop.playing:
+			_liana_loop.stream = sonido_liana_deslizar
+			_liana_loop.play()
+		_liana_loop.volume_db = volumen_liana_db + lerpf(-8.0, 2.0, clampf(velocity.y / 700.0, 0.0, 1.0))
+		_liana_loop.pitch_scale = lerpf(0.9, 1.2, clampf(velocity.y / 900.0, 0.0, 1.0))
+	elif _liana_loop.playing:
+		_liana_loop.stop()
+	_liana_trepar_t -= delta
+	if dir_y < 0 and velocity.y < -60.0 and _liana_trepar_t <= 0.0:
+		_liana_trepar_t = liana_trepar_intervalo
+		_sfx_de(liana_trepar, volumen_liana_db - 2.0, 0.12)
+
+
+## Transformación que no se puede hacer (bloqueada, en cooldown, sin espacio).
+func _denegar_transformacion() -> void:
+	if _denegar_cd > 0.0:
+		return
+	_denegar_cd = 0.3
+	_sfx(sonido_transformacion_bloqueada, volumen_estado_db)

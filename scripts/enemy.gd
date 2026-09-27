@@ -11,6 +11,9 @@ const MAX_FALL_SPEED := 950.0
 @export var spawn_telegrafiado: bool = false  # aparece con el círculo ritual antes de actuar
 @export var ritual_duracion: float = 0.7  # tiempo del círculo ritual antes de que el enemigo actúe
 @export var sonido_golpe: AudioStream
+@export var sonido_muerte: AudioStream = preload("res://assets/audio/sfx/gen/enemigo_muerte.wav")
+@export var sonido_disparo: AudioStream = preload("res://assets/audio/sfx/gen/arquero_disparo.wav")
+@export var volumen_sfx_db := -10.0
 @export var volumen_golpe_db := 0.0
 @export var perseguir_fuera_rango: bool = false  # los proyectiles se quedan donde spawnnean y atacan a rango
 @export var limite_caida := 6000.0
@@ -441,6 +444,9 @@ func _disparar(player: Node2D) -> void:
 	_reproducir_animacion_ataque("attack2")
 	var to_player: Vector2 = player.global_position - global_position
 	var dir: Vector2 = to_player.normalized() if to_player.length_squared() > 0.01 else Vector2(_dir, 0.0)
+	var audio_d := get_node_or_null("/root/AudioManager")
+	if audio_d != null:
+		audio_d.play_sfx(sonido_disparo, volumen_sfx_db, 0.08)
 	var proj: Area2D = preload("res://scenes/projectile.tscn").instantiate()
 	proj.global_position = global_position + Vector2(_dir * 25.0, -10.0)
 	proj.set("direction", dir)
@@ -596,6 +602,9 @@ func _morir() -> void:
 	if player != null and player.has_method("on_enemy_killed"):
 		(player as Node2D).on_enemy_killed()
 	died.emit()
+	var audio_m := get_node_or_null("/root/AudioManager")
+	if audio_m != null:
+		audio_m.play_sfx(sonido_muerte, volumen_sfx_db, 0.1)
 	_freeze_hitstop(0.09)
 	if DisplayServer.get_name() != "headless":
 		var cam := get_viewport().get_camera_2d()

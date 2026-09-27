@@ -39,10 +39,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if not _open:
 		return
-	if event.is_action_pressed("move_up"):
+	if (event.is_action_pressed("move_up") or event.is_action_pressed("ui_up")):
 		_navegar(-1)
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("move_down"):
+	elif (event.is_action_pressed("move_down") or event.is_action_pressed("ui_down")):
 		_navegar(1)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("menu_confirm"):
@@ -80,6 +80,7 @@ func abrir() -> void:
 	$Panel.visible = true
 	dim.visible = true
 	get_tree().paused = true
+	_ui("ui_pausa")
 	botones[0].grab_focus.call_deferred()
 
 
@@ -93,6 +94,7 @@ func cerrar() -> void:
 
 
 func _navegar(dir: int) -> void:
+	_ui("ui_mover")
 	_indice = (_indice + dir + botones.size()) % botones.size()
 	botones[_indice].grab_focus()
 
@@ -102,6 +104,7 @@ func _on_focus(i: int) -> void:
 
 
 func _on_boton_pressed(i: int) -> void:
+	_ui("ui_confirmar")
 	match i:
 		0:
 			cerrar()
@@ -116,8 +119,7 @@ func _on_boton_pressed(i: int) -> void:
 
 
 func _reiniciar_nivel() -> void:
-	get_tree().paused = false
-	get_tree().reload_current_scene()
+	TransicionPantalla.de(get_tree()).recargar()
 
 
 func _abrir_controles() -> void:
@@ -127,5 +129,10 @@ func _abrir_controles() -> void:
 
 
 func _volver_menu() -> void:
-	get_tree().paused = false
-	get_tree().change_scene_to_file(SCENE_MENU)
+	TransicionPantalla.de(get_tree()).cambiar_escena(SCENE_MENU)
+
+
+func _ui(nombre: String) -> void:
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_ui(nombre)

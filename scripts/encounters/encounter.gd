@@ -14,6 +14,10 @@ const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 # Diálogo opcional al completar la arena (post-combate). Vacío = no habla.
 @export var lineas_post_combate: PackedStringArray = []
 @export var hablante_post_combate := "Amuleto"
+@export var texto_despejada := "Zona despejada"   ## aviso del HUD al vencer la última ola (vacío = sin aviso)
+@export var sonido_despejada: AudioStream = preload("res://assets/audio/sfx/gen/zona_despejada.wav")
+@export var sonido_inicio: AudioStream = preload("res://assets/audio/sfx/gen/arena_inicio.wav")   ## al cerrarse la arena
+@export var volumen_despejada_db := -6.0
 
 # Cerco de la arena: 2 paredes laterales generadas según el nodo "Arena" (o los @export).
 @export var paredes_auto := true    # generar las 2 paredes que contienen al jugador
@@ -149,6 +153,9 @@ func _on_body_entered(body: Node) -> void:
 func _empezar() -> void:
 	estado = Estado.RUNNING
 	_mostrar_bounds()
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_sfx(sonido_inicio, volumen_despejada_db)
 	if camara != null and camara.has_method("modo_arena"):
 		camara.modo_arena(arena_center)
 	if camara != null and camara.has_method("encuadre_arena"):
@@ -256,6 +263,12 @@ func _completar() -> void:
 	_ocultar_bounds()
 	if camara != null and camara.has_method("modo_normal"):
 		camara.modo_normal()
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_sfx(sonido_despejada, volumen_despejada_db)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud != null and not texto_despejada.is_empty():
+		hud.mostrar_aviso(texto_despejada)
 	if not lineas_post_combate.is_empty():
 		get_node("/root/Dialogo").mostrar(Array(lineas_post_combate), hablante_post_combate)
 	completado.emit()

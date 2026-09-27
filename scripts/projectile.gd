@@ -1,5 +1,8 @@
 extends Area2D
 
+@export var sonido_impacto: AudioStream = preload("res://assets/audio/sfx/gen/proyectil_impacto.wav")
+@export var volumen_impacto_db := -12.0
+
 var direction := Vector2.RIGHT
 var speed := 700.0
 var damage := 15
@@ -41,6 +44,7 @@ func _physics_process(delta: float) -> void:
 	# Rechaza el terreno (evita atravesar el tilemap a alta velocidad), pero
 	# NO los objetos de energía (barreras y cristales): el sónico los atraviesa.
 	if _choca_terreno(delta):
+		_impacto(0.7)
 		queue_free()
 		return
 	global_position += direction * speed * delta
@@ -50,6 +54,15 @@ func _physics_process(delta: float) -> void:
 	_life -= delta
 	if _life <= 0.0:
 		queue_free()
+
+
+## Chispazo del color del proyectil donde pega (terreno más chico que en un cuerpo).
+func _impacto(escala: float) -> void:
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_sfx(sonido_impacto, volumen_impacto_db + (0.0 if escala >= 1.0 else -4.0), 0.1)
+	var color := visual.color if visual != null else Color.WHITE
+	Burst.emitir(self, global_position, color, int(10 * escala), escala)
 
 
 ## Raycast del extremo del proyectil hacia dónde va a avanzar este frame.
@@ -141,4 +154,5 @@ func _on_body_entered(body: Node2D) -> void:
 				v.modulate = Color(0.78, 0.55, 1.0)
 				var tw := v.create_tween()
 				tw.tween_property(v, "modulate", Color(1, 1, 1), 0.12)
+		_impacto(1.0)
 		queue_free()

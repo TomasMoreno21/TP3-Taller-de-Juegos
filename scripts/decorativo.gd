@@ -12,7 +12,7 @@ const COLORES := {
 	1: { "tronco": Color(0.26, 0.18, 0.13), "copa": Color(0.09, 0.21, 0.13) },
 	2: { "copa": Color(0.10, 0.25, 0.15) },
 	3: { "copa": Color(0.14, 0.29, 0.17) },
-	4: { "copa": Color(0.30, 0.34, 0.42) },
+	4: { "copa": Color(0.34, 0.33, 0.30) },
 }
 
 @export var tipo := Tipo.ARBOL:

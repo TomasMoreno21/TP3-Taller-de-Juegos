@@ -31,10 +31,10 @@ func _animar_entrada() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if is_instance_valid(_controls):
 		return
-	if event.is_action_pressed("move_up"):
+	if (event.is_action_pressed("move_up") or event.is_action_pressed("ui_up")):
 		_navegar(-1)
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("move_down"):
+	elif (event.is_action_pressed("move_down") or event.is_action_pressed("ui_down")):
 		_navegar(1)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("menu_confirm"):
@@ -43,6 +43,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _navegar(dir: int) -> void:
+	_ui("ui_mover")
 	_indice = (_indice + dir + botones.size()) % botones.size()
 	botones[_indice].grab_focus()
 
@@ -52,6 +53,7 @@ func _on_focus(i: int) -> void:
 
 
 func _on_boton_pressed(i: int) -> void:
+	_ui("ui_confirmar")
 	match i:
 		0:
 			_jugar()
@@ -63,10 +65,16 @@ func _on_boton_pressed(i: int) -> void:
 
 func _jugar() -> void:
 	get_node("/root/Progresion").reset()
-	get_tree().change_scene_to_file(SCENE_JUEGO)
+	TransicionPantalla.de(get_tree()).cambiar_escena(SCENE_JUEGO)
 
 
 func _abrir_controles() -> void:
 	var c: CanvasLayer = (load(SCENE_CONTROLES) as PackedScene).instantiate()
 	_controls = c
 	add_child(c)
+
+
+func _ui(nombre: String) -> void:
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_ui(nombre)

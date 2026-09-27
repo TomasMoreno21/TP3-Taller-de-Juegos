@@ -27,9 +27,13 @@
 [ext_resource type="PackedScene" uid="uid://65wfbu1kb774" path="res://scenes/noche.tscn" id="26_dr8ev"]
 [ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="27_46iir"]
 [ext_resource type="PackedScene" uid="uid://bhxju6lap2tcq" path="res://scenes/unlock_forma.tscn" id="28_unlock"]
-[ext_resource type="PackedScene" path="res://scenes/plataforma_fragil.tscn" id="29_2n16c"]
+[ext_resource type="PackedScene" uid="uid://il1swgxuxxa0" path="res://scenes/plataforma_fragil.tscn" id="29_2n16c"]
 [ext_resource type="PackedScene" path="res://scenes/salida_nivel.tscn" id="29_salida"]
 [ext_resource type="PackedScene" uid="uid://glifoayuda1" path="res://scenes/glifo_ayuda.tscn" id="30_glifo"]
+[ext_resource type="PackedScene" uid="uid://skni1dec001" path="res://scenes/decorativo.tscn" id="40_deco"]
+[ext_resource type="PackedScene" uid="uid://skni1luc001" path="res://scenes/luciernagas.tscn" id="41_luci"]
+[ext_resource type="PackedScene" uid="uid://skni1nbl001" path="res://scenes/niebla.tscn" id="42_niebla"]
+[ext_resource type="PackedScene" path="res://scenes/fondo_subsuelo.tscn" id="43_subsuelo"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
 size = Vector2(32620, 401)
@@ -1489,6 +1493,1110 @@ alto = 2800.0
 [node name="Enredadera18" parent="." unique_id=178403607 instance=ExtResource("16_enredadera")]
 position = Vector2(15942, 4822)
 alto = 1600.0
+
+[node name="FondoSubsuelo" parent="." instance=ExtResource("43_subsuelo")]
+
+[node name="Decoracion" type="Node2D" parent="."]
+z_index = -5
+
+[node name="Arbol1" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(-1188, 1002)
+tipo = 0
+variante = 2
+escala = 5.63
+
+[node name="Pasto1" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(-757, 1002)
+tipo = 3
+variante = 5
+escala = 3.45
+flip_h = true
+
+[node name="Pasto2" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(-313, 1002)
+tipo = 3
+variante = 5
+escala = 3.33
+flip_h = true
+
+[node name="Sauce1" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(375, 1002)
+tipo = 1
+variante = 2
+escala = 6.3
+
+[node name="Arbusto1" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(122, 1002)
+tipo = 2
+variante = 7
+escala = 5.42
+
+[node name="Piedra1" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(4462, 1002)
+tipo = 4
+variante = 1
+escala = 4.1
+viento = false
+
+[node name="Arbol2" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(4929, 1002)
+tipo = 0
+variante = 1
+escala = 6.57
+flip_h = true
+
+[node name="Pasto3" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(5334, 1002)
+tipo = 3
+variante = 10
+escala = 3.54
+
+[node name="Pasto4" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(5760, 1002)
+tipo = 3
+variante = 6
+escala = 3.17
+flip_h = true
+
+[node name="Arbol3" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(6869, 1002)
+tipo = 0
+variante = 1
+escala = 5.8
+flip_h = true
+
+[node name="Arbusto2" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(7054, 1002)
+tipo = 2
+variante = 6
+escala = 5.02
+flip_h = true
+
+[node name="Pasto5" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(7322, 1002)
+tipo = 3
+variante = 4
+escala = 3.32
+flip_h = true
+
+[node name="Piedra2" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(7990, 1002)
+tipo = 4
+variante = 3
+escala = 4.6
+flip_h = true
+viento = false
+
+[node name="Arbol4" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(8646, 1002)
+tipo = 0
+variante = 3
+escala = 6.54
+flip_h = true
+
+[node name="Arbusto3" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(9132, 1002)
+tipo = 2
+variante = 6
+escala = 5.46
+flip_h = true
+
+[node name="Arbol5" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(14208, 1002)
+tipo = 0
+variante = 2
+escala = 5.74
+flip_h = true
+
+[node name="Arbusto4" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(14399, 1002)
+tipo = 2
+variante = 7
+escala = 5.65
+
+[node name="Arbusto5" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(14713, 1002)
+tipo = 2
+variante = 1
+escala = 5.36
+
+[node name="Pasto6" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(15370, 1002)
+tipo = 3
+variante = 9
+escala = 3.13
+
+[node name="Arbol6" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(15886, 1002)
+tipo = 0
+variante = 3
+escala = 5.64
+flip_h = true
+
+[node name="Arbusto6" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(15645, 1002)
+tipo = 2
+variante = 2
+escala = 5.1
+flip_h = true
+
+[node name="Piedra3" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(10694, 4614)
+tipo = 4
+variante = 5
+escala = 4.41
+flip_h = true
+viento = false
+
+[node name="Pasto7" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(10660, 4870)
+tipo = 3
+variante = 7
+escala = 3.51
+
+[node name="Pasto8" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(11185, 2310)
+tipo = 3
+variante = 9
+escala = 3.04
+flip_h = true
+
+[node name="Pasto9" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(11187, 2054)
+tipo = 3
+variante = 6
+escala = 3.4
+
+[node name="Pasto10" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(11260, 2566)
+tipo = 3
+variante = 8
+escala = 3.04
+
+[node name="Piedra4" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(11828, 1398)
+tipo = 4
+variante = 3
+escala = 4.33
+viento = false
+
+[node name="Piedra5" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(14943, 1398)
+tipo = 4
+variante = 3
+escala = 4.02
+viento = false
+
+[node name="Arbusto7" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(15745, 1398)
+tipo = 2
+variante = 4
+escala = 5.05
+flip_h = true
+
+[node name="Pasto11" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(16687, 1398)
+tipo = 3
+variante = 4
+escala = 3.18
+
+[node name="Piedra6" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(18445, 1398)
+tipo = 4
+variante = 4
+escala = 4.14
+flip_h = true
+viento = false
+
+[node name="Arbusto8" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(19137, 1398)
+tipo = 2
+variante = 1
+escala = 5.48
+
+[node name="Pasto12" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(19662, 1398)
+tipo = 3
+variante = 10
+escala = 3.58
+
+[node name="Pasto13" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(20472, 1398)
+tipo = 3
+variante = 1
+escala = 3.09
+flip_h = true
+
+[node name="Piedra7" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(21049, 1398)
+tipo = 4
+variante = 5
+escala = 4.62
+viento = false
+
+[node name="Pasto14" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(12093, 6150)
+tipo = 3
+variante = 5
+escala = 3.32
+flip_h = true
+
+[node name="Piedra8" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(14717, 2822)
+tipo = 4
+variante = 3
+escala = 4.57
+flip_h = true
+viento = false
+
+[node name="Piedra9" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(15311, 2822)
+tipo = 4
+variante = 5
+escala = 4.06
+viento = false
+
+[node name="Pasto15" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(13580, 6406)
+tipo = 3
+variante = 5
+escala = 3.51
+
+[node name="Pasto16" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(13693, 3078)
+tipo = 3
+variante = 10
+escala = 3.34
+flip_h = true
+
+[node name="Pasto17" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(14687, 3078)
+tipo = 3
+variante = 10
+escala = 3.16
+flip_h = true
+
+[node name="Piedra10" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(14620, 6406)
+tipo = 4
+variante = 4
+escala = 4.78
+viento = false
+
+[node name="Piedra11" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(16317, 6150)
+tipo = 4
+variante = 2
+escala = 4.73
+flip_h = true
+viento = false
+
+[node name="Piedra12" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(16972, 4358)
+tipo = 4
+variante = 4
+escala = 4.67
+flip_h = true
+viento = false
+
+[node name="Pasto18" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(17925, 4358)
+tipo = 3
+variante = 7
+escala = 3.52
+flip_h = true
+
+[node name="Pasto19" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(18846, 4358)
+tipo = 3
+variante = 7
+escala = 3.02
+flip_h = true
+
+[node name="Pasto20" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(20499, 4358)
+tipo = 3
+variante = 4
+escala = 3.18
+flip_h = true
+
+[node name="Piedra13" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(21021, 4358)
+tipo = 4
+variante = 4
+escala = 4.2
+flip_h = true
+viento = false
+
+[node name="Pasto21" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(21677, 4358)
+tipo = 3
+variante = 1
+escala = 3.43
+
+[node name="Piedra14" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(17784, 4614)
+tipo = 4
+variante = 4
+escala = 4.5
+flip_h = true
+viento = false
+
+[node name="Piedra15" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(18390, 4614)
+tipo = 4
+variante = 4
+escala = 4.27
+viento = false
+
+[node name="Piedra16" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(19689, 4614)
+tipo = 4
+variante = 1
+escala = 4.08
+viento = false
+
+[node name="Piedra17" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(20221, 4614)
+tipo = 4
+variante = 1
+escala = 4.14
+flip_h = true
+viento = false
+
+[node name="Piedra18" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(20977, 4614)
+tipo = 4
+variante = 5
+escala = 4.26
+viento = false
+
+[node name="Pasto22" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(21594, 4614)
+tipo = 3
+variante = 3
+escala = 3.54
+flip_h = true
+
+[node name="Pasto23" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(17177, 4870)
+tipo = 3
+variante = 4
+escala = 3.35
+
+[node name="Pasto24" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(17776, 4870)
+tipo = 3
+variante = 6
+escala = 3.37
+
+[node name="Pasto25" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(18751, 4870)
+tipo = 3
+variante = 7
+escala = 3.36
+flip_h = true
+
+[node name="Piedra19" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(19355, 4870)
+tipo = 4
+variante = 4
+escala = 4.18
+flip_h = true
+viento = false
+
+[node name="Pasto26" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(19939, 4870)
+tipo = 3
+variante = 5
+escala = 3.54
+flip_h = true
+
+[node name="Pasto27" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(20637, 4870)
+tipo = 3
+variante = 10
+escala = 3.24
+flip_h = true
+
+[node name="Pasto28" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(17540, 5126)
+tipo = 3
+variante = 7
+escala = 3.57
+
+[node name="Piedra20" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(18087, 5126)
+tipo = 4
+variante = 2
+escala = 4.32
+viento = false
+
+[node name="Piedra21" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(18648, 5126)
+tipo = 4
+variante = 5
+escala = 4.47
+viento = false
+
+[node name="Piedra22" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(18213, 1002)
+tipo = 4
+variante = 4
+escala = 4.05
+flip_h = true
+viento = false
+
+[node name="Arbol7" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(18952, 1002)
+tipo = 0
+variante = 2
+escala = 6.33
+
+[node name="Arbusto9" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(18719, 1002)
+tipo = 2
+variante = 1
+escala = 5.06
+
+[node name="Pasto29" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(19564, 1002)
+tipo = 3
+variante = 2
+escala = 3.22
+flip_h = true
+
+[node name="Pasto30" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(19828, 5974)
+tipo = 3
+variante = 2
+escala = 3.52
+
+[node name="Arbusto10" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(20543, 5974)
+tipo = 2
+variante = 5
+escala = 5.87
+
+[node name="Arbol8" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(22212, 1002)
+tipo = 0
+variante = 1
+escala = 6.41
+
+[node name="Piedra23" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(22695, 1002)
+tipo = 4
+variante = 3
+escala = 4.34
+flip_h = true
+viento = false
+
+[node name="Arbusto11" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(23507, 1002)
+tipo = 2
+variante = 6
+escala = 5.27
+
+[node name="Sauce2" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(24580, 1002)
+tipo = 1
+variante = 1
+escala = 5.97
+
+[node name="Arbusto12" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(24352, 1002)
+tipo = 2
+variante = 9
+escala = 5.09
+flip_h = true
+
+[node name="Piedra24" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(25076, 1002)
+tipo = 4
+variante = 1
+escala = 4.37
+viento = false
+
+[node name="Pasto31" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(25787, 1002)
+tipo = 3
+variante = 3
+escala = 3.26
+flip_h = true
+
+[node name="Arbol9" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(26580, 1002)
+tipo = 0
+variante = 2
+escala = 5.44
+
+[node name="Arbol10" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(29974, 1002)
+tipo = 0
+variante = 2
+escala = 5.56
+
+[node name="Pasto32" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(30531, 1002)
+tipo = 3
+variante = 10
+escala = 3.27
+
+[node name="Pasto33" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(31113, 1002)
+tipo = 3
+variante = 2
+escala = 3.47
+flip_h = true
+
+[node name="Piedra25" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(21591, 5974)
+tipo = 4
+variante = 2
+escala = 4.07
+viento = false
+
+[node name="Pasto34" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(22295, 2326)
+tipo = 3
+variante = 3
+escala = 3.12
+flip_h = true
+
+[node name="Arbusto13" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(23050, 2326)
+tipo = 2
+variante = 5
+escala = 5.46
+
+[node name="Piedra26" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(23966, 2326)
+tipo = 4
+variante = 2
+escala = 4.15
+viento = false
+
+[node name="Pasto35" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(22619, 2566)
+tipo = 3
+variante = 9
+escala = 3.39
+
+[node name="Piedra27" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(23447, 2566)
+tipo = 4
+variante = 2
+escala = 4.7
+flip_h = true
+viento = false
+
+[node name="Pasto36" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(22489, 2822)
+tipo = 3
+variante = 6
+escala = 3.04
+flip_h = true
+
+[node name="Piedra28" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(22462, 3078)
+tipo = 4
+variante = 1
+escala = 4.54
+flip_h = true
+viento = false
+
+[node name="Pasto37" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(22822, 1398)
+tipo = 3
+variante = 2
+escala = 3.28
+
+[node name="Piedra29" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(23357, 1398)
+tipo = 4
+variante = 2
+escala = 4.26
+flip_h = true
+viento = false
+
+[node name="Pasto38" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(23959, 1398)
+tipo = 3
+variante = 7
+escala = 3.58
+
+[node name="Pasto39" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(24479, 1398)
+tipo = 3
+variante = 1
+escala = 3.26
+
+[node name="Piedra30" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(25358, 1398)
+tipo = 4
+variante = 2
+escala = 4.68
+flip_h = true
+viento = false
+
+[node name="Pasto40" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(23150, 6406)
+tipo = 3
+variante = 4
+escala = 3.26
+flip_h = true
+
+[node name="Piedra31" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(24041, 6406)
+tipo = 4
+variante = 4
+escala = 4.2
+viento = false
+
+[node name="Piedra32" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(24643, 6406)
+tipo = 4
+variante = 5
+escala = 4.24
+viento = false
+
+[node name="Pasto41" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(23329, 2054)
+tipo = 3
+variante = 1
+escala = 3.23
+
+[node name="Pasto42" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(23462, 2822)
+tipo = 3
+variante = 1
+escala = 3.09
+flip_h = true
+
+[node name="Pasto43" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(25147, 3078)
+tipo = 3
+variante = 3
+escala = 3.45
+
+[node name="Piedra33" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(25910, 3078)
+tipo = 4
+variante = 1
+escala = 4.12
+viento = false
+
+[node name="Piedra34" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(27383, 3078)
+tipo = 4
+variante = 2
+escala = 4.02
+flip_h = true
+viento = false
+
+[node name="Pasto44" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(27930, 3078)
+tipo = 3
+variante = 2
+escala = 3.25
+
+[node name="Piedra35" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(28724, 3078)
+tipo = 4
+variante = 5
+escala = 4.05
+flip_h = true
+viento = false
+
+[node name="Piedra36" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(30660, 3078)
+tipo = 4
+variante = 4
+escala = 4.76
+viento = false
+
+[node name="Pasto45" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(31521, 3078)
+tipo = 3
+variante = 1
+escala = 3.13
+
+[node name="Pasto46" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(25333, 6406)
+tipo = 3
+variante = 5
+escala = 3.02
+
+[node name="Pasto47" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(25408, 2630)
+tipo = 3
+variante = 1
+escala = 3.07
+
+[node name="Pasto48" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(26372, 2630)
+tipo = 3
+variante = 4
+escala = 3.42
+flip_h = true
+
+[node name="Piedra37" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(26927, 2630)
+tipo = 4
+variante = 3
+escala = 4.1
+viento = false
+
+[node name="Piedra38" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(27845, 2630)
+tipo = 4
+variante = 3
+escala = 4.38
+viento = false
+
+[node name="Piedra39" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(28623, 2630)
+tipo = 4
+variante = 2
+escala = 4.42
+viento = false
+
+[node name="Pasto49" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(29259, 2630)
+tipo = 3
+variante = 8
+escala = 3.47
+
+[node name="Piedra40" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(29798, 2630)
+tipo = 4
+variante = 2
+escala = 4.05
+viento = false
+
+[node name="Piedra41" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(30487, 2630)
+tipo = 4
+variante = 1
+escala = 4.44
+flip_h = true
+viento = false
+
+[node name="Piedra42" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(25510, 2822)
+tipo = 4
+variante = 1
+escala = 4.79
+viento = false
+
+[node name="Arbusto14" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(26395, 2822)
+tipo = 2
+variante = 1
+escala = 5.32
+
+[node name="Piedra43" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(27388, 2822)
+tipo = 4
+variante = 5
+escala = 4.8
+viento = false
+
+[node name="Pasto50" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(28029, 2822)
+tipo = 3
+variante = 9
+escala = 3.29
+flip_h = true
+
+[node name="Arbusto15" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(28883, 2822)
+tipo = 2
+variante = 2
+escala = 5.31
+flip_h = true
+
+[node name="Piedra44" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(29573, 2822)
+tipo = 4
+variante = 2
+escala = 4.71
+viento = false
+
+[node name="Piedra45" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(30480, 2822)
+tipo = 4
+variante = 5
+escala = 4.56
+flip_h = true
+viento = false
+
+[node name="Pasto51" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(26587, 6406)
+tipo = 3
+variante = 6
+escala = 3.41
+
+[node name="Arbusto16" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(27364, 5238)
+tipo = 2
+variante = 2
+escala = 5.19
+
+[node name="Piedra46" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(27933, 5238)
+tipo = 4
+variante = 1
+escala = 4.68
+viento = false
+
+[node name="Pasto52" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(29418, 5238)
+tipo = 3
+variante = 1
+escala = 3.13
+flip_h = true
+
+[node name="Piedra47" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(30021, 5238)
+tipo = 4
+variante = 1
+escala = 4.12
+viento = false
+
+[node name="Piedra48" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(31389, 5238)
+tipo = 4
+variante = 3
+escala = 4.39
+viento = false
+
+[node name="Piedra49" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(27506, 5382)
+tipo = 4
+variante = 1
+escala = 4.26
+viento = false
+
+[node name="Piedra50" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(28383, 5382)
+tipo = 4
+variante = 5
+escala = 4.71
+flip_h = true
+viento = false
+
+[node name="Pasto53" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(29374, 5382)
+tipo = 3
+variante = 4
+escala = 3.59
+flip_h = true
+
+[node name="Pasto54" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(30171, 5382)
+tipo = 3
+variante = 2
+escala = 3.28
+
+[node name="Piedra51" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(31139, 5382)
+tipo = 4
+variante = 3
+escala = 4.25
+flip_h = true
+viento = false
+
+[node name="Piedra52" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(31916, 5382)
+tipo = 4
+variante = 2
+escala = 4.75
+viento = false
+
+[node name="Pasto55" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(27448, 5638)
+tipo = 3
+variante = 5
+escala = 3.56
+
+[node name="Pasto56" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(28174, 5638)
+tipo = 3
+variante = 5
+escala = 3.34
+flip_h = true
+
+[node name="Piedra53" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(28757, 5638)
+tipo = 4
+variante = 2
+escala = 4.77
+flip_h = true
+viento = false
+
+[node name="Piedra54" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(29384, 5638)
+tipo = 4
+variante = 2
+escala = 4.24
+viento = false
+
+[node name="Piedra55" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(30576, 5638)
+tipo = 4
+variante = 5
+escala = 4.08
+viento = false
+
+[node name="Pasto57" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(31548, 5638)
+tipo = 3
+variante = 8
+escala = 3.52
+flip_h = true
+
+[node name="Piedra56" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(32123, 5638)
+tipo = 4
+variante = 4
+escala = 4.45
+viento = false
+
+[node name="Pasto58" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(29135, 5894)
+tipo = 3
+variante = 3
+escala = 3.2
+
+[node name="Pasto59" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(29830, 5894)
+tipo = 3
+variante = 10
+escala = 3.49
+flip_h = true
+
+[node name="Piedra57" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(30359, 5894)
+tipo = 4
+variante = 4
+escala = 4.22
+viento = false
+
+[node name="Piedra58" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(31297, 5894)
+tipo = 4
+variante = 5
+escala = 4.57
+flip_h = true
+viento = false
+
+[node name="Arbusto17" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(28701, 1382)
+tipo = 2
+variante = 2
+escala = 5.71
+
+[node name="Piedra59" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(30283, 1398)
+tipo = 4
+variante = 5
+escala = 4.29
+viento = false
+
+[node name="Piedra60" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(32925, 2054)
+tipo = 4
+variante = 5
+escala = 4.79
+flip_h = true
+viento = false
+
+[node name="Pasto60" parent="Decoracion" instance=ExtResource("40_deco")]
+position = Vector2(32948, 2310)
+tipo = 3
+variante = 3
+escala = 3.52
+flip_h = true
+
+[node name="Atmosfera" type="Node2D" parent="."]
+z_index = -4
+
+[node name="Niebla1" parent="Atmosfera" instance=ExtResource("42_niebla")]
+position = Vector2(2463, 950)
+amount = 24
+emission_rect_extents = Vector2(1851, 30)
+
+[node name="Niebla2" parent="Atmosfera" instance=ExtResource("42_niebla")]
+position = Vector2(11893, 947)
+amount = 24
+emission_rect_extents = Vector2(1851, 30)
+
+[node name="Niebla3" parent="Atmosfera" instance=ExtResource("42_niebla")]
+position = Vector2(17229, 947)
+amount = 17
+emission_rect_extents = Vector2(779, 30)
+
+[node name="Niebla4" parent="Atmosfera" instance=ExtResource("42_niebla")]
+position = Vector2(21125, 928)
+amount = 19
+emission_rect_extents = Vector2(875, 30)
+
+[node name="Niebla5" parent="Atmosfera" instance=ExtResource("42_niebla")]
+position = Vector2(27861, 950)
+amount = 21
+emission_rect_extents = Vector2(955, 30)
+
+[node name="Niebla6" parent="Atmosfera" instance=ExtResource("42_niebla")]
+position = Vector2(31678, 2618)
+amount = 13
+emission_rect_extents = Vector2(607, 30)
+
+[node name="Niebla7" parent="Atmosfera" instance=ExtResource("42_niebla")]
+position = Vector2(18874, 3242)
+amount = 24
+emission_rect_extents = Vector2(3207, 30)
+
+[node name="Niebla8" parent="Atmosfera" instance=ExtResource("42_niebla")]
+position = Vector2(18685, 3399)
+amount = 13
+emission_rect_extents = Vector2(615, 30)
+
+[node name="Niebla9" parent="Atmosfera" instance=ExtResource("42_niebla")]
+position = Vector2(20121, 3455)
+amount = 24
+emission_rect_extents = Vector2(1741, 30)
+
+[node name="Niebla10" parent="Atmosfera" instance=ExtResource("42_niebla")]
+position = Vector2(12242, 5740)
+amount = 8
+emission_rect_extents = Vector2(288, 30)
+
+[node name="Niebla11" parent="Atmosfera" instance=ExtResource("42_niebla")]
+position = Vector2(14377, 5822)
+amount = 24
+emission_rect_extents = Vector2(1712, 30)
+
+[node name="Niebla12" parent="Atmosfera" instance=ExtResource("42_niebla")]
+position = Vector2(24729, 5987)
+amount = 24
+emission_rect_extents = Vector2(2443, 30)
+
+[node name="Luciernagas1" parent="Atmosfera" instance=ExtResource("41_luci")]
+position = Vector2(9517, 632)
+
+[node name="Luciernagas2" parent="Atmosfera" instance=ExtResource("41_luci")]
+position = Vector2(19903, 620)
+
+[node name="Luciernagas3" parent="Atmosfera" instance=ExtResource("41_luci")]
+position = Vector2(25349, 644)
+
+[node name="Luciernagas4" parent="Atmosfera" instance=ExtResource("41_luci")]
+position = Vector2(26711, 2237)
+
+[node name="Luciernagas5" parent="Atmosfera" instance=ExtResource("41_luci")]
+position = Vector2(18645, 5621)
 
 [editable path="EncounterA"]
 [editable path="EncounterB"]

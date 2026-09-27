@@ -1,7 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://65wfbu1kb774"]
+[gd_scene format=3 uid="uid://65wfbu1kb774"]
+
+[ext_resource type="Script" path="res://scripts/noche.gd" id="1_noche"]
+[ext_resource type="PackedScene" path="res://scenes/luciernagas_ambiente.tscn" id="2_luci"]
 
 [sub_resource type="Gradient" id="Gradient_vin"]
-offset/s = PackedFloat32Array(0, 0.6, 1)
+offsets = PackedFloat32Array(0, 0.6, 1)
 colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0.18, 0, 0, 0, 0.55)
 
 [sub_resource type="GradientTexture2D" id="GradTexture2D_vin"]
@@ -12,19 +15,18 @@ fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(1, 0.5)
 
-[node name="Noche" type="CanvasLayer" unique_id=1637767478]
+[node name="Noche" type="Node" unique_id=1637767478]
+script = ExtResource("1_noche")
+
+[node name="Oscuridad" type="CanvasModulate" parent="." unique_id=223430470]
+color = Color(0.58, 0.62, 0.78, 1)
+
+[node name="LuciernagasAmbiente" parent="." instance=ExtResource("2_luci")]
+
+[node name="CapaVineta" type="CanvasLayer" parent="." unique_id=243430472]
 layer = 5
 
-[node name="Velo" type="ColorRect" parent="." unique_id=223430470]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.07045063, 0.09204782, 0.18271998, 0.45882353)
-
-[node name="Vineta" type="TextureRect" parent="." unique_id=243430471]
+[node name="Vineta" type="TextureRect" parent="CapaVineta" unique_id=243430471]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0

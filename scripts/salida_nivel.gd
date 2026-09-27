@@ -4,6 +4,8 @@ extends Area2D
 
 @export var siguiente_escena: String = ""
 @export var color := Color(0.8, 0.7, 0.3)
+@export var sonido_salida: AudioStream = preload("res://assets/audio/sfx/gen/zona_despejada.wav")
+@export var volumen_salida_db := -8.0
 
 var _usada := false
 
@@ -17,10 +19,16 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	if visual != null:
 		visual.color = color
+	var luz := get_node_or_null("Luz") as PointLight2D
+	if luz != null:
+		luz.color = Color(color, 1.0)
 
 
 func _on_body_entered(_body: Node2D) -> void:
 	if _usada or siguiente_escena.is_empty():
 		return
 	_usada = true
-	get_tree().change_scene_to_file(siguiente_escena)
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_sfx(sonido_salida, volumen_salida_db)
+	TransicionPantalla.de(get_tree()).cambiar_escena(siguiente_escena)

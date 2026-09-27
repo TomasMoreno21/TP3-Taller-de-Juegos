@@ -24,3 +24,15 @@ transformacion.mp3
   Autor: Yodguard
   Fuente: https://pixabay.com/sound-effects/film-special-effects-earth-magic-1-378599/
   Licencia: Pixabay Content License (uso libre, sin atribución obligatoria)
+
+Efectos generados por síntesis (carpeta gen/)
+=============================================
+Todos los .wav de assets/audio/sfx/gen/ son propios: los genera el script
+tools/generar_sfx.py (Python, solo biblioteca estándar, semilla fija → siempre
+el mismo resultado). Sin licencias de terceros. Para regenerarlos:
+    python tools/generar_sfx.py
+Son un primer pase funcional: cada uno está asignado como valor por defecto en
+un @export (player, pickup, checkpoint, rompible, plataforma frágil, enemigo,
+proyectil, arena, level up) y se puede reemplazar desde el Inspector por audio
+definitivo sin tocar código. El loop de la liana (liana_deslizar_loop.wav) tiene
+loop_mode = Forward en su .import.

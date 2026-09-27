@@ -21,10 +21,10 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("move_up"):
+	if (event.is_action_pressed("move_up") or event.is_action_pressed("ui_up")):
 		_navegar(-1)
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("move_down"):
+	elif (event.is_action_pressed("move_down") or event.is_action_pressed("ui_down")):
 		_navegar(1)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("menu_confirm"):
@@ -33,6 +33,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _navegar(dir: int) -> void:
+	_ui("ui_mover")
 	_indice = (_indice + dir + botones.size()) % botones.size()
 	botones[_indice].grab_focus()
 
@@ -42,23 +43,25 @@ func _on_focus(i: int) -> void:
 
 
 func _on_boton_pressed(i: int) -> void:
+	_ui("ui_confirmar")
 	match i:
 		0:
 			_reintentar()
 		1:
-			get_tree().paused = false
-			get_tree().change_scene_to_file(SCENE_MENU)
+			TransicionPantalla.de(get_tree()).cambiar_escena(SCENE_MENU)
 
 
 func _reintentar() -> void:
-	get_tree().paused = false
 	var player := get_tree().get_first_node_in_group("player")
 	if player != null and player.has_method("tiene_checkpoint") and player.has_method("reaparecer_en_checkpoint") and player.tiene_checkpoint():
-		player.reaparecer_en_checkpoint()
-		_restaurar_post_muerte()
-		queue_free()
+		# Con la pantalla en negro: reaparece, se limpian las arenas y se quita el panel.
+		TransicionPantalla.de(get_tree()).fundido(func() -> void:
+			get_tree().paused = false
+			player.reaparecer_en_checkpoint()
+			_restaurar_post_muerte()
+			queue_free())
 	else:
-		get_tree().reload_current_scene()
+		TransicionPantalla.de(get_tree()).recargar()
 
 
 ## Al morir DENTRO de una arena, el encounter queda RUNNING y la cámara fija al
@@ -70,7 +73,13 @@ func _restaurar_post_muerte() -> void:
 	if player != null:
 		var cam := player.get_viewport().get_camera_2d()
 		if cam != null and cam.has_method("modo_normal"):
-			cam.modo_normal()
+			cam.modo_normal(true)
 	for e in get_tree().get_nodes_in_group("encounter"):
 		if e.has_method("reiniciar"):
 			e.reiniciar()
+
+
+func _ui(nombre: String) -> void:
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_ui(nombre)

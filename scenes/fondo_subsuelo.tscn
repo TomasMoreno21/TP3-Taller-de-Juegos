@@ -1,0 +1,56 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/capa_cueva.gd" id="1_capa"]
+
+[node name="FondoSubsuelo" type="ParallaxBackground"]
+layer = -10
+
+[node name="Sombra" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.08, 1)
+script = ExtResource("1_capa")
+tipo = "sombra"
+color_a = Color(0.085, 0.133, 0.133, 1)
+color_b = Color(0.038, 0.067, 0.067, 1)
+semilla = 3
+ancho_total = 6500.0
+centro_x = 1700.0
+y_techo = 1100.0
+y_fondo = 6500.0
+
+[node name="Pared" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.22, 1)
+script = ExtResource("1_capa")
+tipo = "pared"
+color_a = Color(0.133, 0.190, 0.190, 1)
+color_b = Color(0.304, 0.494, 0.475, 1)
+semilla = 7
+ancho_total = 9500.0
+centro_x = 4800.0
+y_techo = 1100.0
+y_fondo = 6500.0
+
+[node name="Estalactitas" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.38, 1)
+script = ExtResource("1_capa")
+tipo = "estalactitas"
+color_a = Color(0.104, 0.162, 0.162, 1)
+color_b = Color(0.085, 0.133, 0.133, 1)
+densidad = 1.1
+semilla = 11
+ancho_total = 13000.0
+centro_x = 8300.0
+y_techo = 1100.0
+y_fondo = 6500.0
+
+[node name="Estalagmitas" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.8, 1)
+script = ExtResource("1_capa")
+tipo = "estalagmitas"
+color_a = Color(0.067, 0.114, 0.123, 1)
+color_b = Color(0.085, 0.133, 0.142, 1)
+y_base = 6000.0
+semilla = 17
+ancho_total = 22000.0
+centro_x = 17400.0
+y_techo = 1100.0
+y_fondo = 6500.0

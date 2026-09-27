@@ -22,23 +22,49 @@ enum Tipo { TRANSFORMAR, DOBLE_SALTO, AGARRAR, FRAGIL, ESQUIVAR, GOLPE }
 		ancho = value
 		queue_redraw()
 
+@export var radio_reaccion := 420.0   ## px: a esta distancia del jugador el cartel "despierta"
+@export var pulso_escala := 0.14       ## cuánto crece al despertar
+@export var brillo_cerca := 1.45       ## multiplicador de brillo con el jugador cerca
+
 var _tmp_clave := Vector3.ZERO
 var _tmp := Vector3.ZERO
+var _escala_base := Vector2.ONE
+var _cerca := 0.0
+var _t := 0.0
+var _player: Node2D
 
 
 func _ready() -> void:
 	z_index = 5
+	_escala_base = scale
 	if Engine.is_editor_hint():
 		queue_redraw()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not Engine.is_editor_hint():
+		_reaccionar(delta)
 		return
 	var clave := Vector3(float(tipo), ancho, scale.x)
 	if clave != _tmp:
 		_tmp = clave
 		queue_redraw()
+
+
+## En juego: con el jugador cerca el cartel crece un poco, late y brilla, para
+## que se note sin necesidad de texto. Lejos vuelve a su tamaño y tono.
+func _reaccionar(delta: float) -> void:
+	if _player == null or not is_instance_valid(_player):
+		_player = get_tree().get_first_node_in_group("player") as Node2D
+		if _player == null:
+			return
+	var objetivo := 1.0 if global_position.distance_to(_player.global_position) < radio_reaccion else 0.0
+	_cerca = move_toward(_cerca, objetivo, delta * 3.0)
+	_t += delta
+	var latido := 0.5 + 0.5 * sin(_t * 5.0)
+	scale = _escala_base * (1.0 + (pulso_escala + 0.05 * latido) * _cerca)
+	var b := lerpf(1.0, brillo_cerca + 0.15 * latido, _cerca)
+	modulate = Color(b, b, b, 1.0)
 
 
 func _draw() -> void:

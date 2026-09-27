@@ -91,6 +91,10 @@ func _physics_process(delta: float) -> void:
 	if _cuerpo_en_zona(player):
 		# Al golpear saltamos el cooldown para no repetir el daño cada frame.
 		_hit_cd = 0.15 if dano < 9999 else 0.0
+		if not player.get("god_mode") and player.get("_invuln_timer") <= 0.0 and not player.get("_derrota_activa"):
+			var audio := get_node_or_null("/root/AudioManager")
+			if audio != null:
+				audio.play_ui("pinchos", -8.0)
 		player.take_damage(dano, 0.0, 0)
 
 

@@ -12,6 +12,10 @@ enum Ruptura { DESTRUIR, CAER }
 ## Clave de persistencia: si queda vacía se genera sola (escena + ruta del nodo).
 ## Ponerla a mano permite agrupar/referenciar plataformas de forma estable.
 @export var clave_persistencia := ""
+@export var color_escombros := Color(0.45, 0.38, 0.3)
+@export var sonido_crujir: AudioStream = preload("res://assets/audio/sfx/gen/fragil_crujir.wav")      ## al empezar a temblar
+@export var sonido_romper: AudioStream = preload("res://assets/audio/sfx/gen/fragil_romper.wav")
+@export var volumen_db := -8.0
 
 enum Fase { ESPERA, TEMBLOR, CAYENDO, ROTA }
 
@@ -52,6 +56,7 @@ func _physics_process(delta: float) -> void:
 			if player is CharacterBody2D and player.is_on_floor():
 				if _pisa_plataforma(player):
 					_fase = Fase.TEMBLOR
+					_escombros(6, 0.6, sonido_crujir)
 		Fase.TEMBLOR:
 			_t += delta
 			var prog := clampf(_t / maxf(tiempo_temblor, 0.01), 0.0, 1.0)
@@ -78,6 +83,7 @@ func _romper(sin_animacion := false) -> void:
 		return
 	_shape.set_deferred("disabled", true)
 	_visual.position.x = 0.0
+	_escombros(20, 1.1, sonido_romper)
 	match modo_ruptura:
 		Ruptura.DESTRUIR:
 			_fase = Fase.ROTA
@@ -89,6 +95,16 @@ func _romper(sin_animacion := false) -> void:
 		Ruptura.CAER:
 			# El collider queda activo: el jugador cae junto con la plataforma.
 			_fase = Fase.CAYENDO
+
+
+## Polvillo/escombros desde el borde superior de la plataforma.
+func _escombros(cantidad: int, escala: float, sonido: AudioStream) -> void:
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_sfx(sonido, volumen_db, 0.1)
+	var r := _rect_propio()
+	var pos := global_position if r == Rect2() else Vector2(r.get_center().x, r.position.y)
+	Burst.emitir(self, pos, color_escombros, cantidad, escala)
 
 
 ## Rect global del collider de esta plataforma.

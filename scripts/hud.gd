@@ -46,6 +46,10 @@ var _esp_cap_style: StyleBoxFlat
 var _flash_tween: Tween
 var _energia_pulse: Tween
 var _energia_aviso_dado := false
+var _prog_tween: Tween
+
+@export var pop_fragmentos_escala := 1.35
+@export var pop_fragmentos_color := Color(0.55, 0.8, 1.0)
 var _hp_delayed_tween: Tween
 var _esp_delayed_tween: Tween
 var _boss: Node2D
@@ -75,6 +79,7 @@ func _process(delta: float) -> void:
 func _ready() -> void:
 	visible = true
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	add_to_group("hud")
 
 	_esp_cap_style = esp_cap.get_theme_stylebox("panel").duplicate()
 	esp_cap.add_theme_stylebox_override("panel", _esp_cap_style)
@@ -184,6 +189,24 @@ func _on_boss_fase(fase: int) -> void:
 func _on_fragmentos(_total: int) -> void:
 	_prog_refresh()
 	_actualizar_selector()
+	_pop_fragmentos()
+
+
+## "Pop" del contador al sumar un fragmento: crece, destella en azul y vuelve.
+func _pop_fragmentos() -> void:
+	if _prog_tween != null and _prog_tween.is_valid():
+		_prog_tween.kill()
+	prog_label.pivot_offset = Vector2(0.0, prog_label.size.y * 0.5)
+	prog_label.scale = Vector2.ONE * pop_fragmentos_escala
+	prog_label.self_modulate = pop_fragmentos_color
+	_prog_tween = create_tween().set_parallel(true)
+	_prog_tween.tween_property(prog_label, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_prog_tween.tween_property(prog_label, "self_modulate", Color.WHITE, 0.5)
+
+
+## Aviso arriba al centro para otros sistemas (checkpoint, arenas...).
+func mostrar_aviso(texto: String) -> void:
+	_aviso(texto)
 
 
 func _on_nivel(_nuevo: int) -> void:
@@ -412,6 +435,9 @@ func _on_energia_changed(energia: float) -> void:
 	if energia < 25.0 and _player != null and _player.current_form != 0:
 		if not _energia_aviso_dado:
 			_aviso("¡Energía baja!")
+			var audio := get_node_or_null("/root/AudioManager")
+			if audio != null:
+				audio.play_ui("energia_baja", -12.0)
 			_energia_aviso_dado = true
 		if _energia_pulse == null or not _energia_pulse.is_valid():
 			_energia_pulse = esp_bar.create_tween()

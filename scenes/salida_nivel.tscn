@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/salida_nivel.gd" id="1_salida"]
+[ext_resource type="Texture2D" path="res://resources/luz_radial.tres" id="9_luz"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_salida"]
 size = Vector2(80, 300)
@@ -16,3 +17,9 @@ shape = SubResource("RectangleShape2D_salida")
 [node name="Visual" type="Polygon2D" parent="."]
 color = Color(0.8, 0.7, 0.3, 0.55)
 polygon = PackedVector2Array(-40, -150, 40, -150, 40, 150, -40, 150)
+
+[node name="Luz" type="PointLight2D" parent="."]
+color = Color(0.8, 0.7, 0.3, 1)
+energy = 1.4
+texture = ExtResource("9_luz")
+texture_scale = 2.6

@@ -11,6 +11,9 @@ var _estilo_normal: StyleBoxFlat
 var _es_joypad := false
 
 @export var pausar_al_abrir := true  # pausa el juego mientras se elige (off en los autotest)
+@export var entrada_duracion := 0.28   ## animación de entrada del panel (escala + fundido)
+@export var sonido_abrir: AudioStream = preload("res://assets/audio/sfx/gen/nivel_subido.wav")
+@export var volumen_abrir_db := -6.0
 
 @onready var panel: Control = $Panel
 @onready var title: Label = $Panel/Margin/VBox/Title
@@ -45,6 +48,21 @@ func abrir() -> void:
 	if pausar_al_abrir:
 		get_tree().paused = true
 	_render()
+	_animar_entrada()
+
+
+## El panel "salta" desde chico y transparente (el tween corre aunque el árbol esté
+## en pausa: este CanvasLayer es PROCESS_MODE_ALWAYS).
+func _animar_entrada() -> void:
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_sfx(sonido_abrir, volumen_abrir_db)
+	panel.pivot_offset = panel.size * 0.5
+	panel.scale = Vector2.ONE * 0.8
+	panel.modulate.a = 0.0
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(panel, "scale", Vector2.ONE, entrada_duracion).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(panel, "modulate:a", 1.0, entrada_duracion * 0.6)
 
 
 func cerrar() -> void:
@@ -67,10 +85,10 @@ func _input(event: InputEvent) -> void:
 		_es_joypad = true
 	elif event is InputEventKey:
 		_es_joypad = false
-	if event.is_action_pressed("move_up"):
+	if (event.is_action_pressed("move_up") or event.is_action_pressed("ui_up")):
 		_mover_indice(-1)
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("move_down"):
+	elif (event.is_action_pressed("move_down") or event.is_action_pressed("ui_down")):
 		_mover_indice(1)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("menu_confirm"):
@@ -81,6 +99,7 @@ func _input(event: InputEvent) -> void:
 func _mover_indice(dir: int) -> void:
 	if _opciones.is_empty():
 		return
+	_ui("ui_mover")
 	var candidata := _indice + dir
 	for _i in range(_opciones.size()):
 		candidata = posmod(candidata, _opciones.size())
@@ -195,5 +214,12 @@ func _confirmar() -> void:
 	var op: Dictionary = _opciones[_indice]
 	if op["bloqueada"]:
 		return
+	_ui("ui_confirmar")
 	get_node("/root/Progresion").elegir_mejora(op["form_index"])
 	cerrar()
+
+
+func _ui(nombre: String) -> void:
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_ui(nombre)

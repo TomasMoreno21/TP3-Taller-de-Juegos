@@ -261,12 +261,21 @@ func modo_arena(centro: Vector2) -> void:
 	modo_cambio.emit("arena")
 
 
-func modo_normal() -> void:
+## instantaneo: salta directo al jugador (p. ej. al reaparecer con la pantalla en
+## negro) en vez de viajar hasta él.
+func modo_normal(instantaneo: bool = false) -> void:
 	_modo = "seguir"
 	modo_cambio.emit("seguir")
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	if player != null:
 		var dest := player.global_position + desplazamiento
+		if instantaneo:
+			global_position = dest
+			_lookahead_actual = 0.0
+			_look_offset = Vector2.ZERO
+			_suelo_y = INF
+			reset_smoothing()
+			return
 		var tw := create_tween()
 		tw.tween_property(self, "global_position", dest, 0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 

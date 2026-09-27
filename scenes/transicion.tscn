@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/transicion.gd" id="1_trans"]
+
+[node name="Transicion" type="CanvasLayer"]
+layer = 120
+script = ExtResource("1_trans")
+
+[node name="Velo" type="ColorRect" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.02, 0.025, 0.035, 0)

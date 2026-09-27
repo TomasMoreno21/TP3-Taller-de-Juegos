@@ -21,10 +21,10 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("move_up"):
+	if (event.is_action_pressed("move_up") or event.is_action_pressed("ui_up")):
 		_navegar(-1)
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("move_down"):
+	elif (event.is_action_pressed("move_down") or event.is_action_pressed("ui_down")):
 		_navegar(1)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("menu_confirm"):
@@ -46,11 +46,9 @@ func _on_boton_pressed(i: int) -> void:
 		0:
 			_reintentar()
 		1:
-			get_tree().paused = false
-			get_tree().change_scene_to_file(SCENE_MENU)
+			TransicionPantalla.de(get_tree()).cambiar_escena(SCENE_MENU)
 
 
 func _reintentar() -> void:
-	get_tree().paused = false
 	get_node("/root/Progresion").reset()
-	get_tree().change_scene_to_file(SCENE_NIVEL1)
+	TransicionPantalla.de(get_tree()).cambiar_escena(SCENE_NIVEL1)

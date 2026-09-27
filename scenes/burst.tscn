@@ -1,22 +1,46 @@
-[gd_scene format=3 load_steps=3]
+[gd_scene format=3]
 
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_burst"]
-emission_shape = 1
-emission_sphere_radius = 20.0
-particle_flag_disable_z = true
-initial_velocity_min = 60.0
-initial_velocity_max = 200.0
-gravity = Vector3(0, 350, 0)
-damping_min = 50.0
-damping_max = 150.0
-scale_min = 0.6
-scale_max = 1.1
-color = Color(1, 1, 1, 1)
+[ext_resource type="Script" path="res://scripts/burst.gd" id="1_burst"]
+
+[sub_resource type="Gradient" id="Gradient_punto"]
+offsets = PackedFloat32Array(0, 0.45, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.85, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradTexture2D_punto"]
+gradient = SubResource("Gradient_punto")
+width = 16
+height = 16
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="Curve" id="Curve_escala"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.6, 0.8), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="Gradient" id="Gradient_vida"]
+offsets = PackedFloat32Array(0, 0.7, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.9, 1, 1, 1, 0)
 
 [node name="Burst" type="CPUParticles2D"]
+texture_filter = 2
+emitting = false
 amount = 16
 lifetime = 0.5
 one_shot = true
 explosiveness = 1.0
-process_material = SubResource("ParticleProcessMaterial_burst")
-emitting = false
+texture = SubResource("GradTexture2D_punto")
+emission_shape = 1
+emission_sphere_radius = 20.0
+direction = Vector2(0, -1)
+spread = 180.0
+gravity = Vector2(0, 350)
+initial_velocity_min = 60.0
+initial_velocity_max = 200.0
+damping_min = 50.0
+damping_max = 150.0
+scale_amount_min = 0.6
+scale_amount_max = 1.2
+scale_amount_curve = SubResource("Curve_escala")
+color_ramp = SubResource("Gradient_vida")
+script = ExtResource("1_burst")
