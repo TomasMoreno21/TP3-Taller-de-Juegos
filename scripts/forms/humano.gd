@@ -26,7 +26,7 @@ func _init() -> void:
 	shake_strength = 5.0
 	hit_rotation = 7.0
 	landing_squash = 0.12
-	camera_zoom = Vector2.ONE
+	camera_zoom = Vector2(0.93, 0.93)
 	accel = 4600.0
 	friction = 5000.0
 	accel_air_mult = 0.85

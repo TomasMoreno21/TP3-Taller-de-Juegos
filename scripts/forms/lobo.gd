@@ -42,7 +42,7 @@ func _init() -> void:
 	jump_buffer_time = 0.20
 	jump_cut_multiplier = 0.35
 	step_up_max = 48.0
-	camera_zoom = Vector2(0.94, 0.94)
+	camera_zoom = Vector2(0.87, 0.87)
 	sprint_zoom_out = 0.16
 	sprint_min_speed = 300.0
 	turn_tilt_cam = 0.06

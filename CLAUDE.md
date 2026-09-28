@@ -9,6 +9,12 @@ Instrucciones de trabajo para el asistente en este proyecto.
 - **No hagas commits ni pushes sin que yo te lo pida.** Cuando corresponda, preguntame el mensaje.
 - Si te muestro un error o algo no anda, investigá la causa real (log, `--headless`, tests) antes de proponer una solución al azar. Explicame en 1 o 2 líneas qué pasaba y qué cambiaste.
 
+## Reglas del asistente (unificadas del AGENTS.md de escritorio)
+- **Lecciones obligatorias:** toda corrección/crítica/error del usuario (código, diseño, comunicación) es una lección permanente → interpretar la causa raíz, **registrarla en `MEMORY.md` > "Lecciones Aprendidas"** y no repetirla (revisar esa sección antes de escribir código similar).
+- **Diseño:** buscar referencias de videojuegos reales para mecánicas y aplicarlas bien; proponer ideas que no requieran código (game feel, sonido, ritmo, narrativa, feedback visual); mantener sistemas simples, evitar sobrediseño.
+- **Investigación previa:** revisar archivos/estructura del proyecto antes de escribir código nuevo.
+- **Adaptarse** al código existente: sin convenciones fijas impuestas (salvo las de este archivo).
+
 ## Reglas de diseño (prioritarias)
 1. **Referencia mecánica: Ben 10: Alien Force** (PS2/Wii, 2008). Al decidir algo, primero preguntate "¿cómo lo resolvía el original?" y partí de ahí, adaptando solo lo que la ambientación/scope obligue a cambiar.
 2. **Regla de edición (usuario, 13/08):** todo elemento del juego (interfaz, personaje, objeto, nivel) debe poder moverse y modificarse desde el editor de Godot. Antes de hardcodear un valor, preguntate "¿lo querrá mover el usuario desde el editor?" → si sí, usar `@export`/recurso/escena. Los `.tres` que son meras envolturas de un script se evitan; los datos ya viven en los `.tscn` y los scripts.
