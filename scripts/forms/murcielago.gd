@@ -32,7 +32,7 @@ func _init() -> void:
 	coyote_time = 0.16
 	jump_buffer_time = 0.18
 	jump_cut_multiplier = 0.20
-	camera_zoom = Vector2(0.95, 0.95)
+	camera_zoom = Vector2(0.88, 0.88)
 	landing_squash = 0.06
 	mult_recuperacion = 1.8
 	recovery_early_fraccion = 0.4

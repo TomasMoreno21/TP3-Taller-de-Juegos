@@ -16,6 +16,8 @@ ancho_total = 22000.0
 centro_x = 6200.0
 y_techo = -1500.0
 y_fondo = 7600.0
+color_niebla = Color(0.3, 0.38, 0.52, 1)
+niebla = 1.0
 
 [node name="Pared" type="ParallaxLayer" parent="." unique_id=2100000612]
 motion_scale = Vector2(0.22, 1)
@@ -28,6 +30,8 @@ ancho_total = 22000.0
 centro_x = 6200.0
 y_techo = -1500.0
 y_fondo = 7600.0
+color_niebla = Color(0.32, 0.4, 0.54, 1)
+niebla = 0.7
 
 [node name="Estalactitas" type="ParallaxLayer" parent="." unique_id=2100000613]
 motion_scale = Vector2(0.38, 1)
@@ -41,6 +45,8 @@ ancho_total = 22000.0
 centro_x = 6200.0
 y_techo = -1500.0
 y_fondo = 7600.0
+color_niebla = Color(0.3, 0.4, 0.56, 1)
+niebla = 0.15
 
 [node name="Pilares" type="ParallaxLayer" parent="." unique_id=2100000614]
 motion_scale = Vector2(0.6, 1)
@@ -55,6 +61,8 @@ ancho_total = 22000.0
 centro_x = 6200.0
 y_techo = -1500.0
 y_fondo = 7600.0
+color_niebla = Color(0.3, 0.38, 0.52, 1)
+niebla = 0.3
 
 [node name="Estalagmitas" type="ParallaxLayer" parent="." unique_id=2100000615]
 motion_scale = Vector2(0.8, 1)
@@ -68,6 +76,8 @@ ancho_total = 22000.0
 centro_x = 6200.0
 y_techo = -1500.0
 y_fondo = 7600.0
+color_niebla = Color(0.28, 0.36, 0.5, 1)
+niebla = 0.15
 
 [node name="Agua" type="ParallaxLayer" parent="." unique_id=2100000616]
 motion_scale = Vector2(1, 1)
@@ -81,3 +91,5 @@ ancho_total = 22000.0
 centro_x = 6200.0
 y_techo = -1500.0
 y_fondo = 7600.0
+color_niebla = Color(0.28, 0.36, 0.5, 1)
+niebla = 0.0

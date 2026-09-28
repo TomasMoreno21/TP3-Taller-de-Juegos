@@ -27,7 +27,7 @@
 [ext_resource type="PackedScene" uid="uid://65wfbu1kb774" path="res://scenes/noche.tscn" id="26_dr8ev"]
 [ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="27_46iir"]
 [ext_resource type="PackedScene" uid="uid://bhxju6lap2tcq" path="res://scenes/unlock_forma.tscn" id="28_unlock"]
-[ext_resource type="PackedScene" uid="uid://il1swgxuxxa0" path="res://scenes/plataforma_fragil.tscn" id="29_2n16c"]
+[ext_resource type="PackedScene" path="res://scenes/plataforma_fragil.tscn" id="29_2n16c"]
 [ext_resource type="PackedScene" path="res://scenes/salida_nivel.tscn" id="29_salida"]
 [ext_resource type="PackedScene" uid="uid://glifoayuda1" path="res://scenes/glifo_ayuda.tscn" id="30_glifo"]
 [ext_resource type="PackedScene" uid="uid://skni1dec001" path="res://scenes/decorativo.tscn" id="40_deco"]
