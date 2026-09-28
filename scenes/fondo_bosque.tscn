@@ -21,116 +21,126 @@ motion_scale = Vector2(0.02, 1)
 motion_mirroring = Vector2(5777, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa1" unique_id=526037936]
-texture_repeat = 1
-position = Vector2(2885, 540)
-texture = ExtResource("1_tex1")
 texture_filter = 2
+texture_repeat = 1
+position = Vector2(2885, 47.75)
+scale = Vector2(1, 1.4526436)
+texture = ExtResource("1_tex1")
 
 [node name="Capa2" type="ParallaxLayer" parent="." unique_id=957162258]
 motion_scale = Vector2(0.08, 1)
-motion_mirroring = Vector2(3772, 0)
+motion_mirroring = Vector2(3774, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa2" unique_id=984083522]
-texture_repeat = 1
-position = Vector2(1896, 540)
-texture = ExtResource("2_tex2")
 texture_filter = 2
+texture_repeat = 1
+position = Vector2(1887, -293)
+texture = ExtResource("2_tex2")
 
 [node name="Capa3" type="ParallaxLayer" parent="." unique_id=1575902628]
 motion_scale = Vector2(0.14, 1)
-motion_mirroring = Vector2(4100, 0)
+motion_mirroring = Vector2(5002, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa3" unique_id=237906117]
-texture_repeat = 1
-position = Vector2(2028, 623)
-texture = ExtResource("3_tex3")
 texture_filter = 2
+texture_repeat = 1
+position = Vector2(2467, 559)
+scale = Vector2(1, 0.8100304)
+texture = ExtResource("3_tex3")
 
 [node name="Capa4" type="ParallaxLayer" parent="." unique_id=616760487]
 motion_scale = Vector2(0.2, 1)
-motion_mirroring = Vector2(3790, 0)
+motion_mirroring = Vector2(3811, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa4" unique_id=423643092]
-texture_repeat = 1
-position = Vector2(1929, 481)
-texture = ExtResource("4_tex4")
 texture_filter = 2
+texture_repeat = 1
+position = Vector2(1955, -118)
+scale = Vector2(1, 1.2202898)
+texture = ExtResource("4_tex4")
 
 [node name="Capa5" type="ParallaxLayer" parent="." unique_id=1223057867]
 motion_scale = Vector2(0.28, 1)
-motion_mirroring = Vector2(3908, 0)
+motion_mirroring = Vector2(4833, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa5" unique_id=965224589]
-texture_repeat = 1
-position = Vector2(1952, 145)
-texture = ExtResource("5_tex5")
 texture_filter = 2
+texture_repeat = 1
+position = Vector2(2172, -814)
+scale = Vector2(0.9593938, 1.0387523)
+texture = ExtResource("5_tex5")
 
 [node name="Capa6" type="ParallaxLayer" parent="." unique_id=1544671824]
 motion_scale = Vector2(0.3, 1)
-motion_mirroring = Vector2(2727, 0)
+motion_mirroring = Vector2(4416, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa6" unique_id=86598725]
-texture_repeat = 1
-position = Vector2(1402, 539)
-texture = ExtResource("6_tex6")
 texture_filter = 2
+texture_repeat = 1
+position = Vector2(2289, 101.75004)
+scale = Vector2(1, 1.358805)
+texture = ExtResource("6_tex6")
 
 [node name="Capa7" type="ParallaxLayer" parent="." unique_id=1363217738]
 motion_scale = Vector2(0.52, 1.13)
-motion_mirroring = Vector2(2969, 0)
+motion_mirroring = Vector2(4651, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa7" unique_id=307276939]
-texture_repeat = 1
-position = Vector2(1865, 535)
-texture = ExtResource("7_tex7")
 texture_filter = 2
+texture_repeat = 1
+position = Vector2(2995, 101.25)
+scale = Vector2(1, 1.3076203)
+texture = ExtResource("7_tex7")
 
 [node name="Capa8" type="ParallaxLayer" parent="." unique_id=1846744976]
 motion_scale = Vector2(0.63, 1.212)
-motion_mirroring = Vector2(4019, 0)
+motion_mirroring = Vector2(4716, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa8" unique_id=840531609]
-texture_repeat = 1
-position = Vector2(1922, 96)
-texture = ExtResource("8_tex8")
 texture_filter = 2
+texture_repeat = 1
+position = Vector2(2397, -1127)
+scale = Vector2(1.1231976, 1.1527377)
+texture = ExtResource("8_tex8")
 
 [node name="Capa9" type="ParallaxLayer" parent="." unique_id=780756554]
 motion_scale = Vector2(0.7, 1.167)
-motion_mirroring = Vector2(3924, 0)
+motion_mirroring = Vector2(4349, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa9" unique_id=19872083]
-texture_repeat = 1
-position = Vector2(0, 791)
-texture = ExtResource("9_tex9")
 texture_filter = 2
+texture_repeat = 1
+position = Vector2(2372, 799)
+scale = Vector2(1.0865716, 1)
+texture = ExtResource("9_tex9")
 
 [node name="Capa10" type="ParallaxLayer" parent="." unique_id=819697361]
 motion_scale = Vector2(0.8, 1.143)
-motion_mirroring = Vector2(3921, 0)
+motion_mirroring = Vector2(4682, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa10" unique_id=963144405]
-texture_repeat = 1
-position = Vector2(0, 926)
-texture = ExtResource("10_tex10")
 texture_filter = 2
+texture_repeat = 1
+position = Vector2(2474, 1004)
+scale = Vector2(1.0764631, 1)
+texture = ExtResource("10_tex10")
 
 [node name="Capa11" type="ParallaxLayer" parent="." unique_id=298801497]
 motion_scale = Vector2(0.84, 1)
 motion_mirroring = Vector2(5765, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa11" unique_id=211485746]
-texture_repeat = 1
-position = Vector2(2878, 1033)
-texture = ExtResource("11_tex11")
 texture_filter = 2
+texture_repeat = 1
+position = Vector2(2881, 1581)
+texture = ExtResource("11_tex11")
 
 [node name="Capa12" type="ParallaxLayer" parent="." unique_id=1528624012]
-motion_mirroring = Vector2(5765, 0)
+motion_mirroring = Vector2(3465, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa12" unique_id=2087439012]
-texture_repeat = 1
-position = Vector2(2878, 968.5)
-texture = ExtResource("12_tex12")
 texture_filter = 2
+texture_repeat = 1
+position = Vector2(1688.25, 1004)
+scale = Vector2(0.9689755, 1)
+texture = ExtResource("12_tex12")

@@ -4,12 +4,12 @@ extends Node2D
 ## de la pantalla. Así cubren todo el nivel (bosque y cuevas) sin colocarlas a mano.
 ## Unas pocas llevan PointLight2D real para iluminar suave lo que tienen cerca.
 
-@export var cantidad := 34
-@export var con_luz := 5                          ## cuántas llevan luz real (el resto solo brilla)
+@export var cantidad := 22
+@export var con_luz := 3                          ## cuántas llevan luz real (el resto solo brilla)
 @export var color := Color(0.82, 1.0, 0.35)       ## amarillo-verdoso de luciérnaga
 @export var color_nucleo := Color(1.0, 1.0, 0.75)
-@export var tamano_halo := 0.36                   ## escala del halo sobre la textura de 256 px
-@export var tamano_nucleo := 0.055
+@export var tamano_halo := 0.22                   ## escala del halo sobre la textura de 256 px
+@export var tamano_nucleo := 0.035
 @export var velocidad := Vector2(25.0, 60.0)      ## rango px/s
 @export var giro := 2.2                           ## qué tan errático es el rumbo (rad/s)
 @export var parpadeo := Vector2(0.35, 0.9)        ## rango de pulsos por segundo
@@ -17,8 +17,9 @@ extends Node2D
 @export var margen := 260.0                       ## px fuera de pantalla antes de reaparecer
 @export var fundido := 1.2                        ## s que tarda en "prenderse" una que reaparece
 @export_range(0.0, 1.0) var franja_alta := 0.15   ## no aparecen en el 15% superior de la vista
-@export var luz_energia := 0.55
-@export var luz_escala := 0.7
+@export var luz_energia := 0.3
+@export var luz_escala := 0.5
+@export_range(0.0, 1.0) var opacidad := 0.7      ## tope de intensidad visual del halo
 
 const TEX := preload("res://resources/luz_radial.tres")
 
@@ -95,7 +96,7 @@ func _process(delta: float) -> void:
 		# Pulso: sube rápido, se apaga lento, como una luciérnaga real.
 		var s := 0.5 + 0.5 * sin(_t * TAU * b.freq + b.fase)
 		var pulso := brillo_min + (1.0 - brillo_min) * pow(s, 2.0)
-		var a: float = pulso * b.brillo * b.aparicion
+		var a: float = pulso * b.brillo * b.aparicion * opacidad
 		(b.halo as Sprite2D).modulate.a = a
 		(b.nucleo as Sprite2D).modulate.a = minf(a * 1.4, 1.0)
 		if b.luz != null:
