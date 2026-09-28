@@ -2,6 +2,39 @@
 
 ---
 
+## 🟢 Sesión 28/09 — Sonidos místico-graves + apartado visual V1 (decoración con el estilo del fondo y primer plano)
+
+### Sonido
+- **Tipeo del diálogo "se tiene que notar más"** (mismo estilo): `dialogo_tecla.wav` pasa a pico 0.75 y 45 ms con algo de cuerpo. `dialogo.gd` tiene `@export volumen_tipeo_db = -9` (antes -20 fijo) y `letras_por_sonido = 2`, y cuenta solo letras y números (espacios y signos no). Medido: 24 letras → 12 sonidos.
+- **Pickup, checkpoint, zona despejada y nivel subido pasan a "místico grave"** (elección del usuario; ver memoria `sonido-tono-tension`): soplos y respiraciones, zumbido grave con batido y díadas o tríadas menores con pasabajos (~1 kHz). El brillo aproximado bajó de 1864/955/1049/959 Hz a 784/115/162/111 Hz. En `tools/generar_sfx.py` cada receta nueva usa su propio `random.Random(701..704)`, y se conserva `ruido(0.3, rng)` de la receta vieja de pickup para que el resto de los WAV salga **byte a byte idéntico** (verificado por md5).
+
+### Visual V1 (plan: V1 decoración + primer plano → V2 piso y plataformas → V3 cuevas → V4 objetos de juego; ver memoria `estilo-visual-siluetas-grises`)
+- **`scripts/paleta_mundo.gd` (`class_name PaletaMundo`):** escala de tonos de más clara a más oscura: `DECO (0.215)`, `DECO_LUZ`, `JUEGO (0.10)` + `JUEGO_BORDE`, `FRENTE (0.04)`, y acentos de color (alma, checkpoint, peligro).
+- **`decorativo.gd` reescrito con el lenguaje de `Boske*.png`:**
+  - Tronco que se afina con raíces abiertas, ramitas finas en "Y" (`_rama`) y vetas.
+  - Copa de anillo de círculos + centro + racimos de manchas claras (no burbujas).
+  - SAUCE = tronco alto sin copa; arbusto festoneado; mata de hojas curvas; piedra de base plana con luz.
+  - Tipos nuevos **al final del enum** (no cambian índices): `TRONCO_FRENTE`, `RAMA_COLGANTE` (cuelga hacia abajo desde 0,0) y `PASTO_ALTO`.
+  - `@export var tono` reemplaza a los `COLORES` verdes.
+  - Las 149 instancias de nivel1 heredan el estilo solas.
+- **`scripts/primer_plano.gd` (`class_name PrimerPlano`, extends **CanvasGroup**, para que el alfa se aplique al conjunto sin solapes):**
+  - `pos = cam + (ancla − cam) × profundidad` (`@export profundidad 1.35`, `profundidad_vertical`).
+  - Si su rectángulo (calculado de los Polygon2D hijos) se cruza con el `CollisionShape2D` de algo en los grupos `player`/`enemy`, el alfa baja a `alfa_tapando 0.3`.
+  - Fuera de `distancia_activa` no procesa.
+- **`scenes/hojas_ambiente.tscn` + `hojas_ambiente.gd`:** CPUParticles2D (z 21) que acompaña la vista por arriba, con textura `assets/vfx/hoja.png` (silueta blanca generada con PIL) teñida con `color_initial_ramp` de 0.04 a 0.2. Ráfagas con `gravity.x` senoidal y `y_max 1300` (no cae bajo tierra). Instanciado en `noche.tscn`.
+- **nivel1:** contenedor `PrimerPlano` (z 20) con 11 grupos (pasto+arbusto, tronco+pasto, 2 ramas, niebla con `local_coords`) cada ~1600–2600 px en la superficie. Evita checkpoints, glifos, frágiles, pickups (±420) y arenas (±950). Backup `%TEMP%\spiritkeeper_backup\nivel1_antes_primer_plano.tscn`.
+- **Rendimiento:** con y sin primer plano, decoración y noche: 16.6 ms por frame (60 fps con vsync), sin diferencia.
+- **Árboles más fieles al fondo (pedido: "no tan recto, jugando con las curvas"):**
+  - `_tronco` ahora tiene bordes curvos (comba + ondulación), base que se abre, punta redondeada, **dos caras** (clara a la izquierda y sombra a la derecha con un corte curvo), vetas cortas y ramas en **cuerno** (`_cuerno`: curva cuadrática que sube, se afina y termina redondeada, a veces en "Y"), más un brote en la base.
+  - `_copa`: círculos oscuros grandes, bolitas colgando del borde inferior y **manchas claras grandes en nube** arriba a la izquierda.
+  - `_arbusto`: festoneado con 10–14 bultitos.
+  - **Contraste:** luz +0.12 / sombra −0.065 / veta −0.1 sobre `tono`. La noche comprime el contraste casi a la mitad, así que hace falta ese salto para que se lea como en el fondo.
+- **⚠️ Crash visto en una corrida con ventana:** D3D12 `CreateGraphicsPipelineState 0x8007000e` (sin memoria) y `0x887a0005` (dispositivo removido) → segfault al arrancar. Causa: **la PC tenía 1.1 GB libres de 8 GB** y la GPU integrada (Intel Iris Xe) usa esa RAM; estaban abiertos editor, Chrome, Discord y el juego. Repetido con la misma escena: 0 errores. No es del juego; si vuelve a pasar, liberar RAM.
+- **⚠️ Lección (bug del editor):** el editor del usuario guardó `nivel1.tscn` con **`tono = null` en las 149 decoraciones**, porque el export tenía como default `PaletaMundo.DECO` (constante de otra `class_name`) y la escena se guardó antes de que el editor registrara la clase. **Regla: en scripts `@tool` o con `@export`, NO usar constantes de otra class_name como default de un export; usar literales** (y evitar depender de otras clases en código @tool). Se arregló quitando esas líneas; comparación normalizada contra HEAD = 0 cambios reales del usuario (solo `unique_id` y defaults omitidos).
+- **Verificación:** import y smoke limpios, nivel1 120 frames sin errores, autotest + 11 diags con 0 fallos, capturas en ventana.
+
+---
+
 ## 🟢 Sesión 27/09 — Nivel 1: experiencia del jugador (plan en 5 fases: 0 base → 1 noche con luces → 2 juice → 3 atmósfera nivel1 → 4 UX flujo)
 
 > Plan aprobado. Se trabaja una fase por vez y se espera el OK del usuario entre fases. Las fases 0/1/2/4 son solo sistema; la 3 edita `nivel1.tscn` (pedir que guarde y cierre la escena en el editor + backup).

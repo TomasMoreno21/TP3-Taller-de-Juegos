@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/noche.gd" id="1_noche"]
 [ext_resource type="PackedScene" path="res://scenes/luciernagas_ambiente.tscn" id="2_luci"]
+[ext_resource type="PackedScene" path="res://scenes/hojas_ambiente.tscn" id="3_hojas"]
 
 [sub_resource type="Gradient" id="Gradient_vin"]
 offsets = PackedFloat32Array(0, 0.6, 1)
@@ -22,6 +23,8 @@ script = ExtResource("1_noche")
 color = Color(0.58, 0.62, 0.78, 1)
 
 [node name="LuciernagasAmbiente" parent="." instance=ExtResource("2_luci")]
+
+[node name="HojasAmbiente" parent="." instance=ExtResource("3_hojas")]
 
 [node name="CapaVineta" type="CanvasLayer" parent="." unique_id=243430472]
 layer = 5

@@ -290,10 +290,22 @@ def generar():
                                     (desplazar(mul(tono(0.1, 880), env(n(0.1), 0.004, 0.03)), 0.16), 1.0)), 0.45)
 
     # --- Mundo
-    guardar("pickup", mezclar((arpegio([1047, 1319, 1568, 2093], 0.045, 0.3, 0.09), 0.9),
-                              (mul(banda(ruido(0.3, rng), 5000, 12000), env(n(0.3), 0.01, 0.08)), 0.15)), 0.7)
-    guardar("checkpoint", mezclar((acorde(1.2, [392, 494, 587, 784], 0.08, 0.45), 1.0),
-                                  (arpegio([1568, 1976, 2349], 0.07, 0.6, 0.2), 0.3)), 0.75)
+    # Estilo "místico grave" (pedido del usuario: nada de tintineos alegres, seco y
+    # tenso): soplos/respiraciones, zumbido grave del espíritu con batido y notas
+    # menores apagadas con cola corta, todo por debajo de ~1 kHz.
+    ruido(0.3, rng)  # conserva el estado del rng compartido (la receta vieja lo consumía)
+    r = random.Random(701)
+    inhala = mul(banda(ruido(0.42, r), 300, 1500), env(n(0.42), 0.26, 0.06, 2.0))
+    zumbido = mul(mezclar((tono(0.24, 110.0), 1.0), (tono(0.24, 112.5), 0.9), (tono(0.24, 155.6, None, "tri"), 0.35)),
+                  env(n(0.24), 0.012, 0.07))
+    guardar("pickup", pasabajos(mezclar((inhala, 0.7), (desplazar(zumbido, 0.2), 1.0)), 900), 0.7)
+    r = random.Random(702)
+    L = n(1.2)
+    zumbido = mul(mezclar((tono(1.2, 73.4), 1.0), (tono(1.2, 74.2), 0.8), (tono(1.2, 110.0), 0.6), (tono(1.2, 110.9), 0.5)),
+                  env(L, 0.35, 0.3, 1.5))
+    soplo = mul(banda(ruido(1.2, r), 250, 1200), env(L, 0.4, 0.35, 1.5))
+    diada = mul(mezclar((tono(1.2, 146.8, None, "tri"), 1.0), (tono(1.2, 174.6, None, "tri"), 0.8)), env(L, 0.25, 0.35, 1.5))
+    guardar("checkpoint", pasabajos(mezclar((zumbido, 1.0), (soplo, 0.35), (diada, 0.45)), 1100), 0.75)
     guardar("rompible_golpe", mezclar((mul(mezclar((tono(0.2, 230), 1.0), (tono(0.2, 370), 0.6), (tono(0.2, 610), 0.3)),
                                            env(n(0.2), 0.001, 0.045)), 1.0),
                                       (mul(banda(ruido(0.05, rng), 1500, 6000), env(n(0.05), 0.0005, 0.01)), 0.6)))
@@ -316,17 +328,31 @@ def generar():
     guardar("arena_inicio", mezclar((golpe_seco(0.7, 75, 40, 0.2, rng), 1.0),
                                     (mul(tono(0.7, 110, 220, "tri"), env(n(0.7), 0.25, 0.2, 2.0)), 0.5),
                                     (mul(pasabajos(ruido(0.7, rng), 250), env(n(0.7), 0.3, 0.2, 2.0)), 0.4)))
-    guardar("zona_despejada", mezclar((arpegio([659, 880, 1319], 0.1, 0.6, 0.2), 1.0),
-                                      (acorde(0.9, [440, 659], 0.2, 0.35), 0.4)), 0.75)
-    guardar("nivel_subido", mezclar((arpegio([523, 659, 784, 1047, 1319], 0.08, 0.7, 0.22), 1.0),
-                                    (acorde(1.3, [523, 659, 784], 0.4, 0.5), 0.5)), 0.8)
+    r = random.Random(703)
+    L = n(0.9)
+    exhala = mul(pasabajos_var(pasaaltos(ruido(0.9, r), 120), [1800.0 * (250.0 / 1800.0) ** (i / L) for i in range(L)]),
+                 env(L, 0.04, 0.3))
+    diada = mul(mezclar((tono(0.9, 110.0, None, "tri"), 1.0), (tono(0.9, 130.8, None, "tri"), 0.8), (tono(0.9, 111.0), 0.4)),
+                env(L, 0.08, 0.28))
+    guardar("zona_despejada", pasabajos(mezclar((exhala, 0.5), (golpe_seco(0.5, 70, 38, 0.12, r), 0.9), (diada, 0.55)), 1000), 0.75)
+    r = random.Random(704)
+    L = n(1.3)
+    respira = mul(pasabajos_var(banda(ruido(1.3, r), 200, 2000), [300.0 * (1400.0 / 300.0) ** (i / L) for i in range(L)]),
+                  env(L, 0.5, 0.35, 1.6))
+    triada = mul(mezclar((tono(1.3, 110.0, None, "tri"), 1.0), (tono(1.3, 130.8, None, "tri"), 0.8), (tono(1.3, 164.8, None, "tri"), 0.7)),
+                 env(L, 0.4, 0.4, 1.8))
+    brillo = mul(mezclar((tono(1.3, 440.0), 1.0), (tono(1.3, 443.5), 1.0)), env(L, 0.5, 0.3, 2.0))
+    grave = mul(mezclar((tono(1.3, 55.0), 1.0), (tono(1.3, 55.6), 0.8)), env(L, 0.4, 0.4, 1.5))
+    guardar("nivel_subido", pasabajos(mezclar((respira, 0.4), (triada, 0.6), (brillo, 0.06), (grave, 0.6)), 1300), 0.8)
 
     # --- Interfaz
     guardar("ui_mover", mul(tono(0.05, 1500, 1400), env(n(0.05), 0.001, 0.012)), 0.4)
     guardar("ui_confirmar", arpegio([880, 1320], 0.06, 0.18, 0.05), 0.55)
     guardar("ui_pausa", mezclar((mul(tono(0.35, 440, 330, "tri"), env(n(0.35), 0.01, 0.1)), 1.0),
                                 (whoosh(0.3, 400, 1600, rng, 0.3), 0.4)), 0.5)
-    guardar("dialogo_tecla", mul(tono(0.035, 1100, 1000, "tri"), env(n(0.035), 0.001, 0.008)), 0.3)
+    # Tecla del diálogo: mismo "blip" triangular, más presente y con un poco de cuerpo.
+    guardar("dialogo_tecla", mul(mezclar((tono(0.045, 1100, 950, "tri"), 1.0), (tono(0.045, 560, 520), 0.5)),
+                                 env(n(0.045), 0.001, 0.012)), 0.75)
 
 
 if __name__ == "__main__":

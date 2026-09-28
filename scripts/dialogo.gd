@@ -17,6 +17,10 @@ var _cola: Array[Dictionary] = []
 var _abierto := false
 var _texto_completo := ""
 var _ultimo_blip := 0
+var _letras_sin_sonar := 0
+
+@export var volumen_tipeo_db := -9.0     ## volumen del "blip" de cada letra al escribir
+@export var letras_por_sonido := 2       ## cada cuántas letras suena (espacios y signos no cuentan)
 ## true si lo último que tocó el jugador fue un joystick: los tokens {accion} del
 ## texto se muestran como botones del mando; si no, como teclas.
 var _usa_joypad := false
@@ -129,6 +133,7 @@ func _siguiente_linea() -> void:
 	texto_label.visible_ratio = 0.0
 	_tipeando = true
 	_ultimo_blip = 0
+	_letras_sin_sonar = 0
 	hint.visible = false
 	retrato.set_hablando(true)
 
@@ -138,11 +143,21 @@ func _process(delta: float) -> void:
 		var duracion: float = max(_texto_completo.length(), 1) * SEG_POR_CARACTER
 		texto_label.visible_ratio = min(texto_label.visible_ratio + delta / duracion, 1.0)
 		var visibles := int(texto_label.visible_ratio * _texto_completo.length())
-		if visibles >= _ultimo_blip + 2:
-			_ultimo_blip = visibles
+		# Suena al ritmo de las LETRAS (espacios y signos no cuentan), una vez cada
+		# `letras_por_sonido`; como mucho un sonido por frame.
+		var sonar := false
+		while _ultimo_blip < visibles:
+			var c := _texto_completo[_ultimo_blip]
+			_ultimo_blip += 1
+			if c.to_lower() != c.to_upper() or c.is_valid_int():
+				_letras_sin_sonar += 1
+				if _letras_sin_sonar >= maxi(letras_por_sonido, 1):
+					_letras_sin_sonar = 0
+					sonar = true
+		if sonar:
 			var audio := get_node_or_null("/root/AudioManager")
 			if audio != null:
-				audio.play_ui("dialogo_tecla", -20.0)
+				audio.play_ui("dialogo_tecla", volumen_tipeo_db)
 		if texto_label.visible_ratio >= 1.0:
 			_terminar_tipeo()
 	elif _tip_visible:
