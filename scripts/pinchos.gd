@@ -11,9 +11,16 @@ extends Area2D
 @export var ancho_pincho := 40.0 # ancho de cada pincho (px)
 @export var alto := 24.0         # altura VISIBLE de cada estaca (px, asoma del terreno)
 @export var dano := 9999         # daño al tocar (por defecto mata de un toque)
-@export var color_base := Color(0.42, 0.28, 0.14)   # barra inferior de la empalizada
-@export var color_estaca := Color(0.63, 0.44, 0.24)  # cuerpo de cada estaca
-@export var enterrado := 36.0    # tramo que queda DENTRO del tile (tapado por el tilemap)
+## Aspecto: ROCA = colmillos de piedra afilada (cueva); MADERA = estacas talladas (bosque).
+enum Estilo { ROCA, MADERA }
+@export var estilo := Estilo.MADERA
+@export var color_base := Color(0.13, 0.12, 0.17)     # escombros / base enterrada
+@export var color_estaca := Color(0.6, 0.58, 0.74)   # cara iluminada de cada pincho (la sombra se deriva)
+## Solo MADERA: cara iluminada de la estaca, sangre en la punta y qué fracción de estacas la lleva.
+@export var color_madera := Color(0.56, 0.38, 0.21)
+@export var color_sangre := Color(0.62, 0.06, 0.08)
+@export_range(0.0, 1.0) var prob_sangre := 0.35
+@export var enterrado := 36.0   # tramo que queda DENTRO del tile (tapado por el tilemap)
 @export var z_index_detras := -1 # el nodo se dibuja detrás del tilemap (asoman las puntas)
 @export var fraccion_zona_dano := 0.4  # qué porción del alto VISIBLE mata (el resto es decorativo)
 
@@ -150,37 +157,112 @@ func _dibujar() -> void:
 		nuevo.position = Vector2(0, -alto_vis + alto_zona * 0.5)
 		nuevo.name = "Collision"
 		killzone.add_child(nuevo)
-	# Empalizada de madera detrás del tilemap: la barra y el cuerpo de las
-	# estacas quedan enterrados (ocultos); solo asoma cada punta desde el borde.
+	# Detrás del tilemap: el cuerpo queda enterrado y solo asoman las puntas.
 	var visual: Node2D = get_node_or_null("Visual")
 	if visual == null:
 		return
 	for child in visual.get_children():
 		child.queue_free()
-	# Barra base: enterrada dentro del terreno (no se ve, une las estacas).
-	var barra := Polygon2D.new()
 	var ancho_total := _kill_zone_size.x
-	barra.color = color_base
-	barra.polygon = PackedVector2Array([
-		Vector2(-ancho_total * 0.5, enterrado - 6),
-		Vector2(ancho_total * 0.5, enterrado - 6),
-		Vector2(ancho_total * 0.5, enterrado + 8),
-		Vector2(-ancho_total * 0.5, enterrado + 8),
-	])
-	visual.add_child(barra)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(absf(global_position.x) * 7.0 + absf(global_position.y) * 3.0) + int(cantidad) * 131
+	var clara := color_estaca
+	var oscura := color_estaca.darkened(0.42)
+	if estilo == Estilo.MADERA:
+		clara = color_madera
+		oscura = clara.darkened(0.38)
+	# Base enterrada continua (une los pinchos; asoma un poco como tierra oscura).
+	visual.add_child(_poli([Vector2(-ancho_total * 0.5 - 4, enterrado + 8), Vector2(-ancho_total * 0.5 - 4, -3),
+		Vector2(ancho_total * 0.5 + 4, -3), Vector2(ancho_total * 0.5 + 4, enterrado + 8)], color_base))
 	for i in range(int(cantidad)):
-		var estaca := Polygon2D.new()
-		var cx := -_kill_zone_size.x * 0.5 + (i + 0.5) * ancho_pincho
-		var ancho_estaca := ancho_pincho * 0.72
-		var alto_cuerpo := maxf(alto - 14.0, 4.0)   # cuerpo hasta la cabeza puntiaguda
-		var punta := alto - alto_cuerpo             # tramo que asoma como punta
-		estaca.color = color_estaca
-		estaca.position = Vector2(cx, 0)
-		estaca.polygon = PackedVector2Array([
-			Vector2(ancho_estaca * -0.5, enterrado),
-			Vector2(ancho_estaca * -0.5, -alto_cuerpo),
-			Vector2(0, -alto),
-			Vector2(ancho_estaca * 0.5, -alto_cuerpo),
-			Vector2(ancho_estaca * 0.5, enterrado),
-		])
-		visual.add_child(estaca)
+		var cx := -ancho_total * 0.5 + (float(i) + 0.5) * ancho_pincho
+		var w := ancho_pincho * rng.randf_range(0.62, 0.86)
+		var h := alto * (rng.randf_range(0.86, 1.0) if i % 3 != 1 else 1.0)
+		var j := w * rng.randf_range(-0.18, 0.18)          # la punta se corre un poco
+		var k := rng.randf_range(0.22, 0.34)                # altura del "hombro"
+		var e := enterrado
+		var pinch := Node2D.new()
+		pinch.position = Vector2(cx, 0)
+		visual.add_child(pinch)
+		if estilo == Estilo.MADERA:
+			_estaca(pinch, rng, w, h, j, e, clara, oscura, rng.randf() < prob_sangre)
+			continue
+		# Colmillo de roca: mitad iluminada (izq.) + mitad en sombra (der.), hombro quebrado.
+		pinch.add_child(_poli([Vector2(-w * 0.5, e), Vector2(-w * 0.47, -h * k), Vector2(-w * 0.2, -h * (k + 0.3)), Vector2(j, -h), Vector2(j, e)], clara))
+		pinch.add_child(_poli([Vector2(j, e), Vector2(j, -h), Vector2(w * 0.24, -h * (k + 0.22)), Vector2(w * 0.5, -h * k * 0.8), Vector2(w * 0.5, e)], oscura))
+		# Filo brillante a lo largo del borde iluminado + punta clara.
+		var filo := Line2D.new()
+		filo.points = PackedVector2Array([Vector2(-w * 0.47, -h * k), Vector2(-w * 0.2, -h * (k + 0.3)), Vector2(j, -h)])
+		filo.width = 2.2
+		filo.default_color = clara.lightened(0.5)
+		pinch.add_child(filo)
+		pinch.add_child(_poli([Vector2(j - w * 0.11, -h * 0.8), Vector2(j, -h), Vector2(j + w * 0.1, -h * 0.8)], Color(0.86, 0.3, 0.36)))
+	# Escombros al pie (piedritas oscuras): rompen la línea recta del suelo.
+	var x := -ancho_total * 0.5
+	while x < ancho_total * 0.5:
+		var r := rng.randf_range(4.0, 9.0)
+		var c := Vector2(x + r, 1.0)
+		var pts := PackedVector2Array()
+		for a in 7:
+			var ang := PI + PI * float(a) / 6.0
+			pts.append(c + Vector2(cos(ang) * r * 1.3, sin(ang) * r))
+		visual.add_child(_poli(pts, color_base.lightened(0.12)))
+		x += rng.randf_range(20.0, 44.0)
+
+
+## Estaca de madera tallada: tronco con punta en bisel, betas, muesca y (a veces) sangre en la punta.
+func _estaca(nodo: Node2D, rng: RandomNumberGenerator, w: float, h: float, j: float, e: float,
+		clara: Color, oscura: Color, con_sangre: bool) -> void:
+	var lean := rng.randf_range(-0.1, 0.1) * w
+	var ab := w * rng.randf_range(0.9, 1.0)
+	var hombro := h * rng.randf_range(0.52, 0.62)       # dónde empieza el afilado
+	var tip := Vector2(j + lean, -h)
+	var l0 := Vector2(-ab * 0.5 + lean * 0.5, -hombro)
+	var r0 := Vector2(ab * 0.5 + lean * 0.5, -hombro)
+	nodo.add_child(_poli([Vector2(-ab * 0.5, e), l0, tip, Vector2(tip.x, e)], clara))
+	nodo.add_child(_poli([Vector2(tip.x, e), tip, r0, Vector2(ab * 0.5, e)], oscura))
+	# Faceta del corte (madera fresca, más clara).
+	nodo.add_child(_poli([l0.lerp(tip, 0.42), tip, r0.lerp(tip, 0.42)], clara.lightened(0.28)))
+	# Betas de la madera.
+	for b in 3:
+		var bx := lerpf(-ab * 0.32, ab * 0.32, float(b) / 2.0) + rng.randf_range(-2.0, 2.0)
+		var beta := Line2D.new()
+		beta.points = PackedVector2Array([Vector2(bx, e), Vector2(bx + rng.randf_range(-1.5, 1.5), -hombro * rng.randf_range(0.55, 0.95))])
+		beta.width = 1.6
+		beta.default_color = oscura.darkened(0.15)
+		nodo.add_child(beta)
+	# Muesca de hachazo y borde de luz.
+	var my := -h * rng.randf_range(0.12, 0.3)
+	nodo.add_child(_poli([Vector2(-ab * 0.5, my), Vector2(-ab * 0.5 + w * 0.3, my - 2.0), Vector2(-ab * 0.5 + w * 0.3, my + 3.0)], oscura.darkened(0.2)))
+	var filo := Line2D.new()
+	filo.points = PackedVector2Array([Vector2(-ab * 0.5, e), l0, tip])
+	filo.width = 1.8
+	filo.default_color = clara.lightened(0.35)
+	nodo.add_child(filo)
+	if not con_sangre:
+		return
+	# Sangre en la punta: manto irregular + brillo + chorro.
+	var s0 := rng.randf_range(0.28, 0.48)
+	var a := l0.lerp(tip, s0)
+	var d := r0.lerp(tip, s0)
+	var largo := h * rng.randf_range(0.3, 0.45)
+	var gx := lerpf(a.x, d.x, 0.45)
+	nodo.add_child(_poli([a, tip, d, d + Vector2(-1.0, largo * 0.5), Vector2(lerpf(a.x, d.x, 0.7), a.y + largo * 0.25),
+		Vector2(gx, a.y + largo), Vector2(lerpf(a.x, d.x, 0.25), a.y + largo * 0.35)], color_sangre))
+	var brillo := Line2D.new()
+	brillo.points = PackedVector2Array([a.lerp(tip, 0.25) + Vector2(1.5, 1.0), a.lerp(tip, 0.7) + Vector2(1.5, 0.0)])
+	brillo.width = 1.4
+	brillo.default_color = color_sangre.lightened(0.45)
+	nodo.add_child(brillo)
+	var chorro := Line2D.new()
+	chorro.points = PackedVector2Array([Vector2(gx, a.y + largo), Vector2(gx, a.y + largo + h * rng.randf_range(0.1, 0.22))])
+	chorro.width = 2.0
+	chorro.default_color = color_sangre.darkened(0.1)
+	nodo.add_child(chorro)
+
+
+func _poli(pts: PackedVector2Array, color: Color) -> Polygon2D:
+	var p := Polygon2D.new()
+	p.polygon = pts
+	p.color = color
+	return p

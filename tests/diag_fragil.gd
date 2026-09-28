@@ -49,8 +49,13 @@ func _init() -> void:
 	print("[TMP] clave=", clave)
 	print("[TMP] fase1=", fragil._fase)
 
+	# Desde la reaparición de frágiles, por defecto NO persisten: se registran solo con persistente_rota.
 	fragil._romper()
-	_check(prog.plataforma_rota(clave), "Al romperla, queda registrada en Progresion")
+	_check(not prog.plataforma_rota(clave), "Por defecto la rotura NO queda registrada en Progresion (reaparece)")
+	fragil.persistente_rota = true
+	fragil.restaurar()
+	fragil._romper()
+	_check(prog.plataforma_rota(clave), "Con persistente_rota, al romperla queda registrada en Progresion")
 
 	# Recarga real: volver a entrar a la misma escena.
 	change_scene_to_file(NIVEL)
@@ -64,9 +69,9 @@ func _init() -> void:
 		_check(fragil2._clave() == clave, "La clave de persistencia se mantiene entre recargas")
 		print("[TMP] fase2=", fragil2._fase, " visible2=", fragil2.visible,
 			" visual=", fragil2.get_node_or_null("Visual").visible if fragil2.get_node_or_null("Visual") != null else "n/a")
-		_check(fragil2._fase == fragil2.Fase.ROTA or not fragil2.visible
-			or (fragil2.get_node_or_null("Visual") != null and not fragil2.get_node_or_null("Visual").visible),
-			"Tras recargar, la plataforma rota arranca rota (fase ROTA/invisible)")
+		# La instancia nueva tiene persistente_rota=false: arranca entera aunque Progresion la recuerde.
+		_check(fragil2._fase == fragil2.Fase.ESPERA and fragil2.get_node_or_null("Visual").visible,
+			"Tras recargar, la plataforma (no persistente) arranca entera")
 
 	print("[TMP] DIAG FRAGIL FIN fallos=", _fallos)
 	quit(_fallos)

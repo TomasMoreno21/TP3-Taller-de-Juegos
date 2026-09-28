@@ -20,6 +20,7 @@ func _init() -> void:
 	await process_frame
 
 	var player: Node2D = nivel.get_node("Player")
+	player.reaparicion_automatica = false
 	player.god_mode = false
 	player.health = 5
 	player.take_damage(10)
@@ -44,6 +45,7 @@ func _init() -> void:
 	current_scene = nivel2
 	await process_frame
 	var player2: Node2D = nivel2.get_node("Player")
+	player2.reaparicion_automatica = false
 	player2.god_mode = false
 	player2.global_position = Vector2(0, 20000)  # > limite_caida (12000)
 	for i in 3:

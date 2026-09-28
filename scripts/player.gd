@@ -136,6 +136,7 @@ var _checkpoint_forma := Form.HUMAN
 var _checkpoint_vida := VIDA_MAX
 var _checkpoint_energia := ENERGIA_MAX
 var _derrota_activa := false
+var _velo_muerte: CanvasLayer
 var _invuln_timer := 0.0
 var _invuln_sin_parpadeo := false
 var _cooldown_formas: Dictionary = {}
@@ -179,6 +180,7 @@ var _platform_snap_cd: float = 0.0
 @export var sonido_swing_pesado: AudioStream = preload("res://assets/audio/sfx/gen/swing_pesado.wav")
 @export var volumen_swing_db := -12.0
 @export var sonido_muerte: AudioStream = preload("res://assets/audio/sfx/gen/muerte_jugador.wav")
+@export var reaparicion_automatica := true      ## al morir reaparece solo en el checkpoint (sin panel "HAS CAÍDO"); false = panel con Reintentar/Menú
 @export var muerte_duracion := 0.9          ## s de cámara lenta + oscurecido antes del panel de derrota (0 = directo)
 @export_range(0.05, 1.0) var muerte_slowmo_escala := 0.3
 
@@ -1575,11 +1577,43 @@ func _secuencia_muerte() -> void:
 	tv.tween_property(velo, "color:a", 0.6, muerte_duracion)
 	# Reloj real: la cámara lenta no debe estirar la espera.
 	await get_tree().create_timer(muerte_duracion, true, false, true).timeout
-	capa.queue_free()
+	if reaparicion_automatica:
+		_velo_muerte = capa  # se quita con la pantalla ya en negro (evita un parpadeo)
+	else:
+		capa.queue_free()
 	_mostrar_derrota()
 
 
+## Reaparición automática: fundido corto → checkpoint (o recarga si no hay) → vuelta.
+func _reaparecer_automatico() -> void:
+	var t := TransicionPantalla.de(get_tree())
+	if t.esta_ocupado():
+		_reaparecer_ahora()
+	else:
+		t.fundido(_reaparecer_ahora)
+
+
+func _reaparecer_ahora() -> void:
+	get_tree().paused = false
+	if is_instance_valid(_velo_muerte):
+		_velo_muerte.queue_free()
+	_velo_muerte = null
+	if _tiene_checkpoint:
+		reaparecer_en_checkpoint()
+		var cam := get_viewport().get_camera_2d()
+		if cam != null and cam.has_method("modo_normal"):
+			cam.modo_normal(true)
+		for e in get_tree().get_nodes_in_group("encounter"):
+			if e.has_method("reiniciar"):
+				e.reiniciar()
+	else:
+		get_tree().reload_current_scene()
+
+
 func _mostrar_derrota() -> void:
+	if reaparicion_automatica:
+		_reaparecer_automatico()
+		return
 	var escena: PackedScene = load("res://scenes/derrota.tscn")
 	var derrota: CanvasLayer = escena.instantiate()
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
@@ -1705,6 +1739,8 @@ func reaparecer_en_checkpoint() -> void:
 	_invuln_timer = 1.5
 	health_changed.emit(health, VIDA_MAX)
 	energia_changed.emit(energia)
+	# Las plataformas frágiles rotas vuelven a aparecer al reaparecer.
+	get_tree().call_group("plataforma_fragil", "restaurar")
 
 
 func _restaurar_forma(nueva: int) -> void:

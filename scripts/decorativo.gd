@@ -7,7 +7,30 @@ extends Node2D
 ## opcionales. Detrás del jugador va en un contenedor z=-5; los tipos *_FRENTE /
 ## RAMA_COLGANTE / PASTO_ALTO son para el primer plano (ver primer_plano.gd).
 
-enum Tipo { ARBOL, SAUCE, ARBUSTO, PASTO, PIEDRA, TRONCO_FRENTE, RAMA_COLGANTE, PASTO_ALTO }
+## ESTALAGMITA..ESTATUA: utilería de cueva (nivel 2); antorcha, brasero, velas, círculo,
+## glifo y estatua (ojos) llevan luz/fuego animado (nodo "Brillo"). Se generan en
+## _generar_silueta_cueva / _generar_brillo.
+enum Tipo { ARBOL, SAUCE, ARBUSTO, PASTO, PIEDRA, TRONCO_FRENTE, RAMA_COLGANTE, PASTO_ALTO,
+	ESTALAGMITA, ESTALACTITA, CRISTAL, ANTORCHA, BRASERO, VELAS, ESTANDARTE, CADENAS, HUESOS,
+	CIRCULO, GLIFO, JAULA, ESTATUA }
+
+const COLORES_CUEVA := {
+	Tipo.ESTALAGMITA: { "copa": Color(0.20, 0.20, 0.27) },
+	Tipo.ESTALACTITA: { "copa": Color(0.17, 0.17, 0.24) },
+	Tipo.CRISTAL: { "copa": Color(0.32, 0.62, 0.90) },
+	Tipo.ANTORCHA: { "copa": Color(0.20, 0.17, 0.16), "tronco": Color(0.30, 0.20, 0.13) },
+	Tipo.BRASERO: { "copa": Color(0.19, 0.16, 0.17), "tronco": Color(0.26, 0.22, 0.22) },
+	Tipo.VELAS: { "copa": Color(0.80, 0.75, 0.62), "tronco": Color(0.55, 0.50, 0.42) },
+	Tipo.ESTANDARTE: { "copa": Color(0.34, 0.08, 0.20), "tronco": Color(0.16, 0.12, 0.10) },
+	Tipo.CADENAS: { "copa": Color(0.25, 0.24, 0.28) },
+	Tipo.HUESOS: { "copa": Color(0.70, 0.65, 0.55) },
+	Tipo.CIRCULO: { "copa": Color(0.68, 0.26, 0.80) },
+	Tipo.GLIFO: { "copa": Color(0.72, 0.28, 0.84) },
+	Tipo.JAULA: { "copa": Color(0.24, 0.22, 0.25) },
+	Tipo.ESTATUA: { "copa": Color(0.32, 0.31, 0.42), "tronco": Color(0.2, 0.2, 0.28) },
+}
+const COLOR_FUEGO := [Color(1.0, 0.42, 0.10), Color(1.0, 0.72, 0.26), Color(1.0, 0.94, 0.62)]
+const LUZ_RADIAL := preload("res://resources/luz_radial.tres")
 
 @export var tipo := Tipo.ARBOL:
 	set(value):
@@ -35,6 +58,11 @@ enum Tipo { ARBOL, SAUCE, ARBUSTO, PASTO, PIEDRA, TRONCO_FRENTE, RAMA_COLGANTE, 
 	set(value):
 		color_noche = value
 		queue_redraw()
+## Solo CRISTAL: color y fuerza del halo aditivo (0 = sin halo).
+@export var halo_color := Color(0.35, 0.7, 1.0)
+@export_range(0.0, 1.0) var halo_alpha := 0.45
+## Parpadeo de fuego / pulso de luz (antorcha, brasero, velas, círculo, glifo, ojos de estatua).
+@export var parpadeo := true
 @export var sombra := true
 @export var sombra_alpha := 0.25:
 	set(value):
@@ -53,6 +81,9 @@ var _editor_sync := true
 var _fase_viento := 0.0
 var _hoja: Node2D
 var _sombra: Polygon2D
+var _brillo: Node2D
+var _llamas: Array[Node2D] = []
+var _halos: Array[Sprite2D] = []
 
 
 func _ready() -> void:
@@ -79,6 +110,15 @@ func _process(delta: float) -> void:
 	if viento and _hoja != null:
 		var t := Time.get_ticks_msec() * 0.001 * viento_velocidad + _fase_viento
 		_hoja.rotation = sin(t) * viento_amplitud
+	if parpadeo and _brillo != null:
+		var tp := Time.get_ticks_msec() * 0.001 + _fase_viento
+		for i in _llamas.size():
+			var f := tp * (7.0 + float(i % 3)) + float(i) * 1.7
+			_llamas[i].scale = Vector2(1.0 + 0.10 * sin(f * 1.3), 1.0 + 0.16 * sin(f) + 0.06 * sin(f * 2.9))
+			_llamas[i].rotation = 0.07 * sin(f * 0.8)
+		for h in _halos:
+			var base: float = h.get_meta("alpha")
+			h.modulate.a = base * (0.82 + 0.18 * sin(tp * 5.0) + 0.06 * sin(tp * 13.0))
 
 
 ## Colores, flip y escala sin redibujar.
@@ -86,6 +126,8 @@ func _aplicar_config() -> void:
 	if _hoja != null:
 		_hoja.scale = Vector2(escala * (-1.0 if flip_h else 1.0), escala)
 		_hoja.modulate = color_noche
+	if _brillo != null:
+		_brillo.scale = Vector2(escala * (-1.0 if flip_h else 1.0), escala)
 	if _sombra != null:
 		_sombra.visible = sombra and _lleva_sombra()
 		_sombra.color.a = sombra_alpha
@@ -93,15 +135,38 @@ func _aplicar_config() -> void:
 
 ## Reconstruye la silueta completa (idempotente: limpia y vuelve a crear).
 func _rehacer() -> void:
-	for nodo in ["Hoja", "Sombra"]:
+	for nodo in ["Hoja", "Sombra", "Brillo"]:
 		var old := get_node_or_null(nodo)
 		if old != null:
+			remove_child(old)
 			old.queue_free()
+	_llamas.clear()
+	_halos.clear()
+	_brillo = null
 	_hoja = Node2D.new()
 	_hoja.name = "Hoja"
 	add_child(_hoja)
 	for pol in _generar_silueta(tipo, variante):
 		_hoja.add_child(pol)
+	if tipo == Tipo.CRISTAL and halo_alpha > 0.0:
+		var halo := Sprite2D.new()
+		halo.name = "Halo"
+		halo.texture = LUZ_RADIAL
+		halo.position = Vector2(0, -22)
+		halo.scale = Vector2(0.35, 0.35)
+		halo.modulate = Color(halo_color.r, halo_color.g, halo_color.b, halo_alpha)
+		var mat := CanvasItemMaterial.new()
+		mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+		mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		halo.material = mat
+		_hoja.add_child(halo)
+	var brillo := _generar_brillo(tipo, variante)
+	if not brillo.is_empty():
+		_brillo = Node2D.new()
+		_brillo.name = "Brillo"
+		add_child(_brillo)
+		for n in brillo:
+			_brillo.add_child(n)
 	_sombra = null
 	if sombra and _lleva_sombra():
 		_sombra = Polygon2D.new()
@@ -122,6 +187,8 @@ func _lleva_sombra() -> bool:
 ## Coordenadas locales en tamaño "base" (y<=0 hacia arriba, 0 = suelo; en
 ## RAMA_COLGANTE 0 = punto de cuelgue y crece hacia abajo). La escala la pone Hoja.
 func _generar_silueta(t: int, v: int) -> Array[Polygon2D]:
+	if t >= Tipo.ESTALAGMITA:
+		return _generar_silueta_cueva(t, v)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(t * 1000 + v)
 	# Dos tonos como en el fondo: cara clara / cara en sombra y manchas de luz grandes.
@@ -411,3 +478,280 @@ func _ancho_silueta_base() -> float:
 		Tipo.PIEDRA:
 			return 60.0
 	return 90.0
+
+
+# ------------------------------------------------------------------ utilería de cueva
+func _generar_silueta_cueva(t: int, v: int) -> Array[Polygon2D]:
+	var colores: Dictionary = COLORES_CUEVA[t]
+	var salida: Array[Polygon2D] = []
+	var tinte := 1.0 + 0.12 * float((v - 1) % 4) - 0.06
+	match t:
+		Tipo.ESTALAGMITA:
+			var h := 34.0 + float((v - 1) % 5) * 9.0
+			var w := 11.0 + float((v - 1) % 3) * 3.0
+			salida += [_poligono([Vector2(-w, 0), Vector2(-w * 0.6, -h * 0.55), Vector2(-w * 0.12, -h), Vector2(w * 0.3, -h * 0.62), Vector2(w, 0)], colores["copa"] * tinte)]
+			salida += [_poligono([Vector2(w * 0.6, 0), Vector2(w * 1.5, -h * 0.4), Vector2(w * 2.2, 0)], colores["copa"] * (tinte * 0.85))]
+			salida += [_poligono([Vector2(-w * 0.1, 0), Vector2(-w * 0.1, -h * 0.9), Vector2(w * 0.3, -h * 0.6), Vector2(w * 0.5, 0)], (colores["copa"] as Color).lightened(0.12) * tinte)]
+		Tipo.ESTALACTITA:
+			var h := 40.0 + float((v - 1) % 5) * 12.0
+			var w := 12.0 + float((v - 1) % 3) * 3.0
+			salida += [_poligono([Vector2(-w, 0), Vector2(-w * 0.55, h * 0.5), Vector2(w * 0.05, h), Vector2(w * 0.5, h * 0.55), Vector2(w, 0)], colores["copa"] * tinte)]
+			salida += [_poligono([Vector2(-w * 2.0, 0), Vector2(-w * 1.4, h * 0.35), Vector2(-w * 0.9, 0)], colores["copa"] * (tinte * 0.85))]
+		Tipo.CRISTAL:
+			var c: Color = colores["copa"]
+			var n := 3 + (v - 1) % 2
+			for i in n:
+				var dx := (float(i) - float(n - 1) * 0.5) * 12.0
+				var hh := 26.0 + float(((v - 1) + i * 2) % 4) * 8.0
+				var ww := 5.5 + float(i % 2) * 1.5
+				var ang := (float(i) - float(n - 1) * 0.5) * 0.28
+				var base := Vector2(dx, 0)
+				var pts := PackedVector2Array([Vector2(-ww, 0), Vector2(-ww, -hh * 0.7), Vector2(0, -hh), Vector2(ww, -hh * 0.7), Vector2(ww, 0)])
+				for k in pts.size():
+					pts[k] = base + pts[k].rotated(ang)
+				salida += [_poligono(pts, c * (0.85 + 0.1 * float(i % 2)))]
+				var luz := PackedVector2Array([Vector2(-ww * 0.2, -2), Vector2(-ww * 0.2, -hh * 0.72), Vector2(0, -hh * 0.95), Vector2(ww * 0.1, -hh * 0.7), Vector2(ww * 0.1, -2)])
+				for k in luz.size():
+					luz[k] = base + luz[k].rotated(ang)
+				salida += [_poligono(luz, c.lightened(0.45))]
+		Tipo.ANTORCHA:
+			var fe: Color = colores["copa"]
+			salida += [_poligono([Vector2(-2.4, 0), Vector2(-2.8, -30), Vector2(2.8, -30), Vector2(2.4, 0)], colores["tronco"] * tinte)]
+			salida += [_poligono([Vector2(-7, -27), Vector2(-8, -39), Vector2(8, -39), Vector2(7, -27), Vector2(2.5, -22), Vector2(-2.5, -22)], fe)]
+			salida += [_poligono([Vector2(-4, -16), Vector2(4, -16), Vector2(4, -13), Vector2(-4, -13)], fe)]
+			salida += [_poligono([Vector2(-8, -39), Vector2(8, -39), Vector2(7, -36.5), Vector2(-7, -36.5)], fe.lightened(0.25))]
+		Tipo.BRASERO:
+			var fe: Color = colores["copa"]
+			salida += [_poligono([Vector2(-15, 0), Vector2(-11, 0), Vector2(-3, -26), Vector2(-6, -26)], colores["tronco"])]
+			salida += [_poligono([Vector2(15, 0), Vector2(11, 0), Vector2(3, -26), Vector2(6, -26)], colores["tronco"])]
+			salida += [_poligono([Vector2(-2, 0), Vector2(2, 0), Vector2(2, -26), Vector2(-2, -26)], colores["tronco"])]
+			var cuenco := PackedVector2Array()
+			for k in 9:
+				var a := PI * float(k) / 8.0
+				cuenco.append(Vector2(cos(a) * 18.0, -29.0 + sin(a) * 11.0))
+			salida += [_poligono(cuenco, fe)]
+			salida += [_poligono([Vector2(-20, -32), Vector2(20, -32), Vector2(19, -28.5), Vector2(-19, -28.5)], fe.lightened(0.22))]
+			salida += [_poligono([Vector2(-10, -29), Vector2(10, -29), Vector2(9, -33), Vector2(-9, -33)], Color(0.55, 0.2, 0.05))]
+		Tipo.VELAS:
+			var cera: Color = colores["copa"]
+			var nv := 3 + (v - 1) % 3
+			salida += [_poligono(_elipse(Vector2(0, -1.5), Vector2(6.0 + 3.0 * float(nv), 2.6), 12), colores["tronco"])]
+			for i in nv:
+				var vx := (float(i) - float(nv - 1) * 0.5) * 9.0
+				var vh := 10.0 + float(((v - 1) + i * 5) % 4) * 6.0
+				salida += [_poligono([Vector2(vx - 2.6, -1), Vector2(vx - 2.4, -vh), Vector2(vx + 2.4, -vh), Vector2(vx + 2.6, -1)], cera * (0.9 + 0.1 * float(i % 2)))]
+				salida += [_poligono([Vector2(vx - 2.4, -vh), Vector2(vx - 0.6, -vh + 5.0), Vector2(vx + 0.8, -vh + 2.0), Vector2(vx + 2.4, -vh)], cera.lightened(0.25))]
+		Tipo.ESTANDARTE:
+			var tela: Color = colores["copa"] * tinte
+			var varilla: Color = colores["tronco"]
+			salida += [_poligono([Vector2(-1.4, -22), Vector2(-1.4, 0), Vector2(1.4, 0), Vector2(1.4, -22)], varilla)]
+			salida += [_poligono([Vector2(-30, -3), Vector2(30, -3), Vector2(30, 2), Vector2(-30, 2)], varilla)]
+			salida += [_poligono(_elipse(Vector2(-30, -0.5), Vector2(3.5, 3.5), 8), varilla.lightened(0.2))]
+			salida += [_poligono(_elipse(Vector2(30, -0.5), Vector2(3.5, 3.5), 8), varilla.lightened(0.2))]
+			var largo := 84.0 + float((v - 1) % 3) * 16.0
+			if v % 2 == 0:
+				salida += [_poligono([Vector2(-24, 2), Vector2(24, 2), Vector2(24, largo - 6.0), Vector2(15, largo - 14.0), Vector2(8, largo), Vector2(0, largo - 12.0), Vector2(-7, largo - 4.0), Vector2(-16, largo - 16.0), Vector2(-24, largo - 8.0)], tela)]
+			else:
+				salida += [_poligono([Vector2(-24, 2), Vector2(24, 2), Vector2(24, largo - 6.0), Vector2(0, largo + 10.0), Vector2(-24, largo - 6.0)], tela)]
+			salida += [_poligono([Vector2(-24, 2), Vector2(-19, 2), Vector2(-19, largo - 9.0), Vector2(-24, largo - 6.0)], tela.darkened(0.35))]
+			salida += [_poligono([Vector2(24, 2), Vector2(19, 2), Vector2(19, largo - 9.0), Vector2(24, largo - 6.0)], tela.darkened(0.35))]
+			var oro := Color(0.78, 0.55, 0.28)
+			salida += [_poligono(_elipse(Vector2(0, largo * 0.36), Vector2(10, 10), 14), tela.darkened(0.45))]
+			salida += [_poligono([Vector2(-9, largo * 0.36), Vector2(0, largo * 0.36 - 5.0), Vector2(9, largo * 0.36), Vector2(0, largo * 0.36 + 5.0)], oro)]
+			salida += [_poligono(_elipse(Vector2(0, largo * 0.36), Vector2(2.4, 2.4), 8), tela.darkened(0.6))]
+		Tipo.CADENAS:
+			var hierro: Color = colores["copa"] * tinte
+			var eslabones := 7 + (v - 1) % 5 * 3
+			salida += [_poligono(_elipse(Vector2(0, -2), Vector2(5, 3), 8), hierro.lightened(0.15))]
+			for i in eslabones:
+				var frontal := i % 2 == 0
+				var rx := 3.4 if frontal else 1.3
+				salida += [_poligono(_elipse(Vector2(0, 4.0 + float(i) * 7.0), Vector2(rx, 5.2), 8), hierro if frontal else hierro.lightened(0.18))]
+				if frontal:
+					salida += [_poligono(_elipse(Vector2(0, 4.0 + float(i) * 7.0), Vector2(1.3, 3.0), 6), Color(0.03, 0.03, 0.05))]
+			var fin := 4.0 + float(eslabones) * 7.0
+			salida += [_poligono([Vector2(-4, fin), Vector2(4, fin), Vector2(0, fin + 12.0)], hierro.lightened(0.1))]
+		Tipo.HUESOS:
+			var hueso: Color = colores["copa"] * tinte
+			var fila_y := [-5.5, -5.5, -5.5, -15.5, -15.5, -25.5]
+			var fila_x := [-12.5, 0.0, 12.5, -6.5, 6.5, 0.0]
+			var cuantos := 3 + (v - 1) % 4
+			salida += [_poligono([Vector2(-22, 0), Vector2(20, 0), Vector2(15, -3), Vector2(-16, -3)], Color(0.10, 0.08, 0.09))]
+			for i in cuantos:
+				var c := Vector2(float(fila_x[i]) + float(((v + i) % 3) - 1) * 1.2, float(fila_y[i]))
+				salida += _calavera(c, hueso * (0.92 + 0.1 * float((i + v) % 3)), 0.0 if (i + v) % 2 == 0 else 0.25)
+			salida += [_poligono([Vector2(-26, -2.5), Vector2(-9, -8), Vector2(-8, -6), Vector2(-25, -0.5)], hueso.darkened(0.12))]
+			salida += [_poligono([Vector2(9, -7), Vector2(27, -1), Vector2(26, 1.5), Vector2(8, -4)], hueso.darkened(0.12))]
+		Tipo.JAULA:
+			var fe: Color = colores["copa"]
+			salida += [_poligono([Vector2(-1.2, -30), Vector2(-1.2, 16), Vector2(1.2, 16), Vector2(1.2, -30)], fe.lightened(0.1))]
+			salida += [_poligono(_elipse(Vector2(0, 17), Vector2(4, 4), 8), fe.lightened(0.15))]
+			salida += [_poligono([Vector2(-14, 27), Vector2(-13, 62), Vector2(13, 62), Vector2(14, 27), Vector2(0, 14)], Color(0.04, 0.03, 0.05))]
+			if v % 2 == 1:
+				salida += _calavera(Vector2(-2, 56), fe.lightened(0.5), 0.3)
+			for i in 6:
+				var bx := -12.5 + float(i) * 5.0
+				salida += [_poligono([Vector2(bx - 0.9, 26), Vector2(bx - 0.9, 63), Vector2(bx + 0.9, 63), Vector2(bx + 0.9, 26)], fe)]
+			salida += [_poligono([Vector2(-16, 27), Vector2(0, 12), Vector2(16, 27), Vector2(13, 29), Vector2(-13, 29)], fe.lightened(0.12))]
+			salida += [_poligono([Vector2(-16, 61), Vector2(16, 61), Vector2(13, 67), Vector2(-13, 67)], fe.lightened(0.12))]
+		Tipo.ESTATUA:
+			var piedra: Color = colores["copa"] * tinte
+			var oscuro: Color = colores["tronco"]
+			salida += [_poligono([Vector2(-24, 0), Vector2(-24, -9), Vector2(-20, -9), Vector2(-20, -14), Vector2(20, -14), Vector2(20, -9), Vector2(24, -9), Vector2(24, 0)], oscuro.lightened(0.05))]
+			salida += [_poligono([Vector2(-18, -14), Vector2(-13, -60), Vector2(13, -60), Vector2(18, -14)], piedra)]
+			salida += [_poligono([Vector2(-13, -60), Vector2(-9, -82), Vector2(0, -108), Vector2(9, -82), Vector2(13, -60)], piedra.lightened(0.06))]
+			salida += [_poligono([Vector2(-5.5, -64), Vector2(-4.5, -82), Vector2(0, -90), Vector2(4.5, -82), Vector2(5.5, -64)], Color(0.02, 0.02, 0.04))]
+			salida += [_poligono([Vector2(-15, -48), Vector2(15, -48), Vector2(12, -38), Vector2(-12, -38)], piedra.darkened(0.25))]
+			salida += [_poligono([Vector2(-18, -14), Vector2(-14.5, -14), Vector2(-10.5, -60), Vector2(-13, -60)], piedra.lightened(0.28))]
+	return salida
+
+
+## Calavera frontal simple (cráneo, mandíbula, cuencas y nariz).
+func _calavera(c: Vector2, hueso: Color, inclina: float) -> Array[Polygon2D]:
+	var pol: Array[Polygon2D] = []
+	var oscuro := Color(0.05, 0.04, 0.05)
+	pol.append(_poligono(_girar(_elipse(Vector2.ZERO, Vector2(6.2, 5.6), 12), c, inclina), hueso))
+	pol.append(_poligono(_girar(PackedVector2Array([Vector2(-3.6, 3.2), Vector2(3.6, 3.2), Vector2(3.0, 7.2), Vector2(-3.0, 7.2)]), c, inclina), hueso.darkened(0.08)))
+	pol.append(_poligono(_girar(_elipse(Vector2(-2.5, -0.4), Vector2(1.6, 1.9), 6), c, inclina), oscuro))
+	pol.append(_poligono(_girar(_elipse(Vector2(2.5, -0.4), Vector2(1.6, 1.9), 6), c, inclina), oscuro))
+	pol.append(_poligono(_girar(PackedVector2Array([Vector2(0, 1.6), Vector2(-0.9, 3.4), Vector2(0.9, 3.4)]), c, inclina), oscuro))
+	return pol
+
+
+func _girar(pts: PackedVector2Array, c: Vector2, ang: float) -> PackedVector2Array:
+	var r := PackedVector2Array()
+	for q in pts:
+		r.append(c + q.rotated(ang))
+	return r
+
+
+## Fuego, luces y glifos brillantes (no se tiñen con color_noche; llevan parpadeo).
+func _generar_brillo(t: int, v: int) -> Array[Node2D]:
+	var res: Array[Node2D] = []
+	match t:
+		Tipo.ANTORCHA:
+			res += _fuego(Vector2(0, -38), 27.0, 8.5, 62.0, 0.5)
+		Tipo.BRASERO:
+			res += _fuego(Vector2(0, -31), 38.0, 14.0, 105.0, 0.55)
+			res += _fuego(Vector2(-9, -31), 21.0, 6.0, 0.0, 0.0)
+			res += _fuego(Vector2(9, -31), 24.0, 6.5, 0.0, 0.0)
+		Tipo.VELAS:
+			var nv := 3 + (v - 1) % 3
+			for i in nv:
+				var vx := (float(i) - float(nv - 1) * 0.5) * 9.0
+				var vh := 10.0 + float(((v - 1) + i * 5) % 4) * 6.0
+				res += _fuego(Vector2(vx, -vh - 1.0), 8.0, 2.6, 0.0, 0.0)
+			res += _halo(Vector2(0, -14), 0.34, 0.4, Color(1.0, 0.6, 0.25))
+		Tipo.CIRCULO:
+			var vio: Color = COLORES_CUEVA[Tipo.CIRCULO]["copa"]
+			vio.a = 0.85
+			res += [_linea_elipse(Vector2(0, -6), Vector2(74, 8.5), vio, 1.8)]
+			res += [_linea_elipse(Vector2(0, -6), Vector2(54, 6.0), Color(vio.r, vio.g, vio.b, 0.55), 1.2)]
+			for i in 8:
+				var a := TAU * float(i) / 8.0 + 0.2
+				var px := cos(a) * 64.0
+				var py := -1.0 + sin(a) * 6.3
+				var l := Line2D.new()
+				l.points = PackedVector2Array([Vector2(px, py), Vector2(px, py - 7.0 - float((i + v) % 3) * 3.0)])
+				l.width = 1.6
+				l.default_color = Color(vio.r, vio.g, vio.b, 0.75)
+				res.append(l)
+			var col := Polygon2D.new()
+			col.polygon = PackedVector2Array([Vector2(-60, -1), Vector2(60, -1), Vector2(42, -78), Vector2(-42, -78)])
+			col.vertex_colors = PackedColorArray([Color(vio.r, vio.g, vio.b, 0.22), Color(vio.r, vio.g, vio.b, 0.22), Color(vio.r, vio.g, vio.b, 0.0), Color(vio.r, vio.g, vio.b, 0.0)])
+			res.append(col)
+			var hl := _halo(Vector2(0, -3), 1.0, 0.16, Color(0.62, 0.22, 0.85))
+			(hl[0] as Sprite2D).scale = Vector2(1.1, 0.14)
+			res += hl
+		Tipo.GLIFO:
+			var vio: Color = COLORES_CUEVA[Tipo.GLIFO]["copa"]
+			vio.a = 0.7
+			res += [_linea_elipse(Vector2.ZERO, Vector2(46, 46), vio, 2.4)]
+			res += [_linea_elipse(Vector2.ZERO, Vector2(38, 38), Color(vio.r, vio.g, vio.b, 0.45), 1.3)]
+			for i in 16:
+				var a := TAU * float(i) / 16.0
+				var l := Line2D.new()
+				l.points = PackedVector2Array([Vector2(cos(a), sin(a)) * 39.0, Vector2(cos(a), sin(a)) * 46.0])
+				l.width = 1.5
+				l.default_color = Color(vio.r, vio.g, vio.b, 0.6)
+				res.append(l)
+			var triangulos := 2 if v % 2 == 0 else 1
+			for k in triangulos:
+				var tri := PackedVector2Array()
+				for i in 3:
+					tri.append(Vector2.from_angle(-PI * 0.5 + TAU * float(i) / 3.0 + PI * float(k)) * 31.0)
+				var lt := Line2D.new()
+				lt.points = tri
+				lt.closed = true
+				lt.width = 1.6
+				lt.default_color = Color(vio.r, vio.g, vio.b, 0.55)
+				res.append(lt)
+			res += [_linea_elipse(Vector2.ZERO, Vector2(13, 6.5), Color(vio.r, vio.g, vio.b, 0.85), 1.8)]
+			var iris := Polygon2D.new()
+			iris.polygon = _elipse(Vector2.ZERO, Vector2(3.6, 3.6), 10)
+			iris.color = Color(1.0, 0.45, 0.6, 0.9)
+			res.append(iris)
+			res += _halo(Vector2.ZERO, 0.85, 0.16, Color(0.62, 0.22, 0.85))
+		Tipo.ESTATUA:
+			if v % 2 == 1:
+				for sx in [-2.6, 2.6]:
+					res += _halo(Vector2(sx, -77), 0.09, 0.9, Color(1.0, 0.18, 0.28))
+	return res
+
+
+## Llama de 3 capas (naranja, ámbar, núcleo) + halo aditivo cálido opcional.
+func _fuego(pos: Vector2, alto: float, ancho: float, radio_halo: float, alpha_halo: float) -> Array[Node2D]:
+	var res: Array[Node2D] = []
+	for k in 3:
+		var f := 1.0 - 0.3 * float(k)
+		var lla := Polygon2D.new()
+		lla.polygon = _gota(alto * f, ancho * f)
+		lla.color = COLOR_FUEGO[k]
+		lla.position = pos - Vector2(0, float(k))
+		res.append(lla)
+		_llamas.append(lla)
+	if radio_halo > 0.0:
+		res += _halo(pos + Vector2(0, -alto * 0.35), radio_halo / 128.0, alpha_halo, Color(1.0, 0.5, 0.18))
+	return res
+
+
+func _gota(alto: float, ancho: float) -> PackedVector2Array:
+	return PackedVector2Array([
+		Vector2(-ancho, 0), Vector2(-ancho * 0.92, -alto * 0.32), Vector2(-ancho * 0.5, -alto * 0.62),
+		Vector2(-ancho * 0.05, -alto), Vector2(ancho * 0.38, -alto * 0.6), Vector2(ancho * 0.92, -alto * 0.3),
+		Vector2(ancho, 0), Vector2(ancho * 0.55, ancho * 0.6), Vector2(-ancho * 0.55, ancho * 0.6)])
+
+
+func _halo(pos: Vector2, esc: float, alpha: float, color: Color) -> Array[Node2D]:
+	var h := Sprite2D.new()
+	h.texture = LUZ_RADIAL
+	h.position = pos
+	h.scale = Vector2(esc, esc)
+	h.modulate = Color(color.r, color.g, color.b, alpha)
+	h.set_meta("alpha", alpha)
+	var mat := CanvasItemMaterial.new()
+	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	h.material = mat
+	_halos.append(h)
+	var res: Array[Node2D] = [h]
+	return res
+
+
+func _linea_elipse(centro: Vector2, radios: Vector2, color: Color, ancho: float) -> Line2D:
+	var l := Line2D.new()
+	l.points = _elipse(centro, radios, 28)
+	l.closed = true
+	l.width = ancho
+	l.default_color = color
+	return l
+
+
+func _elipse(centro: Vector2, radios: Vector2, n: int) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in n:
+		var a := TAU * float(i) / float(n)
+		pts.append(Vector2(centro.x + cos(a) * radios.x, centro.y + sin(a) * radios.y))
+	return pts
+
+

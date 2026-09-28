@@ -1,0 +1,229 @@
+extends Control
+## Dial de forma del HUD (inspirado en el dial del Omnitrix de Alien Force, arte propio).
+## Muestra la silueta de la forma SELECCIONADA dentro de un medallón; al pasar de una
+## forma a otra el ícono sale deslizándose y el nuevo entra desde el lado opuesto.
+## El aro exterior es la energía de transformación (con "fantasma" al gastarse) y su
+## color es el de la forma ACTIVA. Todo vectorial, editable desde el Inspector.
+
+const ICONO_ESCENA := preload("res://scenes/form_icon.tscn")
+
+@export var color_fondo := Color(0.06, 0.07, 0.09, 1.0)
+@export var color_borde := Color(0.30, 0.36, 0.44)
+@export var color_aro_fondo := Color(0.16, 0.18, 0.22, 0.95)
+@export var color_humano := Color(0.72, 0.88, 0.80)   ## color del aro en forma humana
+@export var color_bajo := Color(0.95, 0.25, 0.25)     ## aro con energía baja
+@export var color_cooldown := Color(1.0, 0.7, 0.3)
+@export var ancho_aro := 9.0
+@export_range(0.0, 1.0) var umbral_bajo := 0.25
+@export var duracion_transicion := 0.22
+@export_range(0.2, 1.5) var recorrido := 0.95          ## cuánto se desliza el ícono (fracción del recorte)
+@export_range(0.3, 2.0) var tamano_icono := 1.5         ## lado del ícono respecto del recorte interior (>1 = dibujo más grande)
+@export var giro_por_cambio := 0.5                      ## rad que gira el aro de marcas por cambio
+@export var cooldown_total := 3.0
+
+var energia := 100.0
+var energia_max := 100.0
+var forma_actual := 0
+var forma_sel := 0
+var cooldown := 0.0
+var colores: Array[Color] = [Color(0.8, 0.85, 0.9), Color(0.6, 0.6, 0.65), Color(0.7, 0.5, 0.35), Color(0.5, 0.4, 0.7)]
+
+var _fantasma := 100.0
+var _giro := 0.0
+var _flash := 0.0
+var _t := 0.0
+var _recorte: Control
+var _icono: Control
+var _salientes: Array[Control] = []
+var _tw_trans: Tween
+var _tw_fantasma: Tween
+var _tw_flash: Tween
+var _tw_pulso: Tween
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pivot_offset = size * 0.5
+	_recorte = Control.new()
+	_recorte.name = "Recorte"
+	_recorte.clip_contents = true
+	_recorte.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_recorte)
+	resized.connect(_reacomodar)
+	_reacomodar()
+	_icono = _crear_icono(forma_sel)
+	_recorte.add_child(_icono)
+	_ajustar_icono(_icono)
+
+
+func _process(delta: float) -> void:
+	_t += delta
+	if _icono != null and (_tw_trans == null or not _tw_trans.is_running()):
+		_icono.modulate.a = 0.4 if cooldown > 0.0 else 1.0
+	queue_redraw()
+
+
+func _radio() -> float:
+	return minf(size.x, size.y) * 0.5 - 2.0
+
+
+func _reacomodar() -> void:
+	pivot_offset = size * 0.5
+	if _recorte == null:
+		return
+	var interior := (_radio() - ancho_aro - 6.0) * 2.0
+	var lado := interior * 0.92
+	_recorte.size = Vector2(lado, lado)
+	_recorte.position = (size - _recorte.size) * 0.5
+	for n in _recorte.get_children():
+		_ajustar_icono(n)
+
+
+func _ajustar_icono(ic: Control) -> void:
+	var lado := _recorte.size.x
+	var t := lado * tamano_icono
+	ic.size = Vector2(t, t)
+	ic.pivot_offset = ic.size * 0.5
+	ic.position = Vector2((lado - t) * 0.5, (lado - t) * 0.5)
+
+
+func _crear_icono(idx: int) -> Control:
+	var ic: Control = ICONO_ESCENA.instantiate()
+	ic.forma = idx
+	ic.color_icono = _color_forma(idx).lightened(0.35)
+	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return ic
+
+
+func _color_forma(idx: int) -> Color:
+	return colores[idx] if idx >= 0 and idx < colores.size() else color_humano
+
+
+func set_formas(lista: Array) -> void:
+	colores.clear()
+	for c in lista:
+		colores.append(c)
+	if _icono != null:
+		_icono.color_icono = _color_forma(forma_sel).lightened(0.35)
+
+
+## Cambia la forma seleccionada con transición: el ícono viejo sale y el nuevo entra.
+func fijar_seleccion(idx: int, animar := true) -> void:
+	if idx == forma_sel:
+		return
+	var n := maxi(colores.size(), 2)
+	var d := posmod(idx - forma_sel, n)
+	var dir := 1.0 if d <= n / 2 else -1.0
+	forma_sel = idx
+	if _recorte == null:
+		return
+	# Cambios rápidos: descarta los íconos que aún estaban saliendo.
+	for s in _salientes:
+		if is_instance_valid(s):
+			s.queue_free()
+	_salientes.clear()
+	if _tw_trans != null and _tw_trans.is_valid():
+		_tw_trans.kill()
+	var saliente := _icono
+	_icono = _crear_icono(idx)
+	_recorte.add_child(_icono)
+	_ajustar_icono(_icono)
+	if not animar:
+		if saliente != null:
+			saliente.queue_free()
+		return
+	var w := _recorte.size.x * recorrido
+	_icono.position.x += dir * w
+	_icono.modulate.a = 0.0
+	_salientes.append(saliente)
+	var base_x := (_recorte.size.x - _icono.size.x) * 0.5
+	_tw_trans = create_tween().set_parallel(true)
+	_tw_trans.tween_property(_icono, "position:x", base_x, duracion_transicion).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tw_trans.tween_property(_icono, "modulate:a", 1.0, duracion_transicion * 0.8)
+	if saliente != null:
+		_tw_trans.tween_property(saliente, "position:x", saliente.position.x - dir * w, duracion_transicion).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+		_tw_trans.tween_property(saliente, "modulate:a", 0.0, duracion_transicion * 0.8)
+	_tw_trans.tween_property(self, "_giro", _giro + dir * giro_por_cambio, duracion_transicion * 1.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_tw_trans.chain().tween_callback(_limpiar_salientes)
+	_flash = 1.0
+	if _tw_flash != null and _tw_flash.is_valid():
+		_tw_flash.kill()
+	_tw_flash = create_tween()
+	_tw_flash.tween_property(self, "_flash", 0.0, duracion_transicion * 1.8)
+
+
+func _limpiar_salientes() -> void:
+	for s in _salientes:
+		if is_instance_valid(s):
+			s.queue_free()
+	_salientes.clear()
+
+
+## Pulso de escala al confirmar una transformación.
+func pulso_transformacion() -> void:
+	if _tw_pulso != null and _tw_pulso.is_valid():
+		_tw_pulso.kill()
+	scale = Vector2.ONE * 1.18
+	_flash = 1.0
+	_tw_pulso = create_tween().set_parallel(true)
+	_tw_pulso.tween_property(self, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tw_pulso.tween_property(self, "_flash", 0.0, 0.4)
+
+
+func set_energia(valor: float, maximo := 100.0) -> void:
+	energia_max = maximo
+	if valor < _fantasma:
+		if _tw_fantasma != null and _tw_fantasma.is_valid():
+			_tw_fantasma.kill()
+		_tw_fantasma = create_tween()
+		_tw_fantasma.tween_interval(0.32)
+		_tw_fantasma.tween_property(self, "_fantasma", valor, 0.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	else:
+		if _tw_fantasma != null and _tw_fantasma.is_valid():
+			_tw_fantasma.kill()
+		_fantasma = valor
+	energia = valor
+
+
+func set_cooldown(segundos: float) -> void:
+	cooldown = maxf(segundos, 0.0)
+
+
+func _draw() -> void:
+	var c := size * 0.5
+	var R := _radio()
+	var r_aro := R - ancho_aro * 0.5 - 1.0
+	draw_circle(c, R, color_fondo)
+	draw_arc(c, r_aro, 0.0, TAU, 72, color_aro_fondo, ancho_aro, true)
+	var frac := clampf(energia / maxf(energia_max, 0.01), 0.0, 1.0)
+	var frac_f := clampf(_fantasma / maxf(energia_max, 0.01), 0.0, 1.0)
+	var col_aro := color_humano if forma_actual == 0 else _color_forma(forma_actual)
+	var bajo := frac <= umbral_bajo and forma_actual != 0
+	if bajo:
+		var onda := 0.5 + 0.5 * sin(_t * 9.0)
+		col_aro = col_aro.lerp(color_bajo, 0.55 + 0.45 * onda)
+	if frac_f > frac:
+		draw_arc(c, r_aro, -PI * 0.5 + TAU * frac, -PI * 0.5 + TAU * frac_f, 48, Color(1, 1, 1, 0.35), ancho_aro, true)
+	if frac > 0.001:
+		draw_arc(c, r_aro, -PI * 0.5, -PI * 0.5 + TAU * frac, 72, col_aro, ancho_aro, true)
+	# Marcas interiores que giran al cambiar de forma.
+	var r_in := r_aro - ancho_aro * 0.5 - 3.0
+	for i in 12:
+		var a := _giro + TAU * float(i) / 12.0
+		var u := Vector2.from_angle(a)
+		draw_line(c + u * r_in, c + u * (r_in - 6.0), Color(col_aro.r, col_aro.g, col_aro.b, 0.45), 1.6, true)
+	if _flash > 0.0:
+		var cf := _color_forma(forma_sel)
+		draw_circle(c, r_in - 4.0, Color(cf.r, cf.g, cf.b, 0.32 * _flash))
+	draw_arc(c, R, 0.0, TAU, 72, color_borde, 2.0, true)
+	# Cooldown de la forma seleccionada: arco naranja y segundos en el centro.
+	if cooldown > 0.0:
+		var f := clampf(cooldown / maxf(cooldown_total, 0.01), 0.0, 1.0)
+		draw_arc(c, r_in - 7.0, -PI * 0.5, -PI * 0.5 + TAU * f, 48, color_cooldown, 4.0, true)
+		var fuente := ThemeDB.fallback_font
+		var txt := "%d" % int(ceil(cooldown))
+		var ancho := fuente.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 26).x
+		draw_string(fuente, c + Vector2(-ancho * 0.5, 9.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color(1, 0.9, 0.7))
+	# Punto de "forma activa distinta de la seleccionada".
+	if forma_actual != forma_sel:
+		draw_circle(c + Vector2(0, R - ancho_aro - 9.0), 4.5, _color_forma(forma_actual))

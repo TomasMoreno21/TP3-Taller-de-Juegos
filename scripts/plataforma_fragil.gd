@@ -9,6 +9,12 @@ enum Ruptura { DESTRUIR, CAER }
 @export var modo_ruptura := Ruptura.DESTRUIR
 @export var temblor_max := 3.0       # px de vaivén al temblar (crece hacia la ruptura)
 @export var gravedad_caida := 2400.0 # aceleración al caer (modo CAER)
+## Reaparición: tras `tiempo_reaparicion` s la plataforma vuelve (si el jugador no está encima).
+## También vuelve siempre que el jugador reaparece en un checkpoint. 0 = solo por checkpoint.
+@export var reaparece := true
+@export var tiempo_reaparicion := 10.0
+## true = una vez rota queda rota toda la partida (comportamiento anterior, vía Progresion).
+@export var persistente_rota := false
 ## Clave de persistencia: si queda vacía se genera sola (escena + ruta del nodo).
 ## Ponerla a mano permite agrupar/referenciar plataformas de forma estable.
 @export var clave_persistencia := ""
@@ -24,6 +30,9 @@ var _t := 0.0
 var _vel_caida := 0.0
 var _visual: Polygon2D
 var _shape: CollisionShape2D
+var _pos_inicial := Vector2.ZERO
+var _t_rota := 0.0
+var _tween_vuelta: Tween
 
 
 func _clave() -> String:
@@ -38,6 +47,7 @@ func _clave() -> String:
 func _ready() -> void:
 	add_to_group("plataforma_fragil")
 	collision_layer = 1
+	_pos_inicial = position
 	_visual = get_node_or_null("Visual") as Polygon2D
 	_shape = get_node_or_null("Collision") as CollisionShape2D
 	if _visual == null:
@@ -45,7 +55,7 @@ func _ready() -> void:
 	if _shape == null:
 		_shape = _crear_collision_fallback()
 	var prog := get_node_or_null("/root/Progresion")
-	if prog != null and prog.plataforma_rota(_clave()):
+	if persistente_rota and prog != null and prog.plataforma_rota(_clave()):
 		_romper(true)
 
 
@@ -66,16 +76,25 @@ func _physics_process(delta: float) -> void:
 		Fase.CAYENDO:
 			_vel_caida = minf(_vel_caida + gravedad_caida * delta, 2600.0)
 			position.y += _vel_caida * delta
-			if global_position.y > 4500.0:
-				queue_free()
+			if position.y > _pos_inicial.y + 3000.0:
+				_fase = Fase.ROTA
+				_t_rota = 0.0
+				_visual.visible = false
+				_shape.set_deferred("disabled", true)
+		Fase.ROTA:
+			if reaparece and tiempo_reaparicion > 0.0:
+				_t_rota += delta
+				if _t_rota >= tiempo_reaparicion and not _jugador_encima():
+					restaurar()
 
 
 func _romper(sin_animacion := false) -> void:
 	if _fase == Fase.ROTA:
 		return
 	var prog := get_node_or_null("/root/Progresion")
-	if prog != null:
+	if persistente_rota and prog != null:
 		prog.marcar_plataforma_rota(_clave())
+	_t_rota = 0.0
 	if sin_animacion:
 		_shape.set_deferred("disabled", true)
 		_fase = Fase.ROTA
@@ -91,10 +110,39 @@ func _romper(sin_animacion := false) -> void:
 			tw.set_parallel(true)
 			tw.tween_property(_visual, "modulate:a", 0.0, 0.12)
 			tw.tween_property(_visual, "scale", Vector2(1.3, 1.3), 0.12)
-			tw.chain().tween_callback(queue_free)
+			tw.chain().tween_callback(func() -> void: _visual.visible = false)
 		Ruptura.CAER:
 			# El collider queda activo: el jugador cae junto con la plataforma.
 			_fase = Fase.CAYENDO
+
+
+## Vuelve a aparecer (fundido corto). Se llama por tiempo o al reaparecer el jugador.
+func restaurar() -> void:
+	if _fase == Fase.ESPERA:
+		return
+	if _tween_vuelta != null and _tween_vuelta.is_valid():
+		_tween_vuelta.kill()
+	_fase = Fase.ESPERA
+	_t = 0.0
+	_t_rota = 0.0
+	_vel_caida = 0.0
+	position = _pos_inicial
+	_shape.set_deferred("disabled", false)
+	_visual.position.x = 0.0
+	_visual.scale = Vector2.ONE
+	_visual.visible = true
+	_visual.modulate.a = 0.0
+	_tween_vuelta = create_tween()
+	_tween_vuelta.tween_property(_visual, "modulate:a", 1.0, 0.35)
+
+
+## True si el jugador está tocando el rect de la plataforma (no reaparecer encima suyo).
+func _jugador_encima() -> bool:
+	var p: Node2D = get_tree().get_first_node_in_group("player")
+	if p == null:
+		return false
+	var b := _rect_body(p)
+	return b != Rect2() and b.intersects(_rect_propio().grow(6.0))
 
 
 ## Polvillo/escombros desde el borde superior de la plataforma.

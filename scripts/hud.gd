@@ -15,16 +15,18 @@ var _combo_base_pos: Vector2
 
 @onready var info: RichTextLabel = $Margin/Info
 @onready var combo_label: RichTextLabel = $ComboLabel
-@onready var hp_bar: ProgressBar = $Bars/Rows/HpRow/HpBarStack/HpBar
-@onready var hp_bar_delayed: ProgressBar = $Bars/Rows/HpRow/HpBarStack/HpBarDelayed
-@onready var esp_bar: ProgressBar = $Bars/Rows/EspRow/EspBarStack/EspBar
-@onready var esp_bar_delayed: ProgressBar = $Bars/Rows/EspRow/EspBarStack/EspBarDelayed
-@onready var esp_cap: PanelContainer = $Bars/Rows/EspRow/EspCap
-@onready var prog_label: Label = $ProgLabel
-@onready var sel_label: Label = $SelLabel
+@onready var izquierda: Control = $Izquierda
+@onready var derecha: Control = $Derecha
+@onready var dial: Control = $Izquierda/Dial
+@onready var hp_bar: ProgressBar = $Izquierda/Vida/HpBar
+@onready var hp_bar_delayed: ProgressBar = $Izquierda/Vida/HpBarDelayed
+@onready var hp_label: Label = $Izquierda/Vida/HpLabel
+@onready var nivel_label: Label = $Derecha/Nivel
+@onready var prog_bar: ProgressBar = $Derecha/ProgBar
+@onready var prog_label: Label = $Derecha/ProgLabel
 @onready var aviso: Label = $Aviso
-@onready var racha_box: VBoxContainer = $Racha
-@onready var racha_valor: Label = $Racha/Valor
+@onready var racha_box: VBoxContainer = $Derecha/Racha
+@onready var racha_valor: Label = $Derecha/Racha/Valor
 @onready var flash_dano: ColorRect = $FlashDano
 @onready var vineta_vida: TextureRect = $VinetaVida
 
@@ -42,16 +44,20 @@ var _combo_base_pos: Vector2
 	$BossBar/Panel/Col/Pips/P3,
 ]
 
-var _esp_cap_style: StyleBoxFlat
 var _flash_tween: Tween
-var _energia_pulse: Tween
 var _energia_aviso_dado := false
 var _prog_tween: Tween
 
 @export var pop_fragmentos_escala := 1.35
 @export var pop_fragmentos_color := Color(0.55, 0.8, 1.0)
+## Con vida y energía llenas y sin combate, el HUD baja de opacidad para despejar la pantalla.
+@export var auto_ocultar := true
+@export var ocultar_tras := 3.0
+@export_range(0.0, 1.0) var alpha_reposo := 0.45
 var _hp_delayed_tween: Tween
-var _esp_delayed_tween: Tween
+var _hp_lleno := true
+var _energia_llena := true
+var _t_reposo := 0.0
 var _boss: Node2D
 var _boss_fill_style: StyleBoxFlat
 var _pip_on_style: StyleBox
@@ -62,14 +68,11 @@ var _vineta_fade_tween: Tween
 var _racha_tween: Tween
 
 
-var _selector_refresh := 0.0
-
 func _process(delta: float) -> void:
-	if _player != null and not _player._cooldown_formas.is_empty():
-		_selector_refresh -= delta
-		if _selector_refresh <= 0.0:
-			_selector_refresh = 0.15
-			_actualizar_selector()
+	if _player != null:
+		dial.forma_actual = _player.current_form
+		dial.set_cooldown(float(_player._cooldown_formas.get(_player.forma_seleccionada, 0.0)))
+	_auto_ocultar(delta)
 	if _vineta_activa:
 		var vel := vineta_pulso_velocidad * (1.0 + _vineta_severidad)
 		var t := Time.get_ticks_msec() * 0.001 * vel
@@ -80,9 +83,6 @@ func _ready() -> void:
 	visible = true
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("hud")
-
-	_esp_cap_style = esp_cap.get_theme_stylebox("panel").duplicate()
-	esp_cap.add_theme_stylebox_override("panel", _esp_cap_style)
 
 	_idle_timer = Timer.new()
 	_idle_timer.wait_time = 1.5
@@ -111,11 +111,7 @@ func _ready() -> void:
 		hp_bar_delayed.max_value = 100
 		hp_bar_delayed.value = 100
 	hp_bar.value = 100
-	if esp_bar_delayed != null:
-		esp_bar_delayed.max_value = 100.0
-		esp_bar_delayed.value = 100.0
-	esp_bar.max_value = 100.0
-	esp_bar.value = 100.0
+	dial.set_energia(100.0)
 	_prog_refresh()
 	_connectar_player.call_deferred()
 	_conectar_boss.call_deferred()
@@ -133,8 +129,7 @@ func _connectar_player() -> void:
 	_player.energia_changed.connect(_on_energia_changed)
 	_player.transformacion_agotada.connect(_on_agotada)
 	_player.racha_changed.connect(_on_racha_changed)
-	_actualizar_cap_forma()
-	_actualizar_selector()
+	_actualizar_dial()
 
 
 # --- Barra del jefe (Arzobispo). Nodo propio arriba-centro, FUERA del bloque
@@ -188,15 +183,15 @@ func _on_boss_fase(fase: int) -> void:
 
 func _on_fragmentos(_total: int) -> void:
 	_prog_refresh()
-	_actualizar_selector()
 	_pop_fragmentos()
+	_t_reposo = 0.0
 
 
 ## "Pop" del contador al sumar un fragmento: crece, destella en azul y vuelve.
 func _pop_fragmentos() -> void:
 	if _prog_tween != null and _prog_tween.is_valid():
 		_prog_tween.kill()
-	prog_label.pivot_offset = Vector2(0.0, prog_label.size.y * 0.5)
+	prog_label.pivot_offset = Vector2(prog_label.size.x, prog_label.size.y * 0.5)
 	prog_label.scale = Vector2.ONE * pop_fragmentos_escala
 	prog_label.self_modulate = pop_fragmentos_color
 	_prog_tween = create_tween().set_parallel(true)
@@ -211,7 +206,7 @@ func mostrar_aviso(texto: String) -> void:
 
 func _on_nivel(_nuevo: int) -> void:
 	_prog_refresh()
-	_actualizar_selector()
+	_actualizar_dial()
 
 
 func _on_combo(_form_index: int, combo_nombre: String) -> void:
@@ -240,7 +235,7 @@ func _forma_nueva(nuevo_nivel: int) -> String:
 
 func _on_forma_desbloqueada(form_index: int) -> void:
 	_aviso("¡%s DESBLOQUEADO!" % _nombre_forma(form_index))
-	_actualizar_selector()
+	_actualizar_dial()
 
 
 func _nombre_forma(form_index: int) -> String:
@@ -252,17 +247,45 @@ func _nombre_forma(form_index: int) -> String:
 
 func _on_form_changed(form_name: String) -> void:
 	_aviso("Forma: %s" % form_name)
-	_actualizar_cap_forma()
+	dial.forma_actual = _player.current_form
+	dial.pulso_transformacion()
+	_t_reposo = 0.0
 
 
-func _actualizar_cap_forma() -> void:
-	if _player == null or _esp_cap_style == null:
+## Sincroniza el dial con el estado actual del jugador (colores de forma, selección, energía).
+func _actualizar_dial() -> void:
+	if _player == null:
 		return
-	var data = _player.forms[_player.current_form]
-	_esp_cap_style.bg_color = data.color
+	var cols: Array = []
+	for f in _player.forms:
+		cols.append(f.color)
+	dial.set_formas(cols)
+	dial.forma_actual = _player.current_form
+	dial.fijar_seleccion(_player.forma_seleccionada, false)
+	dial.set_energia(_player.energia, _player.ENERGIA_MAX)
+
+
+## Reposo: con todo lleno y sin actividad, el HUD baja de opacidad.
+func _en_reposo() -> bool:
+	return _hp_lleno and _energia_llena and not racha_box.visible \
+		and _player.forma_seleccionada == _player.current_form \
+		and _player._cooldown_formas.is_empty()
+
+
+func _auto_ocultar(delta: float) -> void:
+	if not auto_ocultar or _player == null or not _en_reposo():
+		_t_reposo = 0.0
+	else:
+		_t_reposo += delta
+	var objetivo := alpha_reposo if _t_reposo >= ocultar_tras else 1.0
+	var vel := 2.0 if objetivo < 1.0 else 8.0
+	var a := lerpf(izquierda.modulate.a, objetivo, minf(vel * delta, 1.0))
+	izquierda.modulate.a = a
+	derecha.modulate.a = a
 
 
 func _on_racha_changed(cantidad: int) -> void:
+	_t_reposo = 0.0
 	if cantidad >= 2:
 		racha_valor.text = str(cantidad)
 		racha_box.visible = true
@@ -279,36 +302,16 @@ func _pop_racha(cantidad: int) -> void:
 	if _racha_tween != null and _racha_tween.is_valid():
 		_racha_tween.kill()
 	var base := Vector2.ONE * (1.0 if cantidad == 3 else 1.2)
+	racha_box.pivot_offset = Vector2(racha_box.size.x, 0.0)
 	racha_box.scale = base * 0.7
 	_racha_tween = create_tween()
 	_racha_tween.tween_property(racha_box, "scale", base * 1.15, 0.08).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	_racha_tween.tween_property(racha_box, "scale", base, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
-func _on_forma_selectada(_index: int) -> void:
-	_actualizar_selector()
-
-
-func _actualizar_selector() -> void:
-	if _player == null:
-		return
-	var prog: Node = get_node("/root/Progresion")
-	var partes: Array[String] = []
-	for i in range(_player.forms.size()):
-		if not prog.forma_desbloqueada(i):
-			continue
-		var nombre := str(_player.forms[i].form_name).to_upper()
-		if _player.has_method("_forma_en_cooldown") and _player._forma_en_cooldown(i):
-			var t: float = _player._cooldown_formas.get(i, 0.0)
-			nombre += " (%ds)" % int(ceil(t))
-			partes.append(nombre)
-		elif i == _player.current_form and i == _player.forma_seleccionada:
-			partes.append("◈ " + nombre)
-		elif i == _player.forma_seleccionada:
-			partes.append("[" + nombre + "]")
-		else:
-			partes.append(nombre)
-	sel_label.text = "FORMAS   " + "   ".join(partes)
+func _on_forma_selectada(index: int) -> void:
+	dial.fijar_seleccion(index)
+	_t_reposo = 0.0
 
 
 func _crear_filas() -> void:
@@ -339,6 +342,7 @@ func _crear_filas() -> void:
 
 func _on_attack_performed(_attack_type: String, _step: Variant) -> void:
 	_idle_timer.start()
+	_t_reposo = 0.0
 	var txt := _texto_ataque(_attack_type, _step)
 	_historial.push_front(txt)
 	if _historial.size() > GOLPES_MAX:
@@ -377,6 +381,9 @@ func _texto_ataque(_attack_type: String, _step: Variant) -> String:
 
 func _on_health_changed(hp: int, max_hp: int) -> void:
 	_actualizar_vineta(hp, max_hp)
+	_hp_lleno = hp >= max_hp
+	_t_reposo = 0.0
+	hp_label.text = "%d/%d" % [hp, max_hp]
 	hp_bar.max_value = max_hp
 	hp_bar.value = hp
 	if hp_bar_delayed != null:
@@ -418,20 +425,10 @@ func _on_dano_recibido(_cantidad: int) -> void:
 
 
 func _on_energia_changed(energia: float) -> void:
-	esp_bar.max_value = 100.0
-	esp_bar.value = energia
-	if esp_bar_delayed != null:
-		esp_bar_delayed.max_value = 100.0
-		if energia < esp_bar_delayed.value:
-			if _esp_delayed_tween != null and _esp_delayed_tween.is_valid():
-				_esp_delayed_tween.kill()
-			_esp_delayed_tween = create_tween()
-			_esp_delayed_tween.tween_interval(0.32)
-			_esp_delayed_tween.tween_property(esp_bar_delayed, "value", energia, 0.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		elif energia > esp_bar_delayed.value:
-			if _esp_delayed_tween != null and _esp_delayed_tween.is_valid():
-				_esp_delayed_tween.kill()
-			esp_bar_delayed.value = energia
+	dial.set_energia(energia)
+	_energia_llena = energia >= 99.9
+	if not _energia_llena:
+		_t_reposo = 0.0
 	if energia < 25.0 and _player != null and _player.current_form != 0:
 		if not _energia_aviso_dado:
 			_aviso("¡Energía baja!")
@@ -439,17 +436,8 @@ func _on_energia_changed(energia: float) -> void:
 			if audio != null:
 				audio.play_ui("energia_baja", -12.0)
 			_energia_aviso_dado = true
-		if _energia_pulse == null or not _energia_pulse.is_valid():
-			_energia_pulse = esp_bar.create_tween()
-			_energia_pulse.set_loops()
-			_energia_pulse.tween_property(esp_bar, "modulate:a", 0.45, 0.35)
-			_energia_pulse.tween_property(esp_bar, "modulate:a", 1.0, 0.35)
 	else:
 		_energia_aviso_dado = false
-		if _energia_pulse != null and _energia_pulse.is_valid():
-			_energia_pulse.kill()
-			_energia_pulse = null
-		esp_bar.modulate.a = 1.0
 
 
 func _on_agotada() -> void:
@@ -462,7 +450,10 @@ func _prog_refresh() -> void:
 	var siguiente: int = prog.fragmentos_para_nivel(prog.nivel + 1)
 	var tramo: int = prog.fragmentos - base
 	var requeridos: int = siguiente - base
-	prog_label.text = "FRAGMENTOS %d/%d · NIVEL %d" % [tramo, requeridos, prog.nivel]
+	nivel_label.text = "NIVEL %d" % prog.nivel
+	prog_bar.max_value = maxi(requeridos, 1)
+	prog_bar.value = tramo
+	prog_label.text = "%d/%d fragmentos" % [tramo, requeridos]
 
 
 func _limpiar_idle() -> void:

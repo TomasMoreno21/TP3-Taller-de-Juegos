@@ -8,7 +8,7 @@ extends ParallaxLayer
 ## Cada capa dibuja de forma CONTINUA en ancho_total/centro_x y alto
 ## (y_techo..y_fondo). Configurable desde el Inspector.
 
-@export_enum("sombra", "pared", "estalactitas", "pilares", "estalagmitas", "agua") var tipo := "sombra":
+@export_enum("sombra", "pared", "secta", "estalactitas", "pilares", "estalagmitas", "agua") var tipo := "sombra":
 	set(value):
 		tipo = value
 		queue_redraw()
@@ -42,6 +42,12 @@ extends ParallaxLayer
 		centro_x = value
 		queue_redraw()
 ## Techo (arriba) de la caverna, límite de la cámara en nivel vertical.
+## Fracción superior (0-1) del alto que entra en fundido desde transparente: sirve
+## para que el techo de la cueva no corte en seco sobre un fondo exterior.
+@export_range(0.0, 0.5) var fundido_superior := 0.0:
+	set(value):
+		fundido_superior = value
+		queue_redraw()
 @export var y_techo := -1500.0:
 	set(value):
 		y_techo = value
@@ -55,6 +61,15 @@ extends ParallaxLayer
 @export var color_niebla := Color(0.36, 0.44, 0.58):
 	set(value):
 		color_niebla = value
+		queue_redraw()
+## Color de acento de la secta (sigilos, resplandor de nichos) y de sus fuegos.
+@export var color_acento := Color(0.6, 0.22, 0.75):
+	set(value):
+		color_acento = value
+		queue_redraw()
+@export var color_fuego := Color(1.0, 0.55, 0.2):
+	set(value):
+		color_fuego = value
 		queue_redraw()
 ## Cuánta niebla atmosférica se dibuja en esta capa (0 = ninguna).
 @export_range(0.0, 1.0, 0.05) var niebla := 0.18:
@@ -73,6 +88,8 @@ func _draw() -> void:
 			_dibujar_sombra(x_min, x_max, ancho)
 		"pared":
 			_dibujar_pared(x_min, x_max, ancho)
+		"secta":
+			_dibujar_secta(x_min, x_max, ancho)
 		"estalactitas":
 			_dibujar_estalactitas(x_min, x_max, ancho)
 		"pilares":
@@ -137,6 +154,54 @@ func _dibujar_pared(x_min: float, x_max: float, ancho: float) -> void:
 			seed(semilla * 17 + i * 11 + j * 13)
 			var p := _punto_rejilla(x_min, ancho, sc, i + 1, y_techo + 300.0, alto - 500.0, sf, j)
 			_estrato(x_min, x_max, p.y, randf_range(0.1, 0.18))
+	# Relieve de la roca: manchas grandes y suaves, más claras y más oscuras, que
+	# rompen la pared lisa (sin bordes marcados: alfa muy bajo).
+	var rc := maxi(3, roundi(ancho / 1100.0))
+	var rf := maxi(3, roundi(alto / 900.0))
+	for i in rc:
+		for j in rf:
+			seed(semilla * 97 + i * 19 + j * 23)
+			var c := _punto_rejilla(x_min, ancho, rc, i, y_techo + 200.0, alto - 400.0, rf, j)
+			var rx := randf_range(320.0, 640.0)
+			var ry := randf_range(200.0, 400.0)
+			var clara_m := randf() < 0.45
+			var base_m := color_a.lightened(0.35) if clara_m else color_a.darkened(0.5)
+			var pts_m := PackedVector2Array()
+			for k in 10:
+				var ang := TAU * float(k) / 10.0
+				var rr := randf_range(0.7, 1.0)
+				pts_m.append(c + Vector2(cos(ang) * rx * rr, sin(ang) * ry * rr))
+			draw_colored_polygon(pts_m, Color(base_m.r, base_m.g, base_m.b, randf_range(0.05, 0.1)))
+	# Bandas de estrato claras (capas de roca distinta) sobre las líneas de estrato.
+	var nb := maxi(3, roundi(alto / 850.0))
+	for j in nb:
+		seed(semilla * 131 + j * 29)
+		var yb := y_techo + 500.0 + (float(j) + randf_range(0.1, 0.9)) * (alto - 900.0) / float(nb)
+		var grosor := randf_range(50.0, 120.0)
+		var arriba := PackedVector2Array()
+		var abajo := PackedVector2Array()
+		var xb := int(floor(x_min))
+		while xb <= int(ceil(x_max)):
+			var off := sin(float(xb) * 0.0021 + float(j) * 1.7) * 26.0
+			arriba.append(Vector2(xb, yb + off))
+			abajo.append(Vector2(xb, yb + off + grosor + sin(float(xb) * 0.0035 + float(j)) * 14.0))
+			xb += 200
+		abajo.reverse()
+		arriba.append_array(abajo)
+		var cb := color_a.lightened(0.28)
+		draw_colored_polygon(arriba, Color(cb.r, cb.g, cb.b, randf_range(0.05, 0.085)))
+	# Vetas de humedad: chorreados oscuros que bajan desde un estrato, con un brillo fino.
+	var nh := maxi(6, roundi(ancho / 800.0))
+	for i in nh:
+		seed(semilla * 151 + i * 43)
+		var hx := x_min + randf() * ancho
+		var hy := y_techo + randf_range(500.0, alto - 1200.0)
+		var hl := randf_range(320.0, 900.0)
+		var hw := randf_range(8.0, 20.0)
+		var cs := color_a.darkened(0.6)
+		draw_polygon(PackedVector2Array([Vector2(hx - hw, hy), Vector2(hx + hw, hy), Vector2(hx + hw * 0.3, hy + hl), Vector2(hx - hw * 0.3, hy + hl)]),
+			PackedColorArray([Color(cs.r, cs.g, cs.b, 0.16), Color(cs.r, cs.g, cs.b, 0.16), Color(cs.r, cs.g, cs.b, 0.0), Color(cs.r, cs.g, cs.b, 0.0)]))
+		draw_line(Vector2(hx + hw * 0.55, hy + 8.0), Vector2(hx + hw * 0.2, hy + hl * 0.7), Color(0.7, 0.8, 0.95, 0.05), 2.0)
 	# Pocas grietas grandes y verticales, colocadas con sentido geológico
 	# (arrancan de un estrato y bajan). No forman rejilla tupida.
 	var n_gri := maxi(2, roundi(ancho / 2200.0))
@@ -145,6 +210,28 @@ func _dibujar_pared(x_min: float, x_max: float, ancho: float) -> void:
 		var x := _centro_familia(x_min, ancho, n_gri, i)
 		var y0 := y_techo + randf_range(400.0, 2400.0)
 		_dibujar_falla_at(x, y0, randf_range(1000.0, 1800.0), randf_range(0.14, 0.22))
+	# Haces de luz tenues que entran por grietas del techo (oblicuos, se apagan hacia abajo).
+	var n_luz := maxi(2, roundi(ancho / 3800.0))
+	for i in n_luz:
+		seed(semilla * 61 + i * 37)
+		var lx := _centro_familia(x_min, ancho, n_luz, i)
+		var ly := y_techo + randf_range(500.0, alto * 0.55)
+		var lw := randf_range(150.0, 280.0)
+		var largo := randf_range(1300.0, 2100.0)
+		var sesgo := randf_range(200.0, 380.0)
+		# Tres capas anidadas (ancha tenue → estrecha más clara): borde suave, sin filo duro.
+		for capa in 3:
+			var f := 1.0 - 0.33 * float(capa)
+			var c_luz := Color(0.72, 0.82, 0.95, 0.03 + 0.012 * float(capa))
+			var c_luz0 := Color(c_luz.r, c_luz.g, c_luz.b, 0.0)
+			draw_polygon(PackedVector2Array([Vector2(lx - lw * 0.5 * f, ly), Vector2(lx + lw * 0.5 * f, ly),
+				Vector2(lx + lw * 0.9 * f + sesgo, ly + largo), Vector2(lx - lw * 0.9 * f + sesgo, ly + largo)]),
+				PackedColorArray([c_luz, c_luz, c_luz0, c_luz0]))
+		# Motas de polvo que flotan dentro del haz.
+		for m in 14:
+			var t := randf()
+			var mp := Vector2(lx + lerpf(-lw * 0.4, lw * 0.4, randf()) + sesgo * t, ly + largo * t * 0.85)
+			draw_circle(mp, randf_range(1.6, 3.6), Color(0.85, 0.92, 1.0, randf_range(0.10, 0.22) * (1.0 - t)))
 	# Niebla media: corta la roca a la altura del descenso, dando profundidad.
 	_dibujar_capa_niebla(x_min, x_max, alto, 3, 0.7)
 
@@ -153,7 +240,15 @@ func _dibujar_estalactitas(x_min: float, x_max: float, ancho: float) -> void:
 	var techo_h := 520.0
 	var base_techo := y_techo + techo_h
 	# Masa del techo con borde inferior iluminado por la luz de la entrada.
-	draw_rect(Rect2(x_min, y_techo, ancho, techo_h), color_a)
+	if fundido_superior > 0.0:
+		# Sin corte seco arriba: la masa entra en fundido desde transparente.
+		var tiras := 24
+		for k in tiras:
+			var ck := color_a
+			ck.a *= smoothstep(0.0, 1.0, float(k) / float(tiras - 1))
+			draw_rect(Rect2(x_min, y_techo + techo_h * k / float(tiras), ancho, techo_h / float(tiras) + 1.0), ck)
+	else:
+		draw_rect(Rect2(x_min, y_techo, ancho, techo_h), color_a)
 	draw_polyline(PackedVector2Array([
 		Vector2(x_min, base_techo), Vector2(x_max, base_techo)]),
 		Color(color_a.lightened(0.5).r, color_a.lightened(0.5).g, color_a.lightened(0.5).b, 0.5), 3.0)
@@ -252,13 +347,129 @@ func _dibujar_agua(x_min: float, x_max: float, ancho: float) -> void:
 		draw_rect(Rect2(x, y_base + 14.0 + randf_range(-4.0, 4.0), 2.0, xy), Color(color_b.r, color_b.g, color_b.b, 0.12))
 
 
+## Capa de la SECTA: nichos tallados con estatuas encapuchadas, sigilos pintados en la
+## pared y candelabros lejanos. Pocos elementos grandes en rejilla, con huecos.
+func _dibujar_secta(x_min: float, x_max: float, ancho: float) -> void:
+	var alto := y_fondo - y_techo
+	var cols := maxi(3, roundi(ancho / (2500.0 / densidad)))
+	var filas := maxi(3, roundi(alto / 1250.0))
+	for i in cols:
+		for j in filas:
+			seed(semilla * 131 + i * 17 + j * 29)
+			if randf() < 0.22:
+				continue
+			var p := _punto_rejilla(x_min, ancho, cols, i, y_techo + 900.0, alto - 1800.0, filas, j)
+			var k := randf()
+			if k < 0.46:
+				_dibujar_nicho(p.x, p.y + 380.0, randf_range(340.0, 500.0), randf_range(760.0, 960.0), randf() < 0.75)
+			elif k < 0.76:
+				_dibujar_sigilo(p, randf_range(260.0, 400.0))
+			else:
+				_dibujar_candelabros(p)
+	_dibujar_capa_niebla(x_min, x_max, alto, 2, 0.5)
+
+
+## Punto de luz cálida con halo suave (candelabro / vela lejana).
+func _luz_calida(p: Vector2, r: float, fuerza: float = 1.0) -> void:
+	for k in 4:
+		var rr := r * (1.0 + float(k) * 1.5)
+		draw_circle(p, rr, Color(color_fuego.r, color_fuego.g, color_fuego.b, (0.075 - 0.014 * float(k)) * fuerza))
+	draw_circle(p, r * 0.55, Color(1.0, 0.9, 0.55, 0.9 * fuerza))
+
+
+func _dibujar_candelabros(p: Vector2) -> void:
+	for s in [-1.0, 1.0]:
+		var q := Vector2(p.x + s * randf_range(150.0, 260.0), p.y + randf_range(-40.0, 40.0))
+		draw_rect(Rect2(q.x - 3.0, q.y, 6.0, 46.0), color_a.darkened(0.5))
+		draw_rect(Rect2(q.x - 9.0, q.y - 2.0, 18.0, 5.0), color_a.darkened(0.3))
+		_luz_calida(q + Vector2(0, -12.0), 9.0)
+
+
+## Sigilo pintado en la pared: anillos, triángulo y ojo, en el color de acento.
+func _dibujar_sigilo(c: Vector2, r: float) -> void:
+	var a := Color(color_acento.r, color_acento.g, color_acento.b, 0.3)
+	for k in 3:
+		draw_circle(c, r * (1.25 - 0.18 * float(k)), Color(color_acento.r, color_acento.g, color_acento.b, 0.035))
+	draw_polyline(_circulo(c, r, 40), a, 5.0)
+	draw_polyline(_circulo(c, r * 0.82, 40), Color(a.r, a.g, a.b, 0.18), 3.0)
+	for i in 20:
+		var ang := TAU * float(i) / 20.0
+		draw_line(c + Vector2.from_angle(ang) * r * 0.82, c + Vector2.from_angle(ang) * r, Color(a.r, a.g, a.b, 0.24), 3.0)
+	var tri := PackedVector2Array()
+	for i in 4:
+		tri.append(c + Vector2.from_angle(-PI * 0.5 + TAU * float(i % 3) / 3.0) * r * 0.62)
+	draw_polyline(tri, Color(a.r, a.g, a.b, 0.26), 4.0)
+	draw_polyline(_elipse(c + Vector2(0, r * 0.06), Vector2(r * 0.2, r * 0.1), 20) + PackedVector2Array([c + Vector2(r * 0.2, r * 0.06)]), Color(a.r, a.g, a.b, 0.32), 4.0)
+	draw_circle(c + Vector2(0, r * 0.06), r * 0.055, Color(1.0, 0.4, 0.55, 0.32))
+
+
+func _circulo(c: Vector2, r: float, n: int) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in n + 1:
+		pts.append(c + Vector2.from_angle(TAU * float(i) / float(n)) * r)
+	return pts
+
+
+## Arco de medio punto: base plana en y=base, lados rectos hasta `alto - w/2`.
+func _arco_nicho(cx: float, base: float, w: float, alto: float) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	var y_res := base - alto + w * 0.5
+	pts.append(Vector2(cx - w * 0.5, base))
+	for i in 15:
+		var ang := PI + PI * float(i) / 14.0
+		pts.append(Vector2(cx + cos(ang) * w * 0.5, y_res + sin(ang) * w * 0.62))
+	pts.append(Vector2(cx + w * 0.5, base))
+	return pts
+
+
+func _dibujar_nicho(cx: float, base: float, w: float, alto: float, estatua: bool) -> void:
+	var marco := color_b.lightened(0.12)
+	draw_colored_polygon(_arco_nicho(cx, base + 18.0, w + 64.0, alto + 50.0), Color(marco.r, marco.g, marco.b, 0.7))
+	draw_colored_polygon(_arco_nicho(cx, base, w, alto), color_a.darkened(0.7))
+	for k in 3:
+		draw_colored_polygon(_arco_nicho(cx, base, w * (0.9 - 0.22 * float(k)), alto * (0.86 - 0.2 * float(k))),
+			Color(color_acento.r, color_acento.g, color_acento.b, 0.05 + 0.02 * float(k)))
+	draw_rect(Rect2(cx - w * 0.5 - 60.0, base, w + 120.0, 26.0), Color(marco.r, marco.g, marco.b, 0.75))
+	if estatua:
+		_dibujar_estatua_fondo(cx, base - 4.0, alto * 0.62)
+	for s in [-1.0, 1.0]:
+		var q := Vector2(cx + s * (w * 0.5 + 52.0), base - 200.0)
+		draw_rect(Rect2(q.x - 3.0, q.y, 6.0, 60.0), color_a.darkened(0.4))
+		_luz_calida(q + Vector2(0, -10.0), 8.0, 0.9)
+
+
+## Figura encapuchada de espaldas a la luz: capucha en punta, túnica y ojos rojos.
+func _dibujar_estatua_fondo(cx: float, base: float, h: float) -> void:
+	var piedra := color_b.lightened(0.05)
+	var w := h * 0.36
+	draw_rect(Rect2(cx - w * 0.62, base - h * 0.1, w * 1.24, h * 0.1), piedra.darkened(0.25))
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(cx - w * 0.5, base - h * 0.1), Vector2(cx - w * 0.36, base - h * 0.56),
+		Vector2(cx + w * 0.36, base - h * 0.56), Vector2(cx + w * 0.5, base - h * 0.1)]), piedra)
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(cx - w * 0.36, base - h * 0.56), Vector2(cx - w * 0.24, base - h * 0.78),
+		Vector2(cx, base - h), Vector2(cx + w * 0.24, base - h * 0.78), Vector2(cx + w * 0.36, base - h * 0.56)]), piedra.lightened(0.05))
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(cx - w * 0.15, base - h * 0.6), Vector2(cx - w * 0.12, base - h * 0.78),
+		Vector2(cx, base - h * 0.84), Vector2(cx + w * 0.12, base - h * 0.78), Vector2(cx + w * 0.15, base - h * 0.6)]), Color(0.01, 0.01, 0.02))
+	for s in [-1.0, 1.0]:
+		var e := Vector2(cx + s * w * 0.06, base - h * 0.7)
+		draw_circle(e, 16.0, Color(1.0, 0.15, 0.25, 0.10))
+		draw_circle(e, 5.0, Color(1.0, 0.25, 0.35, 0.9))
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(cx - w * 0.5, base - h * 0.1), Vector2(cx - w * 0.44, base - h * 0.1),
+		Vector2(cx - w * 0.3, base - h * 0.56), Vector2(cx - w * 0.36, base - h * 0.56)]), Color(piedra.lightened(0.3).r, piedra.lightened(0.3).g, piedra.lightened(0.3).b, 0.6))
+
+
 ## Relleno vertical degradado (noche de cueva) para el fondo.
 func _dibujar_franja(x_min: float, x_max: float, top: float, bot: float, claro: Color, oscuro: Color) -> void:
 	var ancho := x_max - x_min
-	var n := 28
+	var n := 28 if fundido_superior <= 0.0 else 90
 	for i in n:
 		var t := float(i) / float(n - 1)
 		var c := claro.lerp(oscuro, t * t)
+		if fundido_superior > 0.0:
+			c.a *= smoothstep(0.0, fundido_superior, t)
 		var y0 := top + (bot - top) * t
 		var y1 := top + (bot - top) * (i + 1) / float(n - 1)
 		draw_rect(Rect2(x_min, y0, ancho, y1 - y0), c)
@@ -281,20 +492,25 @@ func _dibujar_capa_niebla(x_min: float, x_max: float, alto: float, n_bandas: int
 
 ## Franja simple de niebla (polígono ondulado suave, debilita los planos).
 func _dibujar_banda_niebla(x_min: float, x_max: float, y: float, h: float, alfa: float) -> void:
-	var pts := PackedVector2Array()
+	# Degradado vertical: transparente arriba, más densa en el medio y transparente abajo
+	# (sin bordes duros de rectángulo).
+	var col := Color(color_niebla.r, color_niebla.g, color_niebla.b, alfa)
+	var col0 := Color(col.r, col.g, col.b, 0.0)
 	var paso := 260
-	var ini := int(floor(x_min))
+	var x := int(floor(x_min))
 	var fin := int(ceil(x_max))
-	var x := ini
+	var prev := Vector2.ZERO
+	var primero := true
 	while x <= fin:
-		pts.append(Vector2(x, y + sin(x * 0.0016 + y * 0.004) * 14.0 + randf_range(-6.0, 6.0)))
+		var yy := y + sin(x * 0.0016 + y * 0.004) * 14.0 + randf_range(-6.0, 6.0)
+		if not primero:
+			draw_polygon(PackedVector2Array([prev, Vector2(x, yy), Vector2(x, yy + h * 0.5), prev + Vector2(0, h * 0.5)]),
+				PackedColorArray([col0, col0, col, col]))
+			draw_polygon(PackedVector2Array([prev + Vector2(0, h * 0.5), Vector2(x, yy + h * 0.5), Vector2(x, yy + h), prev + Vector2(0, h)]),
+				PackedColorArray([col, col, col0, col0]))
+		prev = Vector2(x, yy)
+		primero = false
 		x += paso
-	var base_y := -1.0
-	for i in range(pts.size() - 1, -1, -1):
-		if base_y < 0.0:
-			base_y = pts[i].y
-		pts.append(Vector2(pts[i].x, base_y + h))
-	draw_colored_polygon(pts, Color(color_niebla.r, color_niebla.g, color_niebla.b, alfa))
 
 
 ## Línea horizontal ondulada tenue: estrato de roca de la pared.
@@ -410,7 +626,7 @@ func _dibujar_pilar(x: float, base_w: float, h: float) -> void:
 	draw_colored_polygon(PackedVector2Array([
 		Vector2(x - fuste_w * 0.5, y_bt), Vector2(x - fuste_w * 0.5 + edge, y_bt),
 		Vector2(x - fust_t_w * 0.5 + edge * 0.8, y_fust_t), Vector2(x - fust_t_w * 0.5, y_fust_t)]),
-		Color(pil_color.lightened(0.5).r, pil_color.lightened(0.5).g, pil_color.lightened(0.5).b, 0.9))
+		Color(pil_color.lightened(0.5).r, pil_color.lightened(0.5).g, pil_color.lightened(0.5).b, 0.28))
 	# Sombra del fondo en el lateral derecho.
 	draw_rect(Rect2(x + cap_w1 * 0.5 - 10.0, y_cap_inf, 10.0, cap_h * 0.5), pil_color.darkened(0.4))
 	# Grietas finas en el fuste.

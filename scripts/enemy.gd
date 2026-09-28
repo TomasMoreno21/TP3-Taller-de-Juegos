@@ -23,7 +23,9 @@ const MAX_FALL_SPEED := 950.0
 # congelación del frame de la animación durante el hitstun.
 @export var flinch_adelanto_px := 12.0        # px que se adelanta el cuerpo en el impacto
 @export var flinch_pop_escala := 1.12         # escala del "pop" al recuperar la pose
-@export var flinch_congela_anim := true       # congela la animación en el frame del impacto
+@export var flinch_congela_anim := false      # true = congela la animación durante todo el stun (se ve trabado si seguís pegando)
+@export var stun_anim := "idle"               # animación que sigue viva durante el stun ("" = la que corresponda al movimiento)
+@export var flinch_reflash := 0.55            # intensidad del flash si lo golpean de nuevo en pleno stun (0-1)
 
 const FRAMES_POR_TIPO := {
 	"cultista": preload("res://resources/enemigo1_frames.tres"),
@@ -52,6 +54,10 @@ var _lunge_timer := 0.0
 var _lunge_hit := false
 var _ultima_pos_valida := Vector2.ZERO
 var _melee_anim := ""
+var _squash_tween: Tween
+var _base_pos := Vector2.ZERO      # pose de reposo del visual (evita "drift" con golpes repetidos)
+var _base_scale := Vector2.ONE
+var _base_valida := false
 
 @onready var visual: Node2D = $Visual
 @onready var poly: Polygon2D = $Visual/Poly
@@ -397,6 +403,11 @@ func _update_animacion() -> void:
 		else:
 			return
 	var nombre := "idle"
+	if _stun_timer > 0.0 and stun_anim != "" and animated.sprite_frames != null and animated.sprite_frames.has_animation(stun_anim):
+		# En hitstun la animación sigue VIVA (idle) en vez de quedarse en el frame de ataque.
+		if animated.animation != stun_anim or not animated.is_playing():
+			animated.play(stun_anim)
+		return
 	if _attack_anim_timer > 0.0:
 		nombre = _attack_anim
 	elif not is_on_floor():
@@ -468,18 +479,23 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 		# El flash queda congelado durante el hitstop automáticamente: los tweens
 		# no avanzan con `Engine.time_scale = 0`, así que el rojo sostiene el freeze
 		# y el fade reanuda al volver el tiempo (sin corrutinas que se pisen en racha).
-		visual.modulate = Color(1, 0.6, 0.6)
-		var base_scale := visual.scale
-		var sx := absf(base_scale.x)
-		var sy := base_scale.y
+		# Golpe repetido en pleno stun: flash más suave para que la ráfaga no parpadee.
+		var re_golpe := _stun_timer > 0.0
+		visual.modulate = Color(1, 1, 1).lerp(Color(1, 0.6, 0.6), flinch_reflash if re_golpe else 1.0)
+		_capturar_base()
+		var sx := absf(_base_scale.x)
+		var sy := _base_scale.y
 		# El squash preserva el facing actual: usar `dir` aquí voltearía al sprite
 		# hacia el lado opuesto al jugador (el golpe viene de la dirección opuesta).
-		var signo := signf(base_scale.x)
+		var signo := signf(_base_scale.x)
 		if signo == 0.0:
 			signo = 1.0
-		var tw2 := create_tween()
-		tw2.tween_property(visual, "scale", Vector2(signo * sx * 1.15, sy * 0.85), 0.05)
-		tw2.tween_property(visual, "scale", Vector2(signo * sx, sy), 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		if _squash_tween != null and _squash_tween.is_valid():
+			_squash_tween.kill()
+		_squash_tween = create_tween()
+		var apretar := 0.9 if re_golpe else 0.85
+		_squash_tween.tween_property(visual, "scale", Vector2(signo * sx * (2.0 - apretar), sy * apretar), 0.05)
+		_squash_tween.tween_property(visual, "scale", Vector2(signo * sx, sy), 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		if DisplayServer.get_name() != "headless":
 			_mostrar_dano(cantidad, critico, murio)
 	var audio_mgr := get_node_or_null("/root/AudioManager")
@@ -550,8 +566,9 @@ func _pose_stun(dur_stun: float, _fuerza: float = 1.0) -> void:
 		_stun_tween.kill()
 	if _tint_tween != null and _tint_tween.is_valid():
 		_tint_tween.kill()
-	var base_pos := visual.position
-	var base_scale := visual.scale
+	_capturar_base()
+	var base_pos := _base_pos
+	var base_scale := _base_scale
 	var signo := signf(base_scale.x)
 	if signo == 0.0:
 		signo = 1.0
@@ -575,6 +592,23 @@ func _pose_stun(dur_stun: float, _fuerza: float = 1.0) -> void:
 	_stun_tween.tween_property(visual, "rotation", 0.0, stun_recuperar_tiempo).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
+## Guarda la pose de reposo del visual. Si hay una reacción en curso NO la recapturo
+## (tomaría la pose deformada y, con golpes seguidos, el cuerpo derivaría); solo
+## sincronizo el signo de la escala por si el enemigo giró.
+func _capturar_base() -> void:
+	var en_curso := (_reaction_tween != null and _reaction_tween.is_valid()) \
+		or (_squash_tween != null and _squash_tween.is_valid()) \
+		or (_stun_tween != null and _stun_tween.is_valid())
+	if not _base_valida or not en_curso:
+		_base_pos = visual.position
+		_base_scale = visual.scale
+		_base_valida = true
+	else:
+		var s := signf(visual.scale.x)
+		if s != 0.0 and s != signf(_base_scale.x):
+			_base_scale.x = absf(_base_scale.x) * s
+
+
 ## Al terminar el hitstun: suelto la congelación del frame y hago un "pop" de escala
 ## que devuelve el cuerpo a su tamaño base con un rebote.
 func _reanudar_flinch(base_scale: Vector2) -> void:
@@ -586,9 +620,11 @@ func _reanudar_flinch(base_scale: Vector2) -> void:
 	var signo := signf(base_scale.x)
 	if signo == 0.0:
 		signo = 1.0
-	var tw := create_tween()
-	tw.tween_property(visual, "scale", Vector2(signo * absf(base_scale.x) * flinch_pop_escala, base_scale.y * flinch_pop_escala), 0.06)
-	tw.tween_property(visual, "scale", base_scale, 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if _squash_tween != null and _squash_tween.is_valid():
+		_squash_tween.kill()
+	_squash_tween = create_tween()
+	_squash_tween.tween_property(visual, "scale", Vector2(signo * absf(base_scale.x) * flinch_pop_escala, base_scale.y * flinch_pop_escala), 0.06)
+	_squash_tween.tween_property(visual, "scale", base_scale, 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _morir() -> void:

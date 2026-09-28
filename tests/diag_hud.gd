@@ -11,8 +11,8 @@ func _init() -> void:
 	var hud = scene.get_node("Hud")
 	var player = scene.get_node("Player")
 
-	var hp_bar = hud.get_node("Bars/Rows/HpRow/HpBarStack/HpBar")
-	var esp_bar = hud.get_node("Bars/Rows/EspRow/EspBarStack/EspBar")
+	var hp_bar = hud.get_node("Izquierda/Vida/HpBar")
+	var dial = hud.get_node("Izquierda/Dial")
 
 	player.take_damage(30)
 	await process_frame
@@ -28,7 +28,7 @@ func _init() -> void:
 	await process_frame
 	for i in range(40):
 		await physics_frame
-	_check(esp_bar.value < 99.0, "HUD: barra de espíritu baja al transformarse con drenaje. Es: " + str(esp_bar.value))
+	_check(dial.energia < 99.0, "HUD: barra de espíritu baja al transformarse con drenaje. Es: " + str(dial.energia))
 
 	var aviso = hud.get_node("Aviso")
 	# Cambio real de forma dispara la señal form_changed -> aviso

@@ -53,6 +53,20 @@ var _player_cache: Node2D
 @export var anticip_apex_factor := 0.3  # fracción del pico calculado que se acomoda
 @export var suavizado_apex := 3.0  # suavizado al subir; al bajar reusa suavizado_bajada
 
+# Piso visible: sondea el suelo bajo el jugador (y adelantado) y baja la cámara lo
+# justo para que la línea del piso quede `margen_piso` px sobre el borde inferior.
+@export var piso_visible := true
+@export var pies_offset := 142.5  # y local de los pies respecto al origen del player
+@export var margen_piso := 180.0  # px libres que se quieren ver bajo la línea del piso
+@export var piso_offset_max := 420.0  # tope de bajada extra de la cámara
+@export var probe_largo := 1100.0  # alcance del rayo hacia abajo
+@export var probe_adelante := 1.0  # multiplicador del lookahead para el 2º rayo
+@export var suavizado_piso := 3.0
+@export_flags_2d_physics var probe_mascara := 1
+# Mirar abajo a propósito: mantener "abajo" quieto en el suelo.
+@export var mirar_abajo_espera := 0.35
+@export var mirar_abajo_extra_max := 300.0
+
 var _apex_look := 0.0
 var _shake_dir := Vector2.ZERO
 var _shake_rot_amplitud := 0.0
@@ -60,6 +74,9 @@ var _shake_duracion := 0.15
 var _suelo_y := INF
 var _restaura_t := 0.0
 var _vuelo_previo := false
+var _piso_extra := 0.0
+var _mirar_abajo_t := 0.0
+var _mirar_abajo_extra := 0.0
 
 
 func _ready() -> void:
@@ -237,8 +254,36 @@ func _physics_process(delta: float) -> void:
 			if _suelo_y == INF:
 				_suelo_y = target_suelo
 
+	destino.y += _extra_piso_visible(player as Node2D, destino.y, trepando, delta)
+
 	global_position.x = lerpf(global_position.x, destino.x, minf(suavizado * delta, 1.0))
 	global_position.y = lerpf(global_position.y, destino.y, minf(suavizado_y * delta, 1.0))
+
+
+## Bajada extra de la cámara para ver el terreno de abajo (piso bajo los pies +
+## "mirar abajo" manual). Devuelve px a sumar a destino.y.
+func _extra_piso_visible(player: Node2D, destino_y: float, trepando: bool, delta: float) -> float:
+	var objetivo := 0.0
+	if piso_visible and not trepando:
+		var space := get_world_2d().direct_space_state
+		var pies := player.global_position + Vector2(0, pies_offset)
+		var suelo_y := -INF
+		var dx_list := [0.0, _lookahead_actual * probe_adelante]
+		for dx in dx_list:
+			var q := PhysicsRayQueryParameters2D.create(pies + Vector2(dx, -8.0), pies + Vector2(dx, probe_largo))
+			q.collision_mask = probe_mascara
+			var hit := space.intersect_ray(q)
+			suelo_y = maxf(suelo_y, hit.position.y if not hit.is_empty() else pies.y + probe_largo)
+		var mitad := get_viewport_rect().size.y * 0.5 / maxf(zoom.y, 0.01)
+		var necesario := suelo_y + margen_piso - mitad  # y de cámara mínima
+		objetivo = clampf(necesario - destino_y, 0.0, piso_offset_max)
+	_piso_extra = lerpf(_piso_extra, objetivo, minf(suavizado_piso * delta, 1.0))
+	# Mirar abajo a propósito
+	var quieto_abajo := Input.is_action_pressed("move_down") and not trepando 		and player is CharacterBody2D and (player as CharacterBody2D).is_on_floor() 		and absf((player as CharacterBody2D).velocity.x) < 20.0
+	_mirar_abajo_t = _mirar_abajo_t + delta if quieto_abajo else 0.0
+	var extra_m := mirar_abajo_extra_max if _mirar_abajo_t >= mirar_abajo_espera else 0.0
+	_mirar_abajo_extra = lerpf(_mirar_abajo_extra, extra_m, minf(suavizado_piso * delta, 1.0))
+	return _piso_extra + _mirar_abajo_extra
 
 
 func fijar_zoom(objetivo: Vector2) -> void:

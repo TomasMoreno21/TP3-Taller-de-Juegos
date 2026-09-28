@@ -1,67 +1,48 @@
 [gd_scene load_steps=10 format=3 uid="uid://dkyk8avpptlls"]
 
 [ext_resource type="Script" uid="uid://c1q7pellu6xgj" path="res://scripts/hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scripts/hud_dial.gd" id="2_dial"]
+[ext_resource type="Script" path="res://scripts/hud_segmentos.gd" id="3_seg"]
 
-[sub_resource type="StyleBoxFlat" id="panel_bar"]
-bg_color = Color(0.06, 0.07, 0.09, 0.85)
+[sub_resource type="StyleBoxFlat" id="bg_bar"]
+bg_color = Color(0.09, 0.09, 0.12, 0.85)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.18, 0.22, 0.28, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-
-[sub_resource type="StyleBoxFlat" id="bg_bar"]
-bg_color = Color(0.12, 0.12, 0.14, 0.8)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
+border_color = Color(0.22, 0.25, 0.32, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
 
 [sub_resource type="StyleBoxFlat" id="fill_hp"]
 bg_color = Color(0.8, 0.25, 0.25, 1)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
 
 [sub_resource type="StyleBoxFlat" id="fill_hp_delayed"]
-bg_color = Color(0.55, 0.18, 0.18, 1)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
+bg_color = Color(0.95, 0.85, 0.75, 0.8)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
 
-[sub_resource type="StyleBoxFlat" id="fill_esp"]
-bg_color = Color(0.3, 0.55, 0.9, 1)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
+[sub_resource type="StyleBoxFlat" id="bg_prog"]
+bg_color = Color(0.12, 0.12, 0.14, 0.8)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
-[sub_resource type="StyleBoxFlat" id="fill_esp_delayed"]
-bg_color = Color(0.18, 0.32, 0.6, 1)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
-
-[sub_resource type="StyleBoxFlat" id="cap_hp"]
-bg_color = Color(0.55, 0.18, 0.18, 1)
-corner_radius_top_left = 11
-corner_radius_top_right = 11
-corner_radius_bottom_right = 11
-corner_radius_bottom_left = 11
-
-[sub_resource type="StyleBoxFlat" id="cap_esp"]
-bg_color = Color(0.42, 0.62, 0.36, 1)
-corner_radius_top_left = 11
-corner_radius_top_right = 11
-corner_radius_bottom_right = 11
-corner_radius_bottom_left = 11
+[sub_resource type="StyleBoxFlat" id="fill_prog"]
+bg_color = Color(0.95, 0.85, 0.4, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
 [sub_resource type="StyleBoxFlat" id="panel_boss"]
 bg_color = Color(0.08, 0.09, 0.13, 0.92)
@@ -134,33 +115,26 @@ bbcode_enabled = true
 fit_content = true
 scroll_active = false
 
-[node name="Bars" type="PanelContainer" parent="."]
-offset_left = 12.0
-offset_top = 12.0
-offset_right = 150.0
-offset_bottom = 272.0
-theme_override_styles/panel = SubResource("panel_bar")
+[node name="Izquierda" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 14.0
+offset_top = 14.0
+offset_right = 454.0
+offset_bottom = 154.0
+mouse_filter = 2
 
-[node name="Rows" type="HBoxContainer" parent="Bars"]
-layout_mode = 2
-theme_override_constants/separation = 16
+[node name="Vida" type="Control" parent="Izquierda"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 96.0
+offset_top = 50.0
+offset_right = 396.0
+offset_bottom = 80.0
+mouse_filter = 2
 
-[node name="HpRow" type="VBoxContainer" parent="Bars/Rows"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="HpCap" type="PanelContainer" parent="Bars/Rows/HpRow"]
-layout_mode = 2
-custom_minimum_size = Vector2(42, 22)
-theme_override_styles/panel = SubResource("cap_hp")
-
-[node name="HpBarStack" type="Control" parent="Bars/Rows/HpRow"]
-custom_minimum_size = Vector2(42, 18)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="HpBarDelayed" type="ProgressBar" parent="Bars/Rows/HpRow/HpBarStack"]
+[node name="HpBarDelayed" type="ProgressBar" parent="Izquierda/Vida"]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -168,10 +142,11 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/background = SubResource("bg_bar")
 theme_override_styles/fill = SubResource("fill_hp_delayed")
-fill_mode = 3
+value = 100.0
 show_percentage = false
 
-[node name="HpBar" type="ProgressBar" parent="Bars/Rows/HpRow/HpBarStack"]
+[node name="HpBar" type="ProgressBar" parent="Izquierda/Vida"]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -179,101 +154,101 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/background = SubResource("bg_bar")
 theme_override_styles/fill = SubResource("fill_hp")
-fill_mode = 3
+value = 100.0
 show_percentage = false
 
-[node name="HpLabel" type="Label" parent="Bars/Rows/HpRow"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.4, 0.4, 1)
-theme_override_font_sizes/font_size = 12
-text = "VIDA"
-horizontal_alignment = 1
+[node name="Segmentos" type="Control" parent="Izquierda/Vida"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_seg")
 
-[node name="EspRow" type="VBoxContainer" parent="Bars/Rows"]
-layout_mode = 2
+[node name="HpLabel" type="Label" parent="Izquierda/Vida"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 34.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.98, 0.94, 0.92, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.02, 0.02, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 14
+text = "100/100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Dial" type="Control" parent="Izquierda"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 132.0
+offset_bottom = 132.0
+mouse_filter = 2
+script = ExtResource("2_dial")
+
+[node name="Derecha" type="VBoxContainer" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -300.0
+offset_top = 16.0
+offset_right = -18.0
+offset_bottom = 200.0
+grow_horizontal = 0
+mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="EspCap" type="PanelContainer" parent="Bars/Rows/EspRow"]
+[node name="Nivel" type="Label" parent="Derecha"]
 layout_mode = 2
-custom_minimum_size = Vector2(42, 22)
-theme_override_styles/panel = SubResource("cap_esp")
-
-[node name="EspBarStack" type="Control" parent="Bars/Rows/EspRow"]
-custom_minimum_size = Vector2(42, 18)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="EspBarDelayed" type="ProgressBar" parent="Bars/Rows/EspRow/EspBarStack"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/background = SubResource("bg_bar")
-theme_override_styles/fill = SubResource("fill_esp_delayed")
-fill_mode = 3
-show_percentage = false
-
-[node name="EspBar" type="ProgressBar" parent="Bars/Rows/EspRow/EspBarStack"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/background = SubResource("bg_bar")
-theme_override_styles/fill = SubResource("fill_esp")
-fill_mode = 3
-show_percentage = false
-
-[node name="EspLabel" type="Label" parent="Bars/Rows/EspRow"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.7, 1, 1)
-theme_override_font_sizes/font_size = 12
-text = "ESPÍRITU"
-horizontal_alignment = 1
-
-[node name="ProgLabel" type="Label" parent="."]
-offset_left = 12.0
-offset_top = 276.0
-offset_right = 300.0
-offset_bottom = 296.0
 theme_override_colors/font_color = Color(0.95, 0.85, 0.4, 1)
-theme_override_font_sizes/font_size = 13
-text = "FRAGMENTOS 0/3 · NIVEL 1"
+theme_override_colors/font_outline_color = Color(0.05, 0.05, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 24
+text = "NIVEL 1"
+horizontal_alignment = 2
 
-[node name="SelLabel" type="Label" parent="."]
-offset_left = 12.0
-offset_top = 300.0
-offset_right = 500.0
-offset_bottom = 322.0
-theme_override_colors/font_color = Color(0.55, 0.95, 0.75, 1)
+[node name="ProgBar" type="ProgressBar" parent="Derecha"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+theme_override_styles/background = SubResource("bg_prog")
+theme_override_styles/fill = SubResource("fill_prog")
+show_percentage = false
+
+[node name="ProgLabel" type="Label" parent="Derecha"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.8, 0.55, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.05, 0.08, 1)
+theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 14
-text = "FORMAS"
+text = "0/3 fragmentos"
+horizontal_alignment = 2
 
-[node name="Racha" type="VBoxContainer" parent="."]
+[node name="Racha" type="VBoxContainer" parent="Derecha"]
 visible = false
-anchor_left = 0.0
-anchor_right = 0.0
-offset_left = 168.0
-offset_top = 12.0
-offset_right = 268.0
-offset_bottom = 66.0
+layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Titulo" type="Label" parent="Racha"]
+[node name="Titulo" type="Label" parent="Derecha/Racha"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
 theme_override_font_sizes/font_size = 13
 text = "COMBO"
-horizontal_alignment = 1
+horizontal_alignment = 2
 
-[node name="Valor" type="Label" parent="Racha"]
+[node name="Valor" type="Label" parent="Derecha/Racha"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
-theme_override_font_sizes/font_size = 30
+theme_override_colors/font_outline_color = Color(0.1, 0.05, 0.0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 40
 text = "0"
-horizontal_alignment = 1
+horizontal_alignment = 2
 
 [node name="ComboLabel" type="RichTextLabel" parent="."]
 anchor_left = 1.0
