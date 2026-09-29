@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="2_cam"]
 [ext_resource type="PackedScene" uid="uid://ssvmlcpooygw" path="res://scenes/fondo_bosque.tscn" id="3_fondo"]
+[ext_resource type="PackedScene" path="res://scenes/fondo_bosque_delante.tscn" id="3_fondo_delante"]
 [ext_resource type="TileSet" uid="uid://cm28ivesvx3ed" path="res://resources/tileset_bosque.tres" id="4_tileset"]
 [ext_resource type="PackedScene" uid="uid://cr2s0l8k2s5l4" path="res://scenes/rompible.tscn" id="6_romp"]
 [ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="7_pick"]
@@ -37,6 +38,8 @@
 [ext_resource type="Script" uid="uid://ddorv661opnxn" path="res://scripts/primer_plano.gd" id="44_frente"]
 [ext_resource type="Script" uid="uid://2evt507mwee1" path="res://scripts/borde_musgo.gd" id="44_musgo"]
 [ext_resource type="Shader" uid="uid://2gmi16mug215" path="res://resources/tinte_terreno.gdshader" id="45_tinte"]
+[ext_resource type="PackedScene" path="res://scenes/liana_trepable.tscn" id="44_liana"]
+[ext_resource type="Texture2D" path="res://Sprites/Elementos/cosito_frente2.png" id="45_cosito"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte"]
 shader = ExtResource("45_tinte")
@@ -71,13 +74,24 @@ acentos = Array[AudioStream]([ExtResource("22_amb_buho"), ExtResource("23_amb_lo
 acento_volumen_db = -2.0
 
 [node name="Player" parent="." unique_id=1763988589 instance=ExtResource("1_player")]
-position = Vector2(392, 845)
+position = Vector2(-609, 845)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
-position = Vector2(1, 0)
+position = Vector2(20, 120)
+limit_left = -1503
+limit_top = -891
+limit_right = 33071
+limit_bottom = 7121
 script = ExtResource("2_cam")
 
 [node name="FondoBosque" parent="." unique_id=542214532 instance=ExtResource("3_fondo")]
+
+[node name="FondoBosqueDelante" parent="." unique_id=2105542483 instance=ExtResource("3_fondo_delante")]
+
+[node name="CositoFrente1" type="Sprite2D" parent="." unique_id=4215667]
+z_index = 2
+position = Vector2(2641, -602)
+texture = ExtResource("45_cosito")
 
 [node name="Terreno" type="TileMapLayer" parent="." unique_id=211863747]
 tile_set = ExtResource("4_tileset")
@@ -224,20 +238,20 @@ shape = SubResource("RectangleShape2D_plat")
 script = ExtResource("44_musgo")
 semilla = 9
 
-[node name="Enredadera1" parent="." unique_id=800000001 instance=ExtResource("16_enredadera")]
-position = Vector2(2748, 285)
-ancho = 36.0
-alto = 500.0
+[node name="Enredadera1" parent="." unique_id=800000001 instance=ExtResource("44_liana")]
+position = Vector2(2761, -63)
+ancho = 60.0
+alto = 1200.0
 
-[node name="Enredadera2" parent="." unique_id=84208820 instance=ExtResource("16_enredadera")]
-position = Vector2(3170, 91)
-ancho = 36.0
-alto = 500.0
+[node name="Enredadera2" parent="." unique_id=84208820 instance=ExtResource("44_liana")]
+position = Vector2(3168, -172)
+ancho = 60.0
+alto = 800.0
 
-[node name="Enredadera3" parent="." unique_id=1758860922 instance=ExtResource("16_enredadera")]
-position = Vector2(4138, -14)
-ancho = 36.0
-alto = 500.0
+[node name="Enredadera3" parent="." unique_id=1758860922 instance=ExtResource("44_liana")]
+position = Vector2(4141, -155)
+ancho = 60.0
+alto = 800.0
 
 [node name="Enredadera5" parent="." unique_id=1428130658 instance=ExtResource("16_enredadera")]
 position = Vector2(21612, 432)
@@ -249,10 +263,10 @@ position = Vector2(16955, 2185)
 ancho = 36.0
 alto = 1200.0
 
-[node name="Enredadera4" parent="." unique_id=2089772587 instance=ExtResource("16_enredadera")]
+[node name="Enredadera4" parent="." unique_id=2089772587 instance=ExtResource("44_liana")]
 position = Vector2(4775, -22)
-ancho = 36.0
-alto = 500.0
+ancho = 60.0
+alto = 800.0
 
 [node name="Plataforma1" type="StaticBody2D" parent="." unique_id=800000002]
 position = Vector2(1618, 826)

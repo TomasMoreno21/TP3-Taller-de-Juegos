@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" uid="uid://cjlpbqf5rb0yn" path="res://Sprites/Fondos/Bosque/Boske12.png" id="1_tex"]
+
+[node name="FondoBosqueDelante" type="ParallaxBackground"]
+layer = 9
+
+[node name="Capa12" type="ParallaxLayer" parent="."]
+motion_mirroring = Vector2(3465, 0)
+
+[node name="Sprite" type="Sprite2D" parent="Capa12"]
+texture_filter = 2
+texture_repeat = 1
+position = Vector2(1688.25, 1004)
+scale = Vector2(0.9689755, 1)
+texture = ExtResource("1_tex")

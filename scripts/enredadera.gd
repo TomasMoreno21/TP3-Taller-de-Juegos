@@ -75,6 +75,10 @@ func _actualizar_visual() -> void:
 			cs.shape = (cs.shape as RectangleShape2D).duplicate()
 			cs.shape.resource_local_to_scene = true
 		(cs.shape as RectangleShape2D).size = Vector2(ancho, alto)
+	var sprite := get_node_or_null("Visual/Sprite") as Sprite2D
+	if sprite and sprite.texture:
+		var tam := sprite.texture.get_size()
+		sprite.scale = Vector2(ancho / maxf(tam.x, 1.0), alto / maxf(tam.y, 1.0))
 	var poly := get_node_or_null("Visual/Poly") as Polygon2D
 	if poly:
 		poly.color = color_contorno
