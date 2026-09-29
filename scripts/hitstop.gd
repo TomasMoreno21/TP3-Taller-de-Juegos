@@ -7,6 +7,12 @@ var _slow_scale: float = 1.0
 var _slow_restore_ms: int = 0
 
 
+func _ready() -> void:
+	# Siempre activo: con el árbol pausado también debe devolver `Engine.time_scale` a 1
+	# (si no, el panel de derrota/pausa/levelup quedaba en cámara lenta o congelado).
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
+
 func _process(_delta: float) -> void:
 	if _restore_ms > 0 and Time.get_ticks_msec() >= _restore_ms:
 		_restore_ms = 0

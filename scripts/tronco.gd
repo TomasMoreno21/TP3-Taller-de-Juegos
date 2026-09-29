@@ -74,3 +74,8 @@ func _burst() -> void:
 	get_tree().root.add_child(p)
 	p.restart()
 	p.emitting = true
+	# Astillas claras de la madera fresca, más chicas y rápidas.
+	Burst.emitir(self, global_position + Vector2(0, -40), Color(0.78, 0.62, 0.42), 14, 0.6)
+	var amb := get_node_or_null("/root/Ambiente")
+	if amb != null:
+		amb.empujar(global_position, 0.5)

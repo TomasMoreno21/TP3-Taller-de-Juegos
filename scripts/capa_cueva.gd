@@ -98,6 +98,9 @@ func _draw() -> void:
 			_dibujar_estalagmitas(x_min, x_max, ancho)
 		"agua":
 			_dibujar_agua(x_min, x_max, ancho)
+	# El dibujo fija el RNG global con semillas fijas (para que la cueva sea siempre igual):
+	# se re-aleatoriza al terminar, si no todo el azar del juego (IA, luciérnagas, partículas) sería idéntico en cada partida.
+	randomize()
 
 
 ## Posición x del centro de una familia, repartida uniformemente con jitter.

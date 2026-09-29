@@ -1,5 +1,7 @@
 extends StaticBody2D
 
+const Jugador := preload("res://scripts/player.gd")
+
 @export var assist_altura: float = 18.0
 @export var assist_distancia: float = 95.0
 
@@ -19,7 +21,7 @@ func _physics_process(_delta: float) -> void:
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	if player == null or not is_instance_valid(player):
 		return
-	if int(player.get("current_form")) != 1:
+	if int(player.get("current_form")) != Jugador.Form.LOBO:
 		return
 	if not (player as CharacterBody2D).is_on_wall():
 		return

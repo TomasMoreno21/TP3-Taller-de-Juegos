@@ -18,6 +18,23 @@ func _ready() -> void:
 		botones[i].focus_entered.connect(_on_focus.bind(i))
 	botones[_indice].grab_focus.call_deferred()
 	$UIRoot/Dim.visible = true
+	_animar_entrada()
+
+
+## Entrada con fundido del velo y del panel (reloj real: el árbol está pausado). Instantáneo en headless.
+func _animar_entrada() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var dim := $UIRoot/Dim as CanvasItem
+	var panel := $UIRoot/Center/VBox as Control
+	dim.modulate.a = 0.0
+	panel.modulate.a = 0.0
+	panel.pivot_offset = panel.size * 0.5
+	panel.scale = Vector2.ONE * 0.92
+	var tw := create_tween().set_ignore_time_scale(true).set_pause_mode(Tween.TWEEN_PAUSE_PROCESS).set_parallel(true)
+	tw.tween_property(dim, "modulate:a", 1.0, 0.35)
+	tw.tween_property(panel, "modulate:a", 1.0, 0.4).set_delay(0.15)
+	tw.tween_property(panel, "scale", Vector2.ONE, 0.4).set_delay(0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -40,6 +57,15 @@ func _navegar(dir: int) -> void:
 
 func _on_focus(i: int) -> void:
 	_indice = i
+	for k in botones.size():
+		var b := botones[k]
+		b.pivot_offset = b.size * 0.5
+		var objetivo := Vector2.ONE * (1.05 if k == i else 1.0)
+		if DisplayServer.get_name() == "headless":
+			b.scale = objetivo
+			continue
+		b.create_tween().set_ignore_time_scale(true).set_pause_mode(Tween.TWEEN_PAUSE_PROCESS) \
+			.tween_property(b, "scale", objetivo, 0.1).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _on_boton_pressed(i: int) -> void:

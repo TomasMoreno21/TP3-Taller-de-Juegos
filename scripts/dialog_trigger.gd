@@ -67,6 +67,9 @@ func _disparar() -> void:
 	if lineas.is_empty():
 		_disparado = true
 		return
+	# Un tip no se muestra con un diálogo abierto: no lo marco como visto para que no se pierda para siempre.
+	if tipo == "Tip" and get_node("/root/Dialogo").esta_activo():
+		return
 	var prog := get_node_or_null("/root/Progresion") as Node
 	if prog != null and not dialogo_id.is_empty():
 		# una_vez=true (default): se muestra una sola vez por partida y persiste

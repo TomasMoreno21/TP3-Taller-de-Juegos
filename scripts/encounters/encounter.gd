@@ -32,6 +32,7 @@ const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 
 var estado: int = Estado.INACTIVE
 var _ola_idx := -1
+var _gen := 0             # "generación" de la pelea: descarta corrutinas de una pelea anterior
 var _vivos_ola := 0
 var _manuales: Array[Array] = []
 var _spawned: Array[Node] = []
@@ -93,8 +94,16 @@ func _liberar_enemigos() -> void:
 ## cámara fija al centro, con el jugador fuera de encuadre.
 func reiniciar() -> void:
 	estado = Estado.INACTIVE
+	_gen += 1   # invalida cualquier pausa entre olas que estuviera esperando
 	_ola_idx = -1
 	_vivos_ola = 0
+	# Los enemigos auto-spawneados de la ola en curso se descartan (al re-entrar se vuelven a generar);
+	# si no, se readoptaban como "manuales" y trababan o duplicaban la arena.
+	for n in _spawned:
+		if is_instance_valid(n):
+			_conectados.erase(n.get_instance_id())
+			n.queue_free()
+	_spawned.clear()
 	_ocultar_bounds()
 	_agrupar_manuales()
 	_preparar_manuales()
@@ -106,7 +115,7 @@ func _agrupar_manuales() -> void:
 	_manuales.clear()
 	var contenedor := get_node_or_null("Enemies")
 	for hijo in get_children():
-		if hijo.has_method("activar"):
+		if hijo.has_method("activar") and not hijo.has_meta("auto_spawn"):
 			_agregar_manual(hijo)
 	if contenedor != null:
 		for hijo in contenedor.get_children():
@@ -161,6 +170,7 @@ func _empezar() -> void:
 	if camara != null and camara.has_method("encuadre_arena"):
 		camara.encuadre_arena(zoom_encuadre_arena, zoom_encuadre_duracion)
 	_ola_idx = -1
+	_gen += 1
 	_siguiente_ola()
 
 
@@ -173,7 +183,11 @@ func _siguiente_ola() -> void:
 	if _ola_idx < olas.size():
 		delay = olas[_ola_idx].delay
 	if delay > 0.0:
-		await get_tree().create_timer(delay).timeout
+		var gen := _gen
+		# `false`: el timer respeta la pausa (con el juego pausado no se lanza la siguiente ola).
+		await get_tree().create_timer(delay, false).timeout
+		if gen != _gen or estado != Estado.RUNNING:
+			return   # el jugador murió/la arena se reinició durante la pausa entre olas
 	if _ola_idx >= _total_olas():
 		_completar()
 		return
@@ -196,18 +210,20 @@ func _lanzar_ola(idx: int) -> void:
 
 
 func _spawnear_auto(ola: WaveOla, ola_idx: int) -> int:
-	if ola.cantidad <= 0:
+	var total := maxi(ola.cantidad, 0) + (maxi(ola.cantidad_extra, 0) if ola.tipo_extra != "" else 0)
+	if total <= 0:
 		return 0
-	for i in range(ola.cantidad):
+	for i in range(total):
 		var e: Node = ENEMY_SCENE.instantiate()
-		e.set("tipo", ola.tipo)
+		e.set("tipo", ola.tipo if i < ola.cantidad else ola.tipo_extra)
 		e.set("spawn_telegrafiado", true)
+		e.set_meta("auto_spawn", true)
 		add_child(e)
-		e.global_position = _posicion_spawn(i, ola, ola.cantidad)
+		e.global_position = _posicion_spawn(i, ola, total)
 		_conectar_died(e, ola_idx)
 		e.activar()
 		_spawned.append(e)
-	return ola.cantidad
+	return total
 
 
 func _posicion_spawn(i: int, ola: WaveOla, total: int) -> Vector2:
@@ -224,9 +240,18 @@ func _on_enemy_died(ola_tag: int) -> void:
 		return
 	_vivos_ola -= 1
 	if _vivos_ola <= 0:
+		if _ola_idx < olas.size() and olas[_ola_idx].orbe_al_terminar and _ola_idx + 1 < _total_olas():
+			_soltar_orbe_respiro()
 		if _ola_idx + 1 >= _total_olas():
 			_slowmo_cierre()
 		_siguiente_ola()
+
+
+## Respiro entre olas: un orbe de vida en el centro de la arena.
+func _soltar_orbe_respiro() -> void:
+	var orbe: Node2D = preload("res://scenes/pickup_vida.tscn").instantiate()
+	add_child(orbe)
+	orbe.global_position = arena_center + Vector2(0, -20)
 
 
 func _slowmo_cierre() -> void:

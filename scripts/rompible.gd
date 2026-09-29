@@ -13,6 +13,8 @@ const GOLPES_PARA_ROMPER := 3
 
 var golpes := 0
 var broken := false
+var _visual_pos_base := Vector2.ZERO
+var _tw_temblor: Tween
 
 @onready var visual: CanvasItem = get_node_or_null("Visual")
 @onready var sprite: Sprite2D = get_node_or_null("Sprite2D")
@@ -22,6 +24,8 @@ var broken := false
 func _ready() -> void:
 	if visual == null and sprite != null:
 		visual = sprite
+	if visual is Node2D:
+		_visual_pos_base = (visual as Node2D).position
 	add_to_group("rompible")
 
 
@@ -32,7 +36,8 @@ func registrar_golpe(_dano: int) -> void:
 	if golpes >= GOLPES_PARA_ROMPER:
 		_romper()
 	else:
-		visual.modulate = Color(0.7, 0.7, 0.7)
+		if visual != null:
+			visual.modulate = Color(0.7, 0.7, 0.7)
 		_feedback_golpe()
 
 
@@ -44,12 +49,15 @@ func _feedback_golpe() -> void:
 	Burst.emitir(self, global_position, box_color, 5 + golpes * 2, 0.7)
 	if visual is Node2D:
 		var v := visual as Node2D
-		var base := v.position
+		var base := _visual_pos_base   # fija: dos golpes seguidos ya no dejan el visual corrido
+		if _tw_temblor != null and _tw_temblor.is_valid():
+			_tw_temblor.kill()
+			v.position = base
 		var fuerza := temblor_golpe * (1.0 + 0.5 * (golpes - 1))
-		var tw := create_tween()
-		tw.tween_property(v, "position", base + Vector2(fuerza, 0), 0.03)
-		tw.tween_property(v, "position", base - Vector2(fuerza * 0.7, 0), 0.04)
-		tw.tween_property(v, "position", base, 0.05)
+		_tw_temblor = create_tween()
+		_tw_temblor.tween_property(v, "position", base + Vector2(fuerza, 0), 0.03)
+		_tw_temblor.tween_property(v, "position", base - Vector2(fuerza * 0.7, 0), 0.04)
+		_tw_temblor.tween_property(v, "position", base, 0.05)
 
 
 func _romper() -> void:

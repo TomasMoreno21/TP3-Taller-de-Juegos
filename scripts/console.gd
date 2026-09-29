@@ -57,6 +57,7 @@ func esta_abierta() -> bool:
 func _unhandled_input(event: InputEvent) -> void:
 	if _open and event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		toggle()
+		get_viewport().set_input_as_handled()   # si no, la pausa (que va después) veía el mismo Esc y se abría
 
 
 func _on_submitted(texto: String) -> void:
@@ -123,16 +124,24 @@ func _ejecutar(tokens: PackedStringArray) -> void:
 			destino.add_child(d)
 			imprimir("Muñeco de entrenamiento creado")
 		"zona1":
-			get_tree().change_scene_to_file("res://scenes/main.tscn")
+			_viajar("res://scenes/main.tscn")
 			imprimir("Viajando a la Zona 1")
 		"zona2":
-			get_tree().change_scene_to_file("res://scenes/nivel2.tscn")
+			_viajar("res://scenes/nivel2.tscn")
 			imprimir("Viajando a la Zona 2")
 		"jefe":
-			get_tree().change_scene_to_file("res://scenes/nivel_jefe.tscn")
+			_viajar("res://scenes/nivel_jefe.tscn")
 			imprimir("Viajando a la arena del Arzobispo")
 		_:
 			imprimir("Comando desconocido. Escribí 'help'.")
+
+
+## Cambia de escena con el árbol despausado (con la consola abierta en pausa la escena nueva cargaba congelada).
+func _viajar(ruta: String) -> void:
+	_open = false
+	panel.visible = false
+	get_tree().paused = false
+	get_tree().change_scene_to_file(ruta)
 
 
 func index_forma(nombre: String) -> int:

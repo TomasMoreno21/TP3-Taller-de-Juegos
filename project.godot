@@ -8,8 +8,6 @@
 
 config_version=5
 
-"ï»¿config_version"=5
-
 [application]
 
 config/name="Spirit Keeper"
@@ -23,6 +21,7 @@ Progresion="*res://scripts/progresion.gd"
 Dialogo="*res://scenes/dialog_box.tscn"
 Hitstop="*res://scripts/hitstop.gd"
 AudioManager="*res://scripts/audio_manager.gd"
+Ambiente="*res://scripts/ambiente.gd"
 
 [display]
 

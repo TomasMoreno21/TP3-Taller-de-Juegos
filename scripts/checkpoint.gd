@@ -43,6 +43,10 @@ func _on_body_entered(body: Node2D) -> void:
 	# hay piso, el checkpoint sigue apagado y se vuelve a intentar al re-entrar.
 	if not _hay_piso_bajo(global_position + offset_respawn):
 		return
+	# Si ya es el respawn actual no se vuelve a guardar: pasar de nuevo con poca vida
+	# no debe rebajar la vida/energía con la que reaparecés.
+	if _activado and body.get("_spawn_position") == global_position + offset_respawn:
+		return
 	body.actualizar_checkpoint(global_position + offset_respawn)
 	if not _activado:
 		_activado = true

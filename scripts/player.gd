@@ -8,6 +8,7 @@ signal dano_recibido(cantidad: int)
 signal energia_changed(energia: float)
 signal transformacion_agotada
 signal racha_changed(cantidad: int)
+signal parry_exitoso
 
 enum Form { HUMAN, LOBO, OSO, MURCIELAGO }
 
@@ -65,6 +66,29 @@ const HITSTOP_COMBO := 0.11
 @export var racha_zoom_5 := 1.06            # zoom punch extra al llegar a racha 5
 @export var racha_hitstop_3 := 1.15         # multiplicador de hitstop al llegar a racha 3
 @export var racha_hitstop_5 := 1.3          # multiplicador de hitstop al llegar a racha 5
+@export var hitstop_max := 0.16             # tope del hitstop de un golpe (evita que la suma de multiplicadores trabe)
+@export var hitstop_rafaga_mult := 0.7      # si el golpe llega poco después del anterior, el hitstop se acorta (ráfagas fluidas)
+@export var parry_ventana := 0.16           # Humano: al empezar a bloquear, ventana (s) donde el golpe se devuelve (parry)
+@export var parry_energia := 10.0           # energía que da un parry exitoso
+@export var parry_onda_radio := 170.0       # el parry aturde a los enemigos cercanos
+@export var tag_bonus_mult := 1.5           # cambiar de forma a mitad de racha: el próximo golpe pega esto de más
+@export var tag_bonus_tiempo := 2.0         # cuánto dura ese bonus (s)
+@export var tag_energia := 8.0              # energía que da el cambio de forma dentro de una racha
+@export var flap_cooldown := 0.28           # s entre aleteos del Murciélago
+@export_group("Cuerpo elástico")
+@export var resorte_rigidez := 420.0        # cuánto tira el cuerpo de vuelta a su forma (más alto = más rápido)
+@export var resorte_amort := 22.0           # freno del resorte (más bajo = más rebote)
+@export var acel_inclinacion_grados := 3.0  # inclinación del cuerpo al acelerar/frenar (0 = sin)
+@export var giro_squash := 0.07             # aplaste lateral al girar estando quieto
+@export var respiracion_amp := 0.012        # cuánto respira el cuerpo parado (0 = quieto)
+@export var respiracion_latido := 0.03      # cuánto se hincha con cada latido cuando quedás con poca vida
+@export var respiracion_vel := 2.2         # ritmo de la respiración (rad/s)
+@export var polvo_correr_intervalo := 0.24  # s entre nubes de polvo al correr (0 = sin polvo)
+@export var eco_alpha := 0.32               # opacidad inicial de los ecos espectrales (0 = sin ecos)
+@export var magnetismo_alcance := 340.0     # px: a qué distancia busca enemigo para el magnetismo
+@export var magnetismo_mult := 1.6         # el avance del golpe se estira hasta este múltiplo para llegar al enemigo (1 = sin)
+@export_group("")
+@export var hitstop_rafaga_ventana := 0.4   # segundos entre golpes para considerarlo ráfaga
 @export var racha_spark_3 := 1.35           # escala del spark al llegar a racha 3
 @export var racha_spark_5 := 1.7            # escala del spark al llegar a racha 5
 @export var spark_hundir_px := 14.0         # cuánto entra el spark en el cuerpo del enemigo desde su borde
@@ -93,6 +117,16 @@ var blocking := false
 
 var _attacking := false
 var _attack_timer := 0.0
+var _ultimo_hitstop_s: float = -10.0
+var _parry_t: float = 0.0
+var _tag_t: float = 0.0
+var _flap_cd: float = 0.0
+var _picada: bool = false
+var _pose_rot: float = 0.0        # rotación extra del sprite al golpear (rad), vuelve sola a 0
+var _pose_tween: Tween
+var _lunge_t: float = 0.0
+var _lunge_vel: float = 0.0
+const LUNGE_DUR := 0.09           # el avance del golpe dura esto (la distancia la define la forma)
 var _hit_applied := false
 var _hit_delay := 0.0
 var _whiff_applied := false
@@ -125,9 +159,19 @@ var _attack_anim_speed_scale := 1.0
 var _was_blocking := false
 var _was_on_floor := false
 var _fall_impact := 0.0
-var _sprite_tween: Tween
+var _esc_off := Vector2.ZERO      # desvío de escala del resorte (0 = forma normal)
+var _esc_vel := Vector2.ZERO
+var _esc_reposo := Vector2.ZERO   # hacia dónde tira el resorte (poses de salto/apex)
+var _acel_suave := 0.0
+var _vx_prev := 0.0
+var _t_resp := 0.0
+var _polvo_paso_t := 0.0
+var _eco_t := 0.0
 var _tint_tween: Tween
 var _recoil_tween: Tween
+var _visual_base_x := 0.0          # x de reposo del sprite (el retroceso siempre vuelve acá)
+var _tween_muerte: Tween
+var _amb: Node                     # autoload Ambiente (cacheado)
 var _turn_prev_facing := 0
 var _base_sprite_scale := Vector2.ONE
 var _spawn_position := Vector2.ZERO
@@ -171,7 +215,6 @@ var _was_gliding: bool = false
 var _apex_squash_t: float = 0.0
 var _step_up_cd: float = 0.0
 var _salto_aereo_limitado: bool = false
-var _platform_snap_cd: float = 0.0
 @export var limite_caida := 12000.0
 @export var sonido_golpe_liviano: AudioStream
 @export var sonido_golpe_pesado: AudioStream
@@ -258,6 +301,7 @@ func _ready() -> void:
 	health = VIDA_MAX
 	_spawn_position = global_position
 	_base_sprite_scale = Vector2(absf(visual.scale.x), visual.scale.y)
+	_visual_base_x = visual.position.x
 	floor_snap_length = 5.0
 	floor_stop_on_slope = false
 	floor_max_angle = deg_to_rad(45.0)
@@ -273,6 +317,10 @@ func _physics_process(delta: float) -> void:
 	var dialogo_bloquea := _dialogo_bloquea_input()
 	blocking = false if dialogo_bloquea else Input.is_action_pressed("block")
 	if blocking != _was_blocking:
+		if blocking:
+			_cancelar_recuperacion()
+		if blocking and current_form == Form.HUMAN:
+			_parry_t = parry_ventana
 		_was_blocking = blocking
 		_update_tint()
 
@@ -283,8 +331,6 @@ func _physics_process(delta: float) -> void:
 	_denegar_cd = maxf(_denegar_cd - delta, 0.0)
 	if _step_up_cd > 0.0:
 		_step_up_cd = maxf(_step_up_cd - delta, 0.0)
-	if _platform_snap_cd > 0.0:
-		_platform_snap_cd = maxf(_platform_snap_cd - delta, 0.0)
 	if _special_cooldown > 0.0:
 		_special_cooldown = maxf(_special_cooldown - delta, 0.0)
 	_handle_enredadera(delta)
@@ -302,6 +348,7 @@ func _physics_process(delta: float) -> void:
 	# El early-exit (pasar el umbral de recovery) libera el desplazamiento aunque siga recuperando.
 	if _attacking and cmd_axis != 0.0:
 		facing = 1 if cmd_axis > 0 else -1
+		attack_area.position.x = absf(attack_area.position.x) * facing   # la hitbox acompaña el giro
 	var dir := 0.0 if (_attacking and not _early_liberado) else cmd_axis
 	if dialogo_bloquea:
 		dir = 0.0
@@ -334,14 +381,37 @@ func _physics_process(delta: float) -> void:
 			velocity.x = move_toward(velocity.x, 0.0, fric * delta)
 
 	_melee_sticky(data, delta)
+	if _lunge_t > 0.0:
+		_lunge_t -= delta
+		if _attacking and is_on_floor():
+			velocity.x = _lunge_vel
+			if current_form == Form.LOBO:
+				_eco_t -= delta
+				if _eco_t <= 0.0:
+					_eco_t = 0.03
+					emitir_eco()
+	if _picada:
+		_eco_t -= delta
+		if _eco_t <= 0.0:
+			_eco_t = 0.04
+			emitir_eco()
 
 	if not dialogo_bloquea and not _trepando and Input.is_action_just_pressed("jump"):
+		_cancelar_recuperacion()
 		if _salto_enredadera:
 			pass
 		elif _coyote_time > 0.0 or data.can_jump():
 			data.try_jump(self)
+		elif data.flap_impulso > 0.0 and not is_on_floor() and _flap_cd <= 0.0 and energia >= data.flap_costo:
+			_aletear(data)
 		else:
 			_jump_buffer = data.jump_buffer_time
+	if current_form == Form.MURCIELAGO and not is_on_floor() and not dialogo_bloquea and not _trepando \
+			and Input.is_action_just_pressed("move_down") and not _picada:
+		_picada = true
+		velocity.y = maxf(velocity.y, Murcielago.PICADA_VELOCIDAD)
+		velocity.x *= 0.35
+		stretch_y(0.22, 0.2)
 	if not dialogo_bloquea and Input.is_action_just_released("jump") and velocity.y < 0.0:
 		var t := clampf(velocity.y / data.jump_velocity, 0.0, 1.0)
 		velocity.y *= lerpf(0.85, data.jump_cut_multiplier, t)
@@ -388,8 +458,6 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor() and not _trepando and absf(velocity.x) > 2.0:
 		_try_step_up()
 	move_and_slide()
-	if not is_on_floor() and velocity.y > 0.0:
-		_try_platform_snap()
 	if _trepando:
 		pass
 	elif is_on_wall() and is_on_floor() and absf(velocity.x) > 2.0:
@@ -407,6 +475,10 @@ func _physics_process(delta: float) -> void:
 			_squash_landing(data, _fall_impact)
 			_sonido_aterrizaje(_fall_impact)
 			_emitir_polvo(0.5)
+			if _fall_impact > 350.0:
+				var amb := get_node_or_null("/root/Ambiente")
+				if amb != null:
+					amb.empujar(global_position, clampf(_fall_impact / 1000.0, 0.15, 0.6))
 			if _fall_impact > 600.0:
 				var cam := get_viewport().get_camera_2d()
 				if cam != null and cam.has_method("shake"):
@@ -421,6 +493,8 @@ func _physics_process(delta: float) -> void:
 			_fall_impact = velocity.y
 		_was_on_floor = false
 		_coyote_time = maxf(_coyote_time - delta, 0.0)
+		if _coyote_time <= 0.0 and not _trepando:
+			data.perder_salto_suelo()
 	if is_on_floor() and _attack_air_buffer_type != "" and _attack_air_buffer > 0.0 and not _attacking:
 		var buffered := _attack_air_buffer_type
 		_attack_air_buffer_type = ""
@@ -478,17 +552,30 @@ func _physics_process(delta: float) -> void:
 	_handle_racha(delta)
 	_handle_energia(delta)
 	if global_position.y > limite_caida:
-		health = 0
+		if god_mode and _spawn_position != Vector2.ZERO:
+			global_position = _spawn_position   # en god_mode no se muere: vuelve al último punto seguro
+			velocity = Vector2.ZERO
+		else:
+			health = 0
 	_handle_death()
 	_update_animacion()
+	_actualizar_resorte(delta)
 
 
 func _dialogo_bloquea_input() -> bool:
+	if _derrota_activa:
+		return true   # muerto: sin control ni daño hasta reaparecer (evita golpes extra y acciones durante la caída)
 	var dialogo := get_node_or_null("/root/Dialogo")
 	return dialogo != null and dialogo.esta_activo()
 
 
 func _handle_racha(delta: float) -> void:
+	if _parry_t > 0.0:
+		_parry_t = maxf(_parry_t - delta, 0.0)
+	if _tag_t > 0.0:
+		_tag_t = maxf(_tag_t - delta, 0.0)
+	if _flap_cd > 0.0:
+		_flap_cd = maxf(_flap_cd - delta, 0.0)
 	if _racha_timer <= 0.0:
 		return
 	_racha_timer -= delta
@@ -605,7 +692,7 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 					_ejecutar_finisher(data, combo)
 				else:
 					var max_step: int = mini(data.light_combo_steps, _progresion().pasos_luz())
-					_light_step = mini(_light_step + 1, max_step)
+					_light_step = _light_step + 1 if _light_step < max_step else 1   # tras el último golpe la cadena vuelve al 1.º (no se queda en "tercer golpe")
 					_combo_timer = COMBO_WINDOW
 					data.perform_light(self, _light_step)
 					_play_attack_fx("light", _light_step)
@@ -630,7 +717,7 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 				if not combo.is_empty():
 					_ejecutar_finisher(data, combo)
 				else:
-					_heavy_step = mini(_heavy_step + 1, data.heavy_combo_steps)
+					_heavy_step = _heavy_step + 1 if _heavy_step < data.heavy_combo_steps else 1
 					_combo_timer = COMBO_WINDOW
 					data.perform_heavy(self, _heavy_step)
 					_play_attack_fx("heavy", _heavy_step)
@@ -643,6 +730,13 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 				return
 			if _special_cooldown > 0.0 and forms[current_form].special_cooldown > 0.0:
 				return
+			var costo: float = forms[current_form].special_cost
+			if costo > 0.0:
+				if energia < costo:
+					_denegar_transformacion()
+					return
+				energia -= costo
+				energia_changed.emit(energia)
 			_light_step = 0
 			_heavy_step = 0
 			_cancelar_anim_ataque()
@@ -711,14 +805,19 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	_whiff_applied = false
 	_whiff_grace = 0.0
 	var data: Forma = forms[current_form]
-	_hit_delay = data.melee_hit_delay
-	var rec := _recovery_for(_current_attack_type) * data.mult_recuperacion
+	var paso := 1
+	if _current_attack_type == "light":
+		paso = maxi(_light_step, 1)
+	elif _current_attack_type == "heavy":
+		paso = maxi(_heavy_step, 1)
+	_hit_delay = data.hit_delay_para(_current_attack_type, paso)
+	var rec := _recovery_for(_current_attack_type) * data.mult_recuperacion_para(_current_attack_type, paso)
 	_attack_timer = rec
 	# El lobo usa la misma cola que el humano: _iniciar_anim_ataque estira la
 	# anim con speed_scale para que los 4 frames de lobo_attack duren
 	# exactamente la recuperación -> se ve completa (no se corta al 1er frame).
 	if current_form == Form.LOBO and visual.sprite_frames.has_animation("lobo_attack"):
-		_iniciar_anim_ataque("lobo_attack")
+		_iniciar_anim_ataque("lobo_attack", data.anim_frame_inicio(_current_attack_type, paso))
 	_early_exit_umbral = rec * data.recovery_early_fraccion
 	_early_liberado = false
 	# ImÃ¡n suave al enemigo mÃ¡s cercano si estÃ¡s un poco lejos
@@ -735,6 +834,23 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 		elif dir_enemigo != 0 and faltante <= 8.0 and dir_enemigo != facing:
 			facing = int(dir_enemigo)
 			_aplicar_facing()
+	# Avance del cuerpo al golpear (solo en el piso) y pose extra del sprite.
+	var avance := data.lunge_para(_current_attack_type, paso) if is_on_floor() else 0.0
+	# Magnetismo: si hay un enemigo al frente un poco fuera de alcance, el avance se estira
+	# (hasta `magnetismo_mult`×) para llegar a contacto en vez de pegarle al aire.
+	var objetivo_mag := _buscar_enemigo_homing(magnetismo_alcance) if (avance > 0.0 and magnetismo_mult > 1.0) else null
+	if objetivo_mag != null:
+		var dx_m := objetivo_mag.global_position.x - global_position.x
+		if signf(dx_m) == float(facing):
+			var falta := absf(dx_m) - (range + size.x * 0.5) - _mitad_ancho(objetivo_mag)
+			if falta > avance:
+				avance = maxf(avance, minf(falta * 0.9, avance * magnetismo_mult))
+	if avance > 0.0:
+		_lunge_t = LUNGE_DUR
+		_lunge_vel = facing * avance / (LUNGE_DUR * 1.2)
+	else:
+		_lunge_t = 0.0
+	data.pose_ataque(self, _current_attack_type, paso)
 	_hit_applied = false
 	_current_attack_damage = forms[current_form].attack_damage if damage < 0 else damage
 	_current_attack_knockback = knockback
@@ -761,6 +877,29 @@ func _recovery_for(attack_type: String) -> float:
 			return RECOVERY_COMBO
 		_:
 			return RECOVERY_LIGHT
+
+
+## Cancela la recuperación de un golpe con salto/parry/transformación (control instantáneo).
+## Sin `forzar` solo actúa en la fase de recuperación (ya conectó o pasó el umbral de salida).
+## Mitad del ancho del collider del cuerpo (0 si no tiene).
+func _mitad_ancho(body: Node2D) -> float:
+	for c in body.get_children():
+		if c is CollisionShape2D and (c as CollisionShape2D).shape != null:
+			return (c as CollisionShape2D).shape.get_rect().size.x * 0.5 * absf(body.global_scale.x)
+	return 0.0
+
+
+func _cancelar_recuperacion(forzar: bool = false) -> bool:
+	if not _attacking:
+		return false
+	if not forzar and not (_hit_applied or _early_liberado):
+		return false
+	_attack_timer = 0.0
+	_buffered_attack = ""
+	_lunge_t = 0.0
+	_cancelar_anim_ataque()
+	end_attack()
+	return true
 
 
 func end_attack() -> void:
@@ -806,9 +945,15 @@ func _check_attack_hits() -> void:
 	elif _current_attack_type == "heavy" and _heavy_step == forms[current_form].heavy_combo_steps:
 		mult_tercer = 1.5
 	var critico := mult_tercer > 1.0 or _current_attack_type == "combo"
+	var bono_tag := _tag_t > 0.0
+	if bono_tag:
+		_tag_t = 0.0
+		critico = true
 	for idx in range(mini(objetivos.size(), 2)):
 		var body: Node2D = objetivos[idx]
 		var dmg := _current_attack_damage
+		if bono_tag:
+			dmg = int(dmg * tag_bonus_mult)
 		var kb := _current_attack_knockback * mult_tercer
 		if idx == 1:
 			dmg = int(dmg * 0.6)
@@ -837,6 +982,7 @@ func _check_attack_hits() -> void:
 		dur_hitstop *= hitstop_tercer_mult
 	var racha_mult := _racha_feedback_mult()
 	dur_hitstop *= racha_mult
+	dur_hitstop = _limitar_hitstop(dur_hitstop)
 	_freeze_hitstop(dur_hitstop)
 	_zoom_punch_por_tipo(mult_tercer)
 	_shake_por_tipo(mult_tercer)
@@ -847,6 +993,15 @@ func _check_attack_hits() -> void:
 		elif _current_attack_type == "special":
 			vol += volumen_special_db
 		audio_mgr.play_sfx_sincronizado(sonido_golpe, vol, dur_hitstop > 0.0)
+
+
+## Tope + amortiguación en ráfaga: pegar seguido no acumula pausas que se sienten "trabadas".
+func _limitar_hitstop(dur: float) -> float:
+	var ahora := Time.get_ticks_msec() * 0.001
+	if ahora - _ultimo_hitstop_s < hitstop_rafaga_ventana:
+		dur *= hitstop_rafaga_mult
+	_ultimo_hitstop_s = ahora
+	return minf(dur, hitstop_max)
 
 
 func _hitstop_por_tipo() -> float:
@@ -927,7 +1082,7 @@ func _zoom_punch_por_tipo(mult_tercer: float = 1.0) -> void:
 			escala *= zoom_special_mult
 		"combo":
 			escala *= zoom_combo_mult
-	if mult_tercer > 1.0:
+	if mult_tercer > 1.0 and _current_attack_type != "combo":
 		escala *= zoom_combo_mult
 	if _racha >= 5 and racha_zoom_5 > 1.0:
 		escala *= racha_zoom_5
@@ -977,6 +1132,9 @@ func _spark_golpe(body: Node2D, idx: int) -> void:
 	get_tree().root.add_child(p)
 	p.restart()
 	p.emitting = true
+	# Chorro direccional en el sentido del golpe (más fuerte con golpes pesados).
+	var fuerte := 1.35 if _current_attack_type in ["heavy", "special", "combo"] else 1.0
+	Burst.chispas(self, p.global_position, facing, tinte.lightened(0.45), int(5 * racha_spark_escala()), fuerte)
 
 
 ## Punto donde el golpe "toca" al objetivo: el borde del cuerpo que mira al jugador
@@ -1054,15 +1212,31 @@ func _play_attack_fx(tipo: String, step: int) -> void:
 	tw.chain().tween_callback(arco.queue_free)
 
 
-func squash_y(amount: float, duration: float) -> void:
-	if _sprite_tween != null and _sprite_tween.is_valid():
-		_sprite_tween.kill()
-	var base := Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1)
-	visual.scale = base
+## Cuerpo elástico: squash/stretch/punch son IMPULSOS sobre un resorte de escala (se suman y
+## rebotan sin pisarse). `duration` se conserva por compatibilidad con los llamadores.
+func squash_y(amount: float, _duration: float = 0.0) -> void:
+	_esc_off.y = clampf(_esc_off.y - amount, -0.6, 0.6)
 	visual.position.y = _visual_base_y()
-	_sprite_tween = create_tween()
-	_sprite_tween.tween_property(visual, "scale:y", base.y * (1.0 - amount), duration * 0.4)
-	_sprite_tween.tween_property(visual, "scale:y", base.y, duration * 0.6)
+
+
+## Avanza el resorte y aplica la escala final (con facing, reposo de pose y respiración).
+func _actualizar_resorte(delta: float) -> void:
+	var d := minf(delta, 1.0 / 30.0)
+	var acc := -resorte_rigidez * (_esc_off - _esc_reposo) - resorte_amort * _esc_vel
+	_esc_vel += acc * d
+	_esc_off += _esc_vel * d
+	_esc_off = _esc_off.clamp(Vector2(-0.6, -0.6), Vector2(0.6, 0.6))
+	var resp := 0.0
+	if respiracion_amp > 0.0 and is_on_floor() and absf(velocity.x) < 10.0 and not _attacking:
+		var f := _factor_cansancio()
+		_t_resp += d * respiracion_vel * lerpf(1.0, 1.7, f)
+		resp = sin(_t_resp) * respiracion_amp * lerpf(1.0, 2.6, f)
+		if _amb == null:
+			_amb = get_node_or_null("/root/Ambiente")
+		if _amb != null:
+			resp += float(_amb.latido) * respiracion_latido   # el cuerpo late con el corazón (mismo pulso que la viñeta)
+	var base := Vector2(absf(_base_sprite_scale.x) * float(facing), _base_sprite_scale.y)
+	visual.scale = Vector2(base.x * (1.0 + _esc_off.x), base.y * (1.0 + _esc_off.y + resp))
 
 
 ## escala: 0..1 (paso chico → aterrizaje fuerte). direccion != ZERO: polvo lateral
@@ -1120,19 +1294,53 @@ func _sprint_zoom(data: Forma) -> void:
 	cam.fijar_zoom(objetivo)
 
 
-func stretch_y(amount: float, duration: float) -> void:
-	if _sprite_tween != null and _sprite_tween.is_valid():
-		_sprite_tween.kill()
-	var base := Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1)
-	visual.scale = base
+func stretch_y(amount: float, _duration: float = 0.0) -> void:
+	_esc_off.y = clampf(_esc_off.y + amount, -0.6, 0.6)
 	visual.position.y = _visual_base_y()
-	_sprite_tween = create_tween()
-	_sprite_tween.tween_property(visual, "scale:y", base.y * (1.0 + amount), duration * 0.4)
-	_sprite_tween.tween_property(visual, "scale:y", base.y, duration * 0.6)
+
+
+## 0 = sano y con energía; 1 = vida ≤ 30 % (o energía baja fuera de Humano). Sube la respiración y el temblor.
+func _factor_cansancio() -> float:
+	var f := clampf(inverse_lerp(0.3, 0.1, float(health) / float(VIDA_MAX)), 0.0, 1.0)
+	if current_form != Form.HUMAN:
+		f = maxf(f, clampf(inverse_lerp(25.0, 8.0, energia), 0.0, 1.0))
+	return f
+
+
+## Aleteo del Murciélago: impulso corto hacia arriba a cambio de energía.
+func _aletear(data: Forma) -> void:
+	_flap_cd = flap_cooldown
+	energia = maxf(energia - data.flap_costo, 0.0)
+	energia_changed.emit(energia)
+	velocity.y = -data.flap_impulso
+	_emitir_polvo(0.35)
+	_picada = false
 
 
 func apply_zip(impulso: float) -> void:
 	velocity.x = facing * absf(impulso)
+
+
+## Eco espectral: silueta del momento actual que se desvanece (lunge del Lobo, picada, pisotón).
+func emitir_eco() -> void:
+	if eco_alpha <= 0.0 or DisplayServer.get_name() == "headless" or visual == null:
+		return
+	var color: Color = forms[current_form].color
+	var eco := AnimatedSprite2D.new()
+	eco.sprite_frames = visual.sprite_frames
+	eco.animation = visual.animation
+	eco.frame = visual.frame
+	eco.speed_scale = 0.0
+	eco.global_position = visual.global_position
+	eco.global_rotation = visual.global_rotation
+	eco.skew = visual.skew
+	eco.scale = visual.scale
+	eco.modulate = Color(color.r, color.g, color.b, eco_alpha)
+	eco.z_index = -1
+	get_tree().current_scene.add_child(eco)
+	var tw := eco.create_tween()
+	tw.tween_property(eco, "modulate:a", 0.0, 0.26).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(eco.queue_free)
 
 
 func _mostrar_fantasma_forma(idx: int) -> void:
@@ -1155,14 +1363,8 @@ func _mostrar_fantasma_forma(idx: int) -> void:
 
 
 func _punch_sprite(amount: float) -> void:
-	if _sprite_tween != null and _sprite_tween.is_valid():
-		_sprite_tween.kill()
-	var base := Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1)
-	visual.scale = base
+	_esc_off = (_esc_off + Vector2(amount, amount)).clamp(Vector2(-0.6, -0.6), Vector2(0.6, 0.6))
 	visual.position.y = _visual_base_y()
-	_sprite_tween = create_tween()
-	_sprite_tween.tween_property(visual, "scale", base * (1.0 + amount), 0.05).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_sprite_tween.tween_property(visual, "scale", base, 0.1)
 
 
 func _handle_energia(delta: float) -> void:
@@ -1180,10 +1382,11 @@ func _handle_energia(delta: float) -> void:
 		if energia <= 0.0:
 			energia = 0.0
 			var agotada := current_form
-			_transformar(Form.HUMAN, true)
-			_cooldown_formas[agotada] = COOLDOWN_AGOTADA
-			transformacion_agotada.emit()
-			_sfx(sonido_energia_agotada, volumen_estado_db)
+			# Solo si el cambio se concretó (bajo un techo bajo puede no haber lugar: se reintenta sin repetir aviso ni sonido).
+			if _transformar(Form.HUMAN, true):
+				_cooldown_formas[agotada] = COOLDOWN_AGOTADA
+				transformacion_agotada.emit()
+				_sfx(sonido_energia_agotada, volumen_estado_db)
 	energia_changed.emit(energia)
 
 
@@ -1280,11 +1483,12 @@ func _handle_transform() -> void:
 		_transform_buffer = 0.0
 
 
-func _transformar(nueva: int, forzar: bool = false) -> void:
+## Devuelve true si la forma cambió (false si está en cooldown, es la misma o no hay espacio para el collider).
+func _transformar(nueva: int, forzar: bool = false) -> bool:
 	if not forzar and _cooldown_transform > 0.0:
-		return
+		return false
 	if nueva == current_form or (not forzar and _forma_en_cooldown(nueva)):
-		return
+		return false
 	var data_nueva: Forma = forms[nueva]
 	var prev_size: Vector2 = (collision_shape.shape as RectangleShape2D).size
 	var prev_pos: Vector2 = collision_shape.position
@@ -1295,12 +1499,18 @@ func _transformar(nueva: int, forzar: bool = false) -> void:
 	(collision_shape.shape as RectangleShape2D).size = prev_size
 	collision_shape.position = prev_pos
 	if bloqueado:
-		_denegar_transformacion()
-		return
+		if not forzar:
+			_denegar_transformacion()   # forzada (energía agotada): se reintenta sin repetir el sonido cada frame
+		return false
 	forms[current_form].reset_form_state()
 	current_form = nueva
 	forma_seleccionada = nueva
+	_limpiar_estado_transitorio()
+	_cancelar_recuperacion(true)
 	_cancelar_anim_ataque()
+	_light_step = 0
+	_heavy_step = 0
+	_seq.clear()
 	var data: Forma = forms[current_form]
 	data.reset_form_state()
 	_apply_form()
@@ -1311,6 +1521,12 @@ func _transformar(nueva: int, forzar: bool = false) -> void:
 	if slowmo_transformacion > 0.0:
 		_freeze_slowmo(slowmo_transformacion, slowmo_transformacion_escala)
 	_particulas_regreso(data.color)
+	if not forzar:
+		if _racha >= 2 and _racha_timer > 0.0:
+			_tag_t = tag_bonus_tiempo
+			energia = minf(energia + tag_energia, ENERGIA_MAX)
+		if data.onda_transformacion_radio > 0.0:
+			onda_area(data.onda_transformacion_radio, data.onda_transformacion_dano, data.onda_transformacion_knockback, false)
 	_invuln_timer = maxf(_invuln_timer, invuln_transformacion)
 	_invuln_sin_parpadeo = true
 	var audio_mgr_t := get_node_or_null("/root/AudioManager")
@@ -1321,6 +1537,7 @@ func _transformar(nueva: int, forzar: bool = false) -> void:
 	form_changed.emit(data.form_name)
 	forma_selectada_cambiada.emit(nueva)
 	health_changed.emit(health, VIDA_MAX)
+	return true
 
 
 func _particulas_regreso(color: Color) -> void:
@@ -1374,7 +1591,9 @@ func _apply_form() -> void:
 	visual.skew = 0.0
 	collision_shape.shape.size = data.collider_size
 	collision_shape.position.y = 142.5 - data.collider_size.y * 0.5
-	visual.position.y = _visual_base_y()
+	if _recoil_tween != null and _recoil_tween.is_valid():
+		_recoil_tween.kill()   # no debe pisar la Y de la forma nueva
+	visual.position = Vector2(_visual_base_x, _visual_base_y())
 	_gravity_override = -1.0
 	blocking = false
 
@@ -1389,6 +1608,8 @@ func _aplicar_facing() -> void:
 	visual.scale.x = -absf(_base_sprite_scale.x) if facing < 0 else absf(_base_sprite_scale.x)
 	var data: Forma = forms[current_form]
 	if facing != _turn_prev_facing:
+		if _turn_prev_facing != 0 and giro_squash > 0.0 and is_on_floor() and absf(velocity.x) < 40.0 and not _attacking:
+			_esc_off.x = clampf(_esc_off.x - giro_squash, -0.6, 0.6)   # anticipación del giro estando quieto
 		_turn_prev_facing = facing
 		if data.turn_tilt_cam > 0.0:
 			var cam := get_viewport().get_camera_2d()
@@ -1409,14 +1630,31 @@ func _duracion_anim(anim: String) -> float:
 	return 0.5
 
 
-func _iniciar_anim_ataque(anim: String) -> void:
+func _iniciar_anim_ataque(anim: String, frame_ini: int = 0) -> void:
 	_attack_anim_cola.clear()
 	_attack_anim_cola.append(anim)
 	_attack_anim_actual = anim
 	_attack_anim_timer = _attack_timer
-	_attack_anim_speed_scale = _duracion_anim(anim) / maxf(_attack_timer, 0.01)
+	# Si arranca en un frame > 0, la parte que queda se estira para durar la recuperación.
+	var n := maxi(visual.sprite_frames.get_frame_count(anim), 1) if visual.sprite_frames != null and visual.sprite_frames.has_animation(anim) else 1
+	var fi := clampi(frame_ini, 0, n - 1)
+	var fraccion := float(n - fi) / float(n)
+	_attack_anim_speed_scale = _duracion_anim(anim) * fraccion / maxf(_attack_timer, 0.01)
 	visual.speed_scale = _attack_anim_speed_scale
 	visual.play(anim)
+	if fi > 0:
+		visual.set_frame_and_progress(fi, 0.0)
+
+
+## Pose extra al golpear: el sprite se inclina (cabeceo) y se estira un instante; vuelve solo.
+func pose_ataque(rot_deg: float, alargar: float = 0.0, dur: float = 0.2) -> void:
+	if _pose_tween != null and _pose_tween.is_valid():
+		_pose_tween.kill()
+	_pose_rot = deg_to_rad(rot_deg) * facing
+	_pose_tween = create_tween()
+	_pose_tween.tween_property(self, "_pose_rot", 0.0, dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	if alargar > 0.0:
+		_punch_sprite(alargar)
 
 
 func _cancelar_anim_ataque() -> void:
@@ -1427,6 +1665,7 @@ func _cancelar_anim_ataque() -> void:
 
 
 func _update_animacion() -> void:
+	_esc_reposo = Vector2.ZERO
 	_aplicar_facing()
 # Ataques del Humano con cola propia: la anim se estira (speed_scale) para
 	# durar exactamente la recuperación del golpe. Light -> attack1 (1-3),
@@ -1505,22 +1744,43 @@ func _update_animacion() -> void:
 	var lean_mult := 1.4 if not is_on_floor() else 1.0
 	var lean := base_lean * lean_mult
 	visual.skew = lerpf(visual.skew, lean, minf(8.0 * get_physics_process_delta_time(), 1.0))
+	var dt := get_physics_process_delta_time()
 	var target_rot := 0.0
-	if current_form == Form.LOBO and not is_on_floor():
+	if not is_on_floor():
+		# Pose de salto: estirado al subir, compacto en el ápice, alargado al caer (todas las formas).
+		var mag := data.salto_rot_grados if absf(velocity.x) > 10.0 else data.salto_rot_grados * 0.5
+		var lado: float = signf(velocity.x) if absf(velocity.x) > 10.0 else float(facing)
 		if velocity.y < -30.0:
-			if absf(velocity.x) > 10.0:
-				target_rot = deg_to_rad(-14.0) * signf(velocity.x)
-			else:
-				target_rot = deg_to_rad(-7.0) * facing
+			target_rot = deg_to_rad(-mag) * lado
+			_esc_reposo = Vector2(-data.salto_estiramiento * 0.5, data.salto_estiramiento)
 		elif velocity.y > 80.0:
-			if absf(velocity.x) > 10.0:
-				target_rot = deg_to_rad(14.0) * signf(velocity.x)
-			else:
-				target_rot = deg_to_rad(7.0) * facing
-	visual.rotation = lerpf(visual.rotation, target_rot, minf(10.0 * get_physics_process_delta_time(), 1.0))
-	if current_form == Form.LOBO and not is_on_floor() and absf(velocity.y) < APEX_CORE_THRESHOLD and not _trepando and (_sprite_tween == null or not _sprite_tween.is_valid()):
-		var apex_target := Vector2(absf(_base_sprite_scale.x), _base_sprite_scale.y) * Vector2(facing, 1) * Vector2(1.06, 0.94)
-		visual.scale = visual.scale.lerp(apex_target, 0.18)
+			target_rot = deg_to_rad(mag) * lado
+			_esc_reposo = Vector2(-data.caida_estiramiento * 0.5, data.caida_estiramiento)
+		elif absf(velocity.y) < APEX_CORE_THRESHOLD and not _trepando:
+			_esc_reposo = Vector2(data.apex_compacto, -data.apex_compacto)
+	else:
+		# Inclinación al acelerar (hacia adelante) y al frenar (hacia atrás).
+		var ax := (velocity.x - _vx_prev) / maxf(dt, 0.0001)
+		_acel_suave = lerpf(_acel_suave, clampf(ax / maxf(data.accel, 1.0), -1.0, 1.0), minf(10.0 * dt, 1.0))
+		target_rot += deg_to_rad(acel_inclinacion_grados) * _acel_suave
+	_vx_prev = velocity.x
+	# Cansancio: con poca vida/energía el cuerpo se encorva y tiembla apenas.
+	var cansancio := _factor_cansancio()
+	if cansancio > 0.0:
+		if quieto:
+			target_rot += deg_to_rad(4.0) * facing * cansancio
+		visual.offset.x = sin(Time.get_ticks_msec() * 0.06) * cansancio * (1.0 if current_form != Form.HUMAN else 0.0)
+	elif visual.offset.x != 0.0:
+		visual.offset.x = 0.0
+	visual.rotation = lerpf(visual.rotation, target_rot + _pose_rot, minf(10.0 * dt, 1.0))
+	# Polvo al correr (Oso más espaciado y pesado).
+	if polvo_correr_intervalo > 0.0 and is_on_floor() and not _attacking and absf(velocity.x) > data.speed * 0.6:
+		_polvo_paso_t -= dt
+		if _polvo_paso_t <= 0.0:
+			_polvo_paso_t = polvo_correr_intervalo * (1.4 if current_form == Form.OSO else 1.0)
+			_emitir_polvo(0.4 if current_form == Form.OSO else 0.25)
+	else:
+		_polvo_paso_t = 0.0
 	if current_form == Form.LOBO and is_on_floor() and absf(velocity.x) > 320.0:
 		var cam_tilt2 := get_viewport().get_camera_2d()
 		if cam_tilt2 != null and cam_tilt2.has_method("tilt"):
@@ -1563,8 +1823,11 @@ func _secuencia_muerte() -> void:
 		cam.shake(8.0, 0.25)
 	Burst.emitir(self, visual.global_position, forms[current_form].color, 26, 1.6)
 	visual.modulate = Color(3, 3, 3, 1)
-	var tw := create_tween()
-	tw.tween_property(visual, "modulate", Color(0.35, 0.35, 0.45, 1), muerte_duracion * 0.6)
+	if _tween_muerte != null and _tween_muerte.is_valid():
+		_tween_muerte.kill()
+	# Reloj real (la cámara lenta no lo estira) y guardado para poder matarlo al reaparecer.
+	_tween_muerte = create_tween().set_ignore_time_scale(true)
+	_tween_muerte.tween_property(visual, "modulate", Color(0.35, 0.35, 0.45, 1), muerte_duracion * 0.6)
 	var capa := CanvasLayer.new()
 	capa.layer = 94
 	var velo := ColorRect.new()
@@ -1572,7 +1835,7 @@ func _secuencia_muerte() -> void:
 	velo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	velo.color = Color(0, 0, 0, 0)
 	capa.add_child(velo)
-	get_tree().root.add_child(capa)
+	add_child(capa)   # hijo del jugador: si se cambia de escena durante la muerte, el velo se va con él
 	var tv := velo.create_tween().set_ignore_time_scale(true)
 	tv.tween_property(velo, "color:a", 0.6, muerte_duracion)
 	# Reloj real: la cámara lenta no debe estirar la espera.
@@ -1621,7 +1884,14 @@ func _mostrar_derrota() -> void:
 	get_tree().paused = true
 
 
-func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
+## `ignora_bloqueo`: el daño letal del entorno (pinchos) no se puede bloquear.
+func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_bloqueo: bool = false) -> void:
+	if ignora_bloqueo:
+		blocking = false
+		_parry_t = 0.0
+	if _parry_t > 0.0 and blocking and not god_mode and _invuln_timer <= 0.0 and not _dialogo_bloquea_input():
+		_parry_perfecto(dir)
+		return
 	if blocking and not god_mode and _invuln_timer <= 0.0 and not _dialogo_bloquea_input():
 		_sfx(sonido_bloqueo, volumen_estado_db, 0.08)
 	if god_mode or blocking or _invuln_timer > 0.0 or _dialogo_bloquea_input():
@@ -1648,6 +1918,75 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1) -> void:
 	_handle_death()
 
 
+func parry_activo() -> bool:
+	return _parry_t > 0.0 and blocking and current_form == Form.HUMAN
+
+
+## Bloqueo justo a tiempo: no recibe daño, recupera energía, aturde a los cercanos y hace un mini slow-mo.
+func _parry_perfecto(_dir: int) -> void:
+	_parry_t = 0.0
+	_invuln_timer = maxf(_invuln_timer, 0.3)
+	energia = minf(energia + parry_energia, ENERGIA_MAX)
+	energia_changed.emit(energia)
+	_sfx(sonido_bloqueo, volumen_estado_db + 4.0, 0.05)
+	_freeze_hitstop(0.1)
+	_freeze_slowmo(0.18, 0.4)
+	onda_area(parry_onda_radio, 6, 380.0, false)
+	stretch_y(0.16, 0.12)
+	var cam := get_viewport().get_camera_2d()
+	if cam != null and cam.has_method("punch"):
+		cam.punch(1.06)
+	_flash_transformacion(Color(0.9, 0.95, 1.0))
+	parry_exitoso.emit()
+
+
+## Onda alrededor del jugador: daña y empuja a los enemigos cercanos. `solo_atras` excluye a los
+## que están delante (los cubre el golpe frontal). Devuelve cuántos alcanzó.
+func onda_area(radio: float, dano: int, knockback: float, solo_atras: bool = false, lado: int = 0) -> int:
+	var golpeados := 0
+	var frente := lado if lado != 0 else facing
+	for n in get_tree().get_nodes_in_group("enemy"):
+		if not is_instance_valid(n) or not (n is Node2D) or not n.has_method("take_damage"):
+			continue
+		if n.get("_activo") == false:
+			continue   # enemigos de olas pendientes u ocultos: no se los golpea antes de su ola
+		if "health" in n and int(n.health) <= 0:
+			continue
+		var dx: float = n.global_position.x - global_position.x
+		var dy: float = n.global_position.y - global_position.y
+		if absf(dx) > radio or absf(dy) > 320.0:
+			continue
+		if solo_atras and signf(dx) == float(frente):
+			continue
+		n.take_damage(dano, knockback, 1 if dx >= 0.0 else -1, false)
+		golpeados += 1
+	_anillo_onda(radio)
+	var amb := get_node_or_null("/root/Ambiente")
+	if amb != null:
+		amb.empujar(global_position, clampf(radio / 300.0, 0.3, 1.0))
+	return golpeados
+
+
+func _anillo_onda(radio: float) -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var aro := Line2D.new()
+	var pts := PackedVector2Array()
+	for i in 33:
+		var a := TAU * float(i) / 32.0
+		pts.append(Vector2(cos(a), sin(a) * 0.35) * radio)
+	aro.points = pts
+	aro.width = 6.0
+	aro.default_color = _tinte_forma(forms[current_form].color).lightened(0.4)
+	aro.scale = Vector2(0.15, 0.15)
+	aro.global_position = global_position + Vector2(0, 100)
+	get_tree().root.add_child(aro)
+	var tw := aro.create_tween()
+	tw.tween_property(aro, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(aro, "modulate:a", 0.0, 0.26)
+	tw.tween_callback(aro.queue_free)
+
+
 ## Rechazo direccional del sprite (empuja contra la dirección del golpe) sin rotar,
 ## con un micro-temblor corto al impacto y vuelta elástica.
 func _recoil_dano(dir: int) -> void:
@@ -1655,7 +1994,9 @@ func _recoil_dano(dir: int) -> void:
 		return
 	if _recoil_tween != null and _recoil_tween.is_valid():
 		_recoil_tween.kill()
-	var base := visual.position
+	# Base fija (no la posición actual): dos golpes seguidos o un cambio de forma a mitad de tween
+	# ya no dejan el sprite desplazado para siempre.
+	var base := Vector2(_visual_base_x, _visual_base_y())
 	visual.position = base + Vector2(-dir * recoil_sprite, 0)
 	_recoil_tween = create_tween()
 	if temblor_dano > 0.0:
@@ -1705,6 +2046,10 @@ func heal_full() -> void:
 
 
 ## Cura una cantidad sin superar la vida máxima (usado por el orbe rojo de vida).
+func puede_curarse() -> bool:
+	return health < VIDA_MAX
+
+
 func curar(cantidad: int) -> void:
 	health = clampi(health + cantidad, 0, VIDA_MAX)
 	health_changed.emit(health, VIDA_MAX)
@@ -1730,17 +2075,49 @@ func reaparecer_en_checkpoint() -> void:
 	health = _checkpoint_vida
 	energia = _checkpoint_energia
 	_derrota_activa = false
+	if _tween_muerte != null and _tween_muerte.is_valid():
+		_tween_muerte.kill()   # si no, terminaba después y el jugador reaparecía oscuro
 	visual.modulate = Color.WHITE
 	_restaurar_forma(_checkpoint_forma)
+	_limpiar_estado_transitorio()
+	if _trepando:
+		_salir_enredadera()
+	end_attack()
 	_cancelar_anim_ataque()
 	blocking = false
+	_light_step = 0
+	_heavy_step = 0
+	_seq.clear()
+	_combo_timer = 0.0
+	_tag_t = 0.0
+	_murci_glide_t = 0.0
+	_esc_off = Vector2.ZERO
+	_esc_vel = Vector2.ZERO
+	_pose_rot = 0.0
+	_cooldown_transform = 0.0
+	_cooldown_formas.clear()
+	_invuln_sin_parpadeo = false
 	_racha = 0
 	_racha_timer = 0.0
+	racha_changed.emit(0)   # el HUD apaga el indicador de racha
 	_invuln_timer = 1.5
+	_anillo_onda(150.0)   # ritual de reaparición: aro espectral en el checkpoint
+	_particulas_regreso(forms[current_form].color)
 	health_changed.emit(health, VIDA_MAX)
 	energia_changed.emit(energia)
 	# Las plataformas frágiles rotas vuelven a aparecer al reaparecer.
-	get_tree().call_group("plataforma_fragil", "restaurar")
+	get_tree().call_group("plataforma_fragil", "restaurar_tras_muerte")
+
+
+## Estados de acción que no deben sobrevivir a un cambio de forma ni a una reaparición.
+func _limpiar_estado_transitorio() -> void:
+	_picada = false
+	_parry_t = 0.0
+	_flap_cd = 0.0
+	_lunge_t = 0.0
+	_buffered_attack = ""
+	_attack_air_buffer_type = ""
+	_attack_air_buffer = 0.0
 
 
 func _restaurar_forma(nueva: int) -> void:
@@ -1862,37 +2239,10 @@ func _try_step_up() -> void:
 		return
 
 
-func _try_platform_snap() -> void:
-	if is_on_floor() or velocity.y < 40.0 or _platform_snap_cd > 0.0:
-		return
-	if velocity.y > 160.0:
-		return
-	if test_move(Transform2D(0, Vector2.ZERO), Vector2(0, 4)):
-		return
-	for off in [8.0, -8.0]:
-		var test_xform := Transform2D(0, Vector2.ZERO).translated(Vector2(off, 0))
-		if not test_move(test_xform, Vector2(0, 6)):
-			var test_floor := Transform2D(0, Vector2.ZERO).translated(Vector2(off, 0))
-			if not test_move(test_floor, Vector2.ZERO):
-				continue
-			if test_move(test_floor, Vector2(0, 1)):
-				global_position.x += off
-				velocity.y = 0.0
-				_coyote_time = forms[current_form].coyote_time
-				_platform_snap_cd = 0.2
-				return
-
-
-func _try_coleccion_borde() -> void:
-	if is_on_floor() or velocity.y < 20.0 or _platform_snap_cd > 0.0:
-		return
-	for off in [12.0, -12.0]:
-		var side := Transform2D(0, Vector2.ZERO).translated(Vector2(off, 0))
-		if not test_move(side, Vector2(0, 10)):
-			global_position.x += off * 0.5
-			velocity.y = minf(velocity.y, 80.0)
-			_platform_snap_cd = 0.12
-			return
+## Forma con la que se puede trepar esa enredadera (`required_form` de la liana; 0 = Humano).
+func _forma_requerida_enredadera(e: Node) -> int:
+	var v: Variant = e.get("required_form")
+	return int(v) if v != null else Form.HUMAN
 
 
 func _handle_enredadera(delta: float) -> void:
@@ -1906,10 +2256,10 @@ func _handle_enredadera(delta: float) -> void:
 	if Input.is_action_just_pressed("move_up") or Input.is_action_just_pressed("move_down") or Input.is_action_just_pressed("jump"):
 		_vine_buffer_timer = VINE_BUFFER_TIME
 	if _trepando:
-		if current_form != Form.HUMAN:
+		if _enredadera_actual == null or not is_instance_valid(_enredadera_actual):
 			_salir_enredadera()
 			return
-		if _enredadera_actual == null or not is_instance_valid(_enredadera_actual):
+		if current_form != _forma_requerida_enredadera(_enredadera_actual):
 			_salir_enredadera()
 			return
 		var alto: float = float(_enredadera_actual.get("alto")) if _enredadera_actual.get("alto") != null else 400.0
@@ -1956,7 +2306,7 @@ func _handle_enredadera(delta: float) -> void:
 		if dir_x != 0.0 and is_on_floor():
 			_vine_dir_hold_t += delta
 			if _vine_dir_hold_t >= TREPAR_EXIT_HOLD:
-				var lateral := test_move(Transform2D(0, Vector2.ZERO), Vector2(dir_x * 8.0, 0))
+				var lateral := test_move(global_transform, Vector2(dir_x * 8.0, 0))
 				if not lateral:
 					_salir_enredadera()
 					velocity.x = dir_x * 140.0
@@ -1975,7 +2325,7 @@ func _handle_enredadera(delta: float) -> void:
 		var meta: float = dir_y * cs
 		if dir_y > 0:
 			meta *= TREPAR_DOWN_MULT
-		var bloqueado_arriba: bool = dir_y < 0 and test_move(Transform2D(0, Vector2.ZERO), Vector2(0, -(cs * delta + 1.0)))
+		var bloqueado_arriba: bool = dir_y < 0 and test_move(global_transform, Vector2(0, -(cs * delta + 1.0)))
 		if bloqueado_arriba:
 			velocity.y = minf(velocity.y, 0.0)
 		elif dir_y != 0:
@@ -1987,7 +2337,7 @@ func _handle_enredadera(delta: float) -> void:
 		var dx: float = _enredadera_actual.global_position.x - global_position.x
 		if absf(dx) > 1.0:
 			var paso := clampf(dx, -260.0 * delta, 260.0 * delta)
-			if not test_move(Transform2D(0, Vector2.ZERO), Vector2(paso, 0)):
+			if not test_move(global_transform, Vector2(paso, 0)):
 				global_position.x += paso
 		_sonido_liana(dir_y, delta)
 		if dir_y != 0 and absf(velocity.y) > 20.0:
@@ -2001,8 +2351,6 @@ func _handle_enredadera(delta: float) -> void:
 				_vine_particulas_timer = 0.9
 		return
 	if _trepado_cooldown > 0.0:
-		return
-	if current_form != Form.HUMAN:
 		return
 	var quiere_trepar: bool = Input.is_action_pressed("move_up") or Input.is_action_pressed("move_down")
 	if not is_on_floor():
@@ -2022,7 +2370,7 @@ func _handle_enredadera(delta: float) -> void:
 			is_overlap = (area as Area2D).get_overlapping_bodies().has(self)
 		if not is_overlap:
 			is_overlap = absf(global_position.x - area.global_position.x) < ancho2 * 0.5 + 48.0 and global_position.y > top2 - 48.0 and global_position.y < bot2 + 48.0
-		if is_overlap:
+		if is_overlap and current_form == _forma_requerida_enredadera(area):
 			_trepando = true
 			_enredadera_actual = area
 			_gravity_override = 0.0
@@ -2030,7 +2378,7 @@ func _handle_enredadera(delta: float) -> void:
 			velocity.x = 0.0
 			_vine_dir_hold_t = 0.0
 			var paso_agarre: float = area.global_position.x - global_position.x
-			if not test_move(Transform2D(0, Vector2.ZERO), Vector2(paso_agarre, 0)):
+			if not test_move(global_transform, Vector2(paso_agarre, 0)):
 				global_position.x = area.global_position.x
 			if not is_on_floor():
 				squash_y(0.12, 0.12)
@@ -2042,6 +2390,8 @@ func _handle_enredadera(delta: float) -> void:
 func _salir_enredadera() -> void:
 	if _liana_loop != null:
 		_liana_loop.stop()
+	if _trepando and not is_on_floor():
+		_emitir_burst_hojas()   # al soltar la liana también vuelan hojitas
 	_trepando = false
 	_enredadera_actual = null
 	_gravity_override = -1.0

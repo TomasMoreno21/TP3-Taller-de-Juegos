@@ -50,6 +50,20 @@ func _navegar(dir: int) -> void:
 
 func _on_focus(i: int) -> void:
 	_indice = i
+	_resaltar(i)
+
+
+## El botón con foco crece un poco y los demás vuelven a su tamaño (feedback de selección).
+func _resaltar(i: int) -> void:
+	for k in botones.size():
+		var b := botones[k]
+		b.pivot_offset = b.size * 0.5
+		var objetivo := Vector2.ONE * (1.06 if k == i else 1.0)
+		if DisplayServer.get_name() == "headless":
+			b.scale = objetivo
+			continue
+		var tw := b.create_tween()
+		tw.tween_property(b, "scale", objetivo, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _on_boton_pressed(i: int) -> void:

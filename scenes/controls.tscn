@@ -131,6 +131,9 @@ text = "[color=#f2d95c][b]TECLADO[/b][/color]
 [color=#cfd6c6]Fuerte:[/color]  K
 [color=#cfd6c6]Especial / Interactuar:[/color]  L
 [color=#cfd6c6]Bloquear:[/color]  Shift
+[color=#cfd6c6]Parry (Humano):[/color]  Shift justo al recibir el golpe
+[color=#cfd6c6]Aleteo (Murciélago):[/color]  Espacio en el aire
+[color=#cfd6c6]Picada (Murciélago):[/color]  S / ↓ en el aire
 [color=#cfd6c6]Preseleccionar forma:[/color]  Q
 [color=#cfd6c6]Transformar:[/color]  T
 [color=#cfd6c6]Consola dev:[/color]  `
@@ -150,6 +153,9 @@ text = "[color=#f2d95c][b]MANDO[/b][/color]
 [color=#cfd6c6]Fuerte:[/color]  Y
 [color=#cfd6c6]Especial / Interactuar:[/color]  B
 [color=#cfd6c6]Bloquear:[/color]  LB
+[color=#cfd6c6]Parry (Humano):[/color]  LB justo al recibir el golpe
+[color=#cfd6c6]Aleteo (Murciélago):[/color]  A en el aire
+[color=#cfd6c6]Picada (Murciélago):[/color]  Stick / Cruz abajo en el aire
 [color=#cfd6c6]Preseleccionar forma:[/color]  Select
 [color=#cfd6c6]Transformar:[/color]  RB
 [color=#cfd6c6]Pausa:[/color]  Start"

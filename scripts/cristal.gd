@@ -1,5 +1,7 @@
 extends StaticBody2D
 
+const Jugador := preload("res://scripts/player.gd")
+
 signal cristal_destruido
 
 @export var cristal_color: Color = Color(0.62, 0.42, 0.92)
@@ -14,6 +16,8 @@ var _roto := false
 var _golpes := 0
 var _base_y := 0.0
 var _offset := 0.0
+var _escala_base := Vector2.ONE   # escala de reposo (los golpes rápidos no la acumulan)
+var _tw_golpe: Tween
 
 @onready var visual_root: Node2D = $Visual
 @onready var poly: Polygon2D = $Visual/Poly
@@ -25,6 +29,7 @@ var _offset := 0.0
 func _ready() -> void:
 	add_to_group("cristal")
 	_base_y = visual_root.position.y if visual_root != null else 0.0
+	_escala_base = visual_root.scale if visual_root != null else Vector2.ONE
 	_offset = randf() * TAU
 	_actualizar_visual()
 
@@ -77,7 +82,7 @@ func take_damage(_cant: int, _kb: float = 0.0, _dir: int = 1, _critico: bool = f
 	if _roto:
 		return
 	var player := get_tree().get_first_node_in_group("player")
-	if player == null or (solo_murcielago and int(player.get("current_form")) != 3):
+	if player == null or (solo_murcielago and int(player.get("current_form")) != Jugador.Form.MURCIELAGO):
 		return
 	_golpes += 1
 	if _golpes < golpes_para_romper:
@@ -103,11 +108,12 @@ func _flash_golpe() -> void:
 	var base_col: Color = cristal_color
 	if poly != null and poly.visible:
 		poly.color = Color(1, 0.85, 0.85)
-		var tw := create_tween()
-		tw.tween_property(poly, "color", base_col.lerp(Color(1, 1, 1), 0.35), 0.14)
-		var sc := visual_root.scale
-		tw.parallel().tween_property(visual_root, "scale", sc * 1.18, 0.06)
-		tw.tween_property(visual_root, "scale", sc, 0.08)
+		if _tw_golpe != null and _tw_golpe.is_valid():
+			_tw_golpe.kill()
+		_tw_golpe = create_tween()
+		_tw_golpe.tween_property(poly, "color", base_col.lerp(Color(1, 1, 1), 0.35), 0.14)
+		_tw_golpe.parallel().tween_property(visual_root, "scale", _escala_base * 1.18, 0.06)
+		_tw_golpe.tween_property(visual_root, "scale", _escala_base, 0.08)
 	if halo != null and halo.visible:
 		halo.color = Color(1, 0.6, 0.6, 0.32)
 		var tw2 := create_tween()

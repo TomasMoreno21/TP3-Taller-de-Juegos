@@ -8,6 +8,9 @@ extends Area2D
 @export var color_burst := Color(0.45, 0.72, 1.0)
 @export var sonido_recoger: AudioStream = preload("res://assets/audio/sfx/gen/pickup.wav")
 @export var volumen_recoger_db := -8.0
+@export var iman_radio := 150.0          ## px: dentro de este radio el alma vuela hacia el jugador (0 = sin imán)
+@export var iman_velocidad := 700.0      ## velocidad máxima del imán (px/s)
+@export var iman_aceleracion := 1800.0
 
 var _t := randf() * TAU
 var _recogido := false
@@ -15,6 +18,8 @@ var _base_visual := Vector2.ZERO
 var _base_halo := Vector2.ZERO
 var _alpha_halo := 1.0
 var _energia_luz := 1.0
+var _iman_vel := 0.0
+var _jugador: Node2D
 
 @onready var visual: Polygon2D = $Visual
 @onready var halo: Sprite2D = get_node_or_null("Halo")
@@ -37,6 +42,7 @@ func _process(delta: float) -> void:
 	if _recogido:
 		return
 	_t += delta
+	_atraer(delta)
 	var dy := sin(_t * flote_velocidad) * flote_amplitud
 	visual.position = _base_visual + Vector2(0, dy)
 	var latido := 0.8 + 0.2 * sin(_t * pulso_velocidad)
@@ -45,6 +51,24 @@ func _process(delta: float) -> void:
 		halo.modulate.a = _alpha_halo * latido
 	if luz != null:
 		luz.energy = _energia_luz * latido
+
+
+## Imán suave: cerca del jugador el alma acelera hacia él (más rápido cuanto más cerca).
+func _atraer(delta: float) -> void:
+	if iman_radio <= 0.0:
+		return
+	if _jugador == null or not is_instance_valid(_jugador):
+		_jugador = get_tree().get_first_node_in_group("player") as Node2D
+	var p := _jugador
+	if p == null:
+		return
+	var d := (p.global_position + Vector2(0, -60)) - global_position
+	var dist := d.length()
+	if dist < iman_radio and dist > 1.0:
+		_iman_vel = minf(_iman_vel + iman_aceleracion * delta, iman_velocidad)
+		global_position += d / dist * minf(_iman_vel * delta, dist)
+	else:
+		_iman_vel = 0.0
 
 
 func _on_body_entered(body: Node2D) -> void:

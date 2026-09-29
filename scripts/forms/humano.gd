@@ -23,8 +23,6 @@ func _init() -> void:
 	special_knockback = 260.0
 	color = Color(0.42, 0.62, 0.36)
 	collider_size = Vector2(190, 318)
-	shake_strength = 5.0
-	hit_rotation = 7.0
 	landing_squash = 0.12
 	camera_zoom = Vector2(0.93, 0.93)
 	accel = 4600.0

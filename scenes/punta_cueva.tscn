@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/punta_cueva.gd" id="1_punta"]
+
+[node name="PuntaCueva" type="Node2D"]
+script = ExtResource("1_punta")

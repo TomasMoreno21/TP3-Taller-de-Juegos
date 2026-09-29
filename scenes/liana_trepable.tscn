@@ -1,7 +1,6 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/enredadera.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://Sprites/Elementos/liana2.png" id="2_text"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_liana"]
 resource_local_to_scene = true
@@ -16,10 +15,6 @@ ancho = 50.0
 alto = 1462.0
 
 [node name="Visual" type="Node2D" parent="."]
-
-[node name="Sprite" type="Sprite2D" parent="Visual"]
-texture_filter = 1
-texture = ExtResource("2_text")
 
 [node name="Collision" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_liana")

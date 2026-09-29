@@ -170,6 +170,17 @@ func pulso_transformacion() -> void:
 	_tw_pulso.tween_property(self, "_flash", 0.0, 0.4)
 
 
+## Pulso corto al ganar energía (matar, parry, alma): más chico que el de transformación.
+func pulso_energia() -> void:
+	if _tw_pulso != null and _tw_pulso.is_valid():
+		_tw_pulso.kill()
+	scale = Vector2.ONE * 1.08
+	_flash = maxf(_flash, 0.55)
+	_tw_pulso = create_tween().set_parallel(true)
+	_tw_pulso.tween_property(self, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tw_pulso.tween_property(self, "_flash", 0.0, 0.3)
+
+
 func set_energia(valor: float, maximo := 100.0) -> void:
 	energia_max = maximo
 	if valor < _fantasma:

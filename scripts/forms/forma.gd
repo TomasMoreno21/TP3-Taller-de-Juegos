@@ -33,6 +33,16 @@ var _jumps_usados := 0
 @export var special_size: Vector2 = Vector2(160, 90)
 @export var special_knockback: float = 240.0
 @export var heavy_knockback: float = 150.0
+@export var special_cost: float = 0.0            # energía que cuesta cada especial (0 = gratis; si no alcanza, no sale)
+@export var onda_transformacion_radio: float = 0.0  # al transformarse empuja/daña alrededor (0 = sin onda)
+@export var onda_transformacion_dano: int = 0
+@export var onda_transformacion_knockback: float = 0.0
+@export var flap_impulso: float = 0.0            # aleteo en el aire: impulso hacia arriba (0 = no aletea)
+@export var flap_costo: float = 0.0              # energía por aleteo
+@export var salto_rot_grados: float = 0.0        # inclinación del cuerpo al subir/caer (0 = sin balanceo)
+@export var salto_estiramiento: float = 0.0      # estirado vertical al subir en el aire (0 = sin)
+@export var caida_estiramiento: float = 0.0      # estirado vertical al caer (0 = sin)
+@export var apex_compacto: float = 0.0           # cuerpo compacto en el ápice del salto (0 = sin)
 @export var special_cooldown: float = 0.0        # espera entre especiales fuera de combate (0 = sin límite)
 @export var special_cooldown_combate: float = 0.0  # espera entre especiales en combate (0 = sin límite)
 
@@ -43,14 +53,10 @@ var _jumps_usados := 0
 @export var color: Color = Color(1, 1, 1)
 @export var collider_size: Vector2 = Vector2(16, 40)
 @export var flight_lift: float = 0.0         # px que flota el sprite sobre su base (volar/planeo)
-@export var shake_strength: float = 8.0
-@export var shake_duration: float = 0.15
-@export var hit_rotation: float = 14.0
 @export var hit_zoom: float = 1.02
 @export var shake_golpe_ligero: float = 7.5
 @export var shake_golpe_pesado: float = 12.0
 @export var shake_golpe_combo: float = 15.0
-@export var transform_duration: float = 14.0
 @export var lean_angulo: float = 3.0   # inclinación leve del sprite según velocidad (grados)
 
 # Inercia de movimiento (Ítem 5): aceleración al arrancar (más alto = más ágil)
@@ -76,12 +82,45 @@ var _jumps_usados := 0
 # Fluidez de combate: multiplicador de recuperación post-golpe (menor = encadena más rápido)
 # e impulso hacia adelante al golpear (lunge; 0 = golpe estático).
 @export var mult_recuperacion: float = 1.0
-@export var lunge_light: float = 70.0
-@export var lunge_heavy: float = 150.0
+@export var lunge_light: float = 0.0     # px que avanza el cuerpo al dar un golpe ligero (0 = sin avance)
+@export var lunge_heavy: float = 0.0     # ídem golpe pesado
+@export var lunge_combo: float = 0.0     # ídem remate del combo
 @export var melee_sticky: float = 0.0               # persecución al enemigo durante el golpe activo (0 = golpe estático)
 # Early-exit (Capcom): al pasar este % del recovery se libera movimiento/salto/chain.
 # El recovery largo queda solo en el finisher del combo (0 = early-exit desactivado).
 @export var recovery_early_fraccion: float = 0.35
+
+
+## Avance (px) del cuerpo al golpear. Las formas pueden variarlo por paso del combo.
+func lunge_para(tipo: String, _step: int) -> float:
+	match tipo:
+		"light":
+			return lunge_light
+		"heavy":
+			return lunge_heavy
+		"combo":
+			return lunge_combo
+	return 0.0
+
+
+## Retardo hasta que el golpe puede conectar (sincronizar con el frame del impacto).
+func hit_delay_para(_tipo: String, _step: int) -> float:
+	return melee_hit_delay
+
+
+## Multiplicador de recuperación por golpe (el cierre de una cadena puede ser más lento).
+func mult_recuperacion_para(_tipo: String, _step: int) -> float:
+	return mult_recuperacion
+
+
+## Frame de la animación de ataque desde el que arranca (saltear la preparación en golpes encadenados).
+func anim_frame_inicio(_tipo: String, _step: int) -> int:
+	return 0
+
+
+## Pose extra del sprite al golpear (rotación/estirón); cada forma la define a su gusto.
+func pose_ataque(_player: CharacterBody2D, _tipo: String, _step: int) -> void:
+	pass
 
 
 func tick(_player: CharacterBody2D, _delta: float) -> void:
@@ -114,11 +153,10 @@ func try_jump(player: CharacterBody2D) -> void:
 		if absf(dir_jump) > 0.1:
 			player.velocity.x = clampf(dir_jump * speed * despegue_speed_mult, -max_h, max_h)
 	player.set("_salto_aereo_limitado", true)
-	if player.has_method("stretch_y"):
-		player.stretch_y(0.18, 0.2)
 	if player.has_method("_emitir_polvo"):
 		player._emitir_polvo(0.6)
 	_jumps_usados += 1
+	player.set("_coyote_time", 0.0)   # el salto ya gastó el coyote (si no, un 2.º toque "salta" en falso y bloquea el aleteo)
 	if player.has_method("_sonido_salto"):
 		player._sonido_salto(_jumps_usados)
 	if _jumps_usados >= 2:
@@ -135,6 +173,13 @@ func can_jump() -> bool:
 
 func on_floor(_player: CharacterBody2D) -> void:
 	_jumps_usados = 0
+
+
+## Al pasar el coyote time en el aire sin haber saltado, el salto "de suelo" se pierde
+## (caminar fuera de un borde no regala un salto extra).
+func perder_salto_suelo() -> void:
+	if _jumps_usados == 0:
+		_jumps_usados = 1
 
 
 func on_landing(_player: CharacterBody2D, _fall_impact: float) -> void:
@@ -172,9 +217,9 @@ func perform_combo(player: CharacterBody2D, combo: Dictionary) -> void:
 
 func perform_jump_attack(player: CharacterBody2D, heavy: bool) -> void:
 	if heavy:
-		player.enable_melee(heavy_size, heavy_range, heavy_damage)
+		player.enable_melee(heavy_size, heavy_range, heavy_damage, heavy_knockback)
 	else:
-		player.enable_melee(attack_size, attack_range, attack_damage)
+		player.enable_melee(attack_size, attack_range, attack_damage, light_knockback)
 
 
 func reset_form_state() -> void:

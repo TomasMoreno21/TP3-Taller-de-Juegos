@@ -8,3 +8,6 @@ extends Resource
 @export var delay: float = 1.0             # pausa tras resolver la ola anterior
 @export var offset: Vector2 = Vector2(140, 0)  # separación horizontal entre spawns
 @export var edge: bool = false             # entran caminando desde fuera de pantalla
+@export var tipo_extra: String = ""          # ola mixta: segundo tipo de enemigo (vacío = ninguno)
+@export var cantidad_extra: int = 0        # cuántos del tipo extra (se suman a `cantidad`)
+@export var orbe_al_terminar: bool = false # al despejar esta ola suelta un orbe de vida (respiro antes de la siguiente)

@@ -13,6 +13,7 @@ var _lookahead_actual := 0.0
 var _zoom_velocidad := 1.0
 var _framing_scale := 1.0
 var _arena_tween: Tween
+var _modo_tween: Tween
 var _descenso_t := 0.0
 var _offset_descenso := 0.0
 var _look_offset := Vector2.ZERO
@@ -121,6 +122,8 @@ func _process(delta: float) -> void:
 			offset = _look_offset
 			_shake_dir = Vector2.ZERO
 			_shake_rot_amplitud = 0.0
+			if absf(_tilt) <= 0.0005:
+				rotation = 0.0   # sin tilt activo no queda ningún ladeo residual del shake
 	else:
 		offset = _look_offset
 
@@ -136,9 +139,9 @@ func _process(delta: float) -> void:
 		_punch_scale = lerpf(_punch_scale, 1.0, minf(4.0 * delta, 1.0))
 
 	# Tilt de cámara transitorio (giro de Lobo) -> recupera a 0.
-	if absf(_tilt) > 0.01:
+	if absf(_tilt) > 0.0005:
 		rotation = lerpf(rotation, 0.0, minf(suavizado * 0.5 * delta, 1.0))
-		if absf(rotation) < 0.01:
+		if absf(rotation) < 0.0015:   # umbral chico: el final ya no da un salto visible
 			_tilt = 0.0
 			rotation = 0.0
 
@@ -300,6 +303,8 @@ func tilt(angulo: float) -> void:
 
 
 func modo_arena(centro: Vector2) -> void:
+	if _modo_tween != null and _modo_tween.is_valid():
+		_modo_tween.kill()   # el viaje de modo_normal no debe arrastrar la cámara fuera de la arena
 	_modo = "fija"
 	_fija_pos = centro
 	global_position = centro
@@ -309,6 +314,8 @@ func modo_arena(centro: Vector2) -> void:
 ## instantaneo: salta directo al jugador (p. ej. al reaparecer con la pantalla en
 ## negro) en vez de viajar hasta él.
 func modo_normal(instantaneo: bool = false) -> void:
+	if _modo_tween != null and _modo_tween.is_valid():
+		_modo_tween.kill()
 	_modo = "seguir"
 	modo_cambio.emit("seguir")
 	var player := get_tree().get_first_node_in_group("player") as Node2D
@@ -321,8 +328,8 @@ func modo_normal(instantaneo: bool = false) -> void:
 			_suelo_y = INF
 			reset_smoothing()
 			return
-		var tw := create_tween()
-		tw.tween_property(self, "global_position", dest, 0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		_modo_tween = create_tween()
+		_modo_tween.tween_property(self, "global_position", dest, 0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 ## Encuadre de arena: aleja la cámara un toque (escala < 1) al entrar a una arena
@@ -337,6 +344,9 @@ func encuadre_arena(escala_out: float = 0.96, duracion: float = 0.7) -> void:
 
 
 func shake(strength: float = 8.0, duration: float = 0.15, dir: Vector2 = Vector2.ZERO) -> void:
+	var amb := get_node_or_null("/root/Ambiente")
+	if amb != null:
+		amb.sacudida(strength)   # el entorno reacciona a los golpes fuertes (pasto, luciérnagas, polvo de techo)
 	_shake_timer = duration
 	_shake_duracion = duration
 	_shake_strength = strength

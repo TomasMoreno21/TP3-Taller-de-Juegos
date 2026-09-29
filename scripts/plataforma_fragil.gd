@@ -33,6 +33,7 @@ var _shape: CollisionShape2D
 var _pos_inicial := Vector2.ZERO
 var _t_rota := 0.0
 var _tween_vuelta: Tween
+var _tween_rotura: Tween
 
 
 func _clave() -> String:
@@ -106,20 +107,31 @@ func _romper(sin_animacion := false) -> void:
 	match modo_ruptura:
 		Ruptura.DESTRUIR:
 			_fase = Fase.ROTA
-			var tw := create_tween()
-			tw.set_parallel(true)
-			tw.tween_property(_visual, "modulate:a", 0.0, 0.12)
-			tw.tween_property(_visual, "scale", Vector2(1.3, 1.3), 0.12)
-			tw.chain().tween_callback(func() -> void: _visual.visible = false)
+			if _tween_rotura != null and _tween_rotura.is_valid():
+				_tween_rotura.kill()
+			_tween_rotura = create_tween()
+			_tween_rotura.set_parallel(true)
+			_tween_rotura.tween_property(_visual, "modulate:a", 0.0, 0.12)
+			_tween_rotura.tween_property(_visual, "scale", Vector2(1.3, 1.3), 0.12)
+			_tween_rotura.chain().tween_callback(func() -> void: _visual.visible = false)
 		Ruptura.CAER:
 			# El collider queda activo: el jugador cae junto con la plataforma.
 			_fase = Fase.CAYENDO
 
 
 ## Vuelve a aparecer (fundido corto). Se llama por tiempo o al reaparecer el jugador.
+## Al reaparecer el jugador tras morir: las plataformas "persistentes" siguen rotas (como dice su export).
+func restaurar_tras_muerte() -> void:
+	if persistente_rota:
+		return
+	restaurar()
+
+
 func restaurar() -> void:
 	if _fase == Fase.ESPERA:
 		return
+	if _tween_rotura != null and _tween_rotura.is_valid():
+		_tween_rotura.kill()   # su callback dejaba la plataforma invisible con colisión si restaurar() caía dentro de los 0.12 s
 	if _tween_vuelta != null and _tween_vuelta.is_valid():
 		_tween_vuelta.kill()
 	_fase = Fase.ESPERA

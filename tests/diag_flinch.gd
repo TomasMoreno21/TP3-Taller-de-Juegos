@@ -18,6 +18,7 @@ func _initialize() -> void:
 	nivel.add_child(e)
 	e.global_position = Vector2(400, 900)
 	await create_timer(1.0).timeout
+	e.enemy_data.poise_max = 0   # sin poise: aislar el chequeo de animación
 	var pos0: Vector2 = e.visual.position
 	var esc0: Vector2 = e.visual.scale
 	for i in 8:

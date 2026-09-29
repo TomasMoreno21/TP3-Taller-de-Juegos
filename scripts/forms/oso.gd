@@ -1,6 +1,9 @@
 class_name Oso
 extends Forma
 
+const PISOTON_RADIO := 230.0
+const PISOTON_DANO := 14
+const PISOTON_KNOCKBACK := 300.0
 const LANDING_IMPACT_MIN := 500.0
 const LANDING_IMPACT_SHAKE := 900.0
 
@@ -26,14 +29,16 @@ func _init() -> void:
 	special_size = Vector2(390, 210)
 	special_range = 234.0
 	special_knockback = 320.0
+	special_cost = 8.0
+	onda_transformacion_radio = 300.0
+	onda_transformacion_dano = 12
+	onda_transformacion_knockback = 380.0
 	heavy_knockback = 220.0
 	color = Color(0.55, 0.4, 0.22)
 	collider_size = Vector2(470, 324)
 	camera_lookahead_mult = 0.65
-	shake_strength = 14.0
 	lean_angulo = 2.0
 	hit_zoom = 1.05
-	transform_duration = 10.0
 	accel = 1600.0
 	friction = 2100.0
 	accel_air_mult = 0.5
@@ -45,7 +50,7 @@ func _init() -> void:
 	turn_tilt_cam = 0.05
 	mult_recuperacion = 1.15
 	recovery_early_fraccion = 0.25
-	lunge_heavy = 220.0
+	lunge_heavy = 36.0
 	melee_sticky = 0.0
 	combos = [
 		{"nombre": "Garra", "secuencia": ["light", "heavy"], "dano": 48, "knockback": 360.0, "tamano": Vector2(288, 186), "rango": 198.0},
@@ -58,6 +63,14 @@ func perform_heavy(player: CharacterBody2D, step: int) -> void:
 
 func perform_special(player: CharacterBody2D) -> void:
 	player.enable_melee(special_size, special_range, special_damage, special_knockback)
+	# Pisotón: además del zarpazo frontal, la onda castiga a quien lo rodea por detrás.
+	# El lado se fija al empezar el pisotón; si mientras tanto se transformó o murió, la onda no sale.
+	var lado: int = player.facing
+	player.get_tree().create_timer(melee_hit_delay).timeout.connect(func() -> void:
+		if not is_instance_valid(player) or player.forms[player.current_form] != self or player.get("_derrota_activa"):
+			return
+		player.emitir_eco()
+		player.onda_area(PISOTON_RADIO, PISOTON_DANO, PISOTON_KNOCKBACK, true, lado))
 	var cam := player.get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("shake"):
 		cam.shake(10.0)

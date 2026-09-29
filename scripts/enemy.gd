@@ -25,7 +25,13 @@ const MAX_FALL_SPEED := 950.0
 @export var flinch_pop_escala := 1.12         # escala del "pop" al recuperar la pose
 @export var flinch_congela_anim := false      # true = congela la animación durante todo el stun (se ve trabado si seguís pegando)
 @export var stun_anim := "idle"               # animación que sigue viva durante el stun ("" = la que corresponda al movimiento)
-@export var flinch_reflash := 0.55            # intensidad del flash si lo golpean de nuevo en pleno stun (0-1)
+@export var max_atacantes_melee := 2          # cuántos cuerpo a cuerpo pueden estar atacando a la vez (los demás esperan)
+@export var flash_aviso := Color(1.7, 1.7, 1.7)  # destello al iniciar un ataque (aviso de lectura)
+@export var flash_impacto := 2.4               # brillo blanco quemado del impacto (1 = sin destello blanco)
+@export var pausa_impacto := 0.05              # s que queda "colgado" tras el golpe antes de salir despedido (0 = sin)
+@export var polvo_aterrizaje := true           # nube de polvo al caer de una altura
+@export var pop_aparicion := true              # pequeño "pop" al aparecer sin ritual
+@export var flinch_reflash := 0.55           # intensidad del flash si lo golpean de nuevo en pleno stun (0-1)
 
 const FRAMES_POR_TIPO := {
 	"cultista": preload("res://resources/enemigo1_frames.tres"),
@@ -45,11 +51,20 @@ var _dir := -1
 var _player_cache: Node2D
 var _stun_timer := 0.0
 var _stun_dir := 1
+var _usa_sprite := false            # false = enemigo dibujado con polígono (sin AnimatedSprite propio)
+var _pausa_impacto_t := 0.0
+var _kb_pendiente := 0.0
+var _caida_max := 0.0
+var _en_suelo_prev := true
 var _anim_congelada := false
 var _reaction_tween: Tween
 var _stun_tween: Tween
 var _tint_tween: Tween
 var _windup_timer := 0.0
+var _windup_disparo := 0.0
+var _poise_hits := 0
+var _poise_reset_t := 0.0
+var _poise_ventana_t := 0.0
 var _lunge_timer := 0.0
 var _lunge_hit := false
 var _ultima_pos_valida := Vector2.ZERO
@@ -90,6 +105,7 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.offset_visual_x = 3.3
 			d.knockback_resist = 0.55
 			d.stun_duracion = 0.35
+			d.poise_max = 3
 		"arquero":
 			d.tipo_nombre = "Arquero"
 			d.max_health = 60
@@ -106,6 +122,9 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.offset_visual_x = 5.3
 			d.knockback_resist = 0.45
 			d.stun_duracion = 0.4
+			d.windup_disparo = 0.42
+			d.poise_max = 3
+			d.sonico_dano_mult = 1.5
 		"chaman":
 			d.tipo_nombre = "Chamán"
 			d.max_health = 155
@@ -124,6 +143,9 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.visual_scale = Vector2.ONE
 			d.knockback_resist = 0.6
 			d.stun_duracion = 0.35
+			d.windup_disparo = 0.5
+			d.poise_max = 4
+			d.sonico_dano_mult = 1.2
 			d.armor_umbral = 18  # solo golpes pesados (18+) rompen su ataque; Lobo/Murciélago no pueden
 	return d
 
@@ -136,6 +158,7 @@ func _ready() -> void:
 	if enemy_data != null:
 		health = enemy_data.max_health
 		var frames: SpriteFrames = FRAMES_POR_TIPO.get(tipo)
+		_usa_sprite = frames != null
 		if frames != null:
 			poly.visible = false
 			animated.visible = true
@@ -214,6 +237,7 @@ func activar() -> void:
 		visual.visible = true
 		_activo = true
 		_colision(true)
+		_pop_al_aparecer()
 
 
 func _colision(on: bool) -> void:
@@ -263,6 +287,13 @@ func _physics_process(delta: float) -> void:
 		matar_por_caida()
 		return
 	_mirar_jugador()
+	_polvo_al_aterrizar()
+	if _poise_reset_t > 0.0:
+		_poise_reset_t -= delta
+		if _poise_reset_t <= 0.0:
+			_poise_hits = 0
+	if _poise_ventana_t > 0.0:
+		_poise_ventana_t -= delta
 	if _telegraph_timer > 0.0:
 		_telegraph_timer -= delta
 		velocity.x = 0.0
@@ -287,6 +318,17 @@ func _physics_process(delta: float) -> void:
 			_anim_congelada = false
 			if animated != null and not animated.is_playing():
 				animated.play()
+		if _pausa_impacto_t > 0.0:
+			# Colgado un instante en el impacto (asimetría: pesa más el golpe que el jugador),
+			# y recién después sale despedido.
+			_pausa_impacto_t -= delta
+			if _pausa_impacto_t <= 0.0:
+				velocity.x = _kb_pendiente
+			else:
+				velocity = Vector2.ZERO
+				_update_animacion()
+				move_and_slide()
+				return
 		velocity.x = move_toward(velocity.x, 0.0, 180.0 * delta)
 		velocity.y = minf(velocity.y + GRAVITY * delta, MAX_FALL_SPEED)
 		_update_animacion()
@@ -309,10 +351,22 @@ func _physics_process(delta: float) -> void:
 	var dist := global_position.distance_to(player.global_position)
 
 	if _usar_proyectil():
-		if dist <= enemy_data.shoot_range and _attack_timer <= 0.0:
-			_disparar(player)
-			_attack_timer = enemy_data.attack_cooldown
-		if enemy_data.retrocede_dist > 0.0 and dist <= enemy_data.retrocede_dist:
+		if _windup_disparo > 0.0:
+			_windup_disparo -= delta
+			if _windup_disparo <= 0.0:
+				_disparar(player)
+				_attack_timer = enemy_data.attack_cooldown
+		elif dist <= enemy_data.shoot_range and _attack_timer <= 0.0:
+			if enemy_data.windup_disparo > 0.0:
+				_windup_disparo = enemy_data.windup_disparo
+				_reproducir_animacion_ataque("attack2")
+				_flash_aviso()
+			else:
+				_disparar(player)
+				_attack_timer = enemy_data.attack_cooldown
+		if _windup_disparo > 0.0:
+			velocity.x = 0.0
+		elif enemy_data.retrocede_dist > 0.0 and dist <= enemy_data.retrocede_dist:
 			velocity.x = -_dir * enemy_data.speed
 		elif perseguir_fuera_rango:
 			velocity.x = 0.0 if dist <= enemy_data.shoot_range else _dir * enemy_data.speed
@@ -347,8 +401,12 @@ func _physics_process(delta: float) -> void:
 			var min_stop := enemy_data.attack_range * 0.55
 			velocity.x = _dir * enemy_data.speed if gap > min_stop else 0.0
 		elif gap <= enemy_data.attack_range:
-			if enemy_data.windup_tiempo > 0.0:
+			if not _puede_atacar_melee():
+				# Hay otros atacando: espera en su sitio, mirando al jugador.
+				velocity.x = 0.0
+			elif enemy_data.windup_tiempo > 0.0:
 				_windup_timer = enemy_data.windup_tiempo
+				_flash_aviso()
 				_melee_anim = "attack1" if randf() < 0.5 else "attack2"
 				_reproducir_animacion_ataque(_melee_anim)
 				_attack_anim_timer = enemy_data.windup_tiempo + enemy_data.lunge_tiempo + 0.12
@@ -421,7 +479,8 @@ func _update_animacion() -> void:
 func _reproducir_animacion_ataque(tipo: String) -> void:
 	_attack_anim = tipo
 	_attack_anim_timer = 0.35
-	if DisplayServer.get_name() != "headless":
+	# Solo los tipos con sprites propios animan el ataque (el chamán es un polígono: no debe aparecer el sprite del cultista).
+	if DisplayServer.get_name() != "headless" and _usa_sprite:
 		animated.visible = true
 		if _attack_anim_idx == 0:
 			animated.play("attack1")
@@ -442,6 +501,31 @@ func _reproducir_animacion_ataque(tipo: String) -> void:
 
 func _usar_proyectil() -> bool:
 	return enemy_data != null and enemy_data.projectile
+
+
+## Cuántos cuerpo a cuerpo (otros) están ahora mismo en aviso/embestida.
+func _puede_atacar_melee() -> bool:
+	var atacando := 0
+	for n in get_tree().get_nodes_in_group("enemy"):
+		if n == self or not is_instance_valid(n) or n.get("health") == null or int(n.health) <= 0:
+			continue
+		if float(n.get("_windup_timer")) > 0.0 or float(n.get("_lunge_timer")) > 0.0:
+			atacando += 1
+	return atacando < max_atacantes_melee
+
+
+## Destello corto al empezar un ataque: el jugador lee "esto viene ya".
+func _flash_aviso(color: Color = Color(-1, -1, -1)) -> void:
+	if visual == null:
+		return
+	if color.r < 0.0:
+		color = flash_aviso
+	if _tint_tween != null and _tint_tween.is_valid():
+		_tint_tween.kill()
+	visual.self_modulate = Color.WHITE   # el tween matado podía haber dejado el destello del golpe encendido
+	visual.modulate = color
+	_tint_tween = create_tween()
+	_tint_tween.tween_property(visual, "modulate", Color(1, 1, 1), 0.12)
 
 
 func _ataque_melee(player: Node2D) -> void:
@@ -482,6 +566,10 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 		# Golpe repetido en pleno stun: flash más suave para que la ráfaga no parpadee.
 		var re_golpe := _stun_timer > 0.0
 		visual.modulate = Color(1, 1, 1).lerp(Color(1, 0.6, 0.6), flinch_reflash if re_golpe else 1.0)
+		# Destello blanco quemado en el impacto (self_modulate): se sostiene durante el hitstop
+		# y se apaga antes que el rojo → "blanco, luego rojo" como Hollow Knight.
+		var f_blanco := lerpf(1.0, flash_impacto, 0.55 if re_golpe else 1.0)
+		visual.self_modulate = Color(f_blanco, f_blanco, f_blanco, 1.0)
 		_capturar_base()
 		var sx := absf(_base_scale.x)
 		var sy := _base_scale.y
@@ -504,7 +592,22 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 		audio_mgr.play_sfx_sincronizado(sonido_golpe, volumen_golpe_db)
 	var umbral := enemy_data.armor_umbral if enemy_data != null else 0
 	var armadura: bool = umbral > 0 and cantidad < umbral
+	var poise := enemy_data.poise_max if enemy_data != null else 0
+	var rompe: bool = enemy_data != null and cantidad >= enemy_data.poise_rompe_dano
+	if poise > 0 and _poise_ventana_t > 0.0 and not rompe:
+		armadura = true   # resistiendo: el golpe daña pero no interrumpe
 	if not armadura:
+		if poise > 0:
+			if rompe:
+				_poise_ventana_t = 0.0
+				_poise_hits = 0
+			else:
+				_poise_hits += 1
+				_poise_reset_t = enemy_data.poise_recupera
+				if _poise_hits >= poise:
+					_poise_hits = 0
+					_poise_ventana_t = enemy_data.poise_ventana
+					_flash_aviso(Color(1.6, 1.5, 0.9))
 		var dur_stun: float = enemy_data.stun_duracion if enemy_data != null else 0.22
 		_stun_dir = 1 if dir == 0 else dir
 		_stun_timer = maxf(_stun_timer, dur_stun)
@@ -513,6 +616,8 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 		if knockback > 0.0:
 			var resist: float = enemy_data.knockback_resist if enemy_data != null else 1.0
 			velocity.x = dir * knockback * (1.0 - resist)
+			_kb_pendiente = velocity.x
+			_pausa_impacto_t = pausa_impacto if health > 0 else 0.0
 		_pose_stun(dur_stun)
 	if health <= 0:
 		_morir()
@@ -522,6 +627,7 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 	if is_instance_valid(visual):
 		_tint_tween = create_tween()
 		_tint_tween.tween_property(visual, "modulate", Color(1, 1, 1), 0.08)
+		_tint_tween.parallel().tween_property(visual, "self_modulate", Color.WHITE, 0.04)
 
 
 ## Also muestra la cifra de daño flotando sobre el enemigo: pop de escala al
@@ -651,6 +757,7 @@ func _morir() -> void:
 	_colision(false)
 	_burst_particulas()
 	_soltar_orbe_vida()
+	visual.self_modulate = Color.WHITE
 	visual.modulate = Color(4, 4, 4, 1)
 	var tw := create_tween()
 	tw.tween_property(visual, "modulate:a", 0.0, 0.3)
@@ -682,12 +789,35 @@ func matar_por_caida() -> void:
 	_morir()
 
 
+## Estallido de muerte: más grande y con más partículas cuanto más pesado es el enemigo.
 func _burst_particulas() -> void:
-	if DisplayServer.get_name() == "headless":
+	var color := enemy_data.color if enemy_data != null else Color(0.6, 0.3, 0.3)
+	var peso := clampf(float(enemy_data.max_health) / 75.0, 0.8, 1.6) if enemy_data != null else 1.0
+	Burst.emitir(self, global_position, color, int(16.0 * peso), peso)
+	Burst.chispas(self, global_position, int(signf(_stun_dir)) if _stun_dir != 0 else 1, color.lightened(0.4), int(6.0 * peso), 1.2)
+
+
+## Nube de polvo al caer de una altura (no al bajar un escalón).
+func _polvo_al_aterrizar() -> void:
+	var suelo := is_on_floor()
+	if not suelo:
+		_caida_max = maxf(_caida_max, velocity.y)
+	elif not _en_suelo_prev and polvo_aterrizaje and _caida_max > 380.0 and collide_shape != null:
+		var pies := global_position + Vector2(0.0, collide_shape.position.y + (collide_shape.shape.size.y * 0.5 if collide_shape.shape is RectangleShape2D else 40.0))
+		Burst.emitir(self, pies, Color(0.6, 0.55, 0.45, 0.7), int(clampf(_caida_max / 100.0, 4.0, 10.0)), 0.55)
+	if suelo:
+		_caida_max = 0.0
+	_en_suelo_prev = suelo
+
+
+## "Pop" al aparecer sin ritual: nace un poco más chico y rebota a su tamaño.
+func _pop_al_aparecer() -> void:
+	if not pop_aparicion or DisplayServer.get_name() == "headless" or visual == null:
 		return
-	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
-	p.global_position = global_position
-	p.self_modulate = enemy_data.color if enemy_data != null else Color(0.6, 0.3, 0.3)
-	get_tree().root.add_child(p)
-	p.restart()
-	p.emitting = true
+	_capturar_base()   # fija la escala real antes de achicar (un golpe durante el pop no la toma como base)
+	var esc := visual.scale
+	visual.scale = esc * 0.7
+	if _squash_tween != null and _squash_tween.is_valid():
+		_squash_tween.kill()
+	_squash_tween = create_tween()
+	_squash_tween.tween_property(visual, "scale", esc, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)

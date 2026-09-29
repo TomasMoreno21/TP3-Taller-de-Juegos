@@ -11,6 +11,7 @@ var homing := false
 var homing_strength := 24.0
 var homing_range := 3000.0
 var _life := 2.5
+var _consumido := false
 var _cam: Camera2D
 var _homing_timer := 0.0
 const HOMING_TICK := 0.04  # cada cuánto re-busca el homing (evita lookup de grupo por frame)
@@ -21,15 +22,47 @@ const HOMING_TICK := 0.04  # cada cuánto re-busca el homing (evita lookup de gr
 
 const TERRAIN_LAYER := 1  # capa de colisión del TileMap
 
+@export var estela_puntos := 7           ## largo de la estela en puntos (0 = sin estela)
+@export var giro_grados_s := 540.0        ## giro del proyectil sobre sí mismo (0 = fijo)
+
+var _estela: Line2D
+
+
 func _ready() -> void:
 	# Detecta al Player (4) o Enemigos (2) según el dueño, y además el terreno (1).
 	collision_mask = (4 if enemy_shot else 2) | TERRAIN_LAYER
 	body_entered.connect(_on_body_entered)
 	monitoring = true
 	_cam = get_viewport().get_camera_2d()
+	if estela_puntos > 0 and DisplayServer.get_name() != "headless":
+		_estela = Line2D.new()
+		_estela.top_level = true          # los puntos viven en el mundo, no siguen al proyectil
+		_estela.width = 9.0
+		_estela.z_index = -1
+		var curva := Curve.new()
+		curva.add_point(Vector2(0.0, 0.0))
+		curva.add_point(Vector2(1.0, 1.0))
+		_estela.width_curve = curva
+		var g := Gradient.new()
+		var c := visual.color if visual != null else Color.WHITE
+		g.set_color(0, Color(c.r, c.g, c.b, 0.0))
+		g.set_color(1, Color(c.r, c.g, c.b, 0.7))
+		_estela.gradient = g
+		add_child(_estela)
+
+
+func _actualizar_estela() -> void:
+	if _estela == null:
+		return
+	_estela.add_point(global_position)
+	while _estela.get_point_count() > estela_puntos:
+		_estela.remove_point(0)
 
 
 func _physics_process(delta: float) -> void:
+	if visual != null and giro_grados_s > 0.0:
+		visual.rotation += deg_to_rad(giro_grados_s) * delta
+	_actualizar_estela()
 	_homing_timer -= delta
 	if homing and not enemy_shot and _homing_timer <= 0.0:
 		_homing_timer = HOMING_TICK
@@ -54,6 +87,20 @@ func _physics_process(delta: float) -> void:
 	_life -= delta
 	if _life <= 0.0:
 		queue_free()
+
+
+## Parry del Humano: el proyectil vuelve contra los enemigos, más rápido y más fuerte.
+func _reflejar() -> void:
+	enemy_shot = false
+	direction = -direction
+	speed *= 1.25
+	damage = int(damage * 1.5)
+	collision_mask = 2 | TERRAIN_LAYER
+	if visual != null:
+		visual.color = Color(0.85, 0.95, 1.0)
+	_life = maxf(_life, 1.5)
+	_impacto(0.8)
+	Burst.chispas(self, global_position, int(signf(direction.x)) if direction.x != 0.0 else 1, Color(0.85, 0.95, 1.0), 9, 1.4)
 
 
 ## Chispazo del color del proyectil donde pega (terreno más chico que en un cuerpo).
@@ -143,11 +190,23 @@ func _activo_y_vivo(n: Node) -> bool:
 
 
 func _on_body_entered(body: Node2D) -> void:
+	if _consumido:
+		return   # queue_free es diferido: dos cuerpos en el mismo paso de física no deben pegar dos veces
 	# El sónico atraviesa las barreras de energía sin explotar contra ellas.
 	if body.is_in_group("barrera_energia"):
 		return
+	if enemy_shot and body.has_method("parry_activo") and body.parry_activo():
+		_reflejar()
+		return
 	if body.has_method("take_damage"):
-		body.take_damage(damage, 120.0, int(direction.x))
+		var dano_final := damage
+		if not enemy_shot and body.is_in_group("enemy"):
+			var ed: Resource = body.get("enemy_data")
+			if ed != null and ed.get("sonico_dano_mult") != null:
+				dano_final = int(round(damage * float(ed.sonico_dano_mult)))
+		_consumido = true
+		# Signo de la dirección (int() de un vector normalizado daba 0 en disparos inclinados: sin retroceso).
+		body.take_damage(dano_final, 120.0, 1 if direction.x >= 0.0 else -1)
 		if homing and not enemy_shot and body.is_in_group("enemy"):
 			var v := body.get_node_or_null("Visual")
 			if v != null:

@@ -75,6 +75,12 @@ const LUZ_RADIAL := preload("res://resources/luz_radial.tres")
 @export var viento_velocidad := 1.5:
 	set(value):
 		viento_velocidad = absf(value)
+## Arbustos y pastos se apartan al pasar el jugador y se sacuden con golpes fuertes cercanos.
+@export var reactivo := true
+@export var reaccion_angulo := 0.28      # rad máx. que se dobla al pasar el jugador
+@export var reaccion_margen := 50.0      # px extra de alcance más allá del ancho de la silueta
+@export var reaccion_rigidez := 55.0     # vuelta a la posición (más alto = más rápido)
+@export var reaccion_amort := 6.5        # freno (más bajo = más bamboleo)
 
 var _tmp := Vector4.ZERO
 var _editor_sync := true
@@ -84,11 +90,51 @@ var _sombra: Polygon2D
 var _brillo: Node2D
 var _llamas: Array[Node2D] = []
 var _halos: Array[Sprite2D] = []
+var _rx := 0.0                # ángulo de reacción (resorte)
+var _rv := 0.0
+var _jugador: Node2D
 
 
 func _ready() -> void:
 	_fase_viento = randf() * TAU
 	_rehacer()
+	if reactivo and not Engine.is_editor_hint() and tipo in [Tipo.ARBUSTO, Tipo.PASTO, Tipo.PASTO_ALTO]:
+		add_to_group("reactivo")
+
+
+## Golpe fuerte en `pos` (lo llama Ambiente): la mata se inclina lejos del origen del golpe.
+func empujar(pos: Vector2, fuerza: float) -> void:
+	if not is_inside_tree() or _hoja == null:
+		return
+	var dx := global_position.x - pos.x
+	var dy := absf(global_position.y - pos.y)
+	if absf(dx) > 800.0 or dy > 500.0:
+		return
+	var cerca := 1.0 - absf(dx) / 800.0
+	_rv += (1.0 if dx >= 0.0 else -1.0) * fuerza * cerca * 7.0
+
+
+## Reacción al jugador: se dobla en el sentido en que corre y lejos de su cuerpo (resorte, no tween).
+func _reaccionar(delta: float) -> void:
+	var objetivo := 0.0
+	if _jugador == null or not is_instance_valid(_jugador):
+		_jugador = get_tree().get_first_node_in_group("player") as Node2D
+	if _jugador != null:
+		var dx := _jugador.global_position.x - global_position.x
+		var dy := _jugador.global_position.y - global_position.y
+		var alcance := _ancho_silueta_base() * escala * 0.5 + reaccion_margen
+		# Lejos del jugador y en reposo no hay nada que calcular (hay cientos de matas en el nivel).
+		if absf(dx) > alcance + 900.0 and absf(_rx) < 0.0005 and absf(_rv) < 0.0005:
+			return
+		if absf(dx) < alcance and dy > -320.0 and dy < 120.0:
+			var cerca := 1.0 - absf(dx) / alcance
+			var vx := 0.0
+			if "velocity" in _jugador:
+				vx = clampf(float(_jugador.velocity.x) / 320.0, -1.0, 1.0)
+			objetivo = clampf(vx * 0.7 - signf(dx) * 0.3, -1.0, 1.0) * cerca * reaccion_angulo
+	var d := minf(delta, 1.0 / 30.0)
+	_rv += (-reaccion_rigidez * (_rx - objetivo) - reaccion_amort * _rv) * d
+	_rx = clampf(_rx + _rv * d, -0.6, 0.6)
 
 
 func _process(delta: float) -> void:
@@ -107,9 +153,14 @@ func _process(delta: float) -> void:
 			_rehacer()
 		_aplicar_config()
 		return
-	if viento and _hoja != null:
-		var t := Time.get_ticks_msec() * 0.001 * viento_velocidad + _fase_viento
-		_hoja.rotation = sin(t) * viento_amplitud
+	if _hoja != null:
+		var rot_viento := 0.0
+		if viento:
+			var t := Time.get_ticks_msec() * 0.001 * viento_velocidad + _fase_viento
+			rot_viento = sin(t) * viento_amplitud
+		if reactivo and is_in_group("reactivo"):
+			_reaccionar(delta)
+		_hoja.rotation = rot_viento + _rx
 	if parpadeo and _brillo != null:
 		var tp := Time.get_ticks_msec() * 0.001 + _fase_viento
 		for i in _llamas.size():
@@ -218,7 +269,6 @@ func _generar_silueta(t: int, v: int) -> Array[Polygon2D]:
 			out += _rama_colgante(rng, base, _aclarar(base, 0.03))
 		Tipo.PASTO_ALTO:
 			out += _mata(rng, 9 + v % 5, 40.0, 78.0, base)
-			out += _arbusto(rng, Vector2(30.0, 16.0), base, _aclarar(base, 0.03))
 	return out
 
 

@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const Jugador := preload("res://scripts/player.gd")
+
 const SALIDA_DUR := 2.2
 const GOLPES_MAX := 2
 const FILA_PASO := 44.0
@@ -66,6 +68,15 @@ var _vineta_activa := false
 var _vineta_severidad := 0.0
 var _vineta_fade_tween: Tween
 var _racha_tween: Tween
+var _hp_prev := 100
+var _energia_prev := 100.0
+var _racha_prev := 0
+var _color_flash_base := Color(1, 0.1, 0.1, 0.0)
+var _hp_tween: Tween
+var _tween_idle: Tween
+var _amb: Node
+var _boss_tween: Tween
+var _boss_hp_prev := -1
 
 
 func _process(delta: float) -> void:
@@ -74,9 +85,16 @@ func _process(delta: float) -> void:
 		dial.set_cooldown(float(_player._cooldown_formas.get(_player.forma_seleccionada, 0.0)))
 	_auto_ocultar(delta)
 	if _vineta_activa:
-		var vel := vineta_pulso_velocidad * (1.0 + _vineta_severidad)
-		var t := Time.get_ticks_msec() * 0.001 * vel
-		var onda := (sin(t) + 1.0) * 0.5
+		var onda := 0.0
+		if _amb == null:
+			_amb = get_node_or_null("/root/Ambiente")
+		var amb := _amb
+		if amb != null and float(amb.latido_severidad) > 0.02:
+			# Late con el mismo pulso "lub-dub" que el cuerpo del jugador y el orbe de vida.
+			onda = clampf(float(amb.latido) / maxf(float(amb.latido_severidad), 0.01), 0.0, 1.0)
+		else:
+			var vel := vineta_pulso_velocidad * (1.0 + _vineta_severidad)
+			onda = (sin(Time.get_ticks_msec() * 0.001 * vel) + 1.0) * 0.5
 		vineta_vida.modulate.a = lerpf(vineta_alpha_min, vineta_alpha_max, onda) * lerpf(0.5, 1.0, _vineta_severidad)
 
 func _ready() -> void:
@@ -98,6 +116,7 @@ func _ready() -> void:
 
 	_crear_filas()
 	_combo_base_pos = combo_label.position
+	_color_flash_base = flash_dano.color
 
 	var prog: Node = get_node("/root/Progresion")
 	prog.fragmentos_cambiado.connect(_on_fragmentos)
@@ -129,6 +148,7 @@ func _connectar_player() -> void:
 	_player.energia_changed.connect(_on_energia_changed)
 	_player.transformacion_agotada.connect(_on_agotada)
 	_player.racha_changed.connect(_on_racha_changed)
+	_player.parry_exitoso.connect(_on_parry)
 	_actualizar_dial()
 
 
@@ -142,6 +162,8 @@ func _conectar_boss() -> void:
 	_boss = boss
 	boss.salud_cambio.connect(_on_boss_salud)
 	boss.fase_cambio.connect(_on_boss_fase)
+	if boss.has_signal("reiniciado"):
+		boss.reiniciado.connect(_on_boss_reiniciado)
 	_boss_fill_style = boss_fill.get_theme_stylebox("fill").duplicate()
 	boss_fill.add_theme_stylebox_override("fill", _boss_fill_style)
 	_pip_on_style = boss_pips[0].get_theme_stylebox("panel")
@@ -153,16 +175,54 @@ func _conectar_boss() -> void:
 
 
 func _boss_bar_mostrar(hp: int, max_hp: int) -> void:
+	var entra := not boss_bar.visible
 	boss_bar.visible = true
 	boss_fill.max_value = 1.0
 	boss_fill.value = clampf(float(hp) / float(max_hp), 0.0, 1.0)
 	boss_valor.text = str(hp)
+	if DisplayServer.get_name() == "headless":
+		return
+	if entra:
+		# Entrada: se desliza desde arriba y se prende.
+		if _boss_tween != null and _boss_tween.is_valid():
+			_boss_tween.kill()
+		boss_bar.pivot_offset = Vector2(boss_bar.size.x * 0.5, 0.0)
+		boss_bar.modulate.a = 0.0
+		boss_bar.scale = Vector2(1.0, 0.6)
+		_boss_tween = create_tween().set_parallel(true)
+		_boss_tween.tween_property(boss_bar, "modulate:a", 1.0, 0.4)
+		_boss_tween.tween_property(boss_bar, "scale", Vector2.ONE, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	elif _boss_hp_prev > hp:
+		# Golpe recibido: el relleno destella y la barra "tiembla" un poco.
+		boss_fill.self_modulate = Color(2.2, 2.2, 2.2)
+		var tw := create_tween()
+		tw.tween_property(boss_fill, "self_modulate", Color.WHITE, 0.15)
+	_boss_hp_prev = hp
+
+
+## La arena se reinició (moriste en la pelea): la barra del jefe se apaga y vuelve a entrar animada en la próxima.
+func _on_boss_reiniciado() -> void:
+	if _boss_tween != null and _boss_tween.is_valid():
+		_boss_tween.kill()
+	boss_bar.visible = false
+	boss_bar.modulate.a = 1.0
+	_boss_hp_prev = -1
 
 
 func _on_boss_salud(hp: int, max_hp: int) -> void:
 	_boss_bar_mostrar(hp, max_hp)
 	if hp <= 0:
-		boss_bar.visible = false
+		if DisplayServer.get_name() == "headless":
+			boss_bar.visible = false
+			return
+		# Salida: se apaga en 0.6 s en vez de desaparecer en seco.
+		if _boss_tween != null and _boss_tween.is_valid():
+			_boss_tween.kill()
+		_boss_tween = create_tween()
+		_boss_tween.tween_property(boss_bar, "modulate:a", 0.0, 0.6)
+		_boss_tween.tween_callback(func() -> void:
+			boss_bar.visible = false
+			boss_bar.modulate.a = 1.0)
 
 
 func _on_boss_fase(fase: int) -> void:
@@ -289,10 +349,34 @@ func _on_racha_changed(cantidad: int) -> void:
 	if cantidad >= 2:
 		racha_valor.text = str(cantidad)
 		racha_box.visible = true
-		if cantidad == 3 or cantidad == 5:
+		if cantidad != _racha_prev:
 			_pop_racha(cantidad)
 	else:
+		if _racha_prev >= 2:
+			_romper_racha(_racha_prev)
 		racha_box.visible = false
+	_racha_prev = cantidad
+
+
+## Al perder la racha el número no desaparece en seco: se agranda, cae y se desvanece (copia fantasma).
+func _romper_racha(cantidad: int) -> void:
+	if DisplayServer.get_name() == "headless" or racha_valor == null:
+		return
+	var g := Label.new()
+	g.text = str(cantidad)
+	g.label_settings = racha_valor.label_settings
+	g.add_theme_font_size_override("font_size", racha_valor.get_theme_font_size("font_size"))
+	g.add_theme_color_override("font_color", Color(1.0, 0.45, 0.4))
+	g.top_level = true
+	g.z_index = 20
+	add_child(g)
+	g.global_position = racha_valor.global_position
+	g.pivot_offset = g.get_minimum_size() * 0.5   # el Label aún no tiene tamaño: se usa el mínimo para escalar desde el centro
+	var tw := g.create_tween().set_parallel(true)
+	tw.tween_property(g, "scale", Vector2.ONE * 1.5, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(g, "global_position:y", g.global_position.y + 34.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_property(g, "modulate:a", 0.0, 0.35)
+	tw.chain().tween_callback(g.queue_free)
 
 
 ## Pop de escala del indicador de racha al alcanzar hitos de combo (3 y 5).
@@ -301,7 +385,7 @@ func _pop_racha(cantidad: int) -> void:
 		return
 	if _racha_tween != null and _racha_tween.is_valid():
 		_racha_tween.kill()
-	var base := Vector2.ONE * (1.0 if cantidad == 3 else 1.2)
+	var base := Vector2.ONE * (1.2 if cantidad == 5 or cantidad >= 8 else 1.0)
 	racha_box.pivot_offset = Vector2(racha_box.size.x, 0.0)
 	racha_box.scale = base * 0.7
 	_racha_tween = create_tween()
@@ -341,6 +425,10 @@ func _crear_filas() -> void:
 
 
 func _on_attack_performed(_attack_type: String, _step: Variant) -> void:
+	if _tween_idle != null and _tween_idle.is_valid():
+		# Un golpe nuevo cancela el fade de salida: si no, terminaba y borraba el golpe recién hecho.
+		_tween_idle.kill()
+		_filas[0].position = _combo_base_pos
 	_idle_timer.start()
 	_t_reposo = 0.0
 	var txt := _texto_ataque(_attack_type, _step)
@@ -380,6 +468,9 @@ func _texto_ataque(_attack_type: String, _step: Variant) -> String:
 
 
 func _on_health_changed(hp: int, max_hp: int) -> void:
+	if hp > _hp_prev and _hp_prev > 0 and DisplayServer.get_name() != "headless":
+		_pulso_curacion()
+	_hp_prev = hp
 	_actualizar_vineta(hp, max_hp)
 	_hp_lleno = hp >= max_hp
 	_t_reposo = 0.0
@@ -409,27 +500,57 @@ func _actualizar_vineta(hp: int, max_hp: int) -> void:
 	if activa == _vineta_activa:
 		return
 	_vineta_activa = activa
+	if _vineta_fade_tween != null and _vineta_fade_tween.is_valid():
+		_vineta_fade_tween.kill()   # también al reactivarse: si no, el fade viejo pelea con el latido
 	if not activa:
-		if _vineta_fade_tween != null and _vineta_fade_tween.is_valid():
-			_vineta_fade_tween.kill()
 		_vineta_fade_tween = create_tween()
 		_vineta_fade_tween.tween_property(vineta_vida, "modulate:a", 0.0, vineta_fade_dur)
 
 
 func _on_dano_recibido(_cantidad: int) -> void:
+	_flash_pantalla(_color_flash_base, 0.3, 0.35)
+
+
+## Destello de pantalla completa (rojo al daño, celeste en el parry, verde al curar).
+func _flash_pantalla(color: Color, alpha: float, dur: float) -> void:
 	if _flash_tween != null and _flash_tween.is_valid():
 		_flash_tween.kill()
-	flash_dano.color.a = 0.3
+	flash_dano.color = Color(color.r, color.g, color.b, alpha)
 	_flash_tween = create_tween()
-	_flash_tween.tween_property(flash_dano, "color:a", 0.0, 0.35)
+	_flash_tween.tween_property(flash_dano, "color:a", 0.0, dur)
+
+
+## Parry exitoso: destello celeste y el dial "responde" (recupera energía con el parry).
+func _on_parry() -> void:
+	_flash_pantalla(Color(0.75, 0.9, 1.0), 0.2, 0.28)
+	if dial.has_method("pulso_transformacion"):
+		dial.pulso_transformacion()
+	_t_reposo = 0.0
+
+
+## Curación: destello verde suave y la barra de vida "respira" hacia arriba.
+func _pulso_curacion() -> void:
+	_flash_pantalla(Color(0.45, 1.0, 0.6), 0.16, 0.4)
+	if _hp_tween != null and _hp_tween.is_valid():
+		_hp_tween.kill()
+	hp_bar.self_modulate = Color(1.6, 2.0, 1.6)
+	hp_label.pivot_offset = hp_label.size * 0.5
+	hp_label.scale = Vector2.ONE * 1.25
+	_hp_tween = create_tween().set_parallel(true)
+	_hp_tween.tween_property(hp_bar, "self_modulate", Color.WHITE, 0.5)
+	_hp_tween.tween_property(hp_label, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _on_energia_changed(energia: float) -> void:
+	# Ganancia de golpe (matar, parry, tag, alma): el dial pulsa. La regen lenta no dispara nada.
+	if energia - _energia_prev >= 3.0 and dial.has_method("pulso_energia"):
+		dial.pulso_energia()
+	_energia_prev = energia
 	dial.set_energia(energia)
 	_energia_llena = energia >= 99.9
 	if not _energia_llena:
 		_t_reposo = 0.0
-	if energia < 25.0 and _player != null and _player.current_form != 0:
+	if energia < 25.0 and _player != null and _player.current_form != Jugador.Form.HUMAN:
 		if not _energia_aviso_dado:
 			_aviso("¡Energía baja!")
 			var audio := get_node_or_null("/root/AudioManager")
@@ -461,11 +582,11 @@ func _limpiar_idle() -> void:
 	if activa.text == "":
 		_limpiar_todo()
 		return
-	var tw := create_tween()
-	tw.set_parallel(true)
-	tw.tween_property(activa, "position:x", activa.position.x - 220.0, 0.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	tw.tween_property(activa, "modulate:a", 0.0, 0.6)
-	tw.finished.connect(_limpiar_todo)
+	_tween_idle = create_tween()
+	_tween_idle.set_parallel(true)
+	_tween_idle.tween_property(activa, "position:x", activa.position.x - 220.0, 0.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_tween_idle.tween_property(activa, "modulate:a", 0.0, 0.6)
+	_tween_idle.finished.connect(_limpiar_todo)
 
 
 func _limpiar_todo() -> void:

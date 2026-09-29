@@ -3,6 +3,7 @@ extends Node2D
 @export var barrera_id: String = "barrera_1"
 
 var _destruidos := 0
+var _total_cristales := 0
 var _abierta := false
 var _t := 0.0
 
@@ -27,6 +28,7 @@ func _ready() -> void:
 		barrera_sprite.visible = false
 	if barrera_poly != null:
 		barrera_poly.visible = barrera_sprite == null or barrera_sprite.texture == null or not barrera_sprite.visible
+	_total_cristales = _cristales().size()
 	for c in _cristales():
 		if c.has_signal("cristal_destruido"):
 			c.cristal_destruido.connect(_on_cristal_destruido)
@@ -68,7 +70,8 @@ func _on_cristal_destruido() -> void:
 		if barrera_poly != null:
 			barrera_poly.modulate = Color(0.9, 0.75, 1.0)
 			tw.parallel().tween_property(barrera_poly, "modulate", Color(0.45, 0.3, 0.65, 0.55), 0.18)
-	if _destruidos >= _cristales().size():
+	# Contra el total del inicio: los cristales rotos se liberan y ya no cuentan en `_cristales()`.
+	if _destruidos >= _total_cristales:
 		_abrir_animado()
 
 
@@ -86,7 +89,7 @@ func _actualizar_ray() -> void:
 	var pts := PackedVector2Array()
 	for c in vivos:
 		pts.append(c.position)
-	if vivos.size() == 3:
+	if vivos.size() == 3:   # triángulo: el rayo se cierra volviendo al primer cristal
 		pts.append(vivos[0].position)
 	ray.points = pts
 	ray.width = 3.5

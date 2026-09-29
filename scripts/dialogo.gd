@@ -163,6 +163,7 @@ func _process(delta: float) -> void:
 	elif _tip_visible:
 		_tip_timer -= delta
 		if _tip_timer <= 0.0:
+			_tip_timer = 1.0e9   # ya está cerrándose: evita crear un tween por frame (saltaba tips encolados)
 			var tw := create_tween()
 			tw.tween_property(tip_panel, "modulate:a", 0.0, 0.2)
 			tw.tween_callback(_tip_siguiente)

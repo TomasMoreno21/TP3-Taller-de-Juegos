@@ -48,6 +48,8 @@ func _process(_delta: float) -> void:
 		if activo_en_editor:
 			queue_redraw()
 		return
+	if not OS.is_debug_build():
+		return   # en una build de release la guía de saltos no existe (la tecla B no hace nada)
 	if Input.is_action_just_pressed(ACTION_TOGGLE):
 		activo_en_juego = not activo_en_juego
 	if activo_en_juego:

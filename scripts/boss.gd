@@ -15,6 +15,7 @@ extends CharacterBody2D
 
 signal salud_cambio(hp: int, max_hp: int)
 signal fase_cambio(fase: int)
+signal reiniciado   # la arena se reinició: el HUD apaga la barra del jefe
 signal died
 
 const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
@@ -42,6 +43,11 @@ const ZONA_SLOTS: Array[float] = [-190.0, 0.0, 190.0]
 @export var ventana_zona_por_vuelta := 0.7
 @export var ventana_zona_min := 3.2
 @export var intervalo_orbes := 2.2
+@export var aviso_orbe := 0.35            # aviso (s) con destello antes de cada disparo de orbes
+@export var orbes_abanico_fase2 := 3      # orbes por descarga en fase 2 (1 = disparo simple)
+@export var orbes_abanico_fase3 := 5      # orbes por descarga en fase 3
+@export var abanico_apertura := 0.24      # separación angular (rad) entre orbes del abanico
+@export var orbes_en_zona := true         # desde la fase 2 también dispara durante la zona marcada
 @export var pausa_entre_ciclos := 1.4
 
 @export_group("Vuelo")
@@ -56,6 +62,10 @@ const ZONA_SLOTS: Array[float] = [-190.0, 0.0, 190.0]
 @export_group("Audio")
 @export var sonido_golpe: AudioStream
 @export var volumen_golpe_db := -14.0
+@export var hitstop_golpe := 0.04         ## s de hitstop al recibir un golpe (0 = sin)
+@export var retroceso_px := 10.0          ## micro-retroceso del cuerpo al recibir un golpe
+@export var hitstop_fase := 0.12          ## hitstop al cambiar de fase
+@export var slowmo_fase := 0.5            ## s de cámara lenta al cambiar de fase (0 = sin)
 # Si se deja vacío, el rugido se genera por código (ruido grave sintetizado).
 @export var sonido_roar: AudioStream
 
@@ -76,6 +86,7 @@ var _invocados: Array[Node] = []
 var _legion_vivos := 0
 
 var _orbe_timer := 0.0
+var _orbe_aviso_t := 0.0
 var _telegraph_timer := 0.0
 var _telegraph_color := Color(1, 1, 1)
 var _slot_idx := 0
@@ -85,11 +96,15 @@ var _zona_t := 0.0
 var _zona_mov := 0.0
 
 var _piso_y := 0.0
+var _gen := 0   # generación de la pelea (invalida corrutinas viejas al reiniciar)
 var _centro_arena := 0.0
 var _medio_arena := 360.0
 var _dir := -1
 var _player_cache: Node2D
 var _tint_tween: Tween
+var _retroceso_tween: Tween
+var _visual_pos_base := Vector2.ZERO
+var _visual_esc_y_base := 1.0
 var _roar_audio: AudioStream
 var _whoosh_audio: AudioStream
 var _audio_mgr: Node
@@ -130,10 +145,13 @@ func _ready() -> void:
 # --- API para el Encounter (misma firma que enemy.gd) ---
 
 func preparar_ola() -> void:
+	reiniciado.emit()
 	_activo = false
 	_invocado = false
 	_gate = "inactivo"
 	_shield_active = false
+	_gen += 1   # corta cualquier _ronda/gate que siga esperando de la pelea anterior
+	global_position.y = _piso_y   # vuelve al piso: si no, cada reintento lo dejaba 260 px más arriba
 	if visual != null:
 		visual.visible = false
 	apuntar_zona(false)
@@ -146,7 +164,6 @@ func activar() -> void:
 		return
 	_invocado = true
 	_activo = true
-	_piso_y = global_position.y
 	var arena := _datos_arena()
 	_centro_arena = arena[0]
 	_medio_arena = arena[1]
@@ -158,7 +175,7 @@ func activar() -> void:
 		"¡EL ARZOBISPO! Preside desde su trono de energía corrupta.",
 		"Para herirlo tendrás que: matar a sus fieles, romper sus cristales",
 		"y golpear la zona marcada cuando baje.",
-	])
+	], true)
 	_ronda()
 
 
@@ -183,6 +200,8 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 	_flash_tint()
 	if DisplayServer.get_name() != "headless":
 		_mostrar_dano(cantidad, critico, health <= 0)
+		if health > 0:
+			_reaccion_golpe(dir, critico)
 	if health <= 0:
 		_morir()
 		return
@@ -200,7 +219,11 @@ func _golpe_en_zona(_cantidad: int) -> void:
 	if _shield_active:
 		_mostrar_absorbido(_cantidad)
 		return
-	take_damage(dano_zona, 0, 1, false)
+	var p := get_tree().get_first_node_in_group("player") as Node2D
+	var lado := 1 if p == null or global_position.x >= p.global_position.x else -1   # el retroceso se aleja del jugador
+	take_damage(dano_zona, 0, lado, false)
+	if _muerto:
+		return
 	_zona_toques = maxi(_zona_toques - 1, 0)
 	if _zona_toques > 0:
 		_mover_zona_slot()
@@ -252,15 +275,38 @@ func _telegraph_tick(delta: float) -> void:
 
 
 func _orbe_tick(delta: float) -> void:
+	var en_zona := _gate == "zona" and orbes_en_zona and fase >= Fase.DOS
+	if _gate != "legion" and _gate != "cristales" and not en_zona:
+		_orbe_aviso_t = 0.0
+		return
+	if _orbe_aviso_t > 0.0:
+		# Aviso en curso: al terminar, dispara.
+		_orbe_aviso_t -= delta
+		if _orbe_aviso_t <= 0.0:
+			_descarga_orbes()
+			_orbe_timer = _intervalo_orbe() * (1.6 if en_zona else 1.0)
+		return
 	_orbe_timer -= delta
 	if _orbe_timer > 0.0:
 		return
-	if _gate != "legion" and _gate != "cristales":
-		return
+	_orbe_aviso_t = maxf(aviso_orbe, 0.01)
+	_tele_ateos(_orbe_aviso_t, Color(1.0, 0.45, 0.3))
+
+
+## Descarga de orbes: fase 1 simple, fase 2 abanico corto, fase 3 abanico amplio.
+func _descarga_orbes() -> void:
 	var player := _obtener_player()
-	if is_instance_valid(player):
-		_disparar_orb((player as Node2D).global_position - global_position, 0.0, dano_orb, 500.0)
-	_orbe_timer = _intervalo_orbe()
+	if not is_instance_valid(player):
+		return
+	var hacia: Vector2 = (player as Node2D).global_position - global_position
+	var cuantos := 1
+	if fase == Fase.DOS:
+		cuantos = maxi(orbes_abanico_fase2, 1)
+	elif fase == Fase.TRES:
+		cuantos = maxi(orbes_abanico_fase3, 1)
+	for i in cuantos:
+		var ang := (float(i) - float(cuantos - 1) * 0.5) * abanico_apertura
+		_disparar_orb(hacia, ang, dano_orb, 500.0 if cuantos == 1 else 440.0)
 
 
 func _intervalo_orbe() -> float:
@@ -270,20 +316,26 @@ func _intervalo_orbe() -> float:
 # --- Bucle de las 3 barreras ---
 
 func _ronda() -> void:
+	_gen += 1
+	var gen := _gen   # si el jefe se reinicia/reactiva, esta corrutina vieja se corta sola
 	await _esperar(0.4)
-	while _activo and not _muerto:
+	while gen == _gen and _activo and not _muerto:
 		await _gate_legion()
-		if not _activo or _muerto:
+		if gen != _gen or not _activo or _muerto:
 			break
 		_hablar(["Su guardia cede... ¡Rompe sus cristales de energía!"])
 		await _esperar(0.9)
+		if gen != _gen:
+			break
 		await _gate_cristales()
-		if not _activo or _muerto:
+		if gen != _gen or not _activo or _muerto:
 			break
 		_hablar(["¡Cae! Golpea la zona marcada."])
 		await _esperar(0.7)
+		if gen != _gen:
+			break
 		await _gate_zona()
-		if not _activo or _muerto:
+		if gen != _gen or not _activo or _muerto:
 			break
 		_vuelta += 1
 		await _esperar(pausa_entre_ciclos)
@@ -300,7 +352,8 @@ func _gate_legion() -> void:
 	for i in range(cant):
 		_spawn_cultista(i, cant)
 	_hablar(["Sus fieles lo protegen.", "Acaba con ellos para abrir su guardia."])
-	while _legion_vivos > 0 and _activo and not _muerto:
+	var gen := _gen
+	while gen == _gen and _legion_vivos > 0 and _activo and not _muerto:
 		await _esperar(0.4)
 
 
@@ -340,7 +393,8 @@ func _gate_cristales() -> void:
 	_shield_active = true
 	_pulso_aura(color_fase2)
 	_invocar_cristales()
-	while _cristales_vivos > 0 and _activo and not _muerto:
+	var gen := _gen
+	while gen == _gen and _cristales_vivos > 0 and _activo and not _muerto:
 		await _esperar(0.4)
 	_shield_active = false
 
@@ -376,7 +430,8 @@ func _gate_zona() -> void:
 	_zona_ventana = maxf(ventana_zona - _vuelta * ventana_zona_por_vuelta, ventana_zona_min)
 	_zona_t = 0.0
 	_zona_mov = 0.0
-	while _activo and not _muerto and _zona_toques > 0 and _zona_t < _zona_ventana:
+	var gen := _gen
+	while gen == _gen and _activo and not _muerto and _zona_toques > 0 and _zona_t < _zona_ventana:
 		_zona_t += 0.1
 		_zona_mov += 0.1
 		await _esperar(0.1)
@@ -460,6 +515,11 @@ func _cambiar_fase(nueva: int) -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("shake"):
 		cam.shake(8.0, 0.5)
+	if DisplayServer.get_name() != "headless":
+		if hitstop_fase > 0.0:
+			_freeze_hitstop(hitstop_fase)
+		if slowmo_fase > 0.0:
+			_slowmo(slowmo_fase, 0.35)
 
 
 func _color_fase() -> Color:
@@ -596,8 +656,30 @@ func _flash_tint() -> void:
 	if _tint_tween != null and _tint_tween.is_valid():
 		_tint_tween.kill()
 	visual.modulate = Color(1, 0.6, 0.6)
+	visual.self_modulate = Color(2.2, 2.2, 2.2, 1.0)   # destello blanco del impacto, antes del rojo
 	_tint_tween = create_tween()
 	_tint_tween.tween_property(visual, "modulate", Color.WHITE, 0.1)
+	_tint_tween.parallel().tween_property(visual, "self_modulate", Color.WHITE, 0.05)
+
+
+## El jefe es grande: no vuela por el golpe, pero "siente" el impacto con un micro-retroceso,
+## un aplaste vertical y un hitstop corto (más largo con críticos).
+func _reaccion_golpe(dir: int, critico: bool) -> void:
+	if visual == null:
+		return
+	if hitstop_golpe > 0.0:
+		_freeze_hitstop(hitstop_golpe * (1.6 if critico else 1.0))
+	if _retroceso_tween != null and _retroceso_tween.is_valid():
+		_retroceso_tween.kill()
+	else:
+		_visual_pos_base = visual.position
+		_visual_esc_y_base = visual.scale.y
+	visual.position = _visual_pos_base
+	_retroceso_tween = create_tween()
+	_retroceso_tween.tween_property(visual, "position", _visual_pos_base + Vector2(float(dir) * retroceso_px, 0.0), 0.04)
+	_retroceso_tween.parallel().tween_property(visual, "scale:y", _visual_esc_y_base * 0.94, 0.04)
+	_retroceso_tween.tween_property(visual, "position", _visual_pos_base, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_retroceso_tween.parallel().tween_property(visual, "scale:y", _visual_esc_y_base, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _mostrar_absorbido(cantidad: int) -> void:
@@ -677,10 +759,16 @@ func _rugido() -> void:
 		_audio_mgr.play_sfx(_roar_audio, -8.0)
 
 
-func _hablar(lineas: Array) -> void:
+## `bloquea` = false usa el panel TIP (no pausa el juego): los avisos en plena pelea
+## no congelan al jugador ni cortan el ritmo. Solo la presentación del jefe bloquea.
+func _hablar(lineas: Array, bloquea: bool = false) -> void:
 	var dialogo := get_node_or_null("/root/Dialogo")
-	if dialogo != null:
+	if dialogo == null:
+		return
+	if bloquea or not dialogo.has_method("mostrar_tip"):
 		dialogo.mostrar(lineas, "Amuleto")
+	else:
+		dialogo.mostrar_tip(lineas, "Amuleto")
 
 
 ## Natural: genera un rugido grave con envolvente y pitch descendente.
@@ -722,7 +810,7 @@ func _obtener_player() -> Node2D:
 
 
 func _esperar(t: float) -> void:
-	await get_tree().create_timer(t).timeout
+	await get_tree().create_timer(t, false).timeout   # respeta la pausa: el jefe no avanza con el juego pausado
 
 
 func _freeze_hitstop(duracion: float = 0.07) -> void:

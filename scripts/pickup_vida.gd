@@ -1,9 +1,24 @@
 extends Area2D
 
 ## Orbe rojo de vida: soltado por enemigos con 55% de chance al morir.
-## Visualmente igual que el orbe de energía (rombo) pero en rojo.
+## Visualmente igual que el orbe de energía (rombo) pero en rojo. Flota, late, tiene imán
+## y al recogerlo deja un estallido rojo y un aviso de curación (el orbe se libera ya).
 
 @export var curacion := 30
+@export var flote_amplitud := 5.0
+@export var flote_velocidad := 2.4
+@export var pulso_velocidad := 3.4
+@export var color_burst := Color(1.0, 0.35, 0.4)
+@export var iman_radio := 170.0          ## px: dentro de este radio el orbe vuela hacia el jugador (0 = sin imán)
+@export var iman_velocidad := 760.0
+@export var iman_aceleracion := 2000.0
+
+var _t := randf() * TAU
+var _base_visual := Vector2.ZERO
+var _iman_vel := 0.0
+var _jugador: Node2D
+var _amb: Node
+var _recogido := false
 
 @onready var visual: Polygon2D = $Visual
 
@@ -12,9 +27,56 @@ func _ready() -> void:
 	monitoring = true
 	collision_mask = 4
 	body_entered.connect(_on_body_entered)
+	_base_visual = visual.position
+
+
+func _process(delta: float) -> void:
+	if _recogido:
+		return
+	_t += delta
+	visual.position = _base_visual + Vector2(0, sin(_t * flote_velocidad) * flote_amplitud)
+	var latido := 1.0 + 0.06 * sin(_t * pulso_velocidad)
+	# Si estás herido, el orbe late con tu corazón (mismo pulso que la viñeta) y llama más la atención.
+	if _amb == null:
+		_amb = get_node_or_null("/root/Ambiente")
+	var amb := _amb
+	if amb != null and float(amb.latido_severidad) > 0.05:
+		latido += float(amb.latido) * 0.35
+	visual.scale = Vector2(latido, latido)
+	_atraer(delta)
+	# Si el jugador ya lo tocaba con la vida llena y después se lastima, se recoge igual (body_entered no se repite).
+	for b in get_overlapping_bodies():
+		_on_body_entered(b)
+
+
+func _atraer(delta: float) -> void:
+	if iman_radio <= 0.0:
+		return
+	if _jugador == null or not is_instance_valid(_jugador):
+		_jugador = get_tree().get_first_node_in_group("player") as Node2D
+	var p := _jugador
+	if p == null:
+		return
+	if p.has_method("puede_curarse") and not p.puede_curarse():
+		_iman_vel = 0.0
+		return   # vida llena: el imán no lo arrastra
+	var d := (p.global_position + Vector2(0, -60)) - global_position
+	var dist := d.length()
+	if dist < iman_radio and dist > 1.0:
+		_iman_vel = minf(_iman_vel + iman_aceleracion * delta, iman_velocidad)
+		global_position += d / dist * minf(_iman_vel * delta, dist)
+	else:
+		_iman_vel = 0.0
 
 
 func _on_body_entered(body: Node2D) -> void:
-	if body.has_method("curar"):
-		body.curar(curacion)
-		queue_free()
+	if _recogido or not body.has_method("curar"):
+		return
+	# Con la vida llena el orbe se queda esperando (no se gasta ni avisa "Vida +N" sin curar nada).
+	if body.has_method("puede_curarse") and not body.puede_curarse():
+		return
+	_recogido = true
+	body.curar(curacion)
+	Burst.emitir(self, global_position, color_burst, 14)
+	get_tree().call_group("hud", "mostrar_aviso", "Vida +%d" % curacion)
+	queue_free()

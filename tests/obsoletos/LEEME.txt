@@ -1,0 +1,1 @@
+﻿Tests que ya no corresponden al proyecto actual (nivel1 rediseñado sin Santuario/3 arenas, nivel1prueba.tscn inexistente, screenshot.gd requiere el nodo World de otra escena). Se dejan acá como referencia; no forman parte de la batería de regresión.

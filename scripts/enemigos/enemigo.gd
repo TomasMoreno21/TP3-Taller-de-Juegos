@@ -24,3 +24,9 @@ extends Resource
 @export var retrocede_dist: float = 0.0
 @export var proyectil_speed: float = 340.0
 @export var armor_umbral: int = 0  # golpes por debajo de este daño NO interrumpen (0 = sin armadura)
+@export var windup_disparo: float = 0.0    # aviso (s) antes de disparar; 0 = dispara al instante
+@export var poise_max: int = 0             # golpes que aturden seguidos antes de resistir un rato (0 = sin poise)
+@export var poise_ventana: float = 0.9     # tiempo (s) que resiste el aturdimiento tras agotar el poise
+@export var poise_recupera: float = 1.4    # s sin ser golpeado para volver a 0 golpes acumulados
+@export var poise_rompe_dano: int = 24     # un golpe de este daño o más rompe la resistencia y aturde igual
+@export var sonico_dano_mult: float = 1.0  # multiplicador de daño del disparo sónico del Murciélago
