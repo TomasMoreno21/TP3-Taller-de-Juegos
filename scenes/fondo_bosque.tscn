@@ -11,6 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://bqlvt6hwnlmc2" path="res://Sprites/Fondos/Bosque/Boske9.png" id="9_tex9"]
 [ext_resource type="Texture2D" uid="uid://dx1okiwvyra2y" path="res://Sprites/Fondos/Bosque/Boske10.png" id="10_tex10"]
 [ext_resource type="Texture2D" uid="uid://byhji0617vexm" path="res://Sprites/Fondos/Bosque/Boske11.png" id="11_tex11"]
+[ext_resource type="Script" path="res://scripts/viento_capa.gd" id="12_viento"]
 
 [node name="FondoBosque" type="ParallaxBackground" unique_id=1013814485]
 layer = -10
@@ -60,51 +61,72 @@ texture = ExtResource("4_tex4")
 
 [node name="Capa5" type="ParallaxLayer" parent="." unique_id=1223057867]
 motion_scale = Vector2(0.28, 1)
-motion_mirroring = Vector2(6088, 0)
+motion_mirroring = Vector2(6142.16, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa5" unique_id=965224589]
 texture_filter = 2
 texture_repeat = 1
-position = Vector2(2936.0002, -732)
+position = Vector2(3569, -562)
 scale = Vector2(0.96787834, 1.1929808)
 texture = ExtResource("5_tex5")
+offset = Vector2(-621.97876, -726.04895)
+script = ExtResource("12_viento")
+viento_amplitud = 0.01
+viento_velocidad = 1.0
 
 [node name="Capa6" type="ParallaxLayer" parent="." unique_id=1544671824]
 motion_scale = Vector2(0.3, 1)
-motion_mirroring = Vector2(4120, 0)
+motion_offset = Vector2(0, 1096.56)
+motion_mirroring = Vector2(4001, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa6" unique_id=86598725]
 texture_filter = 2
 texture_repeat = 1
-position = Vector2(2289, 101.75004)
-scale = Vector2(1, 1.358805)
+position = Vector2(2217, 553)
+scale = Vector2(0.9711165, 1.358805)
 texture = ExtResource("6_tex6")
+offset = Vector2(0, -1096.56)
+script = ExtResource("12_viento")
+viento_amplitud = 0.013
+fase = 0.4
 
 [node name="Capa7" type="ParallaxLayer" parent="." unique_id=1363217738]
 motion_scale = Vector2(0.52, 1.13)
-motion_mirroring = Vector2(4215, 0)
+motion_offset = Vector2(0, 1082.71)
+motion_mirroring = Vector2(4290.5, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa7" unique_id=307276939]
 texture_filter = 2
 texture_repeat = 1
-position = Vector2(2995, 101.25)
-scale = Vector2(1, 1.3076203)
+position = Vector2(2897, 409.00003)
+scale = Vector2(1.0179123, 1.3076203)
 texture = ExtResource("7_tex7")
+offset = Vector2(0, -1082.71)
+script = ExtResource("12_viento")
+viento_amplitud = 0.015
+viento_velocidad = 0.9
+fase = 0.8
 
 [node name="Capa8" type="ParallaxLayer" parent="." unique_id=1846744976]
 motion_scale = Vector2(0.63, 1.212)
-motion_mirroring = Vector2(6711, 0)
+motion_offset = Vector2(0, 859.5)
+motion_mirroring = Vector2(6906.55, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa8" unique_id=840531609]
 texture_filter = 2
 texture_repeat = 1
-position = Vector2(3265.0002, -947)
+position = Vector2(3330.0002, -698)
 scale = Vector2(1.1559083, 1.2384727)
 texture = ExtResource("8_tex8")
+offset = Vector2(0, -859.5)
+script = ExtResource("12_viento")
+viento_amplitud = 0.018
+viento_velocidad = 1.0
+fase = 0.2
 
 [node name="Capa9" type="ParallaxLayer" parent="." unique_id=780756554]
 motion_scale = Vector2(0.7, 1.167)
-motion_mirroring = Vector2(4349, 0)
+motion_mirroring = Vector2(4725.5, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa9" unique_id=19872083]
 texture_filter = 2
@@ -115,7 +137,7 @@ texture = ExtResource("9_tex9")
 
 [node name="Capa10" type="ParallaxLayer" parent="." unique_id=819697361]
 motion_scale = Vector2(0.8, 1.143)
-motion_mirroring = Vector2(4682, 0)
+motion_mirroring = Vector2(5040, 0)
 
 [node name="Sprite" type="Sprite2D" parent="Capa10" unique_id=963144405]
 texture_filter = 2
