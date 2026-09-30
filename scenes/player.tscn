@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" uid="uid://dfckwvhjipli2" path="res://scripts/player.gd" id="1_player"]
 [ext_resource type="SpriteFrames" uid="uid://bhqpshwxoqn22" path="res://resources/jugador_frames.tres" id="2_frames"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/golpe_liviano_jugador.mp3" id="3_sfx_liviano"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/golpe_pesado_jugador.mp3" id="4_sfx_pesado"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/transformacion.mp3" id="5_sfx_transform"]
+[ext_resource type="AudioStream" uid="uid://cnv4mui1h5jmc" path="res://assets/audio/sfx/golpe_liviano_jugador.mp3" id="3_sfx_liviano"]
+[ext_resource type="AudioStream" uid="uid://qvwrf3f12jv4" path="res://assets/audio/sfx/golpe_pesado_jugador.mp3" id="4_sfx_pesado"]
+[ext_resource type="AudioStream" uid="uid://x8c2mirck2wp" path="res://assets/audio/sfx/transformacion.mp3" id="5_sfx_transform"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(190, 318)
@@ -49,6 +49,7 @@ texture_filter = 1
 sprite_frames = ExtResource("2_frames")
 animation = &"run"
 autoplay = "run"
+frame_progress = 0.1410346
 
 [node name="Collision" type="CollisionShape2D" parent="." unique_id=1655450779]
 position = Vector2(-2, -4.5)
@@ -75,10 +76,10 @@ texture_filter = 2
 position = Vector2(0, 136)
 emitting = false
 amount = 6
+texture = SubResource("GradTexture2D_polvo")
 lifetime = 0.35
 one_shot = true
 explosiveness = 1.0
-texture = SubResource("GradTexture2D_polvo")
 emission_shape = 3
 emission_rect_extents = Vector2(30, 4)
 direction = Vector2(0, -1)

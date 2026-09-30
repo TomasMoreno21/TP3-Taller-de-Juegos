@@ -77,7 +77,7 @@ acentos = Array[AudioStream]([ExtResource("22_amb_buho"), ExtResource("23_amb_lo
 acento_volumen_db = -2.0
 
 [node name="Player" parent="." unique_id=1763988589 instance=ExtResource("1_player")]
-position = Vector2(-609, 845)
+position = Vector2(-613, 838)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
 position = Vector2(20, 120)
@@ -99,7 +99,7 @@ centered = false
 offset = Vector2(-156, -145)
 
 [node name="ArbustoB1" type="Sprite2D" parent="ArbustosSuelo" unique_id=292502198]
-position = Vector2(5200, 998)
+position = Vector2(6276, 1003)
 texture = ExtResource("61_arb_b")
 centered = false
 offset = Vector2(-428, -159)
@@ -2810,7 +2810,7 @@ sombra = false
 viento = false
 
 [node name="Frente3_rama" type="CanvasGroup" parent="PrimerPlano" unique_id=36281111]
-position = Vector2(5458, -195)
+position = Vector2(5479, -193)
 script = ExtResource("44_frente")
 profundidad = 1.43
 

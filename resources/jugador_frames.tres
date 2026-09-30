@@ -5,7 +5,9 @@
 [ext_resource type="Texture2D" uid="uid://cs3jtm4q7tlbr" path="res://Sprites/Jugador y Transformaciones/ccorrer3.png" id="3_h04gk"]
 [ext_resource type="Texture2D" uid="uid://cjx5qylpmbylp" path="res://Sprites/Jugador y Transformaciones/ccorrer4.png" id="4_8ci31"]
 [ext_resource type="Texture2D" uid="uid://rxix8a6wurs5" path="res://Sprites/Jugador y Transformaciones/1lobo correr.png" id="5_lobo1"]
+[ext_resource type="Texture2D" uid="uid://dfrn5allhhlcs" path="res://Sprites/Jugador y Transformaciones/ccorrer5.png" id="5_run5"]
 [ext_resource type="Texture2D" uid="uid://cad1diumnfom3" path="res://Sprites/Jugador y Transformaciones/2lobo correr.png" id="6_lobo2"]
+[ext_resource type="Texture2D" uid="uid://bug75gk6cvx4o" path="res://Sprites/Jugador y Transformaciones/ccorrer6.png" id="6_run6"]
 [ext_resource type="Texture2D" uid="uid://dyxdl5ml23b56" path="res://Sprites/Jugador y Transformaciones/3lobo correr.png" id="7_lobo3"]
 [ext_resource type="Texture2D" uid="uid://b7o2e332bp5fv" path="res://Sprites/Jugador y Transformaciones/4lobo correr.png" id="8_lobo4"]
 [ext_resource type="Texture2D" uid="uid://boy1xam3t3kgo" path="res://Sprites/Jugador y Transformaciones/1murci volar.png" id="9_murci1"]
@@ -235,16 +237,22 @@ animations = [{
 "duration": 1.0,
 "texture": ExtResource("1_ybjtb")
 }, {
-"duration": 1.0,
+"duration": 0.6,
 "texture": ExtResource("2_b7l1w")
 }, {
-"duration": 1.0,
+"duration": 0.8,
 "texture": ExtResource("3_h04gk")
 }, {
-"duration": 1.0,
+"duration": 0.4,
 "texture": ExtResource("4_8ci31")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_run5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_run6")
 }],
 "loop": 1,
 "name": &"run",
-"speed": 5.0
+"speed": 7.0
 }]

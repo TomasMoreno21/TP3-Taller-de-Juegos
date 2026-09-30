@@ -803,5 +803,3 @@ func _elipse(centro: Vector2, radios: Vector2, n: int) -> PackedVector2Array:
 		var a := TAU * float(i) / float(n)
 		pts.append(Vector2(centro.x + cos(a) * radios.x, centro.y + sin(a) * radios.y))
 	return pts
-
-
