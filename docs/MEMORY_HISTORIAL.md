@@ -1,0 +1,1515 @@
+# MEMORY.md — Spirit Keeper (ex proyecto Guardabosques / Espíritus del Bosque)
+
+---
+
+## 🟢 Sesión 29/09 (tarde) — Ronda de bugs: 4 auditorías (jugador, enemigos/jefe, entorno/UI, escenas) → ~30 arreglos. `tests/diag_bugs.gd` + batería en 0
+- **Arenas** (`encounter.gd`): `reiniciar()` descarta a los auto-spawneados (marcados con meta `auto_spawn`, ya no se readoptan como manuales) y hay un token `_gen` que corta la pausa entre olas si se reinicia (antes lanzaba la ola -1 o duplicaba). Timers con `create_timer(t, false)` (respetan la pausa). `barrera_bosque.gd` cuenta contra el total inicial de cristales (abría con 2 de 3).
+- **Jefe** (`boss.gd`): `_piso_y` ya no se relee al activar (subía 260 px por reintento) y `preparar_ola` lo baja al piso; token `_gen` en `_ronda`/gates (no quedan dos rondas); señal `reiniciado` que apaga la barra del HUD; `_golpe_en_zona` corta si murió y el retroceso se aleja del jugador.
+- **Jugador** (`player.gd`): `test_move` de lianas ahora con `global_transform` (antes probaba en el origen del mundo); `_limpiar_estado_transitorio()` (picada, parry, buffers) en `_transformar` y `reaparecer_en_checkpoint` (que además limpia trepado/ataque/combo/cooldowns y emite `racha_changed(0)`); `_transformar` devuelve bool y la energía agotada solo avisa si el cambio se concretó; `_dialogo_bloquea_input()` incluye `_derrota_activa` (sin daño ni control durante la muerte); velo y tween de muerte guardados/matados; salto: caer de un borde gasta el salto de suelo (`Forma.perder_salto_suelo`) y `try_jump` gasta el coyote; la cadena ligera/pesada vuelve al paso 1 tras el último (no queda en "tercer golpe"); hitbox sigue el giro; pisotón del Oso fija su lado y se cancela si cambiás de forma; recoil con base fija; `onda_area` ignora enemigos inactivos y acepta `lado`; god_mode vuelve al spawn al caer.
+- **Otros**: `Hitstop` en `PROCESS_MODE_ALWAYS`; cámara mata su tween de `modo_normal` en `modo_arena` y no deja rotación residual; proyectil: dirección ±1 (no `int(direction.x)`), sin doble impacto, `_consumido`; chamán no muestra el sprite del cultista (`_usa_sprite`); `_flash_aviso` resetea `self_modulate`; pinchos: guard de editor, sin daño con el jugador muerto, chequeo escalonado y con cache de jugador (había 177 instancias recorriendo grupos cada frame), zona de daño TRIBAL coherente; orbe de vida no se gasta con vida llena (`puede_curarse`); checkpoint no re-guarda el ya activo; cristal/rompible/plataforma frágil sin acumulación de escala ni tweens huérfanos (`restaurar_tras_muerte` respeta `persistente_rota`); pausa no se abre con la derrota ni con Esc de la consola (que ahora consume el input); la consola viaja despausando; tips no se pierden con un diálogo abierto; HUD no borra el golpe nuevo con el fade viejo; `capa_cueva.gd` re-randomiza el RNG global tras dibujar (su `seed()` fijo dejaba todo el azar del juego idéntico).
+- **Optimización**: caches de `Ambiente`/jugador en luciérnagas, hojas, HUD, pickups y jugador; `decorativo` no calcula si está lejos y en reposo.
+- **Escenas/datos**: `nivel1.tscn` tenía 531 líneas `color_musgo/prob_musgo/luz_punta = null` en 177 pinchos (las guardó el editor abierto mientras cambiaba `pinchos.gd`): quitadas. Se sacó la línea BOM corrupta de `project.godot`, 2 `.uid` huérfanos, y los tests obsoletos pasaron a `tests/obsoletos/`. La guía de saltos (`herramienta_nivel.gd`, tecla B) solo funciona en builds de debug.
+- **NO se tocó (decisión consciente)**: el aviso de disparo que sigue aunque golpees (pedido del usuario); `muro_lobo.gd` (su `test_move` "roto" hace que el asistente suba siempre; arreglarlo podría impedir subir esos muros); plataformas y checkpoint anidados de `nivel1.tscn` (posiciones correctas, reparentar es riesgoso); `nivel2`/`nivel_jefe` sin checkpoint (falta decidir dónde ponerlos y si conviene); `nivel1oficial.tscn`/`main.tscn` (duplicados que usan tests y consola).
+- **Lección**: al cambiar exports de un script con instancias en un `.tscn` de nivel, cerrar el editor o revisar el `.tscn` después: puede guardar `null` en los exports nuevos.
+
+---
+
+## 🟢 Sesión 29/09 — Plan "El mundo te siente" (game feel, sin contenido nuevo). Fase A hecha; B, C, D pendientes
+Plan completo en `~/.claude/plans/planea-como-mejorar-el-idempotent-globe.md`: A cuerpo del jugador → B entorno vivo (vegetación, luciérnagas, tensión ambiental) → C tacto del combate → D interfaz reactiva.
+### Fase A (hecha; diag_feel + autotest + diag_* en 0)
+- **Resorte de cuerpo** (`player.gd`): `squash_y/stretch_y/_punch_sprite` ya NO usan tweens: suman impulsos a `_esc_off` y `_actualizar_resorte(delta)` (tras `_update_animacion`) lo integra hacia `_esc_reposo` y aplica la escala final (con facing y respiración). Exports en grupo "Cuerpo elástico" (`resorte_rigidez/amort`, `giro_squash`, `respiracion_*`, `acel_inclinacion_grados`, `polvo_correr_intervalo`, `eco_alpha`). Ya no existe `_sprite_tween`.
+- **Poses de salto** para todas las formas por `Forma` (`salto_rot_grados`, `salto_estiramiento`, `caida_estiramiento`, `apex_compacto`; Lobo 14°/apex 0.06, Oso 2°). Inclinación al acelerar/frenar, aplaste al girar quieto, polvo al correr, hojitas al soltar la liana.
+- **Cansancio**: `_factor_cansancio()` (vida ≤30 % o energía baja fuera de Humano) → respiración más rápida/amplia, encorvado y temblor (`visual.offset.x`).
+- **Ecos espectrales** `emitir_eco()` en lunge del Lobo, picada del Murciélago y pisotón del Oso; reaparición con `_anillo_onda` + `_particulas_regreso`.
+- Lección: los efectos de escala del sprite se resuelven con un resorte único; no reintroducir tweens sobre `visual.scale`.
+- Pendiente de probar a mano en ventana: se siente el rebote, respiración a poca vida, ecos del Lobo.
+- **Pedido del usuario tras A**: quitar el estiramiento y el balanceo al saltar → `salto_rot_grados/salto_estiramiento/caida_estiramiento/apex_compacto` quedan en 0 por defecto (los exports siguen en `Forma`), y se sacaron los `stretch_y` de `try_jump`, doble salto del Lobo y aleteo. Regla: NO volver a estirar/balancear el cuerpo al saltar.
+### Fase B (hecha; `tests/diag_ambiente.gd` + toda la batería en 0)
+- **Autoload `Ambiente`** (`scripts/ambiente.gd`, en `project.godot`): `tension` 0..1 (enemigos vivos cerca + jefe + vida baja; sube 0.6/s, baja 0.3/s), `empujar(pos, fuerza)` (llama al grupo "reactivo") y `sacudida(fuerza)` (lo dispara `camera.gd::shake`; con fuerza ≥6 emite `sacudida_fuerte`). En scripts se accede con `get_node_or_null("/root/Ambiente")`.
+- **Vegetación reactiva** (`decorativo.gd`): arbusto/pasto/pasto alto se doblan con un resorte al pasar el jugador y se sacuden con `empujar`. Exports `reactivo`, `reaccion_*`. Se agregan al grupo "reactivo".
+- **Luciérnagas** (`luciernagas_ambiente.gd`): huyen si corrés, se acercan curiosas si estás quieto y sin tensión, se apagan/agitan con tensión, salen disparadas con `empujar`. **Hojas** (`hojas_ambiente.gd`): viento y velocidad suben con tensión, ráfaga con `empujar`, y en la cueva un shake fuerte suelta polvo del techo.
+- **Pickups**: imán (`iman_radio` 150/170) en `pickup.gd` y `pickup_vida.gd`; el orbe de vida ahora flota, late, estalla en rojo y avisa "Vida +N" (grupo "hud"). `tronco`/`interactable`: astillas + shake. **Pinchos**: chispa al herir al jugador y **empalan enemigos en hitstun** (`enemigos_mueren`, `dano_a_enemigos`).
+- Pendiente de B: **el usuario decidió NO hacer** las luciérnagas guiando a un fragmento ni la plataforma frágil con el pisotón del Oso. Los orbes de muerte "vuelan" vía imán. Pendiente de probar a mano en ventana.
+### Fase C — tacto del combate (hecha; `tests/diag_combate.gd` + batería en 0)
+- **Cancelar recuperación** (`player.gd::_cancelar_recuperacion`): salto y bloqueo la cancelan solo en recuperación (ya conectó o pasó el umbral); transformarse siempre. Limpia `_attack_timer`, buffer, lunge y cola de anim.
+- **Magnetismo**: en `enable_melee` el avance se estira hasta `magnetismo_mult` (1.6) hacia un enemigo dentro de `magnetismo_alcance` (340) si quedaría fuera de alcance; nunca lo acorta. Nota: el Lobo ya alcanza mucho con `attack_range` 205, así que se nota sobre todo en golpes pesados/combos.
+- **Enemigo** (`enemy.gd`): destello blanco quemado en el impacto por `visual.self_modulate` (`flash_impacto`, se apaga a 0.04 s antes que el rojo de `modulate`); **pausa de impacto** (`pausa_impacto` 0.05 s: queda colgado y recién después sale despedido, `_kb_pendiente`); polvo al aterrizar tras caída >380 px (`_polvo_al_aterrizar`); pop al aparecer sin ritual; muerte con `Burst.emitir` escalado por `max_health` + chispas (`_burst_particulas` ya no instancia burst a mano).
+- **`Burst.chispas(ref,pos,dir,color,cantidad,fuerza)`**: chorro direccional; lo usa `_spark_golpe` del jugador (más fuerte en pesados), el reflejo del parry y la muerte de enemigos.
+- **Proyectiles** (`projectile.gd`): estela `Line2D` (`estela_puntos`) y giro (`giro_grados_s`); chispas al reflejar con parry.
+- **Jefe** (`boss.gd`): micro-retroceso + aplaste Y + hitstop 0.04 s al recibir golpes (`hitstop_golpe`, `retroceso_px`), destello blanco, y hitstop 0.12 s + slowmo 0.5 s al cambiar de fase (`hitstop_fase`, `slowmo_fase`); todo salvo en headless. El sonido de golpe del jefe sigue siendo un export vacío.
+- Lección: los destellos de impacto van por `self_modulate` (no pisan los chequeos sobre `modulate` de los tests).
+### Fase D — interfaz reactiva (hecha; `tests/diag_interfaz.gd` + batería en 0). Cierra el plan "El mundo te siente"
+- **Latido compartido** (`ambiente.gd`): `latido` (pulso "lub-dub" 0..1) y `latido_severidad` (vida ≤30 %, sube hacia 0). Lo usan la viñeta del HUD (antes seno propio, queda de respaldo), la respiración del jugador (`respiracion_latido`) y el orbe de vida.
+- **HUD** (`hud.gd`): destello de pantalla reutilizable `_flash_pantalla` (rojo daño, celeste parry, verde curar), pulso de curación (barra + etiqueta), `dial.pulso_energia()` al ganar ≥3 de energía, `parry_exitoso` conectado, pop en cada paso de racha (3/5/≥8 más grande) y número fantasma que cae al perder la racha, barra del jefe con entrada animada, destello del relleno al recibir golpe y salida en 0.6 s. En headless todo es instantáneo (diag_jefe chequea `boss_bar.visible`).
+- **Menús**: pausa con fundido (`duracion_fundido`, reloj real: `set_ignore_time_scale` + `TWEEN_PAUSE_PROCESS`), panel de derrota con entrada animada, botones con foco que crecen (principal, pausa, derrota). `controls.tscn` ahora lista parry, aleteo y picada.
+- **Bug corregido** (`dialogo.gd`): al vencer el timer de un tip se creaba un tween por frame y cada callback llamaba a `_tip_siguiente`, así que los tips encolados se saltaban. Ahora se marca el cierre con `_tip_timer = 1e9`.
+- Pendiente de decidir: ¿el bloqueo debe costar energía? Pendiente de probar a mano en ventana (todo el plan).
+
+---
+
+## 🟢 Sesión 28/09 — Sonidos místico-graves + apartado visual V1 (decoración con el estilo del fondo y primer plano)
+
+### Sonido
+- **Tipeo del diálogo "se tiene que notar más"** (mismo estilo): `dialogo_tecla.wav` pasa a pico 0.75 y 45 ms con algo de cuerpo. `dialogo.gd` tiene `@export volumen_tipeo_db = -9` (antes -20 fijo) y `letras_por_sonido = 2`, y cuenta solo letras y números (espacios y signos no). Medido: 24 letras → 12 sonidos.
+- **Pickup, checkpoint, zona despejada y nivel subido pasan a "místico grave"** (elección del usuario; ver memoria `sonido-tono-tension`): soplos y respiraciones, zumbido grave con batido y díadas o tríadas menores con pasabajos (~1 kHz). El brillo aproximado bajó de 1864/955/1049/959 Hz a 784/115/162/111 Hz. En `tools/generar_sfx.py` cada receta nueva usa su propio `random.Random(701..704)`, y se conserva `ruido(0.3, rng)` de la receta vieja de pickup para que el resto de los WAV salga **byte a byte idéntico** (verificado por md5).
+
+### Visual V1 (plan: V1 decoración + primer plano → V2 piso y plataformas → V3 cuevas → V4 objetos de juego; ver memoria `estilo-visual-siluetas-grises`)
+- **`scripts/paleta_mundo.gd` (`class_name PaletaMundo`):** escala de tonos de más clara a más oscura: `DECO (0.215)`, `DECO_LUZ`, `JUEGO (0.10)` + `JUEGO_BORDE`, `FRENTE (0.04)`, y acentos de color (alma, checkpoint, peligro).
+- **`decorativo.gd` reescrito con el lenguaje de `Boske*.png`:**
+  - Tronco que se afina con raíces abiertas, ramitas finas en "Y" (`_rama`) y vetas.
+  - Copa de anillo de círculos + centro + racimos de manchas claras (no burbujas).
+  - SAUCE = tronco alto sin copa; arbusto festoneado; mata de hojas curvas; piedra de base plana con luz.
+  - Tipos nuevos **al final del enum** (no cambian índices): `TRONCO_FRENTE`, `RAMA_COLGANTE` (cuelga hacia abajo desde 0,0) y `PASTO_ALTO`.
+  - `@export var tono` reemplaza a los `COLORES` verdes.
+  - Las 149 instancias de nivel1 heredan el estilo solas.
+- **`scripts/primer_plano.gd` (`class_name PrimerPlano`, extends **CanvasGroup**, para que el alfa se aplique al conjunto sin solapes):**
+  - `pos = cam + (ancla − cam) × profundidad` (`@export profundidad 1.35`, `profundidad_vertical`).
+  - Si su rectángulo (calculado de los Polygon2D hijos) se cruza con el `CollisionShape2D` de algo en los grupos `player`/`enemy`, el alfa baja a `alfa_tapando 0.3`.
+  - Fuera de `distancia_activa` no procesa.
+- **`scenes/hojas_ambiente.tscn` + `hojas_ambiente.gd`:** CPUParticles2D (z 21) que acompaña la vista por arriba, con textura `assets/vfx/hoja.png` (silueta blanca generada con PIL) teñida con `color_initial_ramp` de 0.04 a 0.2. Ráfagas con `gravity.x` senoidal y `y_max 1300` (no cae bajo tierra). Instanciado en `noche.tscn`.
+- **nivel1:** contenedor `PrimerPlano` (z 20) con 11 grupos (pasto+arbusto, tronco+pasto, 2 ramas, niebla con `local_coords`) cada ~1600–2600 px en la superficie. Evita checkpoints, glifos, frágiles, pickups (±420) y arenas (±950). Backup `%TEMP%\spiritkeeper_backup\nivel1_antes_primer_plano.tscn`.
+- **Rendimiento:** con y sin primer plano, decoración y noche: 16.6 ms por frame (60 fps con vsync), sin diferencia.
+- **Árboles más fieles al fondo (pedido: "no tan recto, jugando con las curvas"):**
+  - `_tronco` ahora tiene bordes curvos (comba + ondulación), base que se abre, punta redondeada, **dos caras** (clara a la izquierda y sombra a la derecha con un corte curvo), vetas cortas y ramas en **cuerno** (`_cuerno`: curva cuadrática que sube, se afina y termina redondeada, a veces en "Y"), más un brote en la base.
+  - `_copa`: círculos oscuros grandes, bolitas colgando del borde inferior y **manchas claras grandes en nube** arriba a la izquierda.
+  - `_arbusto`: festoneado con 10–14 bultitos.
+  - **Contraste:** luz +0.12 / sombra −0.065 / veta −0.1 sobre `tono`. La noche comprime el contraste casi a la mitad, así que hace falta ese salto para que se lea como en el fondo.
+- **⚠️ Crash visto en una corrida con ventana:** D3D12 `CreateGraphicsPipelineState 0x8007000e` (sin memoria) y `0x887a0005` (dispositivo removido) → segfault al arrancar. Causa: **la PC tenía 1.1 GB libres de 8 GB** y la GPU integrada (Intel Iris Xe) usa esa RAM; estaban abiertos editor, Chrome, Discord y el juego. Repetido con la misma escena: 0 errores. No es del juego; si vuelve a pasar, liberar RAM.
+- **⚠️ Lección (bug del editor):** el editor del usuario guardó `nivel1.tscn` con **`tono = null` en las 149 decoraciones**, porque el export tenía como default `PaletaMundo.DECO` (constante de otra `class_name`) y la escena se guardó antes de que el editor registrara la clase. **Regla: en scripts `@tool` o con `@export`, NO usar constantes de otra class_name como default de un export; usar literales** (y evitar depender de otras clases en código @tool). Se arregló quitando esas líneas; comparación normalizada contra HEAD = 0 cambios reales del usuario (solo `unique_id` y defaults omitidos).
+- **Verificación:** import y smoke limpios, nivel1 120 frames sin errores, autotest + 11 diags con 0 fallos, capturas en ventana.
+
+---
+- **Corrección posterior (usuario: "más cueva, sin estandartes ni rituales"):** se quitaron estandartes, glifos, círculos rituales, jaulas, cadenas y estatuas del nivel 2 y la capa de fondo `Secta` (el código `tipo="secta"` y los tipos de `decorativo.gd` siguen disponibles, sin usar). Nivel 2 = 69 decorativos: estalagmitas/estalactitas/rocas/cristales violetas + antorchas, braseros en arenas, algo de velas y huesos. **LECCIÓN:** ante "guarida/cueva" priorizar geología; utilería de culto solo como luz puntual, no como simbología.
+- **Pinchos (visual):** `pinchos.gd::_dibujar` reescrito (misma hitbox): `@export estilo` ROCA (default, colmillos de piedra con cara iluminada/sombra, filo claro, punta rojiza, escombros al pie) o MADERA (estacas talladas). Alto visible sigue siendo `alto`=24 (los pinchos asoman poco por diseño; subir `alto` cambia la zona de daño). Backup: `pinchos_antes.gd`.
+- **HUD nuevo (dial de forma):** `scripts/hud_dial.gd` (medallón vectorial: silueta de la forma SELECCIONADA con transición de deslizamiento al pasar de una a otra —mismos controles de siempre: `forma_swap`/`forma_prev`—, aro = energía con "fantasma", color del aro = forma ACTIVA, aro rojo pulsante <25 %, cooldown con segundos, punto si activa != seleccionada, pulso al transformar), `scripts/hud_segmentos.gd` (marcas de la barra de vida). `hud.tscn` reorganizado: `Izquierda` (Dial + `Vida` horizontal con `HpBar/HpBarDelayed/HpLabel`) y `Derecha` (NIVEL, `ProgBar`, `ProgLabel`, `Racha`). Se eliminó la barra de espíritu vertical y el texto `FORMAS`/`FRAGMENTOS…`. Auto-ocultar (`auto_ocultar`, `ocultar_tras`=3 s, `alpha_reposo`=0.45) con vida/energía llenas y sin combate. Boss bar, aviso, viñeta y flash sin cambios. `diag_hud` adaptado (`Izquierda/Vida/HpBar`, `Izquierda/Dial.energia`). Backups `hud_antes.tscn/.gd`. Captura de prueba: script temporal con `RenderingServer.frame_post_draw` (borrado).
+- **Retoque suave del fondo de cueva (nivel 2):** `capa_cueva.gd`: la niebla (`_dibujar_banda_niebla`) ahora es un degradado vertical (transparente–densa–transparente) en vez de un rectángulo con bordes duros (se notaban franjas azules); la capa `pared` suma 2-3 haces de luz oblicuos muy tenues desde el techo. Paleta y capas sin cambios. Decoración a 65 items: antorchas/velas/cristales fuera, **braseros solo en las arenas**, resto estalagmitas/rocas/estalactitas/huesos. Backups `*_antes_retoque.*`.
+- **Fondo de cueva, 2ª pasada (`capa_cueva.gd::_dibujar_pared`):** relieve de roca (manchas suaves claras/oscuras), bandas de estrato claras, vetas de humedad con brillo fino, haces de luz en 3 capas anidadas con motas de polvo. Sin cambio de paleta ni de capas. **Detalle:** las 24 instancias de `Pinchos` de `nivel2.tscn` habían quedado con `color_base/color_estaca` guardados (marrón viejo, seguramente por un re-guardado del editor) y por eso seguían viéndose de madera; se borraron esos overrides para que usen el default nuevo (ROCA). LECCIÓN: tras cambiar defaults de un `@export`, buscar overrides guardados en los `.tscn`.
+- **Pull 28/09 (2 commits de Tomás: sonidos místico-graves + "apartado visual V1": decorativo con estilo del fondo, `primer_plano.gd`, `hojas_ambiente`, `paleta_mundo`).** Conflictos resueltos en `MEMORY.md` (ambas secciones), `decorativo.gd` y `nivel1.tscn`. **`decorativo.gd`:** se tomó la versión nueva de Tomás como base y se agregó la utilería de cueva al FINAL del enum (`ESTALAGMITA=8 … ESTATUA=20`; los índices 5-7 ahora son `TRONCO_FRENTE/RAMA_COLGANTE/PASTO_ALTO`), con `_generar_silueta_cueva`, `_generar_brillo` y `COLORES_CUEVA`; `nivel2.tscn` remapeado (`tipo` ≥5 → +3). `gen_deco.py` (scratchpad) usa la numeración vieja: si se regenera el nivel 2 hay que sumar 3 a los tipos ≥5. **`nivel1.tscn`:** base = versión de Tomás (su decoración y `PrimerPlano`) + mis nodos no decorativos (Musgo x31, `Tierra`, `BocaCueva`, shader del TileMap). Se descartó mi `DecoracionFrente` de nivel 1 (Tomás resolvió el primer plano con `primer_plano.gd`). **LECCIÓN:** nunca correr `git checkout --theirs .` con conflictos ya resueltos a mano: pisa las resoluciones con la versión del stash.
+- **Reacción del enemigo al golpe (feel):** `enemy.gd`: `flinch_congela_anim` ahora `false` por defecto (antes la animación quedaba pausada TODO el stun → se veía trabado al seguir pegando); durante el stun corre `stun_anim` ("idle", `@export`) en vez de quedarse en el frame de ataque; golpes repetidos ya no hacen "drift" de posición/escala (`_capturar_base`, `_squash_tween` único) y el re-flash en pleno stun es más suave (`flinch_reflash`). Diag nueva `tests/diag_flinch.gd`. Pendiente: lobo (una sola anim `lobo_attack` estirada a ~0.24 s + early exit al 35 % → mordidas en spam) y revisar hitstop acumulado por racha (`racha_hitstop_3/5`).
+## 🟢 Sesión 28/09 (noche) — Nivel 2 como guarida de una secta
+- **Pedido:** menos decoración en nivel 2, que pegue con "cueva guarida de una secta" (los enemigos son cultistas encapuchados) y mejorar el fondo.
+- **`decorativo.gd`:** 10 tipos nuevos (`ANTORCHA 8, BRASERO 9, VELAS 10, ESTANDARTE 11, CADENAS 12, HUESOS 13, CIRCULO 14, GLIFO 15, JAULA 16, ESTATUA 17`), todo vectorial. Nodo hijo `Brillo` (no se tiñe con `color_noche`): llamas de 3 capas + halo aditivo (`luz_radial`) con **parpadeo** (`@export parpadeo`), círculo ritual/glifo con `Line2D` violeta, ojos rojos de estatua (variante impar). Estandarte/cadena/jaula se mecen con `viento`. Ancla: pie=0 (suelo) salvo ESTANDARTE/CADENAS/JAULA que cuelgan desde y=0 (techo). Ojo: en tscn `Color()` exige 4 componentes.
+- **`nivel2.tscn`:** `Decoracion` + `DecoracionFrente` regenerados por script Python (relevamiento de suelos por rayos + obstáculos): **237 → 83 decorativos** (arenas con círculo ritual + glifo + 2 braseros + estatuas + estandartes; entrada con antorchas y estatua; resto: antorchas, velas, huesos, estandartes, cadenas, jaulas y unas pocas estalagmitas/piedras/cristales violetas). Sin decoración de piso en el santuario (x≈3978,y≈6948): no hay suelo detectable ahí (solo antorchas/glifo en pared).
+- **`Camara.limit_left` -3000 → -7000:** había piso y el Encounter4 hasta x≈-6600 y la cámara no seguía al jugador.
+- **Fondo (`capa_cueva.gd` + `fondo_cueva.tscn`):** capa nueva `Secta` (`tipo="secta"`, motion 0.3): nichos tallados con estatuas encapuchadas y candelabros, sigilos pintados en la pared y candelabros lejanos, en rejilla con huecos; exports `color_acento` (violeta) y `color_fuego`. Pilares con bandas talladas y runas; paleta de pared/niebla levemente violeta.
+- **Herramienta:** `tests/diag_decorativo.gd` (todos los tipos/variantes + conteo nivel 2). Método de capturas: usar `x,y,1` (posición directa); el modo rayo falla si la física aún no cargó.
+- **LECCIÓN:** `root.add_child()` dentro de `_initialize()` de un SceneTree no ejecuta `_ready` hasta el próximo frame → `await process_frame` antes de inspeccionar hijos. Un heredoc `python - <<'E'` con `'''` largo puede fallar el parseo de bash: escribir el parche a archivo (scratchpad) y ejecutarlo.
+- **Backups:** `%TEMP%\spiritkeeper_backup
+ivel2_antes_secta.tscn`, `fondo_cueva_antes_secta.tscn`, `capa_cueva_antes_secta.gd`.
+
+## 🟢 Sesión 28/09 — Cierre visual (solo nivel 1 y 2) + cámara que ve el piso
+
+- **Cámara (`camera.gd`) — "ver lo de abajo":** los pies del player están a 142 px bajo su origen; con `desplazamiento=-313` el piso quedaba a ~85 px del borde inferior. Nuevo `_extra_piso_visible()`: 2 rayos hacia abajo (bajo los pies y adelantado con el lookahead) y baja la cámara lo justo para dejar `margen_piso` (180 px) bajo la línea del piso, tope `piso_offset_max` 420, suavizado `suavizado_piso`. Mantener `move_down` quieto en el suelo ≥0.35 s baja `mirar_abajo_extra_max` 300 px. Todo `@export` (grupo "Piso visible"). Diag: `tests/diag_camara_suelo.gd` (8 puntos de nivel1 y nivel2, FALLOS = 0).
+- **Nivel 1:** nuevo `scripts/borde_musgo.gd` (@tool, Node2D hijo "Musgo" de cada StaticBody2D de piso/plataforma: labio de pasto + veta clara + raíces colgando; usa el Polygon2D visual como rectángulo; sin raíces en bloques altos/rotados/`Piso`). 31 instancias agregadas a `nivel1.tscn` (backup: `%TEMP%\spiritkeeper_backup
+ivel1_antes_fase_visual.tscn`).
+- **Herramienta:** `tests/captura_nivel.gd` (con ventana: `-- <escena> <dir> "x,y;x,y"`, teletransporta al player y guarda PNG).
+- **Entrada de cueva de nivel 1 (hecha, boca en x≈31240,y≈995; el bosque baja en escalera a la caverna y≈2400-2800):**
+  - **`resources/tinte_terreno.gdshader`** + `ShaderMaterial` en el nodo `TileMap` de `nivel1.tscn`: re-tiñe SOLO los píxeles de matiz púrpura del tileset a tierra (`tierra_color`, `matiz_min/max`, `brillo`), conservando el musgo verde. El TileMap es `tile_map.tscn` compartido con nivel2/3: el material está solo en la instancia de nivel1 (aplicable igual en nivel2).
+  - **`BocaCueva`** (Node2D z=2 en nivel1): `Sombra` Polygon2D con `vertex_colors` (oscurece de izquierda a derecha y de arriba a abajo, sin borde duro) + 2 `niebla.tscn`.
+  - **`capa_cueva.gd` nuevo `@export fundido_superior`** (0-0.5): la franja/techo del fondo entra en fundido desde transparente; se usa 0.06 en Sombra/Pared/Estalactitas de `fondo_subsuelo.tscn` → desaparece el corte horizontal en y=1100 donde empezaba el fondo de cueva sobre el bosque.
+- **Reaparición automática + frágiles que vuelven (28/09):**
+  - **`player.gd`:** `@export reaparicion_automatica := true`. Al morir corre la misma secuencia (slowmo/destello/velo) pero en vez del panel "HAS CAÍDO" hace `_reaparecer_automatico()`: fundido corto de `TransicionPantalla` → `reaparecer_en_checkpoint()` + cámara `modo_normal(true)` + `reiniciar()` de arenas (sin checkpoint: `reload_current_scene`). El velo de muerte se quita con la pantalla ya en negro. `false` = panel de derrota como antes (los diags `diag_derrota` lo ponen así).
+  - **`plataforma_fragil.gd`:** nuevos `@export reaparece := true`, `tiempo_reaparicion := 10.0` (0 = solo por checkpoint), `persistente_rota := false`. Ya no se libera (`queue_free`): se oculta y vuelve con fundido en su posición original (`restaurar()`); por tiempo solo si el jugador no está encima; y siempre que `reaparecer_en_checkpoint()` llama al grupo `plataforma_fragil`. Modo CAER: al caer 3000 px se oculta y vuelve. `persistente_rota=true` restaura el comportamiento viejo (Progresion). `diag_fragil` actualizado a la nueva semántica; nuevo `tests/diag_reaparicion.gd`.
+  - `diag_nivel3` "puente I" falla también sin estos cambios (verificado con stash): geometría del nivel 3, no relacionada.
+- **Plataformas + decoración al frente (28/09):**
+  - **`borde_musgo.gd`:** nuevo detalle de cuerpo (`cuerpo`: sombra inferior, contorno oscuro, grietas, motas de musgo) y modo `fragil` (fisuras en zigzag, astillas, grieta profunda; sin pasto/raíces). Si su padre es un `Polygon2D` usa su polígono como rectángulo. `plataforma_fragil.tscn` lleva un `Visual/Detalle` con `fragil=true` → todas las frágiles (nivel1/2) lo heredan y tiemblan con el visual.
+  - **`DecoracionFrente` (Node2D z=3, sobre el player z=0; los efectos del player son z=5):** en `nivel1.tscn` 5 árboles + 1 sauce + 3 arbustos + 9 pastos movidos desde `Decoracion` (escala ×1.15, `color_noche` más oscuro; árboles/arbustos con alfa 0.86 para no tapar del todo) → el jugador pasa POR DETRÁS del tronco y entre el pasto. En `nivel2.tscn` 16 estalagmitas + 6 rocas + 4 cristales. Elegidos lejos de arenas (≥1000-1300 px), pinchos, pickups, checkpoints y lianas. Para cambiar cuáles van al frente: mover el nodo entre `Decoracion` y `DecoracionFrente` en el editor. Backups: `nivel1_antes_frente.tscn`, `nivel2_antes_frente.tscn`.
+- **Lianas v2 (28/09):** `enredadera.gd` ahora dibuja contorno oscuro (`Poly`) + 2 hebras trenzadas + hojas con nervadura (parejas y variadas) + zarcillos en espiral (`Line2D`) + brote en la punta; exports nuevos `color_tallo`, `color_contorno`. Ya NO se asigna `owner` a los nodos generados (se regeneran en `_ready`, no engordan la escena al guardar).
+- **Lianas y franja bajo el piso (hechas):** `enredadera.gd` ya no dibuja un rectángulo: tallo sinuoso (`_tallo()`, serpentea con `_desvio(y)` desfasado por `position.x`) + hojas en gota alternadas (`_hoja()`), exports nuevos `color_hoja`, `fase`; el collider no cambió. Bajo el `Piso` de nivel1 nuevo `Tierra` (Polygon2D z −1, `vertex_colors` tierra oscura → transparente en 170 px, x −1330…31290) que tapa el corte oscuro/parches del fondo de cueva bajo el pasto. Backup: `nivel1_antes_tierra.tscn`.
+- **Nivel 2 (hecho, backup `nivel2_antes_fase_visual.tscn`):**
+  - **Terreno:** mismo `tinte_terreno.gdshader` con `tierra_color (0.2,0.17,0.28)` y `brillo 0.62` (nuevo uniform `matiz_rojo_max`: los puntos del dither eran rojizos y quedaban salmón). Quedó ciruela oscuro.
+  - **`decorativo.gd`: 3 tipos nuevos** `ESTALAGMITA`(5), `ESTALACTITA`(6), `CRISTAL`(7, con Halo aditivo `halo_color/halo_alpha`).
+  - **Contenedor `Decoracion` (z −5) con ~443 instancias** generadas por relevamiento del suelo (rayos cada 40 px, solo colisiones de TileMap, despeje ≥230 px, evita pinchos/pickups/plataformas): piedras (tinte frío), estalagmitas, ~39 cristales, ~28 estalactitas colgando del techo.
+  - **`capa_cueva.gd`:** el borde de luz de los pilares baja de alfa 0.9 a 0.28 (parecían cables grises verticales).
+  - **Lección:** los tiles interiores del TileMap NO tienen colisión (solo los bordes), por eso las luciérnagas de ambiente (point query capa 1) aparecían dentro de la roca → no se usaron en nivel2. Y las indentaciones de `decorativo.gd` (`match` a 2 tabs): un replace de texto que no matchea falla en silencio; verificar con un diag que cuente los hijos de `Hoja`.
+  - **Aviso al usuario:** `Camara.limit_left = -3000` en nivel2, pero hay contenido hasta x≈−6460 (Enredadera11, Encounter4 en x −3951).
+- (relevado inicialmente:)
+- **Lección:** el origen del player NO es los pies (`pies_offset` 142.5): cualquier cálculo de "qué se ve bajo el jugador" debe partir de los pies.
+
+
+## 🟢 Sesión 27/09 — Nivel 1: experiencia del jugador (plan en 5 fases: 0 base → 1 noche con luces → 2 juice → 3 atmósfera nivel1 → 4 UX flujo)
+
+> Plan aprobado. Se trabaja una fase por vez y se espera el OK del usuario entre fases. Las fases 0/1/2/4 son solo sistema; la 3 edita `nivel1.tscn` (pedir que guarde y cierre la escena en el editor + backup).
+
+### Hallazgos del relevamiento
+- **La decoración de la sesión 24/09 (f) NO existe:** `nivel1.tscn` no tiene `Decoracion`, luciérnagas, niebla ni luces, en ningún commit ni rama. Hay que volver a colocarla (fase 3).
+- El subsuelo de nivel1 (y > 1100) no tiene fondo: se ve el clear color verde oliva.
+- Casi ninguna acción tiene sonido; no hay música ni transiciones de escena.
+
+### Fase 0 — Arreglos base (hecha)
+- **`burst.tscn`, `luciernagas.tscn`, `niebla.tscn` eran `CPUParticles2D` con `process_material` (ParticleProcessMaterial es solo de GPUParticles2D → ignorado)**: todos los bursts de golpe/muerte/checkpoint/rompible salían con defaults (puntos de 1 px sin velocidad). Migrados a propiedades propias de CPUParticles2D + textura radial + `color_ramp`/`scale_amount_curve`. El `Gradient` tenía la clave mal escrita `offset/s` (→ `offsets`).
+- **Nuevo `scripts/burst.gd`:** el burst se libera solo (`finished` + timer de respaldo). Antes cada golpe dejaba un nodo colgado en root. Los callers no cambiaron.
+- **Polvo del player (`player.tscn` nodo `Polvo`)** configurado (textura, dirección arriba, velocidad, color tierra). `player.gd::_emitir_polvo(escala, direccion := ZERO)` ahora usa la escala (tamaño) y el derrape del Lobo pasa la dirección por parámetro en vez de mutar el nodo para siempre. Escala ≥ 0.6 hace `restart()`.
+- **Capas:** `hud.tscn` layer 10, `levelup.tscn` 11, `console.tscn` 110 (antes en 1, debajo del velo de `Noche` en 5 → se oscurecían).
+- **`decorativo.tscn`:** se quitó un `Player` de prueba instanciado como hijo.
+- **Lección:** en Godot 4, `CPUParticles2D` y `GPUParticles2D` NO comparten configuración; un `.tscn` de CPUParticles2D con `process_material` carga sin error pero ignora todo. Verificar con un diag que lea `initial_velocity_max`/`texture` del nodo.
+- **Ajuste pedido (polvo en los pies + chispas en el impacto):**
+  - **Pies del player = y 142.5 local para TODAS las formas** (`_apply_form`: `collision_shape.position.y = 142.5 - collider_size.y*0.5`; los PNG están recortados justo y terminan ahí, ±5 px). El `Polvo` estaba en y=75 (rodillas) → ahora **y=136**, y `_emitir_polvo` ajusta `emission_rect_extents.x = ancho del collider × 0.25` (Oso/Lobo levantan polvo más ancho).
+  - **Chispa de golpe:** `_spark_golpe` usaba `body.global_position - 12`, y el origen del enemigo está en sus PIES → las chispas salían en los tobillos. Nuevo `player.gd::_punto_impacto(body)`: borde del collider del objetivo que mira al jugador (hundido `@export spark_hundir_px = 14`) a la altura `@export spark_altura = 0.42` del hitbox de ataque (0 = arriba; 0.42 ≈ altura del puño en `Pj atq`), acotado al cruce hitbox∩collider. Genérico: sirve para cualquier body con `CollisionShape2D` (usa `shape.get_rect()`); sin collider cae al origen. Medido: ~180 px sobre los pies del enemigo (antes 40-77 px).
+### Fase 1 — Noche con iluminación real (hecha)
+- **`scenes/noche.tscn` reescrito** (mismo uid, raíz ahora `Node` con `scripts/noche.gd` `@tool`): hijo `Oscuridad` = **CanvasModulate** en el canvas del mundo (reemplaza al ColorRect `Velo` que tapaba todo) + `CapaVineta` (CanvasLayer 5) con la `Vineta`. Exports `color_noche` (mundo, default `(0.58,0.62,0.78)`) y `color_fondo` (parallax). **El CanvasModulate no cruza CanvasLayers:** `noche.gd` agrega en runtime un CanvasModulate `NocheFondo` dentro de cada `ParallaxBackground` del nivel. Para editar el nivel sin oscuridad → ocultar `Oscuridad` en el editor. Usan Noche: `main`, `nivel1`, `nivel1oficial` (instancias sin overrides).
+- **`resources/luz_radial.tres`** (GradientTexture2D radial 256 px): textura común de las luces. **Un `PointLight2D` SIN textura no emite nada** → la `Luz` del santuario nunca funcionó (ahora tiene textura). **Mismo bug pendiente de consultar: `cristal.tscn` (`Luz`) y `barrera_bosque.tscn` (`LuzBarrera`) no tienen textura** (se usan en niveles sin noche; darles textura con su energy actual 1.6-2.2 podría quemar a blanco).
+- **Luces nuevas (nodo `Luz`, blend add, editables en la escena):** `checkpoint.tscn` (color = apagado/encendido; `@export luz_apagado 0.3`, `luz_encendido 1.4`, `luz_destello 3.0` → al activarse destella y queda encendida), `pickup.tscn` (azul, energy 0.9, scale 0.9), `salida_nivel.tscn` (color de la salida, energy 1.4, scale 2.6).
+- La viñeta también tenía la clave rota `offset/s` (→ `offsets`).
+- **Corrección tras feedback del usuario ("luces moradas, parecen colores invertidos" + "una línea atraviesa la pantalla al correr"):**
+  - **`PointLight2D.blend_mode`: 0 = ADD, 1 = SUB, 2 = MIX.** Se había puesto `blend_mode = 1` creyendo que era Add → la luz verde RESTABA verde (morado). Quitado (default Add) en checkpoint/pickup/salida/santuario. OJO: en `CanvasItemMaterial.blend_mode` el 1 SÍ es Add (enums distintos). `cristal`/`barrera_bosque` siguen con `blend_mode = 1` (sin textura, no emiten; pendiente de consulta).
+  - **Las PointLight2D solo iluminan ítems del canvas del mundo, no "el aire" ni el parallax** → un pickup sin nada al lado no mostraba brillo. Se agregó un **`Halo`** (Sprite2D con `luz_radial.tres`, `CanvasItemMaterial` blend Add + unshaded) en `pickup.tscn` (verde `(0.6,1,0.7,0.55)`) y `checkpoint.tscn` (opacidad por `@export halo_apagado 0.25` / `halo_encendido 0.6`, crece ×1.6 al activarse). Colores de bosque: pickup `Luz (0.6,1,0.7)`, checkpoint `@export color_luz (0.7,1,0.55)` (separado del color del cristal).
+  - **Línea horizontal al correr (PREEXISTENTE, no de esta sesión):** las 12 capas de `fondo_bosque.tscn` tenían `texture_repeat = 2` (Enabled) + filtro lineal → el borde superior de cada PNG muestreaba (wrap) la fila inferior; `Boske12` tiene la fila de abajo opaca y la de arriba transparente → línea a y≈857 del mundo que parpadea con la cámara en subpíxeles. **Fix: `texture_repeat = 1` (Disabled)** en las 12 capas; el parallax ya repite con `motion_mirroring`, el repeat de textura no hacía falta.
+  - **Pickups azules** (pedido del usuario, para diferenciarlos del checkpoint verde): `Halo (0.35,0.65,1,0.6)`, `Luz (0.4,0.68,1)`.
+  - **Luciérnagas de ambiente (pedido: "que ronden por las cuevas y el bosque, luminosas"):** nuevo `scripts/luciernagas_ambiente.gd` + `scenes/luciernagas_ambiente.tscn`, **instanciado dentro de `noche.tscn`** (→ nivel1/main/nivel1oficial lo tienen sin tocar el nivel). Enjambre que sigue a la cámara: cada luciérnaga (Node2D con halo + núcleo Sprite2D `luz_radial.tres`, material Add + unshaded) vaga con rumbo aleatorio (`giro`) y parpadea (pulso `pow(s,2)`); si sale de la vista + `margen` reaparece en un punto visible **fuera del terreno** (point query capa 1, 8 intentos) con fundido de `fundido` s. 40% van con z=-1 (detrás del jugador, más tenues). Las primeras `con_luz`=5 llevan PointLight2D real. Exports: `cantidad 34`, `color (0.82,1,0.35)`, `tamano_halo 0.36`, `tamano_nucleo 0.055`, `velocidad`, `parpadeo`, `brillo_min 0.15`, `franja_alta`, `luz_energia`… **Lección:** reaparecer "justo afuera del borde" las amontonaba en los bordes cuando la cámara salta (inicio/respawn); reaparecer dentro de la vista con fundido se ve natural.
+  - `luciernagas.tscn` (grupo colocable a mano) pasó al mismo color + material Add/unshaded.
+  - **Ojo en pruebas con captura:** si el player entra a una arena (Encounter) la cámara queda en `modo_arena` fija en la arena aunque se lo teletransporte después; capturar otras zonas antes de pasar por arenas.
+  - **Método de verificación visual que funcionó:** correr Godot con ventana (`--path . --resolution 1920x1080 --script captura.gd -- <dir>`), un `SceneTree` que carga el nivel, saca los `dialog_trigger`, pone `god_mode`, mueve al player y guarda `get_viewport().get_texture().get_image().save_png()` tras `RenderingServer.frame_post_draw`; luego leer los PNG y escanear filas con PIL buscando líneas. Antes del fix: líneas detectadas en golpes; después: 0/60 frames corriendo.
+- **Verificación:** import limpio, diag ad-hoc `diag_noche` 13/13 (CanvasModulate en canvas del mundo, fondo teñido, HUD encima, luces con textura, checkpoint tenue → encendido).
+### Fase 2 — Juice de feedback (hecha)
+- **Helper `Burst.emitir(ref, pos, color, cantidad, escala)`** (static en `scripts/burst.gd`, ahora `class_name Burst`; no hace nada en headless). Usar en código nuevo en vez de instanciar `burst.tscn` a mano.
+- **`AudioManager.play_sfx(stream, volume_db, variacion_tono := 0.0)`**: pitch aleatorio opcional. **Audio = huecos preparados:** cada evento nuevo tiene `@export var sonido_*: AudioStream` VACÍO + volumen; el juego no falla sin archivo. Lista: player `sonido_swing`/`sonido_muerte`, pickup `sonido_recoger`, checkpoint `sonido_activar`, rompible `sonido_golpe`/`sonido_romper`, frágil `sonido_crujir`/`sonido_romper`, encounter `sonido_despejada`, levelup `sonido_abrir`.
+- **Pickup (`pickup.gd` reescrito):** flote senoidal + latido de halo/luz en reposo; al recoger: burst azul + copia del rombo/halo que se infla y desvanece en un Node2D aparte (el pickup se libera en el acto → tests intactos). Exports de flote/pulso/color.
+- **HUD:** grupo `"hud"`, función pública **`mostrar_aviso(texto)`**; pop del `ProgLabel` al sumar fragmentos (`pop_fragmentos_escala/color`).
+- **LevelUp:** entrada animada (escala 0.8→1 con TRANS_BACK + fundido, corre en pausa), `entrada_duracion`.
+- **Checkpoint:** aviso "Punto de control" (`@export texto_aviso`) + pop del cristal.
+- **Estela del golpe:** implementado el stub `player.gd::_play_attack_fx` → medialuna Polygon2D (unshaded, color de la forma) que barre el alcance REAL del hitbox (`attack_hitbox.global_transform * shape.get_rect()` — el nodo AttackHitbox tiene escala 1.57×1.09, usar `shape.size` a secas da un arco chico escondido detrás de la cabeza). Pasos pares barren al revés. No se dibuja si el hitbox está apagado (disparo del Murciélago). Exports `swing_visible/alpha/duracion/grosor/alcance`.
+- **Muerte:** `_handle_death` → `_secuencia_muerte()` (slowmo `muerte_slowmo_escala`, punch+shake, burst del color de la forma, flash blanco→gris, velo negro CanvasLayer 94 hasta 0.6 con tween `set_ignore_time_scale`, timer de reloj real `muerte_duracion` 0.9 s) → `_mostrar_derrota()`. **En headless o con `muerte_duracion = 0` es instantáneo** (los tests chequean la derrota a los 2 frames). Corta el parpadeo de invulnerabilidad (si no, el jugador quedaba invisible congelado bajo el panel). `reaparecer_en_checkpoint` restaura `visual.modulate`.
+- **Rompible:** golpes 1-2 → sacudida creciente + astillas; al romper → shake de cámara + `Hitstop.freeze(hitstop_romper)`.
+- **Plataforma frágil:** polvillo al empezar a temblar, escombros al romperse (`color_escombros`).
+- **Proyectil:** chispazo del color del disparo al pegar en terreno (chico) o cuerpo.
+- **Arena:** aviso "Zona despejada" (`@export texto_despejada`) al completar.
+- **Verificación:** capturas en ventana de cada efecto + suite (autotest, golpe, feedback, formas, derrota, checkpoint, pickups, hud, encuentro, jefe, select).
+### Fase 2b — Audio del jugador + sonidos faltantes (hecha; pedido: "que se sienta que caminan en tiempo real")
+- **SFX propios sintetizados:** `tools/generar_sfx.py` (Python puro, sin numpy, semilla fija) → 56 `.wav` en `assets/audio/sfx/gen/` (pasos ×4 por forma, aleteos, saltos por forma, doble salto, aterrizajes, derrape, liana agarrar/trepar/deslizar-loop/soltar, swings, daño, bloqueo, proyectil, enemigo muerte, arquero, muerte jugador, transformación bloqueada, energía agotada/baja, pickup, checkpoint, rompible, frágil, pinchos, arena inicio/despejada, nivel subido, UI mover/confirmar/pausa, tecla de diálogo). Documentado en `assets/audio/sfx/FUENTES.txt`. `liana_deslizar_loop.wav.import` con `edit/loop_mode=2` (Forward). Todos asignados como **default del `@export`** (preload en el script) → reemplazables desde el Inspector.
+- **Pasos en tiempo real:** `player.gd::_on_frame_animacion` (conectado a `visual.frame_changed`) suena y levanta polvo en los frames de contacto: `pasos_frames_humano [1,3]` ("run"), `pasos_frames_lobo [1,2]` (galope "ta-dum"), `pasos_frames_oso [0,3]` (+ micro shake `oso_paso_shake`); Murciélago aletea en frame 0 de `murci_volar`/`murci_run`. Frames elegidos mirando los PNG (pie delantero apoyado). Se quitó el timer de polvo `PASOS_INTERVALO`. **Lección:** los micro-despegues del terreno (TileMap con irregularidades, hasta ~250 ms con `is_on_floor()=false`) comían pisadas del Oso → se usa `_t_sin_suelo < 0.25 and velocity.y > -60` como "apoyado". Medido (diag headless con reloj real): Humano 1 paso/400 ms, Lobo par cada 330 ms, Oso 1/375 ms, regulares.
+- **Otros hooks:** `forma.gd::try_jump` → `player._sonido_salto(n)` (Murciélago = aleteo; n≥2 = doble salto); aterrizaje por `_fall_impact` (umbral `aterrizaje_umbral 180`, volumen según altura; Oso siempre "fuerte"); derrape del Lobo con cooldown; liana: agarrar, crujidos al trepar (`liana_trepar_intervalo`), loop al deslizar hacia abajo (AudioStreamPlayer propio `_liana_loop`, volumen/pitch por velocidad, se corta en `_salir_enredadera`), soltar al saltar; daño y bloqueo en `take_damage`; `_denegar_transformacion()` (bloqueada/cooldown/sin espacio, rate-limit 0.3 s); energía agotada; disparo. Enemigo: `sonido_muerte`/`sonido_disparo` (arquero). Proyectil: `sonido_impacto`. Pinchos, HUD energía baja, arena inicio (`sonido_inicio`), menús (pausa/menú/derrota/levelup: `_ui("ui_mover"/"ui_confirmar")`, pausa `ui_pausa`), blip de tipeo del diálogo cada 2 caracteres.
+- **`AudioManager`:** `process_mode = ALWAYS` (si no, los sonidos de menú no suenan con el árbol en pausa) + `play_ui(nombre, volumen)` que carga `gen/<nombre>.wav`.
+- **Pendiente (⏳):** música (nivel/combate) y sonidos de cristal/tronco/barrera/santuario/desbloqueo/salida (lista completa en el plan de la sesión).
+- **Verificación:** 56 wav cargan, diag de pasos 0 fallos, suite completa en verde (autotest + 12 diags).
+### Fase 3 — Atmósfera de nivel1 (hecha; el usuario pidió pasar sin esperar)
+- **Backup previo:** `%TEMP%\spiritkeeper_backup\nivel1_antes_fase3.tscn`. `git diff` de `nivel1.tscn` = SOLO líneas agregadas (+ el uid de `plataforma_fragil` que guardó el editor del usuario). Nodos nuevos insertados antes de la sección `[editable]` del final.
+- **Colocación automática por relevamiento del suelo:** script headless que tira rayos cada 50 px en 3 franjas (superficie y<1300, piso alto, caverna) guardando altura, normal y espacio libre hacia arriba, más posiciones de pinchos/lianas/checkpoints/frágiles/glifos/salida → Python arma tramos planos continuos y coloca evitando obstáculos. Resultado: contenedor **`Decoracion`** (z −5) con 149 `decorativo.tscn` (10 árboles + 2 sauces solo donde hay ≥1000 px libres, 17 arbustos, 60 pastos, 60 piedras; en cuevas solo piedra/pasto/arbusto), contenedor **`Atmosfera`** (z −4, DETRÁS de los pinchos para no tapar el peligro) con 12 `niebla.tscn` sobre los tramos de pinchos (amount y `emission_rect_extents` según el ancho) y 5 `luciernagas.tscn` junto a los checkpoints.
+- **`scenes/fondo_subsuelo.tscn`** (nuevo, instanciado como `FondoSubsuelo`): `capa_cueva.gd` con capas Sombra/Pared/Estalactitas/Estalagmitas (SIN Pilares: sus bordes iluminados de 2000-4000 px se veían como postes/cables en los túneles; SIN Agua), `y_techo 1100`, `y_fondo 6500`, `ancho_total`/`centro_x` por capa = recorrido de cámara bajo tierra (x 11000–32600) × `motion_scale.x` (+ margen), paleta verdosa ×1.9 más clara que la primera prueba (casi negra).
+- **`noche.gd` `@export color_vacio`** (0.035,0.045,0.06): fija el clear color mientras el nivel está activo y restaura el anterior en `_exit_tree` → se acabó el verde oliva (`default_clear_color` del proyecto) en huecos sin fondo.
+- **`decorativo.gd` color de PIEDRA** → gris piedra `(0.34,0.33,0.30)` (el gris azulado + la noche la hacía ver como un charco azul).
+- **Para ajustar a mano en el editor:** mover/borrar instancias dentro de `Decoracion`/`Atmosfera`; los colores del subsuelo en `fondo_subsuelo.tscn`.
+### Fase 4 — UX de flujo (hecha, salvo textos pendientes de aprobación)
+- **`TransicionPantalla`** (`scripts/transicion.gd` + `scenes/transicion.tscn`, CanvasLayer 120): **NO es autoload** (no se tocó `project.godot` con el editor del usuario abierto) sino singleton perezoso: `TransicionPantalla.de(get_tree())` lo crea colgado de `root` (sobrevive a cambios de escena). API: `cambiar_escena(ruta)`, `recargar()`, `fundido(accion: Callable)` (negro → acción → vuelve; tweens con `set_ignore_time_scale`, corre en pausa, bloquea clics). **Headless = instantáneo** (tests intactos). Usado por: salida de nivel (+ `sonido_salida`), derrota (menú / reintentar: el reaparecer + `_restaurar_post_muerte` + quitar el panel ocurren con la pantalla en negro; sin checkpoint → `recargar()`), pausa (reiniciar/menú), menú principal (jugar), victoria y victoria_jefe.
+- **`camera.gd::modo_normal(instantaneo := false)`**: con `true` salta directo al jugador (resetea lookahead/offset/suelo + `reset_smoothing`). `derrota._restaurar_post_muerte` lo usa → al reaparecer la cámara ya no "viaja" visible tras el fundido.
+- **Desbloqueo visible (`unlock_forma.gd/.tscn`):** nodo `Orbe` (escala 1.5: Halo aditivo, Aro/Sello/Núcleo Polygon2D estrella unshaded, PointLight2D) que flota; exports `orbe_offset (0,40)`, `color_sello`, `flote_amplitud`, slowmo, `sonido_desbloqueo`. Al tocar: sonido + slowmo + punch + Burst + el sello se infla/disuelve + destello de pantalla del color (CanvasLayer 99). Si la forma ya estaba en `Progresion._extra_formas` (reintento), el sello no aparece.
+- **Glifos vivos (`glifo_ayuda.gd`):** en juego, con el jugador a < `radio_reaccion` (420) crecen (`pulso_escala`), laten y brillan (`brillo_cerca`); lejos vuelven a la normalidad. El `@tool` del editor sigue igual.
+- **Tokens de controles en diálogos/tips (`dialogo.gd`):** `{accion}` del InputMap → tecla o botón según el último dispositivo usado (`_input` detecta joypad/teclado). Alias `{mover}` (A / D ↔ joystick izquierdo), `{trepar}` (W / S ↔ joystick izquierdo), `{camara}` (cam_* ↔ joystick derecho). Nombres de botón estilo Xbox (A/B/X/Y/LB/RB/LT/RT). Tokens desconocidos quedan intactos. Público: `Dialogo.nombre_accion(accion)`.
+- **Aprobado y hecho:** las 6 líneas de `data/dialogos.json` que nombraban botones (`n1_intro[5,6]`, `n1_lobo[1]`, `n1_zona3[0]`, `n1-joystick[0]`, `p1_enredadera[0]`) usan tokens; se corrigió el "con con". La ayuda de la caja de diálogo (`dialog_box.tscn` Hint) ahora es `"▼ {dialog_next} para continuar · {dialog_skip} para saltar"` y se traduce en `_terminar_tipeo` (antes decía "X … X" también en teclado).
+- **MOJIBAKE en `dialogos.json` (reportado por el usuario: "caracteres raros"):** 11 líneas estaban doble-codificadas (bytes UTF-8 de "saltÃ¡" en vez de "saltá") mezcladas con líneas correctas → se veían rotas en el juego. Arregladas línea por línea con `l.encode("cp1252").decode("utf-8")` solo donde hay patrón `[ÂÃ][\x80-\xbf]`. Escaneo del proyecto: no quedan textos visibles con mojibake (en `player.gd` solo comentarios, no tocados). **Lección:** la consola de Windows muestra "�" aunque el archivo esté bien → verificar bytes con `ascii()`; y los heredocs de bash en Windows rompen los acentos → escribir los scripts Python con acentos a un archivo con Write.
+- **Controles (decisión del usuario: "Flechas → cámara"):** en `project.godot` las flechas pasaron de `move_*` a `cam_izq/der/arr/abj` (WASD sigue moviendo) y `forma_prev` = **R**. Los menús (pausa, principal, derrota, levelup, victoria, victoria_jefe) aceptan también `ui_up/ui_down` para que las flechas los sigan navegando. Backups: `%TEMP%\spiritkeeper_backup\project_antes_camara.godot`, `dialogos_antes_tokens.json`.
+- **Godot en esta máquina:** `C:\Users\UNRaf_Libre\Downloads\Godot_v4.7.1-stable_win64.exe\Godot_v4.7.1-stable_win64_console.exe` (la ruta `.exe` es una carpeta).
+- **Verificación:** import limpio (solo `legacy_docks`), smoke limpio, `nivel1` headless 60 frames limpio, autotest **FALLOS = 0**, `diag_hud`/`diag_feedback`/`diag_golpe` 0, diag ad-hoc de burst (propiedades + autoliberación) 9/9 OK. Hash de todas las escenas igual antes/después de las corridas (no se reescribió `nivel1.tscn`).
+
+---
+
+## 🟢 Sesión 24/09 (f) — Atmósfera nocturna: decorado tras el jugador (z=-5), luciérnagas, niebla, luz de santuario y viñeta
+
+> Plan estético presentado y aprobado ("mandale"). Decisiones del usuario: **decorado SOLO detrás del jugador** (`z=-5`, sin capa delante en `z=+5`), **luciérnagas con CPUParticles2D**, **viento senoidal sí, leve y opcional por nodo**. Descartados: primer plano delante del jugador y rayo de luna.
+
+### Qué se hizo
+- **Nuevo `scripts/decorativo.gd` (`@tool`) + `scenes/decorativo.tscn`:** pieza de fondo forestal reutilizable (árbol/sauce/arbusto/pasto/piedra) anclada al SUELO (el pivote va arriba → la copa asoma desde el suelo y el viento mece desde la base). Exports: `tipo` (enum ARBOL/SAUCE/ARBUSTO/PASTO/PIEDRA), `variante` (1..max según el tipo: 3/3/9/10/5), `escala`, `flip_h`, `color_noche` (tinte azulado), `sombra`+`sombra_alpha` (elipse Polygon2D), `viento`+`viento_amplitud`+`viento_velocidad`. Construye hijos "Hoja" (Sprite2D pivoteado arriba) + "Sombra" programáticamente en `_rehacer()` (idempotente, patrón glifo: setter→`queue_redraw`, `_ready`+`_process` reconstruyen cuando cambia la clave visual). **WYSIWYG:** estirar con la herramienta de escala sincroniza `escala` (scale vuelve a 1). `spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST`. Igual que `pinchos.gd`: sin colisión, se coloca en el editor.
+- **Nuevo `scenes/luciernagas.tscn`: CPUParticles2D** (amount 26, emission_sphere_radius 110, gravedad 0, escala 2-6, color dorado) con textura `GradientTexture2D` radial (punto difuso blanco→transparente) + `preprocess` → parpadean suaves, flotan sin gravedad.
+- **Nuevo `scenes/niebla.tscn`: CPUParticles2D** (amount 10, quads 24-46, azul-gris alpha 0.16, desplazamiento lateral lento, `preprocess`) con textura radial → banco de niebla pegado al piso.
+- **`scenes/santuario.tscn`:** nuevo nodo `Luz` (PointLight2D verde-dorado, energy 2.0, blend add) → el santuario ahora emite cálido en la noche.
+- **`scenes/noche.tscn`:** nuevo `Vineta` (TextureRect full-rect con `GradientTexture2D` radial oscuro) arriba del `Velo` → esquinas se cierran, centro claro.
+- **`scenes/nivel1.tscn`:** nodo contenedor `Decoracion` (`z_index = -5`, detrás de TODO el gameplay en z=0) con ~55 instancias: 22 árboles + 2 sauces (escala 1.9-2.6) en los pisos grandes (corredor y≈985-990, piso alto y≈2370-2398, zona salida y≈4985, arena profunda y≈5698), 14 arbustos + 9 pastos + 5 piedras (escala 1.3-2.2) en el suelo, 5 luciérnagas en vanos abiertos y 2 nieblas en tramos de pinchos. Ext_resources `31_deco`/`32_luc`/`33_nbl`.
+
+### Lecciones
+- **En Godot 4 el enum de filtro de textura NO se accede como `TextureFilter.NEAREST`:** las constantes son `CanvasItem.TEXTURE_FILTER_NEAREST` (mayúsculas). Parse error en `decorativo.gd:108`, corregido.
+- Patrón de "anclaje al suelo": sprite `centered=true` dentro de un Node2D "Hoja" en `y=-alto*0.5*escala` → el pie del sprite queda en el origen del nodo (y=0); así se puede apoyar en la línea de piso y el viento rotar alrededor de la raíz (=rotar "Hoja", no "self").
+
+### Verificación
+- Import limpio (solo el error preexistente del plugin `legacy_docks`), smoke limpio, autotest **FALLOS = 0**, y corrida directa de `res://scenes/nivel1.tscn` headless sin errores (instancia todo el decorado en runtime). Pendiente: **abrir nivel1 en el editor y revisar en 3 puntos** (entrada, corredor de pinchos/niebla, salida) — luciérnagas color/brillo, árboles vs. enredaderas, niebla cantidad; mover/ajustar instancias desde el editor si hace falta.
+
+### Decoración VECTORIAL y luciérnagas — resultado final
+- **Decoración = Polygon2D por código (decisión del usuario: "debe ser vectorial, no pixel art").** `decorativo.gd` ya NO carga PNG: árbol/sauce/arbusto/pasto/piedra se generan con polígonos planos (`_generar_silueta`), colores oscuros por tipo en `COLORES`, `variante` = geometría/paleta (no n° de sprite), escala/flip por `Hoja.scale`, `color_noche` por `Hoja.modulate`. Mismos exports y WYSIWYG (estirar raíz → escala). Sombra elíptica propia.
+- **Escalas finales en `nivel1.tscn`: árboles/sauces 5.4-6.8 (~800-1000px), arbustos 5.0-6.0, piedras 4.0-4.8, pastos 3.0-3.6.** Default del script: **5.0**.
+- **Luciérnagas (`luciernagas.tscn`):** píxel brillante que **flota sin caer**: `gravity=0`, `initial_velocity 0`, `orbital_velocity 0.5-2.0`, radio 40, `damping 1.5`, amount 40, lifetime 8, scale 1.5-3.5, amarillo.
+- **LEGACY del bug (2ª vuelta):** el `decorativo.gd` viejo NUNCA aplicaba `escala` al Sprite2D (solo al pivote). Lección: la escala exportada se aplica al nodo hijo que dibuja (`spr.scale`/`Hoja.scale`), no solo a cálculos de posición. Ya obsoleto con Polygon2D (scale va en `Hoja`).
+- **Verificación:** import limpio (solo `legacy_docks`), `nivel1` headless sin errores, autotest FALLOS=0.
+- **LECCIÓN (usuario insistió 3 veces + "no querés un fondo nuevo"): el fondo `fondo_bosque.tscn` NO se rediseña** — el usuario quiere el MISMO fondo, sin píxeles. Se probó reescribirlo como siluetas vectoriales (`scripts/capa_fondo.gd`, estrellas/luna/coníferas) y fue rechazado por inventar composición nueva. **RESULTADO FINAL:** `fondo_bosque.tscn` restaurado desde git (HEAD) → las 12 capas Boske*.png originales, con **`texture_filter=2` (LINEAL)** en cada Sprite2D para que no se vean los bloques del `default_texture_filter=0` (NEAREST) global. `scripts/capa_fondo.gd` quedó **borrado** (huérfano). Los 5 niveles heredan el cambio automáticamente (instancia directa).
+- **Lección aparte:** el modelo no puede leer imágenes (PNG), así que no puede "copiar" arte a mano; para cambios de look hay que partir de descripciones del usuario o de aceptar los PNG con filtro suave.
+- **Fondo vectorial (cambio grande, pedido explícito):** `scenes/fondo_bosque.tscn` reescrito (mismo `uid://ssvmlcpooygw`, mismo layout: ParallaxBackground layer -10, 12 ParallaxLayer con sus motion_scale/motion_mirroring originales) usando **`scripts/capa_fondo.gd`** (`@tool extends ParallaxLayer`): cada capa dibuja su silueta con `_draw()`/`draw_colored_polygon`/`draw_rect`/`draw_circle` en coords locales, repetida por `motion_mirroring`. Tipos por `@export_enum`: cielo (degradado + 80 estrellas), nube_luna, niebla, colina (seno periódico), coniferas, bosque/bosque_alto/arboles (fila redonda), biomasa (arbustos+piedras), troncos (desnudos con ramas), hierba. Editable por capa en Inspector: `tipo`, `color_a/b`, `y_base`, `densidad`, `semilla` (determinista). Los 5 niveles (main, nivel1-3, nivel_jefe) que instancian `fondo_bosque.tscn` heredan el nuevo fondo automáticamente (instancia directa, sin sobrescrituras).
+- **Linear SÍ quedó** en `luciernagas.tscn`, `niebla.tscn`, `noche.tscn` (viñeta) y `rompible.tscn` para que los gradientes/PNG suavizados se vean limpios.
+- **Fondo parallax de CUEVAS para el NIVEL 2 (pedido explícito, aprobado): `scenes/fondo_cueva.tscn` + `scripts/capa_cueva.gd`** (mismo patrón `@tool extends ParallaxLayer` que la decoración, `_draw()` con polígonos planos, colors azul-gris frío). 6 capas (layer -10): Sombra (0.08), Pared lejana con fallas + cristales rombo (0.22), Estalactitas colgando del techo (0.38), Pilares/formaciones (0.6), Estalagmitas (0.8), Agua con glints (1.0). Cada capa editable por Inspector (`tipo`, `color_a/b`, `y_base`, `densidad`, `semilla`). **Ya instalado** en `nivel2.tscn` (ext_resource `33_cueva` + nodo `FondoCueva` único, `git diff` = solo esas 3 líneas, el import headless no reescribió nada). 
+- **LECCIÓN técnica:** `draw_colored_polygon` falla con "Invalid polygon data, triangulation failed" si el contorno se auto-interseca (una "banda" dibujada como zigzag izquierda/derecha). Para cintas verticales usar dos listas (izquierda y derecha) y cerrar el contorno en orden (izq asc → der desc), no intercalado.
+- **Nivel 2 = descenso VERTICAL** (cámara `y=-1500` a `y=7600`, salida/santuario en ~y=6900): el fondo cueva se reescribió para cubrir **todo el descenso** en vez de un nivel horizontal. Nuevos exports por capa: `y_techo` (default `-1500`, techo de la caverna) y `y_fondo` (default `7600`, fondo), ambos editables en el Inspector. `_dibujar_franja`/`_dibujar_falla`/bóvedas usan `y_techo`/`y_fondo` en lugar de y fijas (la grieta arranca en `y_techo-80`). Estalactitas cuelgan del techo (`base_y = y_techo+520`) y son más largas (140-320 normales, 360-560 centrales). Pilares ahora son COLUMNAS ALTAS que se elevan desde el fondo (`h` 2000-3400) enmarcando al jugador. Estalagmitas (`y_base=7100`) y lago (`agua` `y_base=6900`, cubre hasta `y_fondo+900`) viven en el piso inferior, con más reflejos largos. Capa `sombra` suma un HAZ DE LUZ vertical tenue en `centro_x` (apertura de la entrada). En `fondo_cueva.tscn`: todas las capas declaran `y_techo=-1500`/`y_fondo=7600`; `pilares.y_base=7000`, `estalagmitas.y_base=7100`, `agua.y_base=6900`. Lección: para niveles VERTICALES el fondo debe parametrizarse con techo/fondo, no con alturas de nivel horizontal.
+- **Sesión 25/09 (disparo teledirigido + barreras + tilemap):** homing del Murciélago aún más agresivo (defaults `projectile.gd`: `homing_strength 24.0`, `homing_range 3000.0`, `HOMING_TICK 0.04`; `player.gd::fire_projectile` setea `homing_strength 30.0`). **Barreras/orbes: el usuario confirmó que el sistema por-barrera ya está bien** (cada `barrera_bosque` con sus 3 cristales hijos, se abre al romper 3, persistido en `Progresion.barreras_abiertas`) — NO se cambió. **Tilemap nivel2:** `self_modulate = Color(0.42, 0.5, 0.72)` + `texture_filter = 2` en la instancia (solo nivel2). Lección previa de esta iteración: pilares dibujados con jitter aleatorio en el borde generaban `Invalid polygon data, triangulation failed` → se dibujan como **trapezoide + triángulo de corona separados** (convexos); diag: `tests/diag_cueva.gd -- <tipo>`. **DENSIDAD por ÁREA (no por ancho):** al hacer el fondo vertical, los detalles quedaban planos porque se contaban por `ancho_total` y se repartían en 3× más alto. Ahora se usa rejilla de **columnas × filas** con `_punto_rejilla(x,y)` para grietas (sombra/pared), cristales (pared: `ancho/800` × `alto/900`), salientes de techo intermedios (`_dibujar_estalactita_alt` con `base_y` configurable + recto de mini-techo), pisos rocosos intermedios (`_dibujar_estalagmita_at` con `piso_y`), y gotas esparcidas en todo el alto. Las viejas `_dibujar_estalactita`/`_dibujar_estalagmita` (y fijas) se refactorizaron a `_alt`/`_at` con parámetro de altura. Lección: en niveles verticales, la densidad debe escalar con el ÁREA visible, no con el ancho.
+- **Sesión 25/09 (rediseño fondo caverna vertical, 2da pasada):** el usuario pidió que el fondo "esté mejor hecho" (estalactitas con sentido, columnas de piedra). **Bug clave:** `_dibujar_falla()` usaba `y_techo - 80` internamente, ignorando la posición Y de la rejilla → las grietas colgaban todas del techo en niveles verticales. Se reemplazó por **`_dibujar_falla_at(x, org_y, largo, alfa)`** con origen explícito. Regla de coherencia: **todo elemento debe anclarse a una superficie real** (techo, piso o pared) — se eliminaron los mini-techos, pisos flotantes y gotas intermedias. Nuevo diseño del abismo vertical: techo con masa oscura y borde de luz + familias de estalactitas (la central más larga) + **hebras finas muy largas (h 900-1500)** que llenan el alto; **columnas de piedra completas** (`_dibujar_pilar`: base ensanchada + fuste cónico + capitel de 2 escalones + losa de cornisa + luz de borde izq + sombra der + 1-2 grietas, todo convexo), suben desde `y_base` con h 2200-4400 a `ancho/1100`; pared con **estratos ondulados** (`_estrato`) + grietas en rejilla + cristales; estalagmitas solo en la orilla del lago (`y_base`); agua/lago igual. Verificado: import limpio, `diag_cueva` 6/6 OK, smoke nivel2 limpio, autotest `FALLOS = 0`.
+- **Sesión 25/09 (fondo caverna vertical: estilo CUEVA PROFUNDA ATMOSFÉRICA, 4ta pasada):** el usuario pidió "más limpio y coherente, que realmente parezca una cueva profunda" → eligió la opción **"Cueva profunda atmosférica"**. Filosofía nueva: **"menos pero más grande"** — se eliminó TODO el ruido denso (guijarros/cristales/piedras en rejilla tupida quedaron fuera; ya no hay rejillas 380×340). Nuevo diseño: (1) **degradado con curva cuadrática** (`t*t` en `_dibujar_franja`): oscuridad crece rápido hacia abajo (la luz entra por arriba); (2) **luz cenital** en sombra (4 halos amplios que se desvanecen hacia abajo); (3) **niebla atmosférica NUEVA** (`color_niebla` + `niebla` exports; `_dibujar_capa_niebla` = bandas onduladas más densas hacia abajo; `_dibujar_banda_niebla` poligonal convexa suave) — capas lejanas con más niebla (sombra `niebla=1.0`, pared `0.7`), cercanas menos (estalactitas `0.15`, pilares `0.3`, estalagmitas `0.15`, agua `0.0`); (4) elementos **pocos y leíbles**: estalactitas una familia cada ~1500 px (central 620-950) + hebras cada 2600 (h 1400-2200) + plano trasero tenue cada 2400; columnas masivas cada ~1800 px (h 3200-4800); estalagmitas familias cada 1600 px (central 500-760); grietas pocas (`ancho/2200`) arrancando de un estrato — con sentido geológico. Bóvedas lejanas grandes (`ancho/3600`) muy tenues. Barrido de viejo: `_dibujar_cristal` ya NO se usa (queda como helper), `_dibujar_roca` sigue para bases/orillas. Verificado: import limpio, `diag_cueva` 6/6 OK, smoke nivel2 limpio, autotest `FALLOS = 0`. Ajustes desde Inspector: `niebla` (0-1) y `color_niebla` por capa, `densidad`, y divisores de familias.
+- Verificación cueva: import limpio (solo `legacy_docks`), `nivel2` headless sin errores, autotest FALLOS=0. Pendiente: revisión visual en editor del `nivel2.tscn` (capa_`sombra/pared` colores, altura de estalactitas/pilares, posición del agua).
+- **NO tocado (puede que el usuario lo quiera después):** `tile_map.tscn` (suelo con Tileset.png, gameplay, pixel a propósito), personajes/enemigos (pixel), `nivel1oficial.tscn` (nivel viejo no usado; su fondo ya hereda el vectorial). `cristal/barrera_bosque/muro_lobo/tronco` ya eran Polygon2D.
+
+---
+
+## 🟢 Sesión 24/09 (e) — Glifos en el mundo + tips acortados (sigo el enfoque no-invasivo)
+
+> Continuando la sesión (d): el usuario eligió **Iconos en el mundo + Acortar y dividir tips** (descartó "tips por fallo" y "HUD contextual").
+
+### Qué se hizo
+- **Nuevo nodo `scenes/glifo_ayuda.tscn` + `scripts/glifo_ayuda.gd` (`@tool`):** cartel diegético SIN texto que se coloca en el nivel (mover/escalar en el editor, como pinchos). Pictogramas vectoriales planos: `enum Tipo { TRANSFORMAR, DOBLE_SALTO, AGARRAR, FRAGIL, ESQUIVAR, GOLPE }` + exports `color_marco/color_icono/color_fondo/ancho`. Dibuja con `_draw()` (patrón @tool con `_process` → `queue_redraw` para WYSIWYG, igual que `pinchos.gd`).
+- **Glifos colocados en `scenes/nivel1.tscn`:** `GlifoGolpe` (junto a DialogoCombate ~6272,793), `GlifoDobleSalto` (junto a DialogoLobo ~26035,2410), `GlifoAgarrar` (junto a DialogoZona3 ~2385,500).
+- **Tips acortados en `data/dialogos.json`:** todos los de mecánica bajaron a 1-2 frases cortas (n1_lobo, n1_zona2, n1_zona3, n1_arquero, n1_lobo_uso, n1_fragil, p1_combate, p1_plataformas).
+- **Completados los tips que estaban `"lineas": []`** (por eso solo mostraban "Amuleto"): p1_enredadera, p1_lobo, n3_oso, n4_murcielago, n4_abismo, n5_pruebas, p1_combate2, p1_combate3 ahora tienen 1-2 frases.
+
+### Verificación
+- Import y smoke limpios (solo el error preexistente del plugin `legacy_docks`), autotest **FALLOS = 0**, `diag_dialogos` **FALLOS = 0** (n1_lobo sigue con texto → tips no vacíos).
+
+---
+
+## 🟢 Sesión 24/09 (d) — Diálogos no-invasivos: sistema híbrido Tips + Narrativa
+
+> Reporte del usuario: "los diálogos son molestos e invasivos, me gustaría buscar una forma de explicar algunas cosas sin molestar al jugador". Consultada la intención → eligió **Híbrido: Tips + Narrativa** (los tutoriales de mecánica pasan a tips no-bloqueantes; la historia queda como caja narrativa).
+
+### Qué se hizo
+- **Nuevo modo Tip en `scripts/dialogo.gd`:** `mostrar_tip(lineas, hablante)` muestra un panel chico arriba-centro (estilo toast, `Tip` en `dialog_box.tscn`: StyleBox `panel_tip`, Nombre + Texto) que se desvanece solo. **NO bloquea** el input (no toca `_abierto`/`_unhandled_input`; el jugador sigue jugando). Timings `@const SEG_MINIMO_TIP 2.0` / `SEG_POR_CARACTER_TIP 0.09`. Si una narrativa está abierta, el tip se descarta (no se solapan). Tips encolados se muestran secuenciales con fade.
+- **`dialog_trigger.gd`:** nuevo `@export_enum("Narrativa", "Tip") var tipo`; el JSON puede mandar `"tipo": "tip"`/`"narrativa"` (se normaliza con `.capitalize()`). En `_disparar`: si `tipo == "Tip"` → `mostrar_tip(...)`, si no → `mostrar(...)` (caja clásica).
+- **`data/dialogos.json`:** marcados como `"tipo": "tip"` los 15 tutoriales de mecánica: n1_lobo, n1_zona2, n1_zona3, n1-joystick, n1_arquero, n1_lobo_uso, n1_fragil, p1_enredadera, p1_combate, p1_plataformas, p1_lobo, n3_oso, n4_murcielago, n4_abismo, n5_pruebas. El resto (intros de historia, santuarios, jefe, cierres de nivel) queda sin campo → `Narrativa`.
+- **`tests/diag_dialogos.gd`:** +2 checks (n1_lobo es `Tip`, n1_intro es `Narrativa`).
+
+### Verificación
+- Import limpio (solo el error preexistente del plugin `legacy_docks`), smoke limpio, autotest **FALLOS = 0**, `diag_dialogos` **FALLOS = 0**. MEMORY actualizado.
+
+---
+
+## 🟢 Sesión 24/09 (c) — Diálogos de una sola vez + plataformas frágiles persistentes
+
+> Reporte del usuario: "los diálogos no vuelven a repetirse luego de haberlos pasado, y si volves a un checkpoint, las plataformas frágiles se restauran". Consultada la intención: (1) diálogos → **que no se repitan**; (2) plataformas → **al reaparecer en checkpoint, se restauran** (es decir, eso se ve como bug: deben quedar rotas).
+
+### Diálogos (data/dialogos.json)
+- **Causa:** casi todos los diálogos tenían `una_vez: false` en el JSON → al re-entrar a la zona (y sobre todo tras morir sin checkpoint, que hace `reload_current_scene`), se volvían a mostrar. Ese spam es lo que el usuario quería cortar.
+- **Fix:** `data/dialogos.json` → **todos los diálogos a `una_vez: true`** (0 quedan en false). El mecanismo de persistencia ya existía: `dialog_trigger.gd::_disparar` consulta `Progresion.dialogo_visto()` (autoload, persiste entre muertes) y marca con `marcar_dialogo_visto`. Con `una_vez=true` se muestra una sola vez por partida y no reaparece al morir/reiniciar. `tests/diag_dialogos.gd` actualizado (`una_vez true (no repetir)`).
+- Nota de diseño: `una_vez=false` sigue existiendo en el sistema (para triggers sin id o si el usuario quiere re-activar repetición desde un JSON/edit; el flag del JSON manda sobre la regla).
+
+### Plataformas frágiles (scripts/plataforma_fragil.gd + scripts/progresion.gd)
+- **Causa:** al morir sin checkpoint (o reiniciar desde pausa/menú) se hace `get_tree().reload_current_scene()` y las plataformas frágiles se instancian de nuevo enteras. Con checkpoint activo el respawn NO recarga (solo `reaparecer_en_checkpoint()`), por eso el usuario veía las restauraciones en ese flujo.
+- **Fix:** persistencia de rotura en el autoload:
+  - `progresion.gd`: nuevo `var plataformas_rotas: Dictionary = {}` + `plataforma_rota(clave)` / `marcar_plataforma_rota(clave)`; se limpia en `reset()` (nueva partida del menú).
+  - `plataforma_fragil.gd`: nuevo `@export clave_persistencia := ""` (vacía → se auto-genera con `escena.scene_file_path|ruta del nodo`, estable entre recargas; editable desde el Inspector para forzar IDs). `_romper(con_anim=false)` registra la clave en `Progresion` y, si `sin_animacion`, la deja invisible/ROTA al instante. `_ready` consulta `Progresion.plataforma_rota()` → si ya estaba rota, arranca rota (invisible, collider deshabilitado).
+- **`tests/diag_fragil.gd` (nuevo):** rompe una plataforma, verifica registro, recarga el nivel con `change_scene_to_file` real (misma raíz → misma clave) y verifica que arranque ROTA. **FALLOS = 0.** Lección del test: en headless hay que cargar `Progresion` a mano (no hay autoload con `--script`) y usar `change_scene_to_file` (no add_child manual, que renombra la raíz y varía el path → la clave no coincide con una recarga real).
+
+### Verificación
+- Import limpio (solo el error preexistente del plugin `legacy_docks`), smoke limpio, autotest **FALLOS = 0**, `diag_dialogos` FALLOS=0, `diag_fragil` FALLOS=0. MEMORY actualizado.
+
+---
+
+## 🟢 Sesión 24/09 — Step-up por tiles arreglado (causa raíz) + conexión de golpes (ventana de impacto)
+
+> Dos bloques: (1) el escalón automático por tiles "no subía" los TileMaps del nivel real; (2) usuario pidió "mejorar la conexión de golpes y la forma en que los enemigos reaccionan" → eligió **solo conexión de golpes**.
+
+### Step-up (bug de los tilemaps)
+- **Causa raíz encontrada (NO era el collider 190×318):** `_try_step_up()` usaba `test_move(Transform2D(0, Vector2.ZERO), ...)` → test_move interpreta ese transform como **ABS**OLUTO, o sea consultaba colisiones en el origen del mundo (x=0,y=0), no en la posición del player. En el nivel real (lejos del origen) el escalón NUNCA se detectaba. Verificado con física headless (`tests/diag_stepup5.gd`): player en x=9000 → identidad=true, `Transform2D(0, player.global_position)`=false.
+- **Fix:** `_try_step_up()` (player.gd L1514-1550) usa `global_transform.translated(...)` para `sobre`/`hueco`/`vertical` y `test_move(global_transform, facing*...)`. **Lo mismo está roto en `_try_platform_snap` (L1558-1579), trepado (L1658-1731) y `muro_lobo.gd`** — pendiente de arreglar (avisa al usuario).
+- **Fluidez:** se anticipa el escalón dentro del avance del frame (`max(vel.x,130)*delta+2`) en vez de esperar contacto a 1px, y `_step_up_cd` 0.12→0.03. Diag nuevo `tests/diag_stepup.gd`: 1/2/4px + escalera de 3 peldaños → STEPUP-FALLOS=0. `step_up_max` por forma: humano 48, lobo 48, oso 32, **murciélago 0 (no sube)**.
+- **Dato útil del collider runtime:** la posición real del `Collision` del player es `(-2,-16.5)` (las formas la reconfiguran en `_init`, no `-4.5` del tscn). Borde inferior = `y + position.y + 159` (= `y + 142.5`).
+
+### Conexión de golpes (decisión del usuario: "solo conexión")
+- **Nuevo `@export melee_hit_delay` en `forma.gd`** (editable en Inspector): segundos desde iniciar el ataque hasta que el daño puede conectarse (ventana de impacto alineada al pleno swing). Valores por forma en cada `_init()`: Humano 0.06, Lobo 0.04, Oso 0.11, Murciélago 0.06. Default 0.05.
+- **`player.gd`:** `_hit_delay` se setea en `enable_melee` (usa `data.melee_hit_delay`) y se consume al inicio de `_check_attack_hits` antes de leer bodies → el golpe ya no conecta en el frame exacto de presionar la tecla.
+- **`autotest.gd`:** el test del Remate (J→K, 38 dmg) asumía conexión al frame exacto → ahora espera hasta 24 frames hasta que conecta antes de medir.
+
+### Verificación
+- Import limpio, smoke limpio, autotest FALLOS=0, diag_golpe/feedback/formas OK, diag_stepup STEPUP-FALLOS=0.
+- Pendiente: arreglar `test_move(absoluto)` en `_try_platform_snap`/trepado/muro_lobo; commitear step-up + conexión (preguntar mensaje).
+
+### Continuación 24/09 — Flinch caricaturesco + sin tilt de giro + game feel por racha
+- **Flinch caricaturesco (enemy.gd):** `_pose_stun` rediseñado: congela el frame de la animación al impacto (`_anim_congelada` + `animated.pause()`), corte seco hacia adelante (`flinch_adelanto_px` 12, ida/rebase con TRANS_QUAD), inclinación hacia atrás `stun_tilt_angulo` **5°→14°** sostenida todo el hitstun, y al terminar `_reanudar_flinch()` = `animated.play()` + "pop" de escala (`flinch_pop_escala` 1.12, TRANS_BACK). `_update_animacion` no reinicia mientras `_anim_congelada`. El chamán (sin AnimatedSprite, collage de polígonos) recibe inclinación/pop/corte pero no frame congelado (correcto). Los sprites `GraveRobber_hurt.png`/`SteamMan_hurt.png` (pack de 48px) NO se usan: no calzan con los sprites actuales a escala natural (127×380/103×410) — descartados.
+- **Decisión usuario (importante): "que las animaciones ni los personajes se tosquen al atacar":** se eliminó TODO tilt de giro del sprite del player al girar para atacar (girar y pegar atrás ya NO tuerca el sprite). Se borraron `_snap_turn()` y el export `turn_tilt` de `forma.gd` + asignaciones en las 4 formas. Se MANTIENE `turn_tilt_cam` (inclinación de cámara). Reglas a futuro: **nada de rotaciones/torceduras de sprite al atacar; el flinch de daño puede rotar un poco (aprobado) pero las rotaciones se consultan antes de agregar**.
+- **Game feel (player.gd, todo @export):** hitstop escalado por el golpe que cierra combo (`hitstop_tercer_mult` 1.2) y por racha; zoom punch por tipo (`zoom_heavy_mult`/`zoom_special_mult`/`zoom_combo_mult`); shake ahora incluye el especial (`shake_special` 16) y el tercer golpe (`shake_tercer_mult` 1.3).
+- **Daño recibido (player.gd):** pausa de impacto según fuerza (`hitstop_dano` base, `hitstop_dano_pesado` 0.06 si `cantidad >= hitstop_dano_umbral` 20); nuevo `_recoil_dano()` = reculada direccional + micro-temblor SIN rotación (respeta la decisión de arriba); números de daño escalan de 22 a 34 px según cantidad.
+- **Feedback por racha (opción elegida):** al llegar a racha 3/5 suben hitstop (`racha_hitstop_3/5` 1.15/1.3), zoom punch (`racha_zoom_3/5` 1.03/1.06) y el spark (`racha_spark_3/5` 1.35/1.7, vía `_racha_feedback_mult()`/`racha_spark_escala()`); `hud.gd` agrega `_pop_racha` (pop de escala del tick de racha al alcanzar 3 y 5). 
+- **Verificación:** smoke limpio, autotest FALLOS=0, diag_golpe/feedback/formas/hud OK.
+
+### Continuación 24/09 (b) — Fix feedback de golpe: sprite trabado y flash rojo ausente en racha
+- **Bug 1: enemigos a veces se quedan trabados en el frame de la animación** tras golpear. Causa raíz: la liberación del frame congelado dependía SOLO del tween `_stun_tween` (su `tween_callback` → `_reanudar_flinch`). Al encadenar golpes ese tween se mata (`_stun_tween.kill()` en `_pose_stun`), y si el siguiente golpe es bloqueado (armadura) o el orden de kills no lo re-congela bien, `_anim_congelada` queda `true` para siempre → frame pausado para siempre.
+- **Fix:** liberación por doble seguro en `enemy.gd`: (1) en `_physics_process`, al vencer `_stun_timer` → `_anim_congelada=false` + `animated.play()`; (2) en `_update_animacion`, si está congelada pero `_stun_timer <= 0` → des-congelar. El tween sigue siendo la vía estética (pop de escala), pero ya no es la única salida.
+- **Bug 2: el tint rojo a veces no se ve (no se sabe si pegó).** Causa raíz: `take_damage` fundía el rojo con `await _esperar_fin_hitstop()` → cada golpe lanzaba su propia corrutina; en racha una corrutina vieja terminaba DESPUÉS del golpe nuevo y su `_tint_tween` fundía el rojo recién puesto. Además dependía de introspección de `Hitstop._restore_ms`.
+- **Fix:** se eliminó `_esperar_fin_hitstop()`. El flash ahora es síncrono y simple: `visual.modulate = rojo` al instante + `create_tween()` que funde a blanco en 0.08s. El "flash congelado durante el hitstop" se conserva AUTOMÁTICO porque los tweens no avanzan con `Engine.time_scale=0` (no hace falta esperarlo). Más simple y robusto: el último tween siempre gana, y cada golpe refresca el rojo del anterior → en racha el rojo se sostiene.
+- **Verificación:** import limpio (solo error preexistente del plugin), smoke limpio, autotest FALLOS=0. MEMORY actualizado.
+
+---
+
+## 🟢 Sesión 22/09 — Cámara del Lobo: "se mueve demasiado, apenas hace zoom para atrás"
+
+> Petición del usuario: al moverte como Lobo, la cámara "se mueve demasiado", "apenas hace zoom para atrás" y "tras un tiempito se tira un poquito para atrás". Criterio explícito: **gameplay fluido, sin saltos fuertes de cámara**.
+
+### Opción A aplicada (recomendada; la que cumple el criterio)
+- **`lobo.gd:26`** `camera_lookahead_mult 1.15 → 0.9`: el adelanto de cámara con la velocidad bruta del lobo (690 px/s) quedaba clavado en ~160px casi todo el tiempo (el lobo era el único con lookahead > humano 1.0). Bajarlo a 0.9 lo deja por debajo del humano → la cámara "se asienta" y no persigue tanto.
+- **`camera.gd:47`** `zoom_velocidad_max 0.05 → 0.075`: el zoom-out por velocidad era el más chico del dataset y, combinado con el `sprint_zoom_out` del lobo, el alejamiento "apenas se notaba". Un escalón más de aporte único y acotado (disciplina de zoom transversal, NUNCA volver al 0.08 viejo) hace perceptible el alejamiento al correr sin romper la suavidad transversal.
+- **Verificación:** import limpio, smoke sin errores, **autotest FALLOS = 0**. Ambos son `@export` editables en el Inspector (regla: nada hardcodeado).
+
+### LECCIÓN DURA de esta sesión (NO repetir)
+**NO editar de memoria: el disco es la única verdad.** Esta sesión tuve reads/greps mezclados y "archivos fantasma" (`_ATTACK_SPEED_LOBO`, `mult_early_exit`, commits a workdirs/paths inexistentes) que me hicieron dar vueltas en falso y proponer fixes a código que no existía en disco. Regla operativa a partir de ahora: (1) **una sola fuente de verdad** (read tool puro, sin mezclar con bash); (2) confirmar el path absoluto real del repo antes de cualquier grep/edit; (3) si un grep devuelve algo sin referencia en otro lado, **releer en limpio** antes de editar, no asumir.
+
+
+## 🟢 Sesión 21/09 — Integración de sprites de ataque (Lobo) y AFK (Cultista) en verde
+
+> Petición explícita del usuario: "añadilas esas animaciones — el lobo al atacar hace esa animación rápida; los cultistas al estar quietos también". Se aplicó SOLO a recursos, sin tocar el código de combate (player.gd ya tenía la rama para `lobo_attack`).
+
+### Qué quedó integrado (verificado con import + smoke + autotest 22/22 PASS)
+- **`resources/jugador_frames.tres`:** nueva anim **`lobo_attack`** (4× `Atq LOBO1-4.png`, loop 0, speed 16.0 — rápida) con sus 4 `ext_resource` (uids reales `c7oqj61df7kdu..`) al final del array `animations`.
+- **`resources/enemigo1_frames.tres`:** la anim **`idle`** ahora usa los 4 `afk GORDO1-4.png` (uids reales `dokcgtup1uv4g..`), speed 5.0, loop 1. El `ext_resource` base `1_gordo` sigue para `attack1/2`, `jump`, `run`.
+- **Verificación:** `jugador_frames.tres` 13 anims / 0 refs rotas; `enemigo1_frames.tres` 5 anims / refs cuadradas; smoke + autotest (incl. `diag_jefe`, `diag_formas`, `diag_golpe`) todos en verde.
+
+### Decisiones tomadas / cómo queda el juego
+- **Lobo:** al atacar en forma LOBO, `player.gd` ya reproducía `lobo_attack` en `_update_animacion` (rama `Form.LOBO and _attacking`) — NO hizo falta tocar código; el sprite nace de un archivo ya referenciado que solo necesitaba la anim en el SpriteFrames.
+- **Cultista:** `enemy.gd` reproduce `"idle"` cuando está quieto → los 4 frames AFK aparecen al quedar parado.
+- Los `.tres` se editaron a mano con los **uids reales** de los PNG (sacados de los `.uid`/`.import`), NO inventados — lección ya aplicada de sesiones previas (un uid inventado rompe el import con `Parse Error: Expected '['`).
+
+### Lecciones de esta sesión (para no repetir)
+- Al añadir anims multi-frame a un SpriteFrames `.tres` a mano: **los `id` de los `ext_resource` deben coincidir EXACTAMENTE con las `ExtResource("id")` usadas en los bloques `frames`** (ej. `1_akdo1` como id y como ref). Un desfase de ids provoca "Could not find..." en edit / refs sin declarar en Godot.
+- Releer el archivo completo desde disco ANTES de editar de nuevo (los edits parciales previos pueden haber reordenado ids; no asumir el estado).
+
+---
+
+## 🔴 Sesión 20/09 — Cacería exhaustiva de bugs (rama `nivel1-mejoras`) + nivel2: pickups y diálogos reintegrados
+
+> Objetivo: revisar a fondo el juego y corregir TODO (autotest + diags en verde). Se cerró la decisión de reintegrar pickups y diálogos en `nivel2` (Opción A del usuario).
+
+### Bugs reales encontrados (corregidos)
+- **Autotest (crate):** tras romper el tronco la física dejaba al Oso en x≈-553 SOBRE EL POZO → los golpes fallaban. Fix: en `autotest.gd`, el bloque "Rompibles" teletransporta al player a (-350,900) con `velocity=ZERO` y espera 40 frames antes del crate.
+- **`checkpoint.gd::_hay_piso_bajo`:** ray 180 → **400 px** (el piso real del checkpoint de nivel1 está a 225 px bajo el respawn).
+- **`tests/diag_checkpoint.gd`:** el test teletransportaba al player al checkpoint y Area2D NO emite `body_entered` por teletransporte → ahora el player CAE desde `checkpoint + (0,-220)`.
+- **`tests/diag_derrota.gd`:** usaba y=5000, nunca superaba `limite_caida=12000` (`player.gd:144`) → y=20000.
+- **`tests/diag_select.gd`:** no esperaba `COOLDOWN_TRANSFORM=1.8s` (`player.gd:112`) entre transformaciones → helper `_esperar_transform()` (120 physics frames).
+- **UID inválido en `scenes/unlock_forma.tscn`:** referenciaba `uid://cr01jl2ryivbe` pero el `.uid` real es `uid://dpfkblywpdb2b` → warning `invalid UID ... using text path instead` en cada carga. Corregido.
+- **`tests/diag_formas.gd` (falso fallo de planeo):** presionaba J en plena caída → el murciélago saltaba (vy negativa). El apex-hang de `player.gd` mantiene el ascenso MUCHO rato (a los 40 frames seguía vy≈-89). Fix: esperar hasta `velocity.y > 0` (max 300 frames) SOSTENIENDO J, igual que el planeo real.
+- **Nivel2 (7 pickups + 4 diálogos):** dos pickups quedaban en la línea de caída/cuerpo del spawn y el Área los recolectaba al instante (desaparecían del runtime). Ajustadas todas las posiciones a superficies verificadas.
+
+### Nivel2 — reintegración (decisión: Opción A)
+- `nivel2.tscn`: ext_resources `31_pick` (pickup.tscn) y `32_dtg` (dialog_trigger.tscn); nodos Pickup1..7 y DialogoIntro/Combate/Plataformas/Santuario (`dialogo_id = p1_intro/p1_combate/p1_plataformas/p1_santuario`).
+- `data/dialogos.json`: rellenadas las `lineas` de `p1_combate` y `p1_plataformas` (3 c/u). `p1_combate2/3` siguen vacíos (no usados).
+- `tests/diag_zona2.gd` actualizado a la spec: 4 arenas, 12 enemigos, santuario, salida→nivel3, 6 rompibles, 7+ pickups, 4 diálogos, 0 flotando; huecos de piso pasan a [INFO].
+- Pendiente de decidir con el usuario: **Encounter/Encounter2 de nivel2 (arenas 1 y 2) flotan sobre vacío** (centros y≈611/1697) — los 12 enemigos reportan `floor=false`; es layout viejo. NO borrar sin preguntar.
+
+### Lecciones nuevas
+- **El Área de un pickup recolecta por superposición al caer el spawn:** un pickup bajo la vertical de caída del player (o rozando el cuerpo en reposo, colisionador ~47px de semiancho + toma real 34px sobre el piso) se consume en el instante y "no aparece" en runtime. Si un pickup "desaparece", buscar si queda en la vertical de spawn/caída.
+- **Los suelos/mesetas de nivel2 son de capa 2:** un ray con mask=1 no los detecta → el chequeo de "pickup flotando" de `diag_zona2` usa mask `0xFFFFFFFF` con exclusión `[hijo]`.
+- **No usar el aterrizaje del player como referencia de piso para colocar objetos:** el origin del player queda a +142.5 px sobre el piso → un pickup a "esa altura" queda ENTERRADO dentro de la masa de la meseta (techo del sólido arriba del objeto). La forma correcta: raycast directo objeto→abajo (300px, mask total) y ubicarlo a ~34–40px sobre la superficie.
+
+### Verificación (todo en verde)
+- Import limpio (solo el leak cosmético `legacy_docks` del editor) + smoke limpio.
+- `autotest` → **FALLOS = 0**; `diag_checkpoint` 0, `diag_derrota` 0, `diag_select` OK, `diag_golpe` 0, `diag_feedback` 0, `diag_dialogos` 0, `diag_jefe` 0, `diag_nivel1` 0, `diag_nivel3` 0, `diag_nivel4` 0, `diag_nivel5` 0, `diag_pickups` 0, `diag_hud` 0, `diag_encuentro` OK, `diag_spawn` 0, `diag_tinte` 0, `diag_zona2` 0, `diag_orbe` 0, `diag_formas` 0, `diag_suelo` (informativo). Leak `ObjectDB` al salir sigue siendo cosmético.
+- Pendiente: probar en ventana pickups/diálogos de nivel2, decidir arenas huérfanas, commit de la rama `nivel1-mejoras` (pedir mensaje).
+
+---
+
+## 🔴 Sesión 20/09 — Pulido final: batería completa en verde + `diag_orbe` des-flakeado
+
+### Qué se hizo
+- **Auditoría general sin saldo pendiente:** import + smoke limpios, `autotest` FALLOS=0 y **23 diags en verde** (`diag_checkpoint/derrota/select/golpe/feedback/dialogos/jefe/nivel1/nivel3/nivel4/nivel5/pickups/hud/encuentro/spawn/tinte/orbe/formas/zona2/derrota2`) + `diag_suelo` (informativo).
+- **`diag_orbe` (era flaky ~1/6):** la causa real **no era lag de tween sino el propio test**: el enemigo moría en (0,0) — la misma posición del player — y el orbe rojo caía **sobre** el jugador y se recolectaba al instante, `queue_free` antes del check. Con el enemigo posicionado lejos del player y raycast para confirmar el drop, **8/8 estable**. Lección: al probar drops/pickups, spawnear el enemigo LEJOS del player (si el orbe cae sobre el player se auto-recolecta → falsos negativos).
+- **Verificación de pickups/diálogos del nivel2 reinstalados** (`Pickup1..7`, diálogos `p1_intro/combate/plataformas/santuario`) — todos en verde con `diag_zona2`, `diag_pickups`, `diag_pickupvida`.
+
+### Pendiente de decisión del usuario (sin tocar)
+- **Arenas huérfanas del nivel2 (`Encounter`/`Encounter2`, y≈611/1697):** 12 enemigos reportan `floor=false` (están sobre el vacío, layout viejo). Opciones: (A) reubicar los encuentros sobre los pisos reales del nivel, (B) dejarlos como están (las arenas se activan bien igual), (C) eliminar esos 2 encuentros para que el nivel2 quede con 2 arenas. El diag NO lo marca como fallo (es informativo).
+- **Diálogos vacíos `p1_combate2/3` en `data/dialogos.json`:** no están referenciados por ningún trigger en el juego actual; rellenarlos o dejarlos.
+
+### Verificación
+- `tests/diag_orbe.gd` estable 8/8; toda la batería en verde. Sin probes temporales en `tests/` (limpiados `probe_*_n2`, `probe_orbe`).
+
+---
+
+## 🔴 Sesión 20/09 (9) — Rediseño del jefe: "presidencial" flotante (ritual de 3 barreras)
+
+> **NUEVO DISEÑO DEL JEFE (pedido explícito del usuario, reemplaza a la sesión (8)):** el Arzobispo ya NO pelea en el suelo/aire. **Preside la pelea FLOTANDO ARRIBA Y ATRÁS** (z bajo, paleta oscura, dominando la pantalla; nunca se le pega al cuerpo). Para dañarlo hay que completar el **ritual de 3 barreras que se repite en ciclos**: (1) **LEGIÓN** — matar la ronda de cultistas que le dan escudo (invulnerable); (2) **CRISTALES** — romper sus cristales de energía (solo sónico del Murciélago); (3) **ZONA MARCADA** — baja una zona brillante al alcance del jugador y la marca rota entre 3 slots; pegarle ahí hace daño real. Cada ciclo completo endurece el siguiente (más cultistas `legion_base+vuelta+fase`, ventana de zona más corta `6.5-0.7*vuelta`, orbes más frecuentes). La vida (66%/33%) solo corrompe el color (Fase.DOS/TRES) y el ritmo; la barra del HUD sigue igual (pips de fase).
+
+### Implementado (14/09)
+- **`scripts/boss.gd` reescrito (~620 líneas):** FSM de gates `_gate ∈ inactivo|legion|cristales|zona` con corrutina `_ronda()` encadenando `_gate_legion() → _gate_cristales() → _gate_zona()`. Flotación por lerp en `_physics_process` (`_hover`: sigue un poco al jugador ±230px con sway sinusoidal, y=`_piso_y-altura_vuelo`=260). Escudo = `_shield_active` (absorbe todo golpe al cuerpo con "·"). Orbes de presión mientras LEGIÓN/CRISTALES (`_intervalo_orbe = 2.2 - fase*0.3 - vuelta*0.15`). `take_damage` reaplicado solo con guiada por escudo; la zona reenvía `_golpe_en_zona()` → daño real `dano_zona=60` por golpe, toques por vuelta `toques_base_zona+vuelta`. **El cuerpo SIEMPRE con collider apagado** (`_colisionar` eliminado, `collider.set_deferred("disabled", true)` en `_ready`) → la única superficie golpeable es la zona.
+- **`scenes/jefe.tscn`:** se quitaron `CuerpoDano` (ya no hay daño por contacto); nuevos nodos `ZonaGolpe` (StaticBody2D con script en **`scripts/zona_jefe.gd`**, capa 2, `visible=false`, pos base `(0,150)` respecto al jefe → queda a ~990px, alcance de melee/salto) con `ZonaShape`/`Anillo`/`Dardo`, y `Visual/Tentaculo` (Polygon2D beam que baja del jefe a la zona). Anillo como anillo poligonal generado por código (`_anillo_poligono`).
+- **Fix real bug latente:** `cristal.gd::take_damage` solo aceptaba 3 parámetros pero `player.gd::_check_attack_hits` la llama con 4 (`dmg,kb,facing,critico`) → **los cristales eran imposibles de romper en el juego real** (error en runtime). Ahora firma `(cant, kb=0, dir=1, critico=false)`.
+- **`tests/diag_jefe.gd` reescrito:** 18 checks del ciclo completo (flotación y=916, escudo absorbe 30, Legión de 2 muere, cristales rompen con sónico, escudo cae, zona hace -60, muerte + `died` + barra se oculta). **FALLOS=0.**
+
+### Pendiente
+- **Probar en ventana** (ritmo del ritual, alcance/legibilidad de la zona marcada, talla del jefe en pantalla). Ajustar `zona` y/slots desde el Inspector si la zona no se llega bien.
+
+> El pilar del juego: pelea final contra el Arzobispo (entidad mayor del culto), arena dedicada `scenes/nivel_jefe.tscn`, ~5 min, 3 fases, contra óptima por forma NO bloqueante (invocados devuelven +20 energía y hay rompibles en la arena para sostener transformaciones). Diseño consensuado en sesión previa (se descartó el formato "fases obligatorias por forma" por riesgo de frustración con la energía). Committeado: optimización `fec859b`, Arzobispo `f5086cb`, notas de decisión `c542f75` (aún sin push).
+
+### Implementado
+- **`scripts/boss.gd` + `scenes/jefe.tscn`:** vivo con `CharacterBody2D`, group "boss", señales `salud_cambio`/`fase_cambio`/`died`, API de Encounter (`preparar_ola()`/`activar()`). F1 100–66% suelo (embestida 810px con tele-telegraph, orbes en abanico 5 con `ABANICO`, sismo por piso + invocación de cultistas cada 16s); F2 66–33% aéreo (armadura + cristales escudo que SOLO rompe el Murciélago, 2 golpes c/u, +2 cultistas por oleada) → al romperlos cae y quedan 4.0s de ventana; F3 33–0% enfurecido (embestida rápida 3 recorridos, orbes dobles, sismo doble, ventana 0.9s tras cada patrón; Oso/Humano castigan, Lobo esquiva). Armadura F1 por umbral 17 (Oso la rompe). `take_damage` con tint, números flotantes, slow-mo y hitstop de muerte. Audio del rugido sintetizado por código (WAV 16-bit LCG) si no se asigna `sonido_roar`. **Arte:** polígonos minimalistas (Roba + Mitra + Ojos rojos + Halo + Aura de telegraph + Sombra), sin sprite, mismas reglas que el chamán.
+- **`scenes/nivel_jefe.tscn` + `scripts/nivel_jefe.gd`:** arena con `Encounter` (ArenaShape 980×700 → paredes en borde de pantalla), piso de piedra oscura, rompibles de recarga (3 cajas) + 2 calmas al inicio, `SetupProgresion nivel_minimo=4` (todas las formas), diálogo `jefe_intro`, e HUD que muestra la barra. Al morir el jefe → `victoria_jefe` ("¡RESCATASTE A TU HIJO!") con reintentar/menú.
+- **`scenes/victoria_jefe.tscn` + `scripts/victoria_jefe.gd`:** pantalla épica estilo `victoria.tscn` (tema púrpura/dorado).
+- **Barra de jefe en `scripts/hud.gd` + `scenes/hud.tscn`:** nodo `BossBar` propio arriba-centro (nombre, valor, ProgressBar sin %, 3 pips de fase), **FUERA del bloque `Bars`** (respeta la lección del HUD revertido). Conecta a `salud_cambio` (hp/max → fill + texto) y `fase_cambio` (color del fill: verde→púrpura→rojo; pips prendidos por fase). Se oculta al morir o si no hay jefe.
+- **`scripts/cristal.gd` parametrizado:** `@export golpes_para_romper` y `solo_murcielago` (defaults intactos → los cristales de niveles no cambian; el jefe usa 2 golpes y `solo_murcielago=true`).
+- **`scripts/console.gd`:** comando `jefe` → salta a la arena (test rápido).
+- **`data/dialogos.json`:** entrada `jefe_intro`. **`scripts/encounters/encounter.gd`:** fix defensivo en `_agregar_manual` (ver bugs).
+
+### Bugs reales encontrados (corregidos)
+- **Parse error latente en `boss.gd`:** `_centro_arena, _medio_arena = _datos_arena()` no es destructuring válido en GDScript → rompía la carga del script. Fix: `var arena := _datos_arena(); _centro_arena = arena[0]; _medio_arena = arena[1]`.
+- **`encounter.gd:_agregar_manual` crasheaba con el jefe:** `int(hijo.get("ola_asignada"))` → `int(null)` ("Nonexistent 'int' constructor") porque el jefe no tenía esa propiedad; el script se abortaba y el jefe nunca entraba en `_manuales` (la pelea no arrancaba). Fix defensivo (`var idx := int(val) if val is int else 0` + `maxi(idx,0)`) y además `@export var ola_asignada := 0` en `boss.gd`.
+- **Bucle aéreo infinito al pasar a fase 3:** `_forzar_aereo` quedaba `true` tras la F2; al llegar a F3 el jefe entraba a `_ronda_aerea` siempre (while de F2 terminaba al instante y `continue` la re-ejecutaba) → se quedaba flotando sin atacar jamás. Fix: la rama TRES de `_cambiar_fase` ahora resetea `_forzar_aereo=false` y `_armadura_activa=false`.
+- **Off-by-one real en `hud.gd:_on_boss_fase`:** el enum es `Fase { UNO=0, DOS=1, TRES=2 }` pero el HUD hacía `match 1,2,3` y pips `i <= fase-1` → el color/pips de barra quedaban corridos. Fix: `match 0,1,2` + `i <= fase`. (También se corrigió el test que usaba `_cambiar_fase(2/3)` con literales; ahora usa `boss.Fase.DOS/TRES`.)
+
+### Verificación
+- Import limpio, smoke limpio; suite completa en verde → `autotest` 0, `diag_golpe` 0, `diag_feedback` 0, `diag_formas` 0, `diag_nivel1prueba` 0 y **nuevo `tests/diag_jefe.gd` FALLOS=0** (activación por Encounter, barra visible, armadura por umbral, cristales que ignoran al Humano y se rompen con el Murciélago, muerte, señal `died`, barra oculta). Leak al salir de headless es el cosmético preexistente.
+- **Pendientes:** (a) commitear la optimización de la sesión (7) y decidir si conservar `tests/bench_opt.gd`; (b) commit del Arzobispo (preguntar mensaje); (c) probar en ventana: ritmo/energía, legibilidad de patrones, barra y dificultad.
+
+---
+
+## 🔴 Sesión 13/09 (7) — Optimización: medición real + higiene CPU
+
+> 4º ítem de la lista (juice fino ✓, feedback de daño ✓, HUD revertido, optimización ✓). Premisa cumplida: **medir antes de tocar** (regla del usuario). Se creó un bench temporal (`tests/bench_opt.gd`, SceneTree) que spawna N enemigos activos junto al player y mide el frame de física con el monitor `Performance.TIME_PHYSICS_PROCESS`.
+
+### Medición (headless, 600 ticks)
+- baseline (enemigos del nivel): **0.001 ms/física** por tick
+- +25 enemigos: **0.001 ms**
+- +50 enemigos: **0.002 ms**
+- → **No hay cuello de botella de CPU medible en física/AI.** El costo real del juego estaría del lado del RENDER (draw calls/GPU), que headless no mide; si algún día hay perf issues en ventana, mirar render primero.
+
+### Cambios aplicados (higiene CPU, sin cambio visual)
+- `enemy.gd`: nuevo `_player_cache` + `_obtener_player()` (cache con `is_instance_valid`); reemplaza los 2 lookups `get_first_node_in_group("player")` por frame en `_physics_process`/`_mirar_jugador`. La de `_morir` (1 vez por muerte) se dejó igual.
+- `camera.gd`: mismo patrón `_player_cache`/`_obtener_player()` para el lookup de cada `_physics_process`.
+- `projectile.gd`: `_cam` cacheada en `_ready` (con re-búsqueda si muere); homing re-busca objetivo cada `HOMING_TICK = 0.15s` en vez de por frame (`_homing_timer`).
+
+### Verificación + git
+- Import limpio, smoke limpio, `autotest` / `diag_golpe` / `diag_feedback` / `diag_formas` / `diag_nivel1prueba` → **FALLOS = 0**. Bench post-cambio idéntico (0.001–0.002 ms).
+- **Commit `fec859b`**: se conservó `tests/bench_opt.gd` (bench reutilizable para futuras comparaciones) y se incluyó en el commit. Los cambios quedaron pusheados junto con el Arzobispo en una sola entrega (el usuario eligió "un commit por bloque").
+
+---
+
+## 🔴 Sesión 13/09 (6) — Mejora de HUD REVERTIDA (decisión del usuario)
+
+> Se implementaron las opciones A (panel de forma activa) y C (energía baja con tint) elegidas por el usuario, y luego **se revirtió TODO el bloque por pedido explícito** (`git checkout -- scripts/hud.gd scenes/hud.tscn`; esos cambios nunca se commiteó, el último commit sigue siendo `778861e`). El código no quedó incorporado.
+
+### Lección (registrar y no repetir)
+- **Las barras de vida/espíritu del HUD son columnas VERTICALES a todo el alto del panel izquierdo.** Cualquier elemento que se meta en esa columna (panel de forma, cap, etc.) recorta su altura y rompe la organización visual validada por el usuario. Si en el futuro se quiere mostrar la forma activa u otra info junto a las barras, **consultar antes** cómo integrarlo sin alterar la altura/ancho de las barras, o usar nodos por fuera del bloque `Bars` (p.ej. labels sueltos) — NO meter contenedores extra en `Bars/Columna`.
+- Antes de ajustar layouts validados (offsets de `Bars`, `ProgLabel`, `SelLabel`), confirmar con el usuario; él prefiere la organización "líneas verticales" original.
+- Lo que sí quedó intacto y aprobado de sesiones anteriores: juice fino y feedback de daño del jugador (commits `14aec73`, `778861e`).
+
+---
+
+## 🔴 Sesión 13/09 (5) — Feedback de daño del jugador
+
+> 2º ítem de la lista (juice fino ✓, feedback de daño ✓; faltan: mejora de HUD y optimización). El objetivo era darle al jugador la misma claridad de impacto que ya tenían los enemigos (números flotantes, tint, squash), sin tocar la sensación actual (hitstop_dano = 0 deliberado desde la lección 13/09 combate).
+
+### Cambios aplicados (`scripts/player.gd`)
+- **Tint rojo breve** al recibir daño: `@export tint_dano := Color(1, 0.28, 0.28)` y `tint_dano_duracion := 0.11`. Se aplica sobre `visual.modulate` (con tween propio `_tint_tween`, kill del previo), así **no pisa** el tinte de forma (`self_modulate` en `_apply_form`). Reemplaza a la nada; el parpadeo de invuln sigue igual (`visible`).
+- **Número de daño recibido** sobre el jugador (`_mostrar_dano_recibido`): Label rojo 22px con outline negro, subida 26px/0.5s y fade, mismo patrón que `_mostrar_dano` de `enemy.gd`. Gateado por `@export dano_flotante := true` y por headless.
+- **Squeeze de golpe**: `stretch_y(-0.12, 0.14)` al impactar (movimiento corporal además del shake direccional de cámara que ya existía).
+
+### Verificación + git
+- Import limpio (el único warning es un leak del plugin `herramienta_nivel/plugin.gd` en `_exit_tree`, preexistente y cosmético). Smoke limpio, `autotest` / `diag_golpe` / `diag_feedback` / `diag_nivel1prueba` / `diag_formas` → **FALLOS = 0**.
+- **SIN commit**: esperando testeo del usuario (el último commit fue `14aec73`).
+
+---
+
+## 🔴 Sesión 13/09 (4) — Juice fino de combate (daño flotante, slow-mo de transformación, encuadre de arena)
+
+> Primer ítem del pedido del usuario ("vayamos uno por uno y lo testeo"): el resto de la lista (feedback de daño del jugador, mejora de HUD, optimización) queda pendiente. Lo que este bloque hace es pulir lo que YA estaba hilado de sesiones previas (hitstop por peso, slow-mo de kill/finisher/cierre de arena, zoom punch por tipo, shake, sonido sincro).
+
+### Cambios aplicados
+- **Daño flotante mejorado** (`enemy.gd`): se reemplazó el `Label` básico por `_mostrar_dano(cantidad, critico, murio)`:
+  - **Outline** (borde negro, legibilidad sobre fondo oscuro), `z_index 12`.
+  - **Críticos diferenciados**: `take_damage` ahora acepta `critico: bool = false`; `player.gd` lo pasa cuando el golpe es **finisher** (`mult_tercer 1.5` en 3er/último paso de light/heavy) o **combo** (`_current_attack_type == "combo"`). Color naranja, letra 27px vs 21, subida 46px/0.75s vs 30px/0.55s.
+  - **Kills**: color dorado y mismo tamaño grande que crítico.
+  - **Pop de escala** al aparecer (1.6→1.0 con `TRANS_BACK`) y dispersión x ±16 / y -60..-44.
+  - Las demás llamadas a `take_damage` (proyectiles, terreno, enemigos) siguen con `critico=false` por defecto.
+- **Slow-mo de transformación** (`player.gd`): nuevos `@export slowmo_transformacion := 0.18` (0 = off) y `slowmo_transformacion_escala := 0.4`; en `_transformar`, junto al `cam.punch(1.07)` ya existente, se llama `_freeze_slowmo(...)` → momento de "poder" con la escala de tiempo (usa el `Hitstop` autoload que ya tienen kill/finisher).
+- **Encuadre de arena** (`camera.gd` + `encounter.gd`): nuevo método `camera.encuadre_arena(escala_out=0.96, duracion=0.7)` con multiplicador aparte `_framing_scale` (no estorba al zoom punch/golpes); en `_empezar()` del encounter se llama tras `modo_arena` con los `@export zoom_encuadre_arena`/`zoom_encuadre_duracion` del Inspector → zoom-out suave al entrar para leer el escenario y retorno. Guard con `has_method` (no rompe si la cámara no lo tiene).
+
+### Verificación
+- Import limpio, smoke limpio, `autotest` **FALLOS = 0**, `diag_golpe`/`diag_feedback`/`diag_nivel1prueba` **FALLOS = 0**.
+- **Sin commit** (esperando el testeo del usuario; el último commit fue `25884d8`).
+
+---
+
+## 🔴 Sesión 13/09 — Game feel del combate (Bloque 1) + research de referencias
+
+> Research cerrado (~35 fuentes: Capcom/Final Fight, SoR2/4, Shredder's, SF4/GG counter-hits, DMC5 frame data, Smash, Bayonetta, Viewtiful Joe, Arkham, Sekiro/Sifu, Punch-Out, MK11, DBFZ, TMNT paper, y más). Decisión del usuario: implementar **Bloques 1+2**, con `1e` (hitstop de daño recibido) + `2d` (flash sincro) + early-exit liberando **movimiento + salto + chain**. **Launch/juggle (1d) QUITADO del alcance.** Commit inicial del bloque: `0f0e7e1`.
+
+### Bloque 1 implementado (esta sesión)
+- **1a — Interrupción total (Capcom "el 1er golpe siempre interrumpe"):** eliminado el gate `armadura_ataque` de `enemigo.gd` (era una hiper-armadura global agregada el 01/09 para evitar el lock infinito). Todos los golpes ahora cancelan windup/lunge. **Compensación por el riesgo de re-lock infinito (lección 01/09):** el chamán conserva armadura **por umbral** (`@export armor_umbral` = 17): golpes < 17 no lo interrumpen (Humano attack 10, Lobo 6/10/14, Murciélago 8/14/15, Oso attack 16) y ≥ 17 lo rompen (Humano heavy 18+, Oso heavy 24+/special 32, combos) → Lobo/Murciélago no pueden interrumpirlo, rol de formas reforzado. El resto de tipos: `armor_umbral = 0` (sin armadura).
+- **1b — Stun con dirección + reacción física:** `_stun_dir` (dirección del impacto) + jitter del sprite (2 oscilaciones de 3px) + inclinación hacia atrás `-8° * sign(dir)` que se sostiene todo el hitstun y vuelve con TRANS_BACK (`_pose_stun()` con `_reaction_tween`/`_stun_tween` propios, matados en `_morir`). `stun_duracion` por tipo: cultista 0.28 / arquero 0.3 / chamán 0.35.
+- **1c — CONTRA-GOLPE retirado (usuario, 13/09):** implementado (daño ×1.5, chispas doradas, texto, tope 1 por enemigo) y luego **borrado por completo** a pedido del usuario ("que no pase eso"): se revirtieron los exports `counter_dano_mult`/`counter_stun` de `player.gd`, `puede_contra_atacarse()` y `_counter_usado` de `enemy.gd`, `_contra_fx`/`_flash_contra` y `play_sfx_pitch`. El sistema queda sin ninguna compensación especial por pegar durante el viento: solo interrupción normal.
+- **1e — Fix feedback por daño recibido (Hollow Knight):** `const HITSTOP_DANO 0.05` → `@export hitstop_dano := 0.0` (ya no se congela el tiempo al recibir daño; queda shake + flash + invuln).
+- **Tests:** +3 asserts de armadura chamán (sin contra) en `autotest.gd`; **diag_golpe.gd arreglado** (buscaba un nodo `Cultista1` inexistente → colgaba; ahora instancia `enemy.tscn`); **diag_formas.gd** "Lobo salta más alto" → corregido a "Lobo tiene doble salto" (Humano salta más alto, -600 vs -540).
+- **Verificación:** import limpio, smoke limpio, `autotest`/`diag_golpe`/`diag_formas`/`diag_feedback` **FALLOS = 0**.
+
+### Bloque 2 implementado (esta sesión, ¡ya no está pendiente!)
+- **2a — Early-exit extendido (Capcom/DMC5):** nuevo `@export recovery_early_fraccion` en `forma.gd` (Humano 0.35 / Lobo 0.35 / Oso 0.25 / Murciélago 0.4). Al pasar el umbral del recovery se libera desplazamiento horizontal y glide (`_early_liberado`); el salto ya estaba libre. **Chain inmediato:** en pasos intermedios (no-finisher) con ataque encolado (`_buffered_attack`/`_attack_air_buffer_type`), el recovery se comprime a 0.03s; el recovery largo queda solo en el finisher del combo/remate. Umbral calculado en `enable_melee` sobre `recovery * mult_recuperacion`.
+- **2b — Whiff:** `WHIFF_RECOVERY_MULT 1.25` → `@export whiff_recovery_mult := 1.15`.
+- **2c — Hitstop por peso (Hollow Knight) + multigolpe (SOR2):** `_hitstop_por_tipo()` ya no congela (solo calcula); el freeze se aplica en `_check_attack_hits` escalado por `_factor_peso(primer)` = `clampf(max_health/75, 0.85, 1.4)` → cultista 1.0 / arquero 0.85 / chamán 1.4; si se golpean 2+ enemigos, ×0.8 (no se multiplica la lentitud). `_factor_peso` es null-safe (sin `enemy_data` → 1.0).
+- **2d — Flash sincronizado:** en `enemy.gd::take_damage` el tint rojo ya no se resetea con un timer de 0.08s: `_esperar_fin_hitstop()` espera 1 frame (deja arrancar el freeze), detecta `Hitstop._restore_ms`/`Engine.time_scale==0`, espera a que termine el freeze y **recién ahí** funde a blanco con tween 0.08s (`_tint_tween`, matado en `_morir`). El flash queda congelado durante el hitstop y se desvanece al reanudar. En daño letal la muerte es inmediata (sin esperar el fade), así no se atrasa `_morir()`.
+- **Tests:** +9 asserts de Bloque 2 en `autotest.gd` (fracción early-exit por forma, whiff, `_factor_peso` con nodos reales de `enemy.tscn` por tipo). Lección: `_factor_peso` usa `"enemy_data" in body`, así que un `Node2D` con `set()` dinámico no sirve para testear → usar nodo de `enemy.tscn` real.
+- **Verificación:** import limpio, smoke limpio, `autotest` FALLOS = 0 (9 nuevos), `diag_golpe`/`diag_feedback`/`diag_formas` FALLOS = 0.
+- **Post-bloque (usuario):** hitbox del Lobo **360×233 → 360×160** (perfil "bajo y agachado" de 27/08): techo más bajo (recibe menos golpes) y vuelve a caber en huecos bajos/GrietaLobo. `_apply_form` ya re-ancla el collider y reposiciona el visual solo.
+
+### Preexistencias conocidas (NO tocar salvo que se pida)
+- **`diag_encuentro.gd` falla en base** (1 FAIL "Todos los enemigos de la ola murieron/liberados"): test con timing frágil — cuenta 30 physics frames en lugar de esperar la muerte real (tween de muerte 0.4s + freeze 0.09s + `queue_free`). Verificado: falla idéntico en el commit `0f0e7e1` sin los cambios del Bloque 2.
+- **`diag_hud.gd` crashea en base** (`Node not found: Bars/Rows/HpRow/HpBar`): paths stale del HUD viejo (el HUD nuevo usa otra estructura). Verificado: falla idéntico en base. 
+- Bloque 3 (hitstop selectivo) sigue fuera de alcance.
+
+---
+
+## 🔴 Sesión 13/09 (2) — Game feel de movimiento y salto (plan completo aplicado)
+
+> Mismo método que el del combate: audit del código + research profundo (~17 fuentes: frame data de SMB1/SMB3/Meat Boy/Limbo/Sonic/Celeste, DiGRA "Operationalising the Game Feel of Jumping", Designing a 2D Jump, Double Fine/Raz, jump-arc calculators por outcome, tunning de game-feel gamedev, SoR4 patch notes y reviews del Ben 10: Alien Force original) → propuesta en bloques → decisiones del usuario → implementación completa. Decisiones del usuario: **solo sentir (sin tocar alturas)**, doble salto **solo Lobo**, aire Humano **0.9 + empujón de despegue**, **fast-fall fuera**, micro-cámara 2.2, y las dos palancas extra del análisis profundo: **fall_g 1.8** y **accel_air_mult 0.85**.
+
+### Diagnóstico (medido con la física real)
+- Humano/Lobo: apex 0.61/0.67s (banda pesada; referencia 0.25–0.45s) y **todas las formas frenan más lento de lo que aceleran** (stop>start = "derrapa", al revés de la ley Celeste). Oso ya era el pesado correcto (0.27s); Murciélago flota de identidad. Las alturas (184/181px) son restricción de diseño de nivel (`diag_nivel1prueba`: `RISE_HUMANO 135 / RISE_LOBO 235`, gaps 250/420).
+
+### Cambios aplicados
+- **`forma.gd`:** nuevo `@export despegue_speed_mult` (0 = off). En `try_jump`, si el jugador salta con input direccional y el mult > 0, arranca a `dir*speed*mult` (estilo Limbo / Raz 80–90% de speed) sin pasar el tope aéreo (`max_h`).
+- **`humano.gd`:** `jump_velocity -600→-735`, `gravity_scale 1.0→1.5` (apex 0.61→0.50s; altura intacta: 735²/2·1470 ≈ 184px), `accel 2600→4600` (tope ~0.13s), `friction 2200→5000` (frena ~0.12s), `accel_air_mult 0.75→0.85`, `jump_h_speed_mult 0.75→0.9`, `despegue_speed_mult 0.9`.
+- **`lobo.gd`:** `jump_velocity -540→-660`, `gravity_scale 0.82→1.22` (apex 0.67→0.55s), `accel 4200→5200`, `friction 3600→5200`. Doble salto + zip intacto.
+- **`oso.gd`:** `friction 1400→2100` (menos derrape; sigue el pesado lento).
+- **`murcielago.gd`:** `accel 2400→3000`. Identidad de flotar/planeo intacta.
+- **`player.gd`:** `FALL_GRAVITY_MULT 1.6→1.8` (más peso al caer; ratio dentro de rango, Celeste ~2).
+- **`camera.gd`:** `suavizado_subida 1.8→2.2` (acompaña el pop).
+- **No tocado:** cut ×0.42 (release, rampeado con vy), apex hang escalonado, coyote/buffer generosos, doble salto único de Lobo, alturas de salto (restricción de nivel), `herramienta_nivel` (sigue con `GRAVITY * gravity_scale`), fast-fall (descartado por decisión).
+
+### Verificación
+- Import limpio, smoke limpio, `autotest` **FALLOS = 0** (incluye 2a/2b/2c), `diag_formas`/`diag_golpe`/`diag_feedback` **FALLOS = 0**, `diag_nivel1prueba` **FALLOS = 0** ("toda plataforma es alcanzable… inalcanzables=0") → el nivel sigue alcanzable con la física nueva.
+- Asserts de "Lobo salta más alto que el Oso" siguen verdes (Lobo -660 < Oso -410).
+- Pendiente: commit/push a cargo del usuario (Blocques 1+2 + hitbox Lobo + este retune siguen en el working tree).
+
+---
+
+## 🔴 Sesión 13/09 (3) — Cámara: plan C1–C5 aplicado (deadzones, restauración al suelo, lookahead en combate, shake, zoom y límites)
+
+> Mismo método que combate/movimiento: audit de `camera.gd` + research (Game Developer "Camera Logic in a 2D Platformer", Odd Verdure "restoration/anti-bob", Coding Quests "ejes separados + centro en combate", Solana Garden "juice caps: zoom punch 150–250ms, FOV en sprint, shake chico") → propuesta en bloques → **usuario aprobó C1–C5 completo** → implementación + verificación.
+
+### Cambios aplicados
+- **C1 — deadzone vertical 150→200** (`camera.gd`): supera el pico del salto Humano (184px) para que un salto de rutina casi no mueva el encuadre. Nueva **restauración al suelo**: con las palancas `restaurar_suelo` (on), `restaura_tolerancia` (12px) y `restaura_ventana` (0.15s); si al aterrizar la altura coincide con la del piso del que se salió, recentra rápido (tira con `suavizado_bajada`) a la línea recordada en vez de quedar derivado por el apex (anti-bob en escaleras: la tolerancia es chica justamente para NO re-centrar al subir/bajar de plataformas).
+- **C2 — lookahead**: `deadzone_horizontal 12→24`, `lookahead_umbral 80→100` (más correcciones "pegadas" antes de empujar), y **congelar lookahead al atacar** (`lookahead_ataque=140px` hacia el facing del golpe, leído vía `_attacking`/`facing` del player) → legibilidad en combate sin el empuje de la velocidad.
+- **C3 — shake**: la envolvente ahora se normaliza por la **duración real** pasada (`_shake_duracion`, antes estaba anclada a `/0.15`); rotación clamp **0.75→0.2 rad** (rotación es lo más nauseógeno); nuevo `@export intensidad_shake := 1.0` global (0 = desactivado, accesibilidad), aplicado a offset + rotación.
+- **C4 — disciplina de zoom**: `extra_zoom` pasa a `zoom_velocidad_max 0.05` (era 0.08) con umbral/rango exportables (`zoom_velocidad_min 200 / zoom_velocidad_rango 450`); **quitado el `sprint_zoom_out=0.04` + `sprint_min_speed=420` del Lobo** (duplicado con el zoom por velocidad) → Lobo en sprint ahora llega a ~0.93 en vez de ~0.83 de zoom-out. Revisado `projectile.gd:87`: `_fuera_de_camara()` ya usa `cam.zoom` para el rect visible → correcto con zoom dinámico, sin cambios. La palanca `@export sprint_zoom_out` de `forma.gd` (y `_sprint_zoom` de `player.gd`) se conservan por si el usuario quiere re-activar el efecto desde el editor.
+- **C5 — límites reales** (seteados en el nodo Camara de cada nivel, editables en editor; antes el diag `limit_right < 1e8` pasaba vacíamente con el default Godot de 10M):
+  - `nivel1prueba`: x 0..44000, y -700..1100.
+  - `nivel1`: x -1600..17200, y -700..1100 (spawn en -248 visible).
+  - `nivel2`: x -3000..16000, y -1500..7600 (encierra spawn 5421,3511 y santuario 3965,6948).
+  - `main.tscn` no se tocó (extensión incierta; la cámara ya tiene offset propio).
+
+### Verificación
+- Import limpio, smoke limpio, `autotest` **FALLOS = 0**, `diag_formas`/`diag_golpe`/`diag_feedback` **FALLOS = 0**, `diag_nivel1prueba` **FALLOS = 0** (alcanzabilidad intacta; "cámara con límites seteados" ahora es real).
+- Pendiente: commit/push a cargo del usuario (sigue todo acumulado del 13/09: Bloque 1+2, hitbox Lobo, retune movimiento/salto y este plan de cámara).
+
+---
+
+## 🔴 Sesión 11/09 — Gameplay rebalanceado + fix colisiones + pulido visual
+
+> Pedido del usuario: lista de mejoras de gameplay (bloqueo de movimiento al atacar, hitboxes proporcionales, orbes grandes, rompibles a pecho, animaciones más rápidas, cámara al inicio, enemigo de oleada que desaparece, azul oscuro). Aprobado todo junto.
+
+### Bloqueo de movimiento al atacar (Plan A + C)
+- **`player.gd` + formas:** `dir` (eje X) se anula cuando `_attacking==true`; planeo del Murciélago (`is_gliding`) también bloqueado durante ataque. `melee_sticky` de todas las formas → 0. Sin homing push ni lunges (funciones eliminadas).
+- **Recuperaciones bajadas** para compensar el bloqueo: LIGHT 0.275→0.22 / HEAVY 0.5→0.42 (SPECIAL 0.75 / COMBO 0.875 sin cambios).
+
+### Colliders del jugador cubriendo el sprite completo (usuario, 11/09)
+- **Bug reportado:** en juego, la colisión quedaba más chica que el sprite — las piernas del Humano traspasaban plataformas/piso porque no tenían hitbox.
+- **Medición:** los sprites (escala visual 1.0) llenan todo el canvas (sin padding de sombra): Humano ~187×303, Lobo correr 355×152 / quieto 355×218, Oso ~466×309, Murciélago ~131×118.
+- **Fórmula:** `_apply_form` usa `collision_shape.position.y = 142.5 - h*0.5` y `visual.position.y = 150 - h*0.5`; para que los pies del sprite calcen con la base del collider → `altura = alto_sprite + 15`.
+- **Valores nuevos (`collider_size` en cada `forms/*.gd`):** Humano 190×318, Lobo 360×233, Oso 470×324, Murciélago 135×133. También actualizado el `RectangleShape2D_body` de `player.tscn` (era 152×277, default del editor).
+- **Consecuencia asumida (usuario aprobó "sin modificar grietalobo"):** el gap de GrietaLobo (150-190) ahora NO deja pasar físicamente al Lobo (233 de alto); queda pendiente rediseñar la grieta en otra sesión. `diag_nivel1prueba.gd` solo verifica el gap escalar, sigue en 150-190, comentario actualizado.
+- **Verificación:** import limpio, smoke limpio, autotest **FALLOS = 0** (mejor que los 1-2 flaky previos; en esta corrida pasó incluso el special del murciélago).
+
+### Girar durante el ataque sin moverse (usuario, 11/09)
+- **Pedido:** al pegar, poder girar de lado (cambiar `facing`) pero sin desplazarse.
+- **Cambio en `player.gd`:** el input de movimiento ahora se lee en `cmd_axis`; si `_attacking`, solo se actualiza `facing` (si `cmd_axis != 0.0`) y `dir` queda en 0 → el personaje gira en el lugar pero no se mueve. El `attack_area` conserva la posición del facing del momento del golpe (no se re-posiciona a mitad de recuperación).
+- **Verificación:** import limpio, smoke limpio, autotest **FALLOS = 0**.
+
+### Ritmo del combate más pausado y animaciones sincronizadas (usuario, 11/09)
+- **Pedido:** combate "un poquito más pausado" + sincronizar animaciones de ataque con las duraciones.
+- **Valores elegidos por usuario (opción "Moderado"):** `RECOVERY_LIGHT=0.28`, `HEAVY=0.52`, `SPECIAL=0.92`, `COMBO=1.05` (antes 0.22/0.42/0.75/0.875).
+- **Sincronización:** cada anim de ataque del Humano ahora dura exactamente su recuperación. En `_iniciar_anim_ataque()` se calcula `_attack_anim_speed_scale = duracion_natural / recovery` y se aplica a `visual.speed_scale`; `_attack_anim_timer = _attack_timer`. Los fps del `.tres` (`jugador_frames.tres`) quedan como base editable (la distorsión depende del recovery, no del recurso).
+- **Combo "Remate"** ahora reproduce `attack_full` (secuencia 1-6) en vez de `attack1`, para que los 6 frames llenen el recovery de 1.05s (con 3 frames se veía cámara lenta).
+- **Feedback:** whiff sigue multiplicando la recuperación (`WHIFF_RECOVERY_MULT`); el recovery que se estira después del inicio del ataque queda cubierto por la cola de animación existente.
+- **Verificación:** import limpio, smoke limpio, autotest **FALLOS = 0**.
+
+### Hitboxes proporcionales (Plan B)
+- **Formas:** humano 110×190, lobo 150×140, oso 190×215, murciélago 85×70 (`collider_size` en cada `forms/*.gd`).
+- **Enemigos** (`config_por_tipo`): cultista 100×130, arquero 90×155, chamán 90×170 (antes todos compartían un tamaño genérico).
+
+### Hitboxes de ataque editables desde el Inspector (usuario, 11/09)
+- **Pedido ("Exponer todo al Inspector", alcance "Solo hitboxes"):** la geometría de las hitboxes de ataque vivía hardcodeada en `forma.gd`/`forms/*.gd` y en los dicts de `combos` → el usuario no podía ajustarla desde el editor.
+- **Solución:** renacen `resources/formas/*.tres` (Resource con script de la forma). Ahora aportan datos reales y editables en el Inspector:
+  - `forma.gd`: `@export special_range`, `special_size`, `special_knockback`, `heavy_knockback` (antes literales). `perform_heavy()` usa `heavy_knockback`.
+  - `humano.gd`/`lobo.gd`/`oso.gd`: `perform_special()` usa `special_*` export (oso tenía `enable_melee(Vector2(390,210), 234.0, ..., 320.0)` inline; queda en sus exports + `.tres`). El especial del Murciélago es proyectil (`fire_projectile()`), así que NO lleva special geometry.
+  - `player.gd`: `const FORMAS` precarga los `.tres` (ya no `script.new()`); `herramienta_nivel.gd` idem (`SCRIPTS_FORMAS`, sin `.new()`).
+- **Formato del `.tres`:** `[gd_resource ... script_class="Humano"]` + `[ext_resource]` del script + `[resource]` con SOLO los valores de golpe (attack/heavy/special + knockbacks + `combos`). El resto del balance sigue en el `_init()` del `.gd` — no hay duplicación.
+- **Verificación:** import limpio, smoke limpio, autotest **FALLOS = 0**; `diag_formas` sigue con los 2 fallos baseline ("Lobo salta más alto", "Murciélago planea en el aire") — sin regresión.
+
+### Hitbox de enemigos acorde al sprite (usuario, 11/09)
+- **Problema:** en el Plan B de esta sesión los colliders de enemigos habían quedado chicos (cultista 100×130, arquero 90×155, chamán 90×170) frente a sprites a escala natural mucho más grandes → la hitbox cubría ~1/3 del cuerpo visible.
+- **Tamaños reales medidos (`Sprites/Enemigos/`):** gordo 127×380 (cultista), flaco 103×410 (arquero), chamán = polígono ~102×330.
+- **Fix (`enemy.gd::config_por_tipo`):** colliders = talla del sprite: cultista **127×380**, arquero **103×410**, chamán **102×330**. El chamán no usa sprite: su `Visual` conserva scale del tscn (3.64,5.89) y su base real queda en y≈65.4, así que `enemigo.gd` gana `@export collider_pies_y` (0 = usar base del tscn) y `enemy.gd::_ready` respeta ese offset para anclar los pies del collider.
+- **Verificación:** import limpio, smoke limpio, autotest **FALLOS = 0**; `diag_nivel1` baja de 6 a 3 fallos (rompibles/pickups/diálogos, conteos preexistentes de la escena, ajenos al collider) y el frag de enemigos (11 cultistas) pasa; `diag_nivel1prueba` sin solapes (0).
+
+### Recuperación de posición anti-NaN (Plan D)
+- **`enemy.gd`:** nuevo `var _ultima_pos_valida` + guard al inicio de `_physics_process`: si `velocity` o `global_position` no son finitos (colisión degenerada), restaura posición y zero-ea velocidad. Preventivo contra la cascada de NaN que rompía melee/rompibles/pickups en cornisas del TileMap.
+- **`enemy.gd`:** `@export limite_caida = 6000.0`, check `y > limite_caida` → `matar_por_caida()` (health=0 + `_morir()`), evita soft-lock si un enemigo cae al vacío.
+
+### Anti soft-lock de oleadas (Plan E)
+- **`encounter.gd`:** nuevo `_comprobar_limbos()` — enemigos vivos con `y > _arena_base_y + 400` → `matar_por_caida()`. Llamado en `_physics_process` tras `_actualizar_paredes_a_borde()`.
+- **`camera.gd`:** snap en `_ready()` a `player.global_position + desplazamiento` (evita cámara en esquina durante diálogo intro).
+
+### Pickups más grandes (Plan F)
+- `pickup.tscn` / `pickup_vida.tscn`: radio 11→26, rombo -10..10 → -20..20.
+
+### Animaciones más rápidas (Plan G)
+- `resources/jugador_frames.tres`: attack1 10→16 fps, attack2/attack_full 7→13 fps.
+
+### Pulido visual (Plan H)
+- **`player.gd`:** `TINT_ALPHA 0.45→1.0` con comentario: "La semi-transparencia 0.45 hacía que el self_modulate gris-azulado del Lobo x alfa diera azul oscuro." Ahora el tinte es `color.lerp(WHITE, 0.55)` a alpha 1.0.
+- **`pinchos.gd`:** `@export fraccion_zona_dano := 0.4`, killzone = `_kill_zone_size.y * fraccion` (antes +46px de aire sobre los pinchos).
+
+### Tests
+- **`autotest.gd`:** `_esperar_recuperacion` frames actualizados a 16/28/44/52; loop de "muere al recibir daño" con corte `en2.health <= 0` para evitar lecturas post-free.
+- **`diag_nivel1.gd` / `diag_nivel1prueba.gd`:** `ANCHO_COLLIDER_ENEMIGO = 100.0`; gap GrietaLobo 150–190 (con tallas actuales de colliders).
+- **`tests/diag_tinte.gd` NUEVO:** revisa por forma que `visual.modulate.a==1.0`, `self_modulate.a>0.9` y canales r,g,b>0.5 (luminoso). FALLOS=0.
+
+### Verificación
+- **Bug cornisa→NaN (root cause de 6 fallos):** en `main.tscn`, el TileMap tiene una cornisa en y≈789 en la zona de spawn del enemy. El test "muere al recibir daño" colocaba el enemigo en esa cornisa (x≈-438, y≈789) mientras el player reposaba en Ground (y≈861). El lunge de 420px tiraba al enemigo de la cornisa contra el player → colisión degenerada → NaN en `move_and_slide` → cascada de 6 fallos. **Fix:** guard anti-NaN en `enemy.gd` + reposicionar el enemigo en la misma base que el player (misma y, misma plataforma) en el test.
+- **Con fix:** FALLOS = 1 (solo el flaky conocido del murciélago special).
+- **diag_tinte:** FALLOS = 0 (el bug del "azul oscuro" no viene del tinte).
+- **Rompibles elevados (nivel1/2/main):** verificados con probe de raycast → todos están en sus posiciones correctas de diseño de nivel (sobre plataformas, techos, grietas). Solo los del piso plano (nivel1prueba y nivel1 spawn) fueron ajustados a y=936.5 en la sesión anterior.
+- Import limpio, smoke limpio.
+
+## 🔴 Sesión 10/09 (3) — Sprites de ataque humano enlazados + enemigos a escala natural
+
+> Pedido del usuario: los sprites nuevos de la animación de ataque "no se ven" + integrar los sprites nuevos de enemigos (pendiente de la sesión previa).
+
+- **Causa de los sprites de ataque invisibles:** `resources/jugador_frames.tres` líneas 29-34 referenciaban `PJ A {1-6}.png` (archivos borrados) → los `ext_resource` de `attack1/attack2/attack_full` apuntaban a fantasmas. Fix: reenlazados a `Pj atq {1-6}.png` con sus uids reales del `.import` (`uid://dyeyigpfhh6oc`, `78nqa1chcjpp`, `c0jktb0armluo`, `crlr17bq04ki3`, `deb44sae1e6j2`, `cpwpko102fm`). Mismos ids de recurso, resto del archivo intacto.
+- **`resources/enemigo1_frames.tres` y `resources/enemigo2_frames.tres` REESCRITOS:** pasaron de ~1169 líneas (frames 48×48 embebidos como PackedByteArray) a **28 líneas handcrafted** con `ext_resource` a `Sprites/Enemigos/enemigo gordo1.png` (uid `uid://kvieg5g388al`) y `enemigo flaco1.png` (uid `uid://cdm52qmr4qnjp`). Mismos uids de archivo (`uid://bkfv821bksv2h`, `uid://ucfekjr1adaf`). **Solo 5 animaciones** (idle/run/jump/attack1/attack2) — las únicas que usa `enemy.gd` (se descartaron attack3/climb/craft/death/default/fly/hurt/push/walk, 0 referencias en código/tests).
+- **`scripts/enemigos/enemigo.gd`:** nuevo `@export visual_scale: Vector2 = Vector2.ZERO` (editable desde el editor).
+- **`scripts/enemy.gd`:** `config_por_tipo` setea `visual_scale = Vector2.ONE` y colliders nuevos para cultista/gordo (**96×320**) y arquero/flaco (**72×340**); chamán sin cambios (Poly). En `_ready()`, si `visual_scale != ZERO`: aplica scale 1.0 y reposiciona `Visual` para que los **pies del sprite (altura real de la textura) queden alineados con la base del collider** (reusa `animated.position.y = -1.27` del tscn). El chamán conserva el scale/pos del tscn (pensado para su Polygon2D).
+- **Regla a recordar:** los sprites nuevos se ven a **escala natural (1.0)**; el `visual_scale` del respawn del tscn (3.64583, 5.89583) era para los sprites de 48px — ahora solo aplica al chamán.
+- **Verificación:** import limpio (solo el ERROR preexistente del plugin `herramienta_nivel/plugin.gd`), smoke limpio (`--quit-after 5`), autotest **FALLOS = 1** (solo el flaky conocido "Murciélago: special dispara proyectil sónico", NO es regresión). `git status`: `PJ A *.png` + `.import` borrados (staged por el usuario), `Pj atq` + `Sprites/Enemigos/` untracked.
+
+---
+
+## 🔴 Sesión 10/09 (2) — Orbe rojo de vida (drop 30% de los enemigos)
+
+> Pedido del usuario: orbe de vida que sueltan los enemigos; "visualmente igual al orbe de energía" pero rojo; los recoge el player al tocarlo (regla: editable desde el editor, sin `.tres`).
+
+- **`scenes/pickup_vida.tscn` + `scripts/pickup_vida.gd` NUEVOS:** Area2D idéntico al pickup de energía (rombo `0,-10 / 8,0 / 0,10 / -8,0`, radio 11, `collision_mask=4`) pero `color = Color(1, 0.32, 0.28)`. Export `curacion := 30`; `body_entered` → `body.curar(curacion)` + `queue_free()`.
+- **`player.gd::curar(cantidad)` NUEVO:** `health = clampi(health + cantidad, 0, VIDA_MAX)` + emite `health_changed` (para el HUD). OJO: `VIDA_MAX` real del player es **100** (en el resumen previo figuraba 500 por error; el `.tscn`/script manda).
+- **`enemy.gd::_soltar_orbe_vida()` NUEVO (llamado desde `_morir()`):** `if randf() > 0.3: return`; instancia `pickup_vida.tscn` en `global_position` y lo agrega al `current_scene` (fallback `get_parent()`). No compite con el drop de energía: es un objeto aparte.
+- **Verificación:** `tests/diag_orbe.gd` NUEVO **FALLOS=0** (aislado, sin `main.tscn` porque los encounters dañan al player y contaminan las aserciones de vida): `curar(30)` 50→80, no pasa `VIDA_MAX`, 40 muertes → suelta orbe, al tocarlo cura. Smoke limpio, import limpio (solo el ERROR preexistente del plugin), autotest **FALLOS=1** (mejor que baseline 2: la consola `mv` ahora pasa; solo el murciélago special sigue flaky). `diag_checkpoint` re-corrido **FALLOS=0**.
+
+---
+
+## 🔴 Sesión 10/09 — Checkpoint colocable (respawn en el lugar, sin recargar el nivel)
+
+> Pedido del usuario: escena de checkpoint reutilizable + **al morir NO se resetea el nivel** (el jugador se teletransporta al último checkpoint y el mundo queda como estaba: enemigos muertos siguen muertos, pickups recogidos, rompibles rotos) + **estado completo** restaurado (posición, forma, vida, energía; fragmentos/combos/barreras/diálogos ya persisten porque no se recarga la escena) + **feedback visual** de activación (se enciende).
+
+- **`scenes/checkpoint.tscn` + `scripts/checkpoint.gd` NUEVOS:** Area2D reutilizable (`collision_mask=4`, igual que pickup/santuario). Al `body_entered` llama `player.actualizar_checkpoint(global_position + offset_respawn)` (export `offset_respawn := Vector2(0,-60)`), se enciende (`color_apagado` → `color_encendido`, glow + `burst`), con señal `activado` y exports de colores (regla: editable desde el editor, sin `.tres`). Visual: hexágono vectorial (poste + glow).
+- **`player.gd::actualizar_checkpoint` AHORA GUARDA ESTADO COMPLETO** (antes solo `_spawn_position`): `_checkpoint_forma`, `_checkpoint_vida`, `_checkpoint_energia`, `_tiene_checkpoint=true`. Nuevos métodos `tiene_checkpoint()` e `reaparecer_en_checkpoint()` (teleport a `_spawn_position`, restaura forma vía `_restaurar_forma()` que aplica collider/zoom sin cooldown ni sonido, vida, energía, limpia `_derrota_activa`, racha, `_invuln_timer=1.5` y re-emite señales para el HUD).
+- **`derrota.gd::_reintentar()` ahora bifurca:** si el player tiene checkpoint → `paused=false` + `reaparecer_en_checkpoint()` + `queue_free()` (NO recarga la escena). Sin checkpoint → `reload_current_scene()` (comportamiento previo intacto).
+- **`santuario.gd` reordenado:** curar ANTES de `actualizar_checkpoint` (si no, el snapshot guardaba la vida previa al heal y el respawn restauraba vida baja — regresión contra el reload previo).
+- **Instancias:** `Checkpoint1` @(9780,920) y `CheckpointLobo` @(16800,920) en `nivel1prueba.tscn` (regla: NO tocar `nivel1.tscn`).
+- **Verificación:** import limpio, smoke final limpio, autotest **FALLOS=2** (baseline: murciélago special flaky + consola `mv`), `tests/diag_checkpoint.gd` NUEVO **FALLOS=0** (activa checkpoint, verifica snapshot+restauración posición/vida/energía/`_derrota_activa`). Ojo: `tests/diag_derrota.gd` tiene bug PREEXISTENTE (carga `nivel_2.tscn` inexistente, el real es `nivel2.tscn` → timeout) — no se usa en la verificación estándar.
+
+---
+
+## 🔴 Sesión 08/09 — Nivel 1 (prueba) rediseñado: 44.000 px, 3 actos, coherencia de plataformeo
+
+> Basado en feedback del usuario: el nivel duraba ~1 min, estaba "desordenado y sin sentido", faltaban secuencias de plataformeo y espacios vacíos entre zonas de conflicto. Pedido explícito: **44.000 px**, "muchísimo más largo", plataformeo coherente. Decisiones confirmadas: **5 arenas / 14 enemigos** (escalada 2→2→3 [ola]→3 [presión]→4 final) y **3 actos**.
+
+- **`scenes/nivel1prueba.tscn` reescrito (0–44.400 px, piso `(44400,401)@(22200,1092)`, visual ±22200):** los 22 bloques en orden, cada batalla seguida de plataformeo y calma (ritmo **calma → enseñar → combate → plataformeo → recompensa → calma**). Piso continuo de punta a punta (sin pozos), campos de pinchos SIEMPRE con puente encima. `Pinta` cubre hasta celda `(1387,34)`.
+- **Estructura:** Acto 1 Humano (0–15.400: intro mov, enredadera1, Encounter1 @5100, plataformas T1, pinchos 1 y 2, **TotemLobo @14700**); Acto 2 Lobo (15.400–31.000: GrietaLobo @16000 gap 172, MuroLobo @16650, clusters T3, Encounter2 @24500 arquero+cultista, enredadera2 → T4, gauntlet T2→T3→T4 + pinchos 3); Acto 3 (31.000–44.400: Encounter3 @35800 3 cult. c/ola, torre T1→T4 @36400, rompibles×3, Encounter4 @40200 arquero+cult+arquero, puente T3 pinchos 4, torre final, Encounter5 @43900 4 enem. y Santuario @44350 `activar_victoria`).
+- **`scenes/plataforma.tscn` NUEVO (uid `uid://plataforma_0001`):** StaticBody2D 280×30 reutilizable (60 instancias en el nivel) — respeta la regla de edición (positivos/colores/editables desde el inspector), y evita inflar el `.tscn` con ~200 líneas repetidas.
+- **Gramática de plataformeo (fuente de verdad, verificada por el diag):** tiers `T1 y915→superficie 900` (Humano, gap≤200), `T2 y875→860` (Humano apretado, gap≤170), `T3 y795→780` (solo Lobo, gap≤240), `T4 y715→700` (Lobo desde T3 o enredadera, gap≤240). Subidas por paso ≤80 (gap×0.75 si >80); enredaderas (tope ~476) = "súper fuente" para bajar a cualquier plataforma debajo a ≤350px. Escaleras compuestas >=3 plataformas; nunca plataforma aislada.
+- **`tests/diag_nivel1prueba.gd` ahora verifica COHERENCIA, no solo estructura:** BFS de alcanzabilidad por fases (Humano para plataformas x<totem, Lobo ≥totem, + seeding por tope de enredadera designada `desde_enredadera`), puente sobre cada pincho (plataforma con |dx|≤140), enredaderas a ≥300px de clusters T3/T4 no designados, piso continuo hasta x=43.400, conteos (5 arenas, 14 enem., 24 pickups, 10 pinchos, 3 romp., 60 plataformas), grieta gap 172, muro base 992.
+- **Iteración v2 (mismo día, feedback del usuario):** "distancia más las plataformas para saltos más interesantes, usar pinchos para matar si no llegás al salto, más verticalidad con enredaderas". Cambios:
+  - **Salto real = separación de centros − ancho de plataforma (280).** Presupuestos nuevos en el diag: Humano plano ≤250 / subiendo ≤180 (rise≤135), Lobo plano ≤420 / subiendo ≤300 (rise≤235), escalones verticales ≤80. Filas espaciadas 430-480 (Humano) y 300-640 (Lobo) → saltos reales, no pasitos.
+  - **Pinchos bajo los HUECOS de cada tramo de saltos** (fallar = morir, no relleno decorativo). Nueva regla del diag: todo pincho tiene una plataforma a ≤320px **y** un par de plataformas que lo flanquean con separación ≤720px (siempre en contexto de un tramo saltable, nunca en corredor de calma). Total **24 pinchos**.
+  - **4 enredaderas de alto 500** (tope y=376): Enredadera1@2800, @10100 (cascada T3→T2→T1), @25600 (salida T4 tras Encounter2), @42300 (clímax final). Enredaderas = verticalidad (subís 616px) + súper-fuente en BFS para bajar a cualquier plataforma dentro de 420px.
+  - **44 plataformas** (antes 60, más espaciadas), 23 pickups (12 en plataformas/enredaderas + 11 de calma/tesoro), 5 arenas/14 enemigos igual, 3 rompibles.
+  - **Verificado:** diag **FALLOS=0**, smoke limpio, autotest **FALLOS=2** (baseline). Probar a mano en el editor: si un salto de Lobo de 360px de hueco se siente justo/frustrante, aflojar `GAP_FLAT_LOBO`.
+- **Verificación:** `diag_nivel1prueba.gd` **FALLOS = 0**, smoke limpio, autotest **FALLOS = 2** (baseline conocido: murciélago special flaky + consola `mv`). Import con solo el error preexistente del plugin `herramienta_nivel/plugin.gd` (ajeno).
+- **Pendiente:** textos de los 8 ids `p1_*` (vacíos adrede); probar a mano el nivel en el editor (pacing real, no solo física); commit/push a cargo del usuario.
+
+---
+
+## 🔴 Sesión 05/09 — Diálogos persistentes en `data/dialogos.json` (texto fuera del .tscn)
+
+> **Problema:** las líneas de los diálogos vivían en el `.tscn` (`lineas = PackedStringArray(...)` en cada nodo `DialogTrigger`). Un merge o re-guardado del editor las vaciaba (pasó 2 veces con `DialogoIntro`/`DialogoTronco`, sesión 27/08 y de nuevo en HEAD 2ae4202 vía re-guardado). El usuario pidió que "los diálogos perduren" = que el texto no se borre del juego.
+
+- **`res://data/dialogos.json` (NUEVO directorio `data/`):** un solo dict por `id`, con `hablante`, `modo` ("Zona"/"Automatico"), `retraso`, `una_vez` y `lineas` (array de strings). **Para agregar un diálogo:** crear/editar el trigger en la escena con `dialogo_id` y añadir la entrada al JSON. Es la ÚNICA fuente del texto → escenas y merges ya no pueden borrarlo.
+- **`scripts/dialog_trigger.gd`:** nuevo `@export var dialogo_id: String`. En `_ready`, `_cargar_dialogo_por_id()` carga la entrada (cacheada en `static _cache`, read una sola vez). Si el id no existe → `push_error` y el trigger no dispara. Los exports `lineas/hablante/modo/una_vez/retraso` siguen como fallback para triggers sin id.
+- **IDs migrados:** `main_intro`, `main_tronco` (main.tscn), `n1_intro` (único con texto real, 7 líneas), `n1_combate`, `n1_lobo`, `n1_zona2`, `n1_zona3`, `n1_santuario` (nivel1.tscn). Los triggers vacíos mantienen su entrada con `lineas: []` para completar el texto después.
+- **Verificación:** import limpio, smoke final limpio (incluye `nivel1.tscn`), `tests/diag_dialogos.gd` **FALLOS=0** (6 checks: carga de n1_intro, id inexistente). Autotest **FALLOS=2** — ver nota crítica abajo.
+
+---
+
+## 🔴 REALINEAMIENTO SPIRIT KEEPER (13/08 — ESTADO ACTUAL, LEER ANTES QUE EL HISTORIAL)
+
+> Todo el código de juego fue **reconstruido desde cero** y alineado al **Documento de Concepto** (`Documento_de_Concepto_TP3_GRUPO9.pdf`, extraído con PyMuPDF a `temp/concepto.txt`). Las secciones de abajo con mecánicas viejas (enemigos/Encounter/Ben 10) son **historial**, no el estado actual.
+
+- **Título:** `config/name = "Spirit Keeper"` en `project.godot`.
+- **Formas (enum `Form` en player.gd):** `HUMAN(0)`, `LOBO(1)`, `OSO(2)`, `MURCIELAGO(3)`. **Desde 11/09 se cargan desde `resources/formas/{humano,lobo,oso,murcielago}.tres`** (Resource + script de `scripts/forms/*.gd`) vía `const FORMAS` en `player.gd` y `SCRIPTS_FORMAS` en `herramienta_nivel.gd`. Los `.tres` del 13/08 eran envolturas vacías y se borraron; los **nuevos** aportan datos reales editables en el Inspector: geometría de golpe (`attack/heavy/special_size+range`, `heavy/special_knockback`) y el `combos` (tamano/rango/dano/knockback). El resto de stats (velocidad, saltos, física, collider) sigue viviendo en el `_init()` de cada `.gd` (no duplicado en el `.tres`).
+  - **Humano:** 520 px/s · melee balanceado · combo único "Remate" (J→K, 42).
+  - **Lobo:** 560 px/s · salto alto (-500) · **doble salto (2 saltos)** · melee veloz · combo "Mordida".
+  - **Oso:** 160 px/s (lento) · daño alto (30) · salto bajo (-420, gravedad 1.45×) · **rompe el Tronco** · combo "Garra".
+  - **Murciélago:** 330 px/s · **disparo sónico** (`scenes/projectile.tscn` + `fire_projectile()`) · **planeo** (J sostenido en el aire) · combo "Ala Cortante".
+- **Vida compartida (`VIDA_MAX=100`):** `health` NO se resetea al transformar (NO es por forma). `max_health` de cada forma existe pero es informativo.
+- **Energía de transformación:** drena 8/s transformado, a 0 → vuelve a Humano; Humano regenera 5/s; romper rompibles/pickups recargan.
+- **Progresión:** `Progresion` autoload. 3 fragmentos/nivel. `forma_desbloqueada = form_index < nivel` (nivel 2→Lobo, 3→Oso, 4→Murciélago). 1 combo por forma, desbloqueable al subir de nivel.
+- **Comandos consola (`console.gd`):** `help`, `form <humano|lobo|oso|murcielago>`, `god`, `mv`, `frags <n>`, `nivel <n>`, `kill`. (El método de ejecutar es `_ejecutar(PackedStringArray([...]))`; abrir/cerrar es `toggle()`.)
+- **Escenas core:** `scenes/main_menu.tscn` (main scene desde 15/08), `scenes/main.tscn`, `scenes/player.tscn`, `scenes/pause.tscn`, `scenes/controls.tscn`, `scenes/rompible.tscn`, `scenes/tronco.tscn` (+`interactable.gd`), `scenes/pickup.tscn`, `scenes/hud.tscn`, `scenes/console.tscn`, `scenes/levelup.tscn`, `scenes/projectile.tscn`.
+- **Scripts:** `scripts/player.gd`, `progresion.gd`, `rompible.gd`, `interactable.gd`, `pickup.gd`, `camera.gd`, `hud.gd`, `console.gd`, `levelup.gd`, `projectile.gd`, `forms/{forma,humano,lobo,oso,murcielago}.gd`.
+- **Tests (todos verdes, FALLOS = 0):** `tests/autotest.gd`, `tests/diag_formas.gd`, `tests/diag_hud.gd`, `tests/diag_feedback.gd` + helper `tests/dummy.gd` (StaticBody2D para medir daño melee).
+  - Correr: `godot --headless --path . --script res://tests/autotest.gd` etc.
+- **Enemigos sectarios (Documento §05/§06, IMPLEMENTADO):** `scripts/enemigos/enemigo.gd` (`class_name Enemigo extends Resource`, usado como contenedor de stats) + `scripts/enemy.gd` (nodo `CharacterBody2D`, IA: acercarse / parar en `stop_distance` / telegrafiar–atacar melee o disparar proyectil). **NO hay `resources/enemigos/*.tres`** (se borraron el 13/08): los stats de cada tipo están **hardcodeados** en `enemy.gd::config_por_tipo(tipo)` con `@export var tipo: String` ("cultista" 40hp melee, "arquero" 35hp proyectil 420, "chaman" 90hp proyectil 480 con `knockback_resist 0.3`); en `_ready()`, si `enemy_data == null` se arma desde `config_por_tipo(tipo)`. Escena `scenes/enemy.tscn` (layer 2, para que el `AttackArea` del player con mask 3 lo detecte). Instanciados 3 en `main.tscn` (2 cultistas + 1 arquero, cada uno con `tipo = ...`). Al morir → `player.on_enemy_killed()` recarga energía (Documento: "la energía se recarga conectando golpes en combate"). Para tests: `_limpiar_enemigos()` libera al grupo `enemy`, y los stats se leen con `preload("res://scripts/enemy.gd").config_por_tipo("tipo")`. **Con sprites desde 15/08:** cultista → GraveRobber, arquero → SteamMan, chamán → polígono (ver sección "Sesión 15/08").
+- **Tronco (`interactable.gd`):** `required_form=2` (Oso), `interact_range=220.0` (el coloso de 200×300 exige rango mayor; con 90 el player no llegaba a 90 del centro sin pisar el cuerpo). Solo el **Oso** lo rompe con `L`.
+- **Animación del personaje (`resources/jugador_frames.tres` + `AnimatedSprite2D`):** el `Sprite2D` de `player.tscn` pasó a `AnimatedSprite2D` (mismo nodo `Sprite2D` para no romper `$Sprite2D`). El `SpriteFrames` es un `.tres` EDITABLE con las hojas del leñador (frames 48×48): `idle`(4f/6fps), `run`(6/12), `walk`(6/8), `jump`(6/12), `attack1/2/3`(6/14, loop off), `fly`(reusa jump), `hurt`, `death`, `climb`, `push`, `craft`. El **flip horizontal** es `visual.flip_h = facing < 0`. El tinte por forma (ahora sin nodo `Tint` en la escena) se aplica vía `visual.self_modulate` con el color de la forma. `_update_animacion()` elige: ataque (`attack1/2/3` según tipo/step), en el aire `fly`, moviéndose `run`/`walk` según velocidad, si no `idle`.
+- **Escala REAL en px del mundo (13/08):** el nodo raíz `Player` ya NO tiene `scale=(3,3)` (eso agrandaba la hitbox a ~74×89 reales; la colisión no coincidía con el editor). Ahora `scale=(1,1)` y la escala visual (`2.98,3`) está en el `AnimatedSprite2D` (pos `21,-20`). Los valores de las formas (`collider_size`, `attack_range`, `attack/heavy_size`, `combos.tamano/rango`, `special`) están **multiplicados ×3 = px reales del mundo** (humano: collider 48×120, rango ligero 78, special 198×126/156). Velocidades, knockbacks y físicas NO cambian. `_slash_poligono` y el offset de `fire_projectile` (90,-60) también en px reales. Regla: **el nodo raíz del player NO debe tener scale; el scale visual va en el sprite**.
+
+### Sesión 15/08 — Sprites de enemigos, doble salto del Lobo y carteles de progresión
+- **Sprites de enemigos:** cultista → GraveRobber, arquero → SteamMan, chamán → polígono (decisión del usuario, sin sprite). SpriteFrames embebidos en `resources/enemigo1_frames.tres` y `resources/enemigo2_frames.tres` (patrón de `jugador_frames.tres`, no AtlasTexture). Animaciones: idle/run/walk/jump/fly(→jump)/attack1/attack2/attack3/hurt/death/climb/push/craft (hojas 48 px/frame: idle 4f, hurt 3f, resto 6f).
+- **`enemy.tscn` reescrito:** estructura `Visual` (Node2D) > `Poly` (Polygon2D, chamán) + `Animated` (AnimatedSprite2D, scale 3, pos (0,-42)). `enemy.gd`: `FRAMES_POR_TIPO` (preloads), elige poly o animated según tipo, `_update_animacion()`, `_reproducir_animacion_ataque()` (attack1 melee / attack2 disparo), flip en `visual.scale.x`. Generador: `scripts/generar_frames_enemigos.gd`.
+- **Doble salto:** `forma.gd` tiene `jumps` (Humano 1, Lobo 2), `try_jump()` limita por `_jumps_usados`, `on_floor()` y `reset_form_state()` resetean el contador.
+- **Carteles de progresión:** `hud.gd` conecta `nivel_subio` y muestra "¡NIVEL X ALCANZADO!" + "¡FORMA DESBLOQUEADO!" con una cola `_cola_avisos` (fade 0.6 s + timer 2.2 s) para que no se pisen.
+- **Corrección de estado roto preexistente:** `enemy.tscn` tenía un `Sprite2D` estático (de una sesión previa) pero `enemy.gd` referenciaba `$Visual` → error "Node not found: Visual" en smoke. Se resolvió con la estructura Visual/Poly/Animated.
+- **`tests/diag_golpe.gd` actualizado:** ya no busca `Camera2D` (la cámara ya no es hija del player) ni rotación; chequea daño (30 tras golpe ligero al Cultista1, 40−10) y tinte rojo. Ojo: el daño conecta ~2 frames después del `attack` (el overlap tarda en actualizarse tras `monitoring = true`).
+- **Pendiente de verificar visualmente:** alineación de sprites enemigos en el editor (144 px de alto ×3 vs collider 27×60).
+
+### Sesión 15/08 — UIX: Menú principal, Pausa y pantalla de Controles
+- **Menú principal (`scenes/main_menu.tscn` + `scripts/main_menu.gd`, NUEVA main scene):** `run/main_scene` pasó de `main.tscn` a `main_menu.tscn`. Fondo = gradiente verde oscuro (`TextureRect` + `GradientTexture2D`, OJO: **`ColorRect` NO tiene `texture`** en Godot 4 — usar `TextureRect` con `stretch_mode`), título "SPIRIT KEEPER" dorado, botones JUGAR / CONTROLES / SALIR con StyleBoxFlat (focus = borde dorado). Navegación `↑↓` + `J`/Enter + mouse; "Jugar" hace `Progresion.reset()` y cambia a `main.tscn`.
+- **Pausa (`scenes/pause.tscn` + `scripts/pause.gd`):** instanciada en `main.tscn`. Nueva acción `pause` en `project.godot` (Esc 4194305 + Start joypad 7). CanvasLayer layer 90, `process_mode=ALWAYS`; abre/cierra con `get_tree().paused`. Opciones: REANUDAR / CONTROLES / VOLVER AL MENÚ / SALIR. No se abre si la consola dev está abierta (`_consola_abierta` → grupo `console` + método nuevo `esta_abierta()` en `console.gd`).
+- **Controles (`scenes/controls.tscn` + `scripts/controls.gd`):** overlay reutilizable (CanvasLayer layer 100, ALWAYS) instanciado por menú y pausa; se cierra con Esc o el botón VOLVER (`queue_free`). Dos columnas TECLADO/MANDO con las acciones reales del proyecto.
+- **Verificación:** import limpio, smoke limpio, autotest **FALLOS = 0** + diag_hud/feedback/formas verdes. Capturas de verificación en `tests/cap_menu.png`, `tests/cap_controles.png`, `tests/cap_pausa.png` (generadas con un script temporal, ya borrado).
+- **Pendiente UX (probarlo a mano en el editor):** flujo menú→jugar→pausa→controles→volver, y que el foco del teclado se sienta bien con mando y mouse.
+
+### Sesión 15/08 — Sistema de diálogo del amuleto (narrativa + tutorial in-game)
+- **Pedido del usuario:** una caja de diálogos con la imagen del amuleto que le va hablando al jugador, como recurso narrativo y de tutorial (introduce mecánicas a medida que aparecen, no solo controles genéricos al inicio).
+- **Autoload `Dialogo` (`scripts/dialogo.gd` + `scenes/dialog_box.tscn`, registrado en `project.godot` como escena: `Dialogo="*res://scenes/dialog_box.tscn"`):** CanvasLayer `layer=85`, `process_mode=ALWAYS`. API pública: `mostrar(lineas: Array, hablante: String = "Amuleto")` (encola líneas; si no hay diálogo abierto, pausa el juego y arranca) y `esta_activo() -> bool`. Efecto de tipeo (`visible_ratio` de un `RichTextLabel`, ~0.022s/carácter); `J`/`Enter` completa la línea de golpe si está tipeando, o avanza a la siguiente si ya terminó. Al vaciar la cola, despausa y emite `dialogo_terminado`. Acceder siempre por ruta `/root/Dialogo` (no por identificador global, mismo motivo que `Progresion` — ver lección de Lote 2).
+- **Retrato vectorial placeholder (`scripts/amuleto_retrato.gd`, `extends Control`, `_draw()`):** gema/diamante facetado con un "ojo" que pulsa (glow) mientras el amuleto habla (`set_hablando(bool)`). Colores expuestos (`@export color_gema/color_borde/color_brillo/color_ojo`) para retocar desde el inspector sin tocar código. **Reemplazar por el sprite final del amuleto cuando el equipo lo tenga** (solo hay que cambiar este nodo `Retrato` por un `TextureRect`/`AnimatedSprite2D`, la caja de diálogo no depende de la implementación visual).
+- **`scripts/dialog_trigger.gd` + `scenes/dialog_trigger.tscn` (reusable, colocable en el editor):** `Area2D` con `@export lineas: PackedStringArray`, `hablante`, `modo` (`"Zona"` = habla al cruzar el área, detecta al player por `collision_mask=4`; `"Automatico"` = habla solo al cargar la escena, con `retraso` en segundos) y `una_vez` (default true). Full editable desde el inspector, sin datos hardcodeados en script (regla de edición).
+- **Instancias en `main.tscn`:** `DialogoIntro` (modo Automático, retraso 0.6s) — narrativa de apertura (el amuleto se presenta, contexto del hijo perdido) + tutorial de controles básicos (mover/saltar/J/K/T). `Level/DialogoTronco` (modo Zona, antes del Tronco en x=1350) — anticipa que hace falta el Oso para romperlo, ejemplo de tutorial contextual de mecánica.
+- **`pause.gd`:** no abre el menú de pausa si el diálogo está activo (`_dialogo_activo()`, mismo patrón que `_consola_abierta()`) — evita que el panel de pausa se dibuje encima de la caja de diálogo.
+- **Lección (15/08) — un diálogo automático en `main.tscn` rompe el autotest si no se neutraliza:** `tests/autotest.gd` instancia `main.tscn` completo y simula ataques con `Input.action_press("attack"/"special")` (eventos reales, no llamadas directas). Como `Dialogo` es `PROCESS_MODE_ALWAYS` y consume el input de avance (`attack`/`ui_accept`) vía `set_input_as_handled()`, el diálogo automático de `DialogoIntro` se disparaba a mitad de la corrida, pausaba el árbol (`get_tree().paused = true`) y absorbía los `attack` de las pruebas siguientes → 11 tests fallaban en cascada (combos, block, tronco, rompibles, pickup, enemigos). **Fix:** `_quitar_dialogos_automaticos(nodo)` en `autotest.gd::_init()` recorre el árbol de `_scene` **antes** de agregarlo a `root` y libera cualquier nodo cuyo script sea `dialog_trigger.gd` (recursivo, no hace falta tocarlo si se agregan más triggers a futuro). Mismo espíritu que `_limpiar_enemigos()`. **Regla a futuro: cualquier sistema que pause el árbol y consuma input global (`PROCESS_MODE_ALWAYS` + `_unhandled_input`) necesita neutralizarse en `_init()` de `autotest.gd` antes del `root.add_child(_scene)`, o interfiere con toda la simulación de input posterior.**
+- **Verificación:** import limpio, smoke limpio (`--quit-after 5`, el diálogo automático se disparó sin errores), autotest **FALLOS = 0**. Nota aparte (no introducida por este cambio, no corregida): el smoke/autotest tira `ERROR: There is no animation with name 'fly'` repetidas veces desde `player.gd:486` (`_update_animacion`) cuando el Murciélago está en el aire — bug preexistente de animación, pendiente de investigar en otra sesión.
+- **Pendiente/ideas a futuro:** enganchar `DialogTrigger` a `Progresion.nivel_subio`/`combo_desbloqueado` para que el amuleto explique cada forma nueva apenas se desbloquea (hoy el único tutorial de mecánica nueva es el del Tronco/Oso); considerar más triggers de zona para Lobo/Murciélago cuando esas secciones del nivel existan.
+
+### Sesión 16/08 — Selección de transformación con flechas (↑/↓ preseleccionan, T confirma)
+- **`progresion.gd`:** `forma_desbloqueada()` ahora **siempre devuelve `true`** → todas las formas desbloqueadas desde el inicio (decisión del usuario en la rama prototipo). Nota: esto deja sin efecto los carteles de desbloqueo de forma al subir de nivel (ya no hay forma por desbloquear).
+- **`player.gd`:** `T` ya NO cicla (`current_form+1` salvando bloqueadas). Ahora `var forma_seleccionada` marca la forma preseleccionada; **↑/↓** (`move_up`/`move_down`, ya existían con flechas/W/S/D-pad) la mueven solo entre formas **desbloqueadas** (`_progresion().forma_desbloqueada`, wrapping con `posmod`), y **`T` transforma** a `forma_seleccionada`. `_transformar()` sincroniza `forma_seleccionada = nueva` (consola/formas por energía también la actualizan). Nueva señal `forma_selectada_cambiada(forma_index)`.
+- **`hud.gd` + `hud.tscn`:** nuevo `SelLabel` (abajo-izq, verde) que lista las formas desbloqueadas: la **actual** con `◈`, la **preseleccionada** con `[ ]`. Se actualiza por señales (`_on_forma_selectada`) y al cambiar nivel (`_on_nivel`).
+- **Verificación:** autotest FALLOS = 0 (ajustado el check "Lobo bloqueado en nivel 1" → ahora verifica desbloqueado), smoke limpio, `tests/diag_select.gd` OK **desde nivel 1 sin set_nivel**. Ojo en diag `extends SceneTree`: usar `root.get_node_or_null("Progresion")`, no `get_node`.
+- **RESUELTO (anim "fly"):** `fallaba` "there is no animation with name fly" cuando el Lobo/Murciélago cae en el aire (`player.gd` pedía `nombre = "fly"` pero `jugador_frames.tres` no tiene esa anim). Fix: `player.gd::_update_animacion` reutiliza `"jump"` (que sí existe en el SpriteFrames) para el estado aéreo.
+
+### Sesión 16/08 (b) — Sistema de oleadas de enemigos (Encounter)
+- **Reconstruido desde cero** (el viejo `encounter.gd`/`gate`/`spawn_point` se habían eliminado en el rewrite). Ahora respeta la REGLA DE EDICIÓN: las olas se editan en el inspector y los enemigos se colocan a mano.
+- **`scripts/encounters/wave_ola.gd` → `class_name WaveOla extends Resource`:** `@export tipo`(cultista/arquero/chaman), `cantidad` (0 = solo manuales), `delay`, `offset`, `edge` (entran caminando desde fuera de pantalla).
+- **`scenes/encounter.tscn` + `scripts/encounters/encounter.gd` (Area2D):** `@export olas: Array[WaveOla]`, `camara: Camera2D`, `arena_center`, `arena_medio_ancho`. Estados `INACTIVE→RUNNING→COMPLETED`. Al cruzar (`body_entered` del grupo "player") arranca: activa el cerco + cámara a `modo_arena`, y resuelve olas con contador `_vivos_ola` vía señal `died`; al terminar → `completado`, `modo_normal`, suelta la arena. API: `empezar()`, `_liberar_enemigos()` (tests).
+  - **Cerco de arena (Plan B) — separar TRIGGER de ZONA:** el `Area2D` del Encounter es SOLO el trigger de **inicio** (CollisionShape chico central). La **zona de pelea** se define aparte con el nodo visual **`Arena`** (Node2D → `ArenaShape` rectángulo editable + `ArenaVisual` Polygon2D translúcido). `_derivar_arena_desde_nodo()` deduce `arena_center = ArenaShape.global_position` y `arena_medio_ancho = rect.size.x*0.5`. `_generar_paredes()` crea 2 `StaticBody2D` altos a `center.x ± (medio+separacion)`; `_mostrar_bounds`/`_ocultar_bounds` los encienden al empezar y apagan al completar. **Qué se edita:** el trigger con el área pequeña del Encounter; la zona/cámara/paredes estirándo el rectángulo `Arena`. No mezclar (estirar el Area2D ANTAdelanta el inicio).
+  - **Lección (bug de coordenadas del cerco):** las 2 paredes se crean como hijos del `Encounter` (que está desplazado, p. ej. en `(803,751)`), pero `arena_center` es GLOBAL. Al asignar `pared.position` (relativo) con `arena_center` global se **duplica el offset** y ambas paredes quedaban desplazadas a la derecha (la izquierda terminaba sobre el borde derecho de la arena). Fix: usar `pared.global_position = ...` (centro ± medio+separación), no `position`.
+  - **Lección (paredes flotando):** centrar la pared en `arena_center.y` dejaba su **base en el centro del rect `Arena`** (arriba del piso → hueco por donde se escapaba). Fix: `_arena_base_y = arena_center.y + rect.size.y*0.5` (borde inferior del `ArenaShape`) y la pared se posiciona con `_arena_base_y - altura_pared*0.5`, quedando anclada/enterrada al piso.
+  - **Agrandar la arena desde otra escena:** el `Encounter` es una instancia; para editar sus hijos desde `main` usar `editable_children` (Godot lo guarda como `[editable path="Encounter"]` al final del `.tscn`). Además, `_derivar_arena_desde_nodo()` DEBE incluir `global_scale` del `ArenaShape` (`arena_medio_ancho = rect.size.x*0.5*absf(esc.x)`, `_arena_base_y = ... + rect.size.y*0.5*absf(esc.y)`): si no, estirar/escalar la hitbox (scale del nodo) NO cambiaba la zona (solo el `rect.size` cuenta), y las paredes no seguían al tamaño visual. Verifar con scale 2x → medio 360→720.
+  - **Lección (cámara no se fijaba):** un `@export camara: Camera2D` seteado con `camara = NodePath("../Camara")` en un `.tscn` NO se resuelve cuando el `Encounter` es una instancia de otra escena (`enemy` <-> `Camara` están en escenas distintas bajo `main`). El export quedaba en `<null>` y `_empezar` nunca llamaba `modo_arena` → la cámara seguía siguiendo al player. **Fix:** en `encounter.gd::_ready`, `if camara == null: camara = get_viewport().get_camera_2d()` (autodetección de la cámara activa del viewport). Es más robusto que conectar NodePath manualmente.
+- **Enemigos a mano:** se agrupan por `@export ola_asignada` y `preparar_ola()` los desactiva en `_ready`. `_agrupar_manuales()` los busca **como hijos directos del Encounter O dentro del nodo `Enemies`** (cualquiera con método `activar`) — así el usuario puede arrastrar `enemy.tscn` bajo el Encounter directo y no sólo en `Enemies`. **Ojo:** un enemigo manual colocado como hijo directo del Encounter (fuera de `Enemies`) antes no se agrupaba y quedaba **activo desde el inicio** — por eso se amplió `_agrupar_manuales()`.
+  - **Enemigos ocultos hasta su ola:** `preparar_ola()` (cuando se agrupa) hace `visual.visible = false` + desactiva la colisión (`_colision(false)`); `activar()` los muestra (`visual.visible = true`) y reactiva colisión al terminar el círculo ritual si `spawn_telegrafiado`. Así los enemigos **no se ven ni chocan** hasta que el jugador cruza la zona del Encounter y se dispara su ola. Los enemigos *sueltos* de `main.tscn` no pasan por `preparar_ola()` (siguen visibles desde el inicio).
+  - **Lección (bug de telegrafiado):** en `enemy.gd::_physics_process` hay que chequear/avanzar `_telegraph_timer` **ANTES** de `if not _activo: return`; si el `if not _activo` va primero, el timer nunca baja y el enemigo con `spawn_telegrafiado` queda **congelado para siempre** (no se mueve y su colisión sigue desactivada, por lo que tampoco se le puede pegar). Orden correcto: telegrafiado primero, luego inactivo.
+  - **Lección (enemigo no ataca):** para el **melee** la parada/ataque debe decidirse con **`attack_range`**, NO con `stop_distance`: la física frena a los cuerpos a una distancia real de contacto (suma de semianchos, p. ej. el jugador deja al cultista a `dist≈46px`). Si se usa `stop_distance` (< `attack_range`) el enemigo queda en `elif dist > stop` persiguiendo para siempre y nunca llega al `else` de atacar. Fix en `enemy.gd::_physics_process`: `elif dist > attack_range: mover`, si no `atacar` (con cooldown). `attack_range` del cultista = **62** (cubre el ~46 de contacto). El proyectil usa `shoot_range`.
+  - **Lección (sprite que se sale al girar):** `AnimatedSprite2D.flip_h` espeja alrededor del **origen local del nodo sprite**, NO del centro del cuerpo/hitbox. Si el sprite está descentrado (en `player.tscn` estaba en `(21,-20)`), al girar la figura saltaba fuera de la hitbox. Solución: envolver el sprite en un nodo pivote centrado en el cuerpo (`VisualRoot` en `(0,0)`) y voltear con `visual_root.scale.x = ∓abs()` en vez de `flip_h`; el sprite conserva su `position`/`scale`/`offset` internos. Helper `_aplicar_facing()` en `player.gd`, llamado en `_apply_form()` y `_update_animacion()`.
+  - **Lección (enemy_data vacío de la demo):** al arrastrar `enemy.tscn` Godot materializa `enemy_data` como una sub_resource **`Enemigo` vacía** (defaults: `tipo_nombre="Sectario"`, `stop_distance=55>attack_range=40`, `projectile=false`). Como `_ready` solo fabricaba stats si `enemy_data == null`, los enemigos de la demo usaban esos **defaults**, repitiendo el bug de no-ataque para todos (y el arquero ni siquiera era proyectil). Fix en `_ready`: si `enemy_data == null` **o** `enemy_data.tipo_nombre` está vacío/`"Sectario"` (no editado), se regenera con `config_por_tipo(tipo)`; un `enemy_data` realmente editado por el usuario se respeta.
+- **`enemy.gd`:** nuevo estado `_activo` (default true, para no romper los enemigos sueltos de main.tscn) + `@export spawn_telegrafiado` + `@export ola_asignada` + **`@export ritual_duracion` (tiempo del círculo ritual, por defecto 0.7, editable en el inspector)**. `activar()` con `spawn_telegrafiado` muestra el **círculo ritual** (Polygon2D generado por código, agregado a `self` y no a `visual` para que se vea) durante `ritual_duracion` s antes de activar la IA; **el sprite (`visual`) NO se ve durante el ritual** (queda `visual.visible=false` de `preparar_ola` y solo se muestra al terminar, cuando ya puede moverse/atacar y reactiva la colisión). Mientras inactivo no se mueve/ataca.
+- **`camera.gd`:** se reescribió para seguir al jugador (lerp + límites `export`) y tener `modo_arena(centro)` (fija) / `modo_normal()` (sigue), señal `modo_cambio`. Antes solo tenía `shake`. La cámara ahora se instancia explícitamente en cada escena.
+- **`scenes/demo_olas.tscn`:** escena demo (suelo + Player + `Camara` + Encounter + guía). **La demo NO trae enemigos automáticos** (el array `olas` está vacío): sólo aparecen los enemigos que el usuario coloca a mano. La guía (Label "Guia") explica el flujo. Correr: `godot --headless ... res://scenes/demo_olas.tscn --quit-after 6`.
+- **Verificación:** import limpio (registra `WaveOla`), autotest FALLOS=0, `tests/diag_encuentro.gd` OK (INACTIVE→RUNNING→spawn 2→matar→COMPLETED), smokes de `demo_olas` y `main` sin errores.
+- **Lecciones de esta sesión:** (1) en diag/tests NO usar `:=` con `load().instantiate()` (no infiere tipo con recursos) → tipar como `Node`; (2) un `Array[WaveOla]` no acepta `[ola]` plano → usar `[ola] as Array[WaveOla]`; (3) los arrays exportados de recursos se escriben en el `.tscn` como `Array[Tipo]([SubResource(...)])` y los nodos exportados como `NodePath(...)`; para nodos exportados "múltiples" conviene usar contenedores hijos en vez de `Array[Node]`.
+
+### Integración (17/08) — Fusión de UIXFranco + prototipo-gameplay-mecanicas en main
+- Ambas ramas partían del mismo commit de `main` y nunca se habían fusionado entre sí. Se integraron en una rama `integracion` y luego a `main`: UI/UX (menú, pausa, controles, diálogo del amuleto) + gameplay (selección de forma con flechas, sistema de oleadas Encounter, doble salto del Lobo).
+- **Nota de diseño a resolver:** `progresion.gd::forma_desbloqueada()` ahora siempre devuelve `true` (decisión de la rama prototipo), lo que deja sin efecto los carteles de "¡FORMA DESBLOQUEADO!" de `hud.gd` (Sesión 15/08) y el tutorial de `DialogTrigger` pensado para explicar cada forma nueva al desbloquearse. Falta decidir si se vuelve a un desbloqueo progresivo o se ajustan los carteles/diálogos a que ya no aplican.
+
+### Sesión 17/08 (b) — Íconos vectoriales por forma en el menú de subida de nivel
+- **Pedido del usuario:** que el menú "¡NIVEL N!" (elegir qué forma mejora su combo) muestre un ícono con la imagen de la transformación en vez de solo el nombre en texto. Decisión del usuario: alcance limitado a este menú (no al selector `SelLabel` del HUD) y usar siluetas vectoriales placeholder (mismo enfoque que `amuleto_retrato.gd`, `_draw()`) para reemplazar después por arte final.
+- **`scripts/form_icon.gd` + `scenes/form_icon.tscn` (reutilizable):** `Control` con `_draw()`. `@export forma: int` (sigue el enum `Form` de `player.gd`: HUMAN=0, LOBO=1, OSO=2, MURCIELAGO=3) elige la silueta (figura humana / cabeza de lobo con orejas puntiagudas / cabeza de oso con orejas redondas / murciélago con alas), `@export color_icono` la tiñe, `@export bloqueado` oscurece con un velo. Los setters de los exports llaman `queue_redraw()` para reflejar cambios en caliente.
+- **`scenes/levelup_option.tscn` (reutilizable):** `PanelContainer` ("Option") con borde/fondo (`StyleBoxFlat "panel_normal"`) que envuelve un `FormIcon` + `Label` con el nombre, para cada opción del menú.
+- **`scripts/levelup.gd` reescrito (`_build_opciones`/`_render`):** en vez de un `RichTextLabel` con texto BBCode, instancia un `levelup_option.tscn` por forma desbloqueada dentro de un `HBoxContainer` ("Options", antes `RichTextLabel`). La opción seleccionada se resalta duplicando el estilo base (mismo patrón que `hud.gd::_actualizar_cap_forma`) con borde/fondo dorado + `scale` 1.08 con `pivot_offset` centrado (vía señal `resized`, porque el tamaño no está listo al instanciar dentro de un contenedor).
+- **Nodos/props tipados con `Control`/`Node` genéricos** (patrón ya usado en el proyecto, ver `hud.gd::_player`) requieren `.set("prop", valor)` o `as Tipo` al acceder a miembros que no existen en la clase base declarada (GDScript no puede inferir el script adjunto de un nodo instanciado en runtime).
+- **Lección (UID de escena perdido en un merge):** al reconstruir `hud.tscn` a mano durante la integración de ramas (sesión 17/08 (a)) se perdió el `uid="uid://dkyk8avpptlls"` del header `[gd_scene ...]` (una de las dos ramas no lo tenía). Godot lo detecta con el warning `ext_resource, invalid UID ... using text path instead` al importar (no rompe, pero conviene arreglarlo). **Regla a futuro:** al fusionar a mano un `.tscn` con conflicto en la línea `[gd_scene ...]`, conservar el `uid=` si alguna de las dos versiones lo tiene (es el identificador estable que usan otras escenas para referenciarla).
+- **Verificación:** import limpio (sin warnings tras el fix del UID), `tests/autotest.gd` **FALLOS = 0** (incluye los 6 checks de `LevelUp` ya existentes, que siguen pasando con la UI de íconos), smoke de `main.tscn` sin errores. Godot usado: `C:\Users\UNRaf_Libre\Downloads\Godot_v4.7.1-stable_win64.exe\Godot_v4.7.1-stable_win64.exe` (headless).
+
+### Sesión 17/08 (c) — Preselección de forma movida a un botón dedicado fuera de combate
+- **Pedido del usuario:** que el selector de transformación (la preselección de forma que luego confirma `T`) use sí o sí un botón que no se use durante el combate, para que no cambie por accidente. Motivo: `_handle_seleccion_forma()` usaba `move_up`/`move_down` (W/S, ↑/↓, cruceta), que caen justo al lado o encima de las teclas/stick de movimiento (A/D, ←→, stick izquierdo) — un roce accidental durante el combate cambiaba la forma preseleccionada sin que el jugador lo notara.
+- **Nueva acción `form_next` en `project.godot`:** teclado **Q** (`physical_keycode 81`), mando **Select/Back** (`button_index 4`, libre — no lo usaba ninguna otra acción). Cicla hacia adelante (wrap) entre las formas desbloqueadas; se sacrificó el ciclo bidireccional (antes `move_up`=atrás, `move_down`=adelante) por simplicidad, ya que con 4 formas como máximo el costo de solo-adelante es de a lo sumo 3 toques.
+- **`player.gd::_handle_seleccion_forma()`:** ahora solo escucha `form_next` (antes leía `move_up`/`move_down` para decidir la dirección). `move_up`/`move_down` siguen intactos para navegar los menús (pausa, principal, controles, level-up), que no tienen este problema porque pausan el juego.
+- **`scenes/controls.tscn`:** se agregó la fila "Preseleccionar forma: Q" / "Select" a las columnas TECLADO/MANDO (antes esta acción no figuraba en la pantalla de controles).
+- **`tests/diag_select.gd` actualizado:** usaba `move_down`/`move_up` con `Input.action_press` para simular la preselección; se cambió a `form_next` (incluye probar el wrap-around con 3 pulsaciones seguidas para volver a Humano).
+- **Verificación:** import limpio, `tests/autotest.gd` FALLOS = 0, `tests/diag_select.gd` OK, smoke de `main.tscn` sin errores.
+
+### Sesión 17/08 (d) — Fix: T "no respondía" al transformarse
+- **Reporte del usuario:** usar T para transformarse "no se siente bien", parece no responder. Causa: el rediseño de la sesión 16/08 (Q/flechas preseleccionan, T solo confirma `forma_seleccionada`) dejó a `_transformar()` con un `if nueva == current_form: return` silencioso — si `forma_seleccionada` ya era igual a `current_form` (p. ej. el estado inicial, ambos en Humano, o después de confirmar una transformación), **T no hacía absolutamente nada** (sin animación, sin sonido, sin feedback), y encima no había forma rápida de volver a Humano: había que ciclar `form_next` (Q) hasta volver a 0 y recién ahí tocar T. Eso es lo que se sentía como "no responde".
+- **Fix en `player.gd::_handle_transform()`:** si `current_form != Humano` y `forma_seleccionada == current_form` (o sea, ya estás transformado en la forma que tenés preseleccionada), T ahora revierte directo a Humano en vez de no hacer nada. Si `forma_seleccionada` apunta a una forma distinta (se movió con Q después de transformarse), T sigue transformando directo entre las dos formas no-Humano sin pasar por Humano en el medio (comportamiento sin cambios).
+- **`tests/diag_select.gd` ampliado:** se agregaron dos checks nuevos — "T de nuevo revierte a Humano sin pasar por Q" y "T transforma directo de Lobo a Oso" (confirma que el fix no rompió la transformación directa entre dos formas no-Humano).
+- **Verificación:** import limpio, `tests/autotest.gd` FALLOS = 0, `tests/diag_select.gd` OK (5/5, incluye los 2 checks nuevos), smoke de `main.tscn` sin errores.
+
+### Sesión 17/08 (e) — El menú de nivel no se puede saltear sin elegir forma
+- **Pedido del usuario:** que el menú "¡NIVEL N!" **no se pueda sacar de ninguna manera** salvo eligiendo una de las formas.
+- **Loophole encontrado:** `levelup.gd` pausa el juego al abrirse (`get_tree().paused = true`) pero `pause.gd::_unhandled_input` no chequeaba si el LevelUp estaba abierto (solo chequeaba consola y diálogo, ver Sesión 15/08). Presionando `pause` (Esc/Start) se abría el menú de Pausa **encima** del menú de nivel; desde ahí "Reanudar" llama `cerrar()` → `get_tree().paused = false`, lo que **despausaba el juego con el panel de nivel todavía visible mostrando en pantalla**, sin haber llamado nunca `_confirmar()`. El jugador quedaba jugando de nuevo sin haber elegido combo ni forma. "Volver al menú"/"Salir" desde esa misma pausa también evitaban la elección.
+- **Fix (mismo patrón que `_consola_abierta()`/`_dialogo_activo()`):** `levelup.gd::_ready()` ahora hace `add_to_group("levelup")` y expone `esta_abierto() -> bool`. `pause.gd` agrega `_levelup_abierto()` (busca el grupo "levelup") y lo suma a la condición que bloquea `toggle()` en `_unhandled_input`. Con el LevelUp abierto, la tecla/botón de pausa ahora no hace nada — la única salida es `_confirmar()`, que solo se dispara al elegir una forma con `attack`/`ui_accept`.
+- **Otras vías de escape revisadas y descartadas:** la consola dev (`` ` ``) no tiene comandos de cambiar de escena ni salir (`COMMANDS` en `console.gd`); el panel del LevelUp es un `Control` común (no `Popup`), no se cierra solo con click afuera ni con `ui_cancel` (no lo escucha).
+- **`tests/autotest.gd` ampliado:** dentro del bloque de LevelUp, tras verificar que el menú se abre, se simula `Input.action_press("pause")` y se chequea que el panel de Pausa (`_scene.get_node("Pause")`) siga cerrado y que el panel de LevelUp siga abierto.
+- **Verificación:** import limpio, `tests/autotest.gd` FALLOS = 0 (incluye los 2 checks nuevos), smoke de `main.tscn` sin errores.
+
+### Sesión 17/08 (f) — El menú de nivel solo confirma con Enter (no J)
+- **Pedido del usuario:** que el selector del menú "¡NIVEL N!" confirme solo con Enter, no con J (`attack`).
+- **Por qué importaba (no era solo estético):** `levelup.gd::_input()` escuchaba `event.is_action_pressed("attack") or event.is_action_pressed("ui_accept")`. Dos problemas: (1) `attack` es la tecla J, una acción real de gameplay — confirmar con J en un menú que pausa el juego corre el riesgo de que ese mismo evento "sangre" hacia el jugador apenas se despausa en el mismo frame (el `_input()` del menú corre antes que el `_physics_process()` del player en el orden de Godot, así que despausar dentro del handler de `_input` deja el player procesando ese mismo frame con el flag de "attack" todavía en `just_pressed`, gatillando un golpe fantasma justo al salir del menú); (2) `ui_accept` es una acción **built-in** de Godot con bindings por defecto que incluyen **Espacio** y el botón **A/Cruz** del mando — los mismos botones de `jump` y (Espacio) — mismo riesgo de sangrado hacia un salto fantasma, y el usuario ni se había dado cuenta de que Espacio también confirmaba.
+- **Fix:** nueva acción dedicada `menu_confirm` en `project.godot` (teclado **Enter** + **Kp Enter**, mando **Start**, botón 6 — no pisa ninguna acción de gameplay). `levelup.gd::_input()` ahora escucha solo `menu_confirm`. Se actualizó el hint del panel (`scenes/levelup.tscn`, antes "↑ ↓ mover · J / Enter elegir" → ahora "↑ ↓ mover · Enter elegir").
+- **Lección de testing (importante, aplica a cualquier sistema con `_input()`/`_unhandled_input()`):** `Input.action_press("nombre_accion")` **NO dispara `_input()` ni `_unhandled_input()`** — solo actualiza el estado interno que consultan `Input.is_action_pressed()`/`is_action_just_pressed()` (polling, usado por `player.gd` en `_physics_process`). Para simular un evento que un sistema *event-driven* como `levelup.gd`, `pause.gd` o `console.gd` reciba de verdad en su `_input`, hay que despachar un `InputEventAction` real con `Input.parse_input_event()`. El check de "Pausa no se abre encima del menú de nivel" de la sesión 17/08 (e) usaba `Input.action_press("pause")` y **nunca ejercitó el código real** (pasaba trivialmente aunque el fix no existiera). Se corrigió agregando el helper `_simular_accion(action: String)` en `tests/autotest.gd` (dispatchea press+release vía `parse_input_event`, con un `await process_frame` entre medio) y se reescribieron con él tanto ese check como los nuevos de J/Enter.
+- **Verificación:** import limpio, `tests/autotest.gd` FALLOS = 0 (los checks de Pausa+LevelUp y J/Enter ahora sí ejercitan el código real vía `parse_input_event`), `tests/diag_select.gd` OK, smoke de `main.tscn` sin errores.
+
+### Sesión 17/08 (g) — Fix real: T no transformaba nunca sin usar Q antes
+- **Reporte del usuario (tercera vez con la misma sensación):** "la T no me deja transformarme en juego". Esta vez con causa raíz concreta y reproducible, no solo de feel.
+- **Causa:** `forma_seleccionada` arranca en `Form.HUMAN` (igual que `current_form`). `_handle_transform()` solo llama `_transformar(forma_seleccionada)`, y `_transformar()` tiene `if nueva == current_form: return`. Como **todas las formas están desbloqueadas desde el arranque** (`progresion.gd::forma_desbloqueada() → true` fijo, decisión de la rama prototipo, 16/08), el jugador nunca ve un cartel de desbloqueo que lo obligue a usar `Q` — simplemente empieza a jugar y aprieta `T` (que el diálogo tutorial de `DialogoIntro` en `main.tscn` describe como "usa T para transformarte", **sin mencionar que hay que preseleccionar con Q primero**). Resultado: la primera vez que el jugador toca T, **no pasa absolutamente nada** — se sentía exactamente como "T no funciona".
+- **Fix en `player.gd`:** se extrajo `_avanzar_seleccion() -> bool` (la misma lógica de ciclado que ya usaba `_handle_seleccion_forma()` con `Q`/`form_next`, ahora reutilizable). `_handle_transform()`: si `forma_seleccionada == current_form` (nada preseleccionado todavía, típicamente al arrancar en Humano), T ahora llama `_avanzar_seleccion()` primero y transforma directo a la forma resultante, en vez de no hacer nada. Combinado con el fix de la sesión (d) (T ya transformado revierte a Humano), el resultado es: **T solo, sin tocar nunca Q, alterna Humano ↔ Lobo** (la primera forma desbloqueada tras Humano) de forma predecible; para llegar a Oso/Murciélago específicamente hay que usar `Q` para preseleccionar esa forma y confirmar con T (sin pasar por Humano en el medio, comportamiento sin cambios).
+- **`tests/diag_select.gd`:** se agregó el caso que reproduce el bug reportado — presionar `transform` **antes de tocar `form_next` ninguna vez** — y confirma que transforma a Lobo (antes hubiera fallado silenciosamente, current_form se quedaba en 0).
+- **Verificación:** import limpio, `tests/autotest.gd` FALLOS = 0, `tests/diag_select.gd` OK (8/8, incluye el caso nuevo), smoke de `main.tscn` sin errores.
+
+### Sesión 17/08 (h) — Vuelve el desbloqueo progresivo por nivel (Lobo→Oso→Murciélago) con formas bloqueadas visibles en el LevelUp
+- **Pedido del usuario:** que las transformaciones del menú de subir de nivel se muestren como bloqueadas, desbloqueando primero Lobo, después Oso, después Murciélago.
+- **`progresion.gd::forma_desbloqueada()` vuelve a `form_index < nivel`** (revierte la decisión de la rama prototipo del 16/08 que la había dejado en `true` fijo — ver la nota de diseño de la sesión 17/08 (a), que ya anticipaba esta tensión). Nivel 1 = solo Humano, nivel 2 = +Lobo, nivel 3 = +Oso, nivel 4 = +Murciélago.
+- **`levelup.gd` reescrito para mostrar las 4 formas siempre** (antes `_build_opciones()` filtraba y solo listaba las desbloqueadas — con el desbloqueo progresivo de vuelta, eso hubiera dejado el menú con 1 sola opción al nivel 1). Cada entrada de `_opciones` ahora tiene `bloqueada: bool`; `_reconstruir_slots()` le pasa `icon.set("bloqueado", ...)` al `FormIcon` (el velo oscuro que ya existía en `form_icon.gd` desde la sesión (b) pero nunca se usaba, porque antes nunca había nada bloqueado). Navegación (`↑`/`↓`) ahora usa `_mover_indice(dir)`, que salta las opciones bloqueadas (mismo patrón que `_avanzar_seleccion()` en `player.gd`); `_confirmar()` se blinda para no confirmar una opción bloqueada (no debería poder pasar por la navegación, pero por las dudas).
+- **Efecto colateral esperado (no un bug):** al volver el desbloqueo progresivo, `_avanzar_seleccion()` en `player.gd` (Q y el "T transforma directo" de la sesión (g)) también respeta el nivel — a nivel 1, T no tiene a qué transformar (correcto, antes de subir a nivel 2 solo existe Humano) y no hace nada; esto es el comportamiento correcto, no una regresión del fix de la sesión (g). También se reactiva el cartel "¡FORMA DESBLOQUEADO!" de `hud.gd` (estaba muerto código desde el 16/08 porque nunca había nada que desbloquear).
+- **Tests actualizados:** `tests/autotest.gd` — "Inicio: Lobo desbloqueado" → "Nivel 1: Lobo bloqueado" (invertido); el bloque de LevelUp ahora chequea que las 4 formas se muestran siempre, que a nivel 2 dos están bloqueadas (Oso/Murciélago) y dos no (Humano/Lobo), y que `↓` salta las bloqueadas al navegar. `tests/diag_select.gd` — como prueba la mecánica de selección Q/T en sí (no el gate de progresión, que ya cubre `autotest.gd`), ahora hace `prog.set_nivel(4)` al arrancar para tener las 4 formas abiertas.
+- **Verificación:** import limpio, `tests/autotest.gd` FALLOS = 0 (incluye 5 checks nuevos de bloqueo/navegación en LevelUp), `tests/diag_select.gd` OK (8/8), smoke de `main.tscn` sin errores.
+
+### Sesión 20/08 — Cámara (lookahead + zoom punch) y knockback/stun en enemigos. Zona 1 + victoria + game feel integrados y pusheados a main
+- **Cámara (`camera.gd`):** se agregó **lookahead** (`@export lookahead = 0.006`, anticipa `destino.x += clampf(player.velocity.x * lookahead, -120, 120)` en modo seguir — la cámara "mira hacia donde vas") y **zoom punch al golpe**: `punch(escala)` seteana `_punch_scale`, y en `_process` el zoom objetivo efectivo es `_zoom_objetivo * _punch_scale` con recuperación suave hacia 1.0. `player.gd::_zoom_punch_por_tipo()` lo dispara en cada golpe a enemigo usando `forms[current_form].hit_zoom` (default 1.02 = punch-in leve; se puede subir por forma). Nota: el `punch` es un zoom-in breve (escala >1 multiplica `_zoom_objetivo`), orientado a "acercar" en el impacto.
+- **Knockback + hitstun en enemigos (EMPÍRICAMENTE IMPLEMENTADO):** antes `enemy.take_damage(cantidad, _knockback, _dir)` **ignoraba** knockback/dir y el enemigo (CharacterBody2D) nunca era empujado. Ahora: `take_damage` aplica `velocity.x = dir * knockback * (1.0 - resist)` y setea `_stun_timer = enemy_data.stun_duracion`; en `_physics_process`, si `_stun_timer > 0` el enemigo NO persigue ni ataca y su `velocity.x` decae con fricción (180/s). `enemigo.gd` ganó `@export stun_duracion: float = 0.15`.
+- **Lección (20/08) — calibración del knockback (el knockback "ni se notaba"):** `knockback_resist` por defecto era **1.0**, y `1.0 - resist = 0` → el knockback se anulaba por completo para cultista/arquero (solo el chamán 0.3 recibía algo). Además la fricción del hitstun era 400/s y mataba el deslizamiento en ~1 frame. **Valores finales:** `knockback_resist` default 1.0 → **0.3**, `light_knockback` base 80 → **150** (forma.gd), fricción del hitstun 400 → **180** (enemy.gd). Regla: al introducir un atenuador del knockback, revisar el valor por defecto para que no aniquile el efecto con la configuración más común.
+- **Lo que se integró en este push (commit `ac703b7`, rama `main` via fast-forward desde `prototipo-gameplay-mecanicas`):** Zona 1 completa en `main.tscn` (Intro → 3 Rompibles → Encounter2 (arena gate con diálogo post-combate) → DialogoTronco → plataformeo escalonado → Santuario). Escenas nuevas: `scenes/santuario.tscn`+`scripts/santuario.gd` (checkpoint vía `player.actualizar_checkpoint()`, cura, `activar_victoria`), `scenes/victoria.tscn`+`scripts/victoria.gd` (**raíz `CanvasLayer` layer 90** — con raíz `Control` no se veía bajo pausa — botones a `$UIRoot/Center/VBox/Panel/Opciones/...`), `scenes/burst.tscn` (partículas preconfiguradas; **`process_material` NO se puede asignar por código en esta build de Godot** → tint vía `self_modulate`, con guards `DisplayServer.get_name() == "headless"`). Game feel: zoom por forma/sprint Lobo, tilt cámara, squash de aterrizaje, polvo de pasos, hit-stop (heavy/combo), flash de transformación, bursts de muerte/bote. Limites de cámara **eliminados por completo** (bug: `limite_max` cortaba el seguimiento en un nivel de 4390px).
+- **Push:** `git checkout main` → `git merge prototipo-gameplay-mecanicas` (fast-forward) → `git push origin main`. La rama `prototipo-gameplay-mecanicas` quedó 1 commit adelante de su remoto (`ac703b7`); avisar al usuario si quiere pushearla. **`tests/diag_particulas.gd.uid` quedó fuera del commit** (órfano: no existe `diag_particulas.gd` en disco).
+- **Estado de desbloqueo al cerrar la sesión:** `progresion.gd::forma_desbloqueada()` fijo en `true` (decisiones de la rama prototipo) → autotest **FALLOS = 6 esperados** (5 checks de bloqueo de forma/LevelUp + 1 de combo). Smoke y import limpios.
+- **Pendiente relevado en esta sesión:** al elegir "camara", el usuario profundizó en **feedback al daño** para la próxima: blink de invulnerabilidad + micro-squash al recibir daño, reacción de sprite en el enemigo golpeado, combo counter en HUD, parallax de fondo, idle breathing, delayed-fill/pulso de barras, SFX básicos y game over explícito.
+
+### Sesión 21/08 — Game feel de movimiento/salto, transformaciones con gatillos, pantalla de derrota y Zona 2 (commit `53b5713` en main)
+- **Movimiento rebalanceado (player.gd + forma.gd):** velocidades Humano 400→520, Lobo 340→560 (era más lento que el Humano), Murciélago 215→330, Oso 140→160; accel/friction +40-50% por forma. **Turn boost ×2.2** al invertir dirección (`dir * velocity.x < 0`). **Apex hang escalonado:** |vy|<35 → gravedad ×0.45, elif |vy|<70 → ×0.7 (salto Humano ~130px). Coyote 0.12 / buffer 0.15. **Animación sincronizada:** `visual.speed_scale = |vx|/speed` clamp 0.4-1.6, y **freeze (<10 px/s)** para que no ciclen piernas quieto.
+- **Lean del sprite:** `visual.skew` (NO rotation, para no pisar `_snap_turn` ni el tilt del Murciélago) proporcional a velocidad; `@export lean_angulo` por forma (Lobo 4.5°, Humano 3°, Murciélago 2°, Oso 1.5°). Se resetea en `_apply_form()`.
+- **Cámara lookahead progresivo (camera.gd):** zona muerta `lookahead_umbral=80` px/s (debajo no anticipa nada), offset = `(|vx|-umbral)*0.28` clamp ±160 (~120px a full speed), suavizado propio `suavizado_lookahead=3`. **Lección: un multiplicador chico es invisible** — el lookahead original 0.006 daba ~4px reales a full speed; siempre calcular píxeles resultantes, no confiar en el número crudo.
+- **Fix "el personaje vibra/marea":** faltaba `snap/snap_2d_transforms_to_pixel=true` en `[rendering]` de project.godot — la cámara continua dibujaba todo en píxeles fraccionarios (shimmer). Más el freeze de animación quieto (arriba). Regla: cualquier cámara con lerp continuo necesita pixel snapping o tiembla.
+- **Transformaciones joystick-first:** cruceta directa ya existía (←Oso →Lobo ↑Murciélago ↓Humano). Nueva acción `forma_swap` (**RT eje 5** + tecla E): avanza la PRESELECCIÓN (no transforma); nueva `forma_prev` (**LT eje 4**): retrocede; **RB/T confirma y transforma** (y revierte a Humano si ya estás en la seleccionada). W/S/↑↓ ya NO tocan la selección (causaban transformaciones accidentales). Q sigue como avance. `_retroceder_seleccion()` reutilizada por LT.
+- **Pantalla de derrota (`scenes/derrota.tscn` + `scripts/derrota.gd`, clon de victoria con paleta roja):** `player.gd::_handle_death()` instancia el overlay en `current_scene` + pausa el árbol (guard `_derrota_activa`). Reintentar = `reload_current_scene()` SIN resetear Progresion (nivel/fragmentos persisten); Menú = main_menu. god_mode ignora la muerte. **Muerte por caída:** `@export limite_caida := 3000.0` en player chequeado cada frame (`global_position.y > limite_caida → health=0`).
+- **Dummy de entrenamiento (`scenes/dummy_entrenamiento.tscn` + script):** StaticBody2D invencible con contador golpes/daño, flash+squash al golpe, modo rompible vía exports. Comando consola `dummy` lo instancia delante del player.
+- **Consola ahora sí instanciada en main.tscn y nivel_2.tscn** (antes solo existía para el autotest). Comandos nuevos: `zona1`/`zona2` (change_scene_to_file), `dummy`.
+- **Feedback al recibir daño:** señal `dano_recibido(cantidad)` en player (solo si el daño entra; god/blocking no emiten) → HUD `FlashDano` (ColorRect rojo alpha 0.3→0 en 0.35s) + shake 3.5/0.12.
+- **Zona 2 (`scenes/nivel_2.tscn`, ~11.000px):** 4 grounds (spacing 2974 para solapar 26px, top y=1003), 8 arenas escalonadas A-H (27 enemigos total; C enseña matar chamán primero, G "concilio" 2 arqueros+chamán+cultistas, H mini-jefe Hierofante chamán+2 arqueros+ola), torre opcional x2300-2850 con pickup+rompible arriba, tronco x3200, arena E sobre meseta (6350,440), santuario victoria x10700, 4 diálogos, 7 pickups, 3 rompibles. **Validación geométrica:** saltos obligatorios ≤103px (salto Humano ~110-130), arenas espaciadas para que ningún trigger quede antes de la pared de la arena anterior (F pared 8220 → G trigger >8220, etc.). Diag: `tests/diag_zona2.gd` (estructura + piso continuo por query físico).
+- **Fix "set_input_as_handled on a null value":** en Godot 4.7 `change_scene_to_file` desengancha la escena actual SÍNCRONAMENTE; los handlers de menú/pausa/victoria llamaban `_on_boton_pressed()` (cambio de escena) ANTES de `get_viewport().set_input_as_handled()` → viewport null. Fix: marcar input PRIMERO, cambiar escena después. Reproducible headless seteando `current_scene` en un diag.
+- **Tests:** autotest FALLOS=6 esperados (desbloqueo true), diag_select OK (12 checks incl. RT/LT/RB), diag_formas OK, diag_zona2 FALLOS=0, diag_derrota FALLOS=0. Ojo PowerShell: encadenar con `$?` después de un Select-String sin matches SALTEA el segundo comando (pasó 2 veces) → correr verificaciones directas.
+
+### Sesión 26/08 — Obstáculos por forma (Muro Lobo / Tronco / Barrera 3 cristales), cooldowns, planeo y drenaje por encounter (commit `602bcb9` en main)
+- **Muro Lobo (`scenes/muro_lobo.tscn` + `scripts/muro_lobo.gd`):** `StaticBody2D` 40×250 (ajustado 550→420→320→280→250) anclado al suelo (top ~613px sobre ground top 1003, requiere doble salto Lobo 260px vs simple 130px). Estructura `Visual (Node2D) > Poly + Sprite` dual (Poly visible, Sprite oculto hasta textura) para migración a sprites sin reescribir lógica. Script con asistencia Lobo-only: si `current_form==Lobo` y `is_on_wall()` cerca del borde superior (±40px vertical, 70px horizontal) y hay hueco 18px arriba (`test_move`), hace snap `global_position.y-=18` + `velocity.y=-90` (perdón del pixel justo). Lección: el assist general del player (`_try_ledge_assist` 16-20px / `_try_step_up` 14-18px) no alcanza para un muro de 250px; el muro necesita assist propio de 18px.
+- **Tronco (`scenes/tronco.tscn` + `scripts/tronco.gd`):** reescrito desde `interactable.gd` a `tronco.gd` con misma API `try_interact` pero visual dual `Visual>Poly+Sprite`, pulso 1.2% (1.1s) + highlight si Oso cerca (<260px) y flash rojo 0.18s si intentas con otra forma, ruptura con squash 1.12×0.88 + fade 0.18s + burst 18 + shake 5.0. Mantiene `required_form=2` y `interact_range=220`.
+- **Cristal (`scenes/cristal.tscn` + `scripts/cristal.gd`) + Barrera (`scenes/barrera_bosque.tscn` + `scripts/barrera_bosque.gd`):** cristal flotante diamante 28×44 en `Visual>Halo+Poly+Sprite` (Halo 22×30 alpha 0.18 pulsante 0.08, Poly 16×22, Sprite oculto) con flotación `sin*6px` y `modulate.a 0.92±0.08`, `GOLPES_PARA_ROMPER=3` solo con Murciélago (`current_form==3`, 3 hits con flash y crack `modulate` 15% rojo progresivo + scale 1.18, al 3º burst 14 + scale 1.4 fade + `cristal_destruido`). Barrera 220×320 `Barrera/Visual>Poly+Sprite` dual con pulso 1.2% y `modulate.a 0.58±0.07`, `Line2D Ray` triángulo tenue (2px, 22% alpha, 38% si Murciélago <260px) entre cristales vivos, brillo proximidad Murciélago, pico de escala 1.06 al romper cada cristal. Al 3/3 (`_destruidos==3`) → `barreras_abiertas[barrera_id]=true` + `burst 32` + `shake 7.0/0.28` + fade `Visual.modulate.a 0.35` + scale 1.08, luego `visible=false`. Persistencia: `progresion.gd` nueva `var barreras_abiertas: Dictionary`, `reset()` lo limpia solo al volver a menú (derrota `reload_current_scene` no lo toca → no reaparece al morir/reintentar como pidió el usuario). `projectile.gd` mask `3→2` para que el disparo del Murciélago atraviese la barrera (layer1) y llegue a cristales (layer2) + homing ahora busca también grupo `cristal` en 500px + desaparece al salir de cámara (`_fuera_de_camara()` con `view_size/cam.zoom` +80px margen). Lección: barrera tenía `Poly/Sprite` con parent `Visual` en vez de `Barrera/Visual` → `Node not found` y el tween de fade nunca corría (diag `barrera_visible=true` tras 3 roturas, modulate 0.36); fix parent a `Barrera/Visual`.
+- **Cooldowns (`player.gd`):** `RECOVERY_*` +25% → Light 0.22→0.275, Heavy 0.4→0.5, Special 0.6→0.75, Combo 0.7→0.875. Murciélago `mult_recuperacion 1.0→1.35` para su especial (0.75→1.01s, ligero 0.37s).
+- **Planeo Murciélago:** `GLIDE_FALL_MULTIPLIER 0.35→0.22` + `gravity_scale 0.8→0.72` (~35% más lento manteniendo Espacio en el aire). Ya era `is_gliding = jump pressed + !on_floor + vy>0`, ahora se siente.
+- **Drenaje de energía (`player.gd` + `encounter.gd`):** fuera de combate drena 45% (2.25/s vs 5/s). Combate = `Encounter.estado==RUNNING` (`encounter.gd` ahora `add_to_group("encounter")` en `_ready`, player `_en_combate()` chequea grupo). Usuario pidió que no sea por distancia/racha sino por entrar a encounter.
+- **Ledge assist reforzado (`player.gd`):** `_try_ledge_assist` 12-16→16-20px + `facing*6` + `vy -90`, `_try_step_up` 10-14→14-18px + `facing*8` (muy ligero +2-4px pedido).
+- **Ejemplos en `main.tscn`:** `MuroLobo` (Level, 2700,883) y `BarreraBosque` (3900,843, id `main_barrera_1`) colocados como ejemplo editable; `muro_lobo.tscn` dual listo para sprite.
+- **Verificación:** import OK, smoke OK, autotest FALLOS=6 esperados (desbloqueo `true` temporal).
+
+### Sesión 27/08 — Lobo bajo y agachado, grieta, diálogos restaurados y cámara pulida (commits `7971a95` y `45d238a` en main)
+- **Lobo bajo y alargado (`scripts/forms/lobo.gd`):** `collider_size` 150×280→**210×160** para pasar por huecos bajos donde Humano/Oso/Murci (175×300 / 200×280 / 160×286) no entran. `player.gd::_apply_form()` ahora centra la hitbox con `collision_shape.position.y = 142.5 - h*0.5` y ajusta `visual.position.y` para que los pies queden a ras de suelo; `_transformar()` bloquea el cambio si el nuevo tamaño colisionaría (`test_move` con tamaño destino, retorna sin transformar).
+- **Grieta de agachado (`scenes/grieta_lobo.tscn`):** `Node2D` con `Techo` `StaticBody2D` 600×40 + `Visual` Poly + `Sombra`, hueco libre 160px (techo a 160px sobre suelo) — solo Lobo pasa; editable estirando el `CollisionShape` del techo. Ejemplo colocado en `main.tscn` `Level/GrietaLobo` (1215,822) como raíces/tronco hueco. Persistencia no necesaria (no es barrera).
+- **Cámara pulida (`scripts/camera.gd`):** shake con decaimiento cuadrático `t*t` + punch con `lerpf(..., 4*delta)` (antes lineal `3*delta` y shake sin atenuación). Mucho más suave al encadenar golpes. `lookahead` ya por forma (Lobo 1.15 / Oso 0.65 / Murci 0.86 + Humano 1.0) y `deadzone_horizontal 12` siguen.
+- **Diálogos restaurados (`scenes/main.tscn`):** `DialogoIntro` (automático, 5 líneas del amuleto + tutorial J/K/T) y `DialogoTronco` (zona, 2 líneas del tronco Oso) habían quedado en `lineas = []` tras merges (commit `b281ebe` tenía el texto correcto) → restaurados a `PackedStringArray` originales, editables en inspector.
+- **Verificación:** import OK, smoke OK, autotest FALLOS=6 esperados.
+
+### Sesión 27/08 (b) — Nivel 1 real (`scenes/nivel1.tscn`), desbloqueo progresivo reactivado, TileSet inicial
+- **`main.tscn` deja de ser "el nivel"**: pasa a ser oficialmente el playground de pruebas de mecánicas (así lo definió el usuario). Se creó **`scenes/nivel1.tscn`** como la primera fase jugable real: 7 partes (inicio → introducción → enseñanza → prueba → escalada → clímax → final), ~4750px, spawn→Santuario, con Humano primero (movimiento, plataformeo, combo vs. 1+2 cultistas) y Lobo desbloqueado a mitad de nivel (transformación, agachado por `GrietaLobo`, doble salto obligatorio en una escalera de 3 plataformas, gestión de energía con pickups dedicados). 6 cultistas en 3 `Encounter` (1/2/3, el último en 2 olas), 3 `Rompible`, 4 `Pickup` dedicados, 3 `DialogTrigger`.
+- **`progresion.gd::forma_desbloqueada()` reactivada** a `return form_index < nivel` (estaba hardcodeada a `true`, "TEMPORAL (pruebas)", desde el 17/08h). Sin esto, "Lobo se desbloquea a mitad del nivel 1" no se podía forzar. Bajó el autotest de 6 fallos esperados a **FALLOS=0** (los checks de desbloqueo progresivo ya estaban escritos en `autotest.gd` desde antes, solo esperaban este revert).
+- **`main.tscn` sigue permitiendo todas las formas** pese al revert: se le agregó `scripts/main_playground.gd` (script mínimo en el nodo raíz `Main`, `_ready()` fuerza `get_node("/root/Progresion").set_nivel(4)`) para que siga siendo un playground completo sin depender de recordar el comando de consola `nivel 4`.
+- **Bug repetido y ya documentado (Lote 2) — autoload como identificador global en `--script`:** `main_playground.gd` usaba `Progresion.set_nivel(4)` (identificador global) y rompía la COMPILACIÓN de `autotest.gd` con "Identifier not found: Progresion" (no un fallo de test, un error de carga que abortaba el resto). Fix: `get_node("/root/Progresion")`, como ya usan pickup/rompible/hud/console. **Ningún script del proyecto usa el identificador global de un autoload** — antes de escribir uno nuevo, grepear `Progresion\.` (o el autoload que sea) para confirmar el patrón existente.
+- **TileSet nuevo (`resources/tileset_bosque.tres`)**, primer uso de `TileMapLayer` en el proyecto (hasta ahora todo el terreno era `StaticBody2D+Polygon2D` a mano). Grid confirmado por análisis de píxeles (Python/Pillow, no por el editor — no hay acceso interactivo a Godot en esta sesión): `Tileset.png` es 320×192px = grid 10×6 de 32×32 exacto. Se registraron 2 tiles con colisión (piso borde `(2,3)` y relleno `(5,4)`) pero **el `TileMapLayer` "Terreno" quedó vacío (sin pintar)**: el terreno real del nivel usa el patrón probado `StaticBody2D+Polygon2D` (`Piso1`/`Piso2`, mismo estilo que `main.tscn`) para no arriesgar corromper a ciegas el `tile_data` binario (formato empaquetado bit a bit, no verificable sin abrir el editor). **Pendiente:** pintar `Terreno` a mano en el editor (1-2 min, solo estética) o pedir que se intente por script si se acepta el riesgo.
+- **Convención de coordenadas para terreno nuevo:** suelo (`y_suelo=992`) con el piso hecho de rectángulos centrados (`node.position.y = top + half_height`). Player/Enemy NO tienen el origen exactamente en los pies (offset ~130px y ~48px respectivamente, según el `CollisionShape2D` de cada `.tscn`) — para spawns/posiciones nuevas, calcular `origin.y = y_suelo - offset` en vez de tantear a ojo.
+- **Verificación:** import OK, smoke OK, autotest FALLOS=0, `tests/diag_nivel1.gd` (nuevo, mismo patrón que `diag_zona2.gd`) FALLOS=0 (3 arenas, 6 cultistas, 3 rompibles, 4 pickups, 3 diálogos, piso continuo salvo el pozo de Introducción, gap de `GrietaLobo`=199px entre 160 y 300).
+- **Lección de testing (nueva):** un `PhysicsPointQueryParameters2D` sobre el piso falla si el punto de consulta cae exactamente en el borde de la `RectangleShape2D` (ni 1px arriba de la superficie superior, ni justo en el borde derecho de la última pieza) — `intersect_point` es estricto en el borde. Consultar unos px **adentro** del sólido (no en la superficie ni en el límite exacto del rectángulo).
+
+### Sesión 27/08 (c) — Bugs reportados jugando nivel1.tscn: enemigos superpuestos, Lobo sin alcance, test de balance desactualizado
+- **Bug "el personaje desaparece al empezar el combate de 2 cultistas" (`EncounterB` de `nivel1.tscn`):** causa raíz encontrada por inspección (no reproducible en headless, es un efecto físico/visual): `Enemy1`/`Enemy2` estaban a `x=±80` (160px de separación) pero el collider de cada cultista mide **175px de ancho** (`scenes/enemy.tscn`) → arrancaban ~15px superpuestos entre sí, garantizado, al activarse su colisión. Godot resuelve esa superposición de golpe (depenetración) y puede eyectar violentamente a cualquier cuerpo (el jugador incluido) que esté cerca. Agravante secundario (no la causa): `camera.gd::modo_arena()` fija la cámara sin seguir al jugador durante el combate, así que si lo eyecta lejos no se lo vuelve a encuadrar hasta terminar. Fix: separar a `±140` (280px, deja 105px libres entre colliders de 175px) tanto en `EncounterB` como en la primera ola de `EncounterC` (mismo patrón de riesgo con 2 enemigos simultáneos). **Lección para futuros encuentros con 2+ enemigos en la misma ola:** la separación en X entre posiciones locales debe superar el ancho del collider del enemigo (175px); `tests/diag_nivel1.gd` ahora tiene un chequeo automático de esto.
+- **Bug "el Lobo no golpea a los enemigos transformado":** en `scripts/forms/lobo.gd`, `attack_range=90` no compensaba el propio ancho del collider del Lobo (`collider_size.x=210`, el más ancho de las 4 formas) — el alcance total (`range + attack_size.x*0.5`) dejaba solo ~55px de margen de solape real contra un enemigo, contra ~67.5px de Humano. Con la velocidad alta del Lobo (690px/s) eso se traduce en golpes que fallan seguido. Fix: `attack_range 90 → 110` (margen ≈75px). Este bug NO era específico de `nivel1.tscn`: afectaba al Lobo en cualquier escena, y nunca se detectó porque no había ningún test de daño real del Lobo contra un enemigo (solo había uno para Humano). Se agregó ese test a `autotest.gd` (espejo del test de Humano, con `form lobo` por consola).
+- **`main.tscn` tenía un error de parseo que rompía el `--headless --import` de TODO el proyecto:** el nodo `Enredadera` (agregado por el usuario en el editor) referenciaba `ExtResource("19_enredadera")` pero el recurso estaba declarado como `id="20_enredadera"` — desajuste de un número. Se corrigió la referencia del nodo al id real. **Lección:** si `--headless --import` tira `Parse Error` en un `.tscn` que no tocaste vos, revisar que cada `ExtResource("id")` usado en los nodos exista literalmente en las declaraciones `[ext_resource ... id="..."]` de arriba del archivo — un editor a veces deja ids desincronizados tras un copy/paste manual.
+- **Test de balance desactualizado (no es un bug de código):** `scripts/forms/humano.gd` ya tenía el combo "Remate" en `"dano": 38` (bajado de 42 por un ajuste de balance ya commiteado, hecho por fuera de esta sesión), pero `autotest.gd` seguía comprobando `remate_dmg == 42` → fallaba. Se actualizó el assert a 38. **Lección:** cuando un test de daño falla justo después de que alguien ajustó números de balance en un `forms/*.gd`, comprobar primero el valor fuente (`"dano"` del combo) antes de asumir que el código de combate se rompió — el test puede simplemente estar desactualizado.
+- **Verificación:** import OK, smoke OK, `autotest.gd` FALLOS=0 (con el test nuevo del Lobo pasando: 40→34 de daño), `diag_nivel1.gd` FALLOS=0 (con el chequeo nuevo de separación de enemigos pasando).
+- **Pendiente:** los diálogos de `nivel1.tscn` (`DialogoIntro`/`DialogoCombate`/`DialogoLobo`) siguen con el texto que escribió Claude la sesión anterior — el usuario pidió que a partir de ahora se le consulte el texto exacto de cada diálogo antes de ponerlo (no escribir narrativa sin su aprobación). Falta reemplazarlos por el texto que el usuario provea.
+
+### Build/Run y verificación
+- **Ruta real del ejecutable en esta máquina:** `C:\Users\Usuario\Downloads\Godot_v4.7-stable_win64_console.exe` (variante `_console.exe` para que los `print()` de los tests salgan por stdout). La máquina anterior (UNRaf_Libre) tenía el Godot en una subcarpeta — en esta (`Usuario`) el `.exe` está directo en `Downloads`.
+```powershell
+$godot = "C:\Users\Usuario\Downloads\Godot_v4.7-stable_win64_console.exe"
+# import (regenera UIDs, registra class_name)
+& $godot --headless --import
+# smoke del juego
+& $godot --headless --path . --quit-after 5
+# tests
+& $godot --headless --path . --script res://tests/autotest.gd
+```
+
+---
+
+## Visión del Juego
+
+**Action Adventure 2D Side Scroller** desarrollado en **Godot**, inspirado en las **mecánicas** de *Ben 10: Alien Force* (PS2/Wii, 2008) pero con identidad totalmente propia: otra ambientación, narrativa, arte, personajes y estética.
+
+> La inspiración viene exclusivamente de las mecánicas. No se copian personajes, historia ni estética.
+
+**Pregunta central de diseño:** "¿Qué transformación es la mejor para esta situación?"
+
+---
+
+## ⚠️ REGLA DE DISEÑO (prioritaria)
+
+**Siempre que debamos decidir algo**, tener presente el juego de referencia **Ben 10: Alien Force** en **todas sus dimensiones** (combate, progresión, niveles, ritmo, cámara, interfaz, enemigos, jefes, co-op, coleccionables, etc.), con el objetivo de hacer nuestro juego **lo más parecido mecánicamente** al original, aunque cambie la ambientación.
+
+Esto significa que al evaluar cualquier decisión de diseño, primero preguntarse: **"¿cómo lo resolvía Ben 10: Alien Force?"** y partir de ahí, adaptando solo lo que la ambientación/sigilo/scope obligue a cambiar.
+
+---
+
+## ⚠️ REGLA DE EDICIÓN (usuario, 13/08 — prioritaria)
+
+**Todo elemento del juego (interfaz, personaje, objeto, nivel) debe poder moverse y modificarse desde el editor de Godot**, para que el usuario acomode el mundo y los niveles por su cuenta sin quedar atado al código.
+
+Normas prácticas para el asistente:
+- **No enterrar valores de gameplay/espaciales en constantes de scripts** que el usuario querrá tocar. Usar `@export` y layouts en `.tscn` (las posiciones de nodo ya son editables). Nota (13/08): decisión del usuario — eliminar los `.tres` de formas y enemigos y usar **scripts** (`FORM_SCRIPTS` en `player.gd`, `config_por_tipo` en `enemy.gd`), a pesar de que esto quita la edición de stats desde el editor. Los `.tres` SOLO se mantienen cuando aportan datos reales no triviales (como `jugador_frames.tres` con el SpriteFrames). **Matiz (11/09):** revivieron `resources/formas/*.tres` como portadores de los datos de hitbox (geometría de golpe + combos) porque el usuario pidió editar eso desde el Inspector; no son envolturas vacías, llevan datos propios. Regla vigente: usar `.tres` **solo cuando aportan datos editables no triviales**.
+- Antes de hardcodear un valor, preguntarse: *"¿lo querrá mover el usuario desde el editor?"* Si la respuesta es sí → exportado/recurso/escena. Pero los `.tres` que son meras envolturas de un script (sin datos propios) se deben evitar.
+- Los datos que ya viven en `.tscn` (posiciones, tamaños de colisión, `tipo` de enemigo, colores de rompibles) **no se deben replicar en código**; la escena es la fuente.
+- Pendiente de migrar a edición desde editor: **las olas** de `encounter.gd` (datos → recursos/escenas). **(RESUELTO 16/08:** implementado con `WaveOla` editable en el inspector + enemigos manuales en el editor — ver sección "Sesión 16/08 (b)".)**
+
+---
+
+## Concepto General
+
+> **NOTA (13/08):** La narrativa es **provisional** y se irá modificando hasta la versión final. No tomar los detalles de historia como definitivos.
+
+- **Protagonista:** Guardabosques con un antiguo contrato espiritual con los guardianes del bosque.
+- **Mecánica principal:** Invoca el espíritu de animales y se transforma temporalmente en ellos para usar sus habilidades.
+- **Antagonista:** Secta que corrompe el bosque mediante rituales para despertar un antiguo poder oculto.
+- **Justificación narrativa:** Los espíritus animales ya no pueden intervenir directamente; el guardabosques es su representante.
+- **Transformaciones:** espíritus animales (aún por diseñar desde cero).
+- **Narrativa TEMPORAL (diseñada con la IA, 09/08; inicio corregido por el usuario):**
+  1. La familia pasa un día en el bosque. El hijo ve algo que le da curiosidad: **la secta haciendo algo para atraerlo** (lo "pescan" activamente, no se pierde por azar).
+  2. El padre se da cuenta de que el nene se perdió y sale a buscarlo; ahí ocurre el viaje: **va peleando y obteniendo los poderes de los animales** (los espíritus se le presentan) mientras avanza por la zona mágica.
+  3. En la zona mágica trabaja una **secta**. Concepto: **A. Cosecha de almas** — atrapa espíritus animales y a los "sensibles" (el nene oye/ve espíritus = señal) para alimentar un ritual que vuelve inmortal al líder. Riesgo: la corrupción de los espíritus posee a los sectarios (esos son los enemigos cultista/arquero/chamán) y drena la magia del bosque.
+  4. El jugador supera enemigos de la secta y obstáculos naturales, y llega al **jefe de la secta**, que tenía al nene **para experimentos y sacrificios**. Lo vence y rescata al hijo.
+- **Decisión (09/08 → CORREGIDA en Lote 2):** inicialmente se decidió transformación **ilimitada** por fidelidad al original. Pero al probar el original (notas del usuario), se confirmó que la transformación **es limitada** (vuelve a la forma base al agotarse el tiempo). **IMPLEMENTADO en Lote 2:** gauge de espíritu que drena (22/s), a 0 → vuelve a Humano; matar enemigos y romper recipientes recargan; Humano regenera lento. **NO volver a ilimitada.**
+- **Ideas anotadas para futuro:** fragmentos de espíritu (reflavor de los orbes amarillos) que caen de enemigos y desbloquean pasos de combo; checkpoints = santuarios de espíritu; jefe en 3 fases que obligue a alternar formas (síntesis de la pregunta central).
+- **Dirección de combate (decidido):** side-scroller con sensación beat 'em up (OPCIÓN A). Cámara **zoom 2x** (todo más grande/cerca) + **oleadas más numerosas con flanqueo** (ola1 = 4 cultistas, ola2 = 2 arqueros + 4 cultistas con bordes, ola3 = chamán + 2 arqueros + 4 cultistas) — 33/33 PASS.
+- **Belt-scroller:** se probó en rama `gameplay-prueba` (escena aislada con movimiento X+Y, enemigos que rodean, sin salto, Humano+Oso) y **el usuario decidió descartarla** y borrar la rama. Se eliminaron `scenes/belt_{prueba,player,enemy}.tscn`, `scripts/belt/` y los inputs `belt_up`/`belt_down`. La lección técnica quedó registrada (abajo).
+
+---
+
+## Dirección Artística
+
+- Arte vectorial, minimalista, colores planos.
+- Siluetas fáciles de reconocer.
+- Mucha vegetación, bosque místico.
+- Interfaz limpia.
+- No realismo — estética simple viable para equipo pequeño.
+
+---
+
+## Mecánicas a Conservar de Ben 10
+
+1. **Transformación instantánea** — rápida, satisfactoria, útil en combate y exploración.
+2. **Cada transformación cambia todo el gameplay** — no simples stats; cada forma se siente como un personaje distinto (movilidad, ataques, utilidades, fortalezas y debilidades propias).
+3. **Resolver situaciones con la transformación correcta** — sin transformación superior; cada una resuelve problemas diferentes.
+4. **Cambio constante durante el combate** — enemigos y jefes incentivan transformar varias veces en una misma pelea (decisión estratégica, no animación decorativa).
+5. **Tiempo limitado — IMPLEMENTADO (Lote 2):** transformación **limitada por gauge de espíritu** (drena al transformarse; se recarga matando enemigos, rompiendo recipientes, pickups y regenerando lento en Humano), fiel a cómo lo juega el original. Antes estaba marcado DESCARTADO (09/08) con transformación ilimitada; rectificado tras las notas del usuario.
+
+## Mecánicas que NO Copiar
+
+- Omnitrix, ADN alien, aliens originales, ciencia ficción, historia y diseño visual de Ben 10.
+
+---
+
+## Transformaciones (POR DISEÑAR)
+
+- Pocas, muy diferenciadas entre sí, cada una con rol claro de combate + exploración.
+- Inspiradas en espíritus animales del bosque.
+- No disponibles desde el inicio: se desbloquean conforme avanza la historia.
+- Cada nueva transformación abre desafíos nuevos y enemigos distintos.
+
+## Progresión
+
+- Transformaciones desbloqueables por avance de historia.
+- Recompensas por nivel.
+
+---
+
+## Diseño de Niveles
+
+- **Completamente lineal** (no metroidvania ni mundo abierto).
+- **4-5 niveles.**
+- Estructura típica por nivel:
+  1. Introducción narrativa
+  2. Exploración
+  3. Primer combate
+  4. Desafío ambiental
+  5. Segundo combate
+  6. Mini jefe (opcional)
+  7. Tramo final
+  8. Jefe
+  9. Recompensa
+- Caminos lineales con pequeños desvíos (coleccionables o mejoras).
+
+### Side Scroller (similar al original: plataformas + interacción con el entorno)
+
+- Plataformas con saltos precisos (evitar la imprecisión del original).
+- Romper troncos / obstáculos (equivalente a romper objetos para obtener pickups).
+- Mover rocas.
+- Cruzar ríos / secciones acuáticas.
+- Infiltrarse por grietas o huecos.
+- Activar mecanismos.
+- Abrir caminos.
+- Cada situación favorece una transformación distinta.
+
+---
+
+## Cámara
+
+- **Side-scrolling** (lateral), como el original.
+- Seguimiento suave del jugador.
+- Pequeño desplazamiento hacia la dirección del movimiento.
+- Límites dentro del mapa.
+- Ligero zoom en transformaciones importantes o jefes.
+- Debe favorecer la lectura del combate.
+- **CAMBIADO (13/08):** se eliminó el **zoom 2x** → la cámara quedó en **zoom 1, resolución nativa 1920×1080**. Ahora **1 unidad del mundo = 1 px en pantalla** (los sprites se ven a su tamaño real; lo "grande" se logra agrandando sprites/nivel manualmente, no con zoom). Límites actuales en `player.tscn` (Camera2D): left -400, top -800, right 3400, bottom 1080. `zoom_punch` sigue siendo relativo a `_base_zoom` (camera.gd).
+
+---
+
+## Combate
+
+- Dinámico; los enemigos incentivan distintas transformaciones:
+  - Rápidos
+  - Pesados
+  - A distancia
+  - Que bloquean ataques
+  - Que obligan a sigilo
+- Jefes con **fases** que obligan a transformar varias veces en la misma pelea.
+
+## Enemigos
+
+Secta que corrompe el bosque:
+
+- Cultistas básicos
+- Arqueros
+- Chamanes
+- Guardianes pesados
+- Animales corrompidos
+
+---
+
+## Ritmo del Juego
+
+Exploración → Combate → Desafío → Exploración → Combate → Jefe (alternancia constante; nunca demasiado tiempo en una sola actividad).
+
+---
+
+## Alcance (2 meses, 3 personas)
+
+- 4-5 niveles lineales.
+- Pocas transformaciones, priorizando calidad.
+- Pocos enemigos, bien diferenciados.
+- 1-2 jefes importantes.
+- **Pulido por encima de cantidad** — divertido, sólido y con buen nivel de calidad aunque corto.
+
+---
+
+## Estado Actual del Proyecto
+
+### Prototipo de Core Feel (implementado ✓)
+
+- **Perspectiva:** Side Scroller 2D, fiel al original.
+- **4 formas diferenciadas:** Guardabosques (melee), Oso (golpe fuerte), Lobo (dash veloz), Búho (proyectil + doble salto + planeo).
+- **Transformación:** tecla `T` cicla entre formas; cambia stats, sprite (placeholder icono de Godot con capa de color `Tint` por forma) y ataque.
+- **Combate:** melee/heavy con `Area2D` + señal `body_entered`; dash con impulso; búho dispara proyectil.
+- **Enemigo dummy:** recibe daño, muestra vida, muere.
+- **Nivel de prueba:** suelo + 3 plataformas + 1 enemigo.
+- **Consola dev:** tecla `` ` `` (backtick) abre panel con recuadro de comandos y prompt. Pausa el juego al abrir.
+
+### Estructura del prototipo
+```
+scenes/
+├── main.tscn          # Nivel de prueba (suelo, plataformas, enemigo, player, UI)
+├── player.tscn        # CharacterBody2D + Sprite2D(icono) + Tint(capa de color) + Collision + AttackArea
+├── enemy.tscn         # Dummy con vida/HpLabel
+├── projectile.tscn    # Proyectil del búho
+├── console.tscn       # CanvasLayer: panel + recuadro de comandos + prompt
+├── hud.tscn           # CanvasLayer: forma activa + controles (top-left, señal form_changed)
+├── encounter.tscn     # Zona beat 'em up: TriggerZone + SpawnGroup + Gate (portón)
+├── spawn_point.tscn   # Telegrafiado de aparición (círculo ritual) + spawn de enemigo
+├── gate.tscn          # Portón visible que bloquea durante el encuentro
+├── rompible.tscn      # Objeto destructible (caja/urna/tótem): resiste 3 golpes (feedback tipo enemigo); suelta pickups y fragmentos
+├── pickup.tscn        # Item flotante (vida/espíritu) que el jugador recoge al tocarlo
+└── levelup.tscn       # Pantalla de elección de mejora (combo) al subir de nivel
+scripts/
+├── progresion.gd      # AUTOLOAD Progresion: fragmentos → nivel → desbloqueos (formas y pasos de combo)
+├── player.gd          # Node que delega en la forma activa (OOP); gauge de espíritu + muerte/respawn + romper rompibles
+├── enemy.gd           # 100 HP. configure() + signal died + IA + ATAQUES (cultista melee/arquero/chamán a distancia, con telegrafiado). Feedback de golpe por forma del player
+├── rompible.gd        # class_name Rompible (StaticBody2D): golpear() (3 golpes + feedback tipo enemigo) + suelta pickups/fragmentos
+├── pickup.gd          # class_name Pickup (Area2D): tipo vida/espíritu; recarga al tocar al player
+├── camera.gd          # Camera2D que sigue al player (smoothing) + shake() por offset aleatorio
+├── projectile.gd      # setup(dir, dmg, target_group, tint): proyectil del búho (a "enemy") o de enemigos (a "player")
+├── console.gd         # Diccionario central COMMANDS (fuente única panel+help)
+├── hud.gd             # HUD: barras VIDA/ESPÍRITU verticales (izq.) + contador de progreso + combo
+├── encounter.gd       # Olas de enemigos + portón + contador (INACTIVE/RUNNING/COMPLETED)
+├── spawn_point.gd     # Círculo ritual (telegrafiado ~0.7s) + spawn con fade-in
+├── levelup.gd         # Menú de elección de combo (pausa) al subir de nivel
+├── gate.gd            # set_closed() alterna visual + colisión + label "SECTOR CERRADO"
+└── forms/             # OOP: base abstracta + 4 formas
+	├── forma.gd       # class_name Forma (RefCounted): atributos + métodos virtuales
+	├── humano.gd      # Solo atributos (melee por default)
+	├── oso.gd         # Solo atributos (stats pesados)
+	├── lobo.gd        # Override: dash (tick/is_dashing/dash_speed/perform_attack)
+	└── buho.gd        # Override: doble salto + planeo + proyectil
+tests/
+└── autotest.gd        # Simula gameplay (13 checks). Correr: godot --headless --script res://tests/autotest.gd
+```
+
+### OOP de las formas (refactor ✓)
+- **`Forma` (base abstracta):** atributos `form_name, speed, jump_velocity, gravity_scale, max_health, attack_damage, attack_range, attack_size, color, collider_size` + métodos virtuales `tick()`, `is_dashing()`, `dash_speed()`, `is_gliding()`, `try_jump()`, `on_floor()`, `perform_attack()` (melee por default), `reset_state()`.
+- Cada animal extiende `Forma`: sobreescribe **atributos** (stats) y solo sobreescribe **métodos** cuando cambia el comportamiento.
+- El player conserva `current_form: int` (id, para no romper consola/autotest) + `forms: Array[Forma]` (instancias). Delega en `forms[current_form]`.
+- Las formas NO son nodos (`RefCounted`); acceden al player vía mini-API pública: `enable_melee(size, range)`, `fire_projectile()`, `end_attack()`.
+
+### Sistema de encuentros (beat 'em up, estilo del original ✓)
+- **Aparición de enemigos:** el nivel se divide en zonas con `Encounter`. Al cruzar el `TriggerZone`, se activa: olas de enemigos con **telegrafiado** (círculo ritual que brilla ~0.7s) y **portón visible** ("SECTOR CERRADO"). Evita el muro invisible del original.
+- **Olas (`encounter.gd`):** `waves: Array` de listas `{type, offset, delay, edge}`. Cada ola empieza cuando la anterior está muerta. Tipos: cultista, arquero, chamán (todos **100hp**). `edge: true` = aparece caminando desde fuera de pantalla.
+- **Contador:** `_alive` sube en `enemy_spawned` y baja en `signal died`. A 0 → siguiente ola; sin olas → `COMPLETED` + portón abierto.
+- **Enemigo (`enemy.gd`):** `configure(hp, color, name)`, `signal died`, IA de aproximación al player (speed 60, stop_distance 70; edge walk-in 120). **100 HP** (default y en `spawn_point.gd`). Al recibir golpe lee la forma activa del player (`player.forms[current_form]`) y aplica su feedback: tinte rojo + rotación + shake + zoom.
+- **Feedback por forma (atributos en `Forma`):** `shake_strength`, `shake_duration`, `hit_rotation` (grados), `hit_zoom` (1 = sin zoom). **Todos los ataques que conectan hacen un zoom pequeño (`hit_zoom` default 1.02 en la base; lobo idem), menor al 1.06 original.** Humano 5/7° · Oso 14/14° · Lobo 4 + zoom · Búho 8/14°.
+- **Cámara (`camera.gd`):** Camera2D hija del Player (sigue con smoothing), límites 0..2200 x / -800..640 y. `shake(strength=8, duration=0.15)` con offset aleatorio que decae (el `length` puede llegar a ~√2× la fuerza por los 2 ejes). `zoom_punch(strength)` con tween que vuelve a `_base_zoom`.
+- **Debug:** comando `spawn_wave` en consola activa el encuentro a mano.
+
+### Versionado (Git) ✓
+- **Repo:** `https://github.com/TomasMoreno21/TP3-Taller-de-Juegos` — remoto `origin`, rama `main`.
+- **Historia:** README del repo (commit `59f3f1f`) + primer commit del prototipo `0e582d6` + merge `8a76d83` (push inicial hecho 06/08).
+- **Cadencia:** un commit por **lote validado** (verificación: `--headless --import` → autotest → `--quit-after 90`). Preguntar al usuario el mensaje antes de cada commit. Rama principal `main`.
+- Identidad global configurada: Tomás Moreno `<morenotomas2112@gmail.com>`.
+
+### Controles del prototipo
+- Teclado: `← →` / `A D`: mover · `Espacio`: saltar · `J`: combo ligero (repetición escala daño) · `K`: combo fuerte · `L`: especial/interactuar · `Shift`: bloquear (reduce daño 25%) · `T`: transformar · `` ` ``: consola
+- Mando: stick/DPAD mover · `A` saltar · `X` ligero · `Y` fuerte · `B` especial/interactuar · `LB` bloquear · `RB` transformar
+- En el aire: `J`/`K` (X/Y) hacen jump attacks (light/heavy).
+
+### Lote 1 IMPLEMENTADO ✓ — Combate fiel al original
+- **Combos por repetición de tecla** (como pidió el usuario): cada `J` repetido avanza el combo ligero (paso n = `light_damage_at(n)`, +50% por paso, tope `light_combo_steps`); `K` idem con `heavy_*`. Ventana de cadena `COMBO_WINDOW` 0.35s; cambiar de botón o dejar expirar resetea el contador del otro. **Los golpes ligeros tienen knockback pequeño** (`light_knockback` = 80, ~8px) para que el combo siga encadenando; el pesado 150 y el especial más (humano 260 / oso 320).
+- **`L` = especial/interactuar:** si hay un `Interactable` en rango de la forma correcta → interacción; si no → ataque especial de la forma. Humano = barrido ancho (66x42, rango 52, knockback 260) · Oso = golpe de tierra (130x70, 320, shake 10) · Lobo = aullido AoE (`aoe_knockback(240, special_damage, 320)`) · Búho = proyectil (movido de `J` a `L`; `J` ahora es picotazo melee).
+- **Feedback visual por tipo:** `AttackEffect` (Polygon2D hijo del player) — slash amarillo (light), slash naranja (heavy), ráfaga octogonal con el color de la forma (special); escala crece con el paso del combo; fade+scale tween 0.22s. `_punch_sprite(strength)` estira el sprite por tipo (light 0.15 / heavy 0.3 / special 0.4). Tinte del sprite se aclara mientras se bloquea.
+- **Feedback del área de ataque:** `AttackAreaVisual` (Polygon2D) dibuja un rectángulo traslúcido que **refleja exactamente el hitbox** (`attack_hitbox.shape.size` + posición de `attack_area.position`) durante la ventana activa (0.15s) y con el color por tipo (light amarillo / heavy naranja / special color de forma). `show_aoe_area(radius)` dibuja un anillo circular (24 pts) para el aullido del lobo (0.3s). El área se oculta con timer propio (`_area_visual_timer`) y en `end_attack`.
+- **Hit por sondeo** (no por `body_entered`): `_check_attack_hits()` sondea `get_overlapping_bodies()` cada frame con `_hit_applied` — 1 golpe por pulsación, determinista para combos rápidos (reemplaza al sistema de eventos que fallaba con doble pulsación). `enable_melee(size, range, damage=-1, knockback=0)`.
+- **Block:** `Shift` → `take_damage` reduce a 25% (mínimo 1).
+- **Interactable (`scripts/interactable.gd` + `scenes/tronco.tscn`):** `required_form` + `interact_range`; `can_interact()`/`break_interact()` (fade+scale+free). `Tronco` en main.tscn (1180,530) bloquea el paso al encuentro — **solo el Oso lo rompe** (valida la pregunta central de diseño). Hint encima: "Usa el especial con el Oso para romper".
+- **Nivel (`main.tscn`):** suelo extendido (2560px, cubre x -380..2180), **7 plataformas de 200px dispersas con alturas variadas** (y 300→470, 560→360, 820→260, 1080→400, 1350→310, 1580→470, 1780→380). 2 enemigos sueltos (650,540 y 950,540) antes del Tronco. `Encounter` en (1480,540) con **3 olas más numerosas**: ola1 = 3 cultistas, ola2 = arquero + 3 cultistas, ola3 = chamán + arquero + 2 cultistas. Cámara: `limit_right = 2200`. (⚠ esta `main.tscn` fue **rediseñada por completo en Lote 2** — ver sección Lote 2.)
+- **HUD:** controles actualizados + línea `COMBO LIGERO/FUERTE/ESPECIAL xN` (señal `attack_performed(type, step)`) abajo-izquierda.
+- **Autotest: 13 → 31 checks PASS** (combo light escala 10→25, heavy, special, block 25%, jump attack, lobo dash, búho proyectil, feedback visible, interact humano no/oso sí, métodos de la base).
+
+### Lote 2 IMPLEMENTADO ✓ — Progresión fiel al original (gauge, fragmentos, rompibles, enemigos y Zona 1 completa)
+- **Autoload `Progresion` (`scripts/progresion.gd`):** Singleton `Progresion`. `fragmentos` y `nivel`. Cada `3` fragmentos sube `nivel` (`add_fragmentos` → `subir_nivel`). `forma_desbloqueada(form)` = `form < nivel` (Humano siempre; Oso=nivel 2, Lobo=3, Búho=4). `pasos_luz()` = `nivel`. Señales `fragmentos_cambiado`/`nivel_cambiado`/`combo_desbloqueado`. Registrado en `project.godot [autoload]`.
+- **Gauge de espíritu (`player.gd`):** `energia` (0..100). Transformado drena **8/s** (antes 22/s → la transformación dura **mucho más**, ~12.5s a plena energía, a pedido del usuario); a 0 → vuelve a Humano (`transformacion_agotada`). Humano regenera 5/s. `on_enemy_killed()` da +20 (melee, AoE y proyectil del búho). `add_energia`, `set_energia`, `heal`. **Muerte/respawn:** a 0 HP (sin god) vuelve a Humano en `_spawn_position` con vida llena y 50 de energía.
+- **Transformación con gating:** `T` cicla **saltando las formas bloqueadas** por `nivel` (Humano↔siguiente desbloqueada); no se puede transformar si la próxima está bloqueada. **Combo ligero limitado:** `max_step = min(light_combo_steps, nivel)` → cada nivel desbloquea el siguiente paso de combo (progresión por repetición fiel al original).
+- **Rompibles (`rompible.gd` + `scenes/rompible.tscn`):** StaticBody2D en grupo `rompible` con `box_size`, `box_color` (adaptan colisión+visual en `_ready`). **Todos iguales: requieren 3 golpes** (`GOLPES_PARA_ROM=3`). En cada golpe no final hacen **feedback igual que los enemigos** (destello rojo + rotación del sprite, `_feedback_golpe`), en el 3º estallan. Al romper sueltan pickups (35% vida) y **siempre +1 fragmento**. Detección vía `_check_attack_hits` (el `AttackArea` tiene `collision_mask = 3`). NOTA color pickup vida = **rojo**, espíritu = azul.
+- **Pickups (`pickup.gd` + `scenes/pickup.tscn`):** Area2D en grupo `pickup`, `colision_mask = 4` (detecta al player). `tipo` "vida" (heal 25) / "espiritu" (energía). `setup(tipo)` + color en `_ready`. Tween de pulso y despawn a 8s.
+- **Enemigos que atacan (`enemy.gd`):** `@export enemy_type` (cultista/arquero/chamán) → `_apply_type_stats()` (cultista melee 80px/s stop 60, ataque 15 en rango 55; arquero 45px/s mantiene distancia ~*, proyectil 12 en rango 420; chamán 38px/s, proyectil 16 en rango 460). Ciclo: acercarse → **telegrafiado** (`_pulse_telegraph` escala visual 1.4 en 0.35s) → impacto (cultista melee cuerpo a cuerpo; arquero/chamán proyectil contra "player"). Cooldowns 1.6/2.2/2.6s. **`apply_knockback` recarga el timer y decae `velocity.x`** (se restauró el manejo de knockback que se había perdido en el rewrite). **Separación mutua (`_separacion()`):** los enemigos se repelen entre sí (rango ~46px) para no amontonarse en la oleada y evitar el "spam de un solo golpe". **Olas menos densas** (2/4/5 en lugar de 4/6/7) con offsets más amplios.
+- **Proyectil mejorado (`projectile.gd`):** `setup(dir, dmg, target_group, tint)` — ahora puede atacar a "player" (proyectiles enemigos, color oscurecido del enemigo); el del búho sigue atacando "enemy" y da +energía al matar.
+- **HUD (`hud.gd/.tscn`):** barras superiores VIDA y ESPÍRITU (ProgressBar) + `FRAGMENTOS x/y · NIVEL n` + label de avisos ("¡Transformación agotada!", "¡Combo n desbloqueado!"). Conecta señales de `player` y `Progresion`. **Desde 15/08:** también muestra cartel de nivel ("¡NIVEL X ALCANZADO!") y de desbloqueo de forma ("¡NOMBRE DESBLOQUEADO!") con cola de avisos para que no se pisen.
+- **Consola:** comando `fragmentos <n>` (concede fragmentos/sube nivel).
+- **Zona 1 completa (`main.tscn`):** rediseño en 5 secciones: inicio+combate (Player 200,540, Enemy 380,540) → 3 urnas grandes (520/700/880, rompen con heavy + fragmentos → desbloquean Oso) → Tronco (1010, enseña el especial del Oso) → **Arena 1** Encounter (1300) → **plataformeo** (5 plataformas 1460→2000, alturas 460→300; cajas chicas que rompen; Urna4 en 1560) → **Arena 2** (E1..E5 en 1980→2320: arquero/cultista/cultista/arquero/chamán — mezcla distinta a la arena 1) → **Santuario** (Tótem en 2280: grande, da fragmentos; label "SANTUARIO"). Suelo extendido a 3000px, `limit_right` del player a 2400.
+- **Autotest: 45 checks PASS** (0 fallos). Nuevos tests: transformar bloqueado en nivel 1, combo limitado a 1 paso, 3 fragmentos→nivel 2→desbloquea Oso, energía drena y vuelve a Humano, rompibles (1 golpe no rompe, 3er golpe rompe + pickup + fragmento), pickup recarga energía. **Importante:** usa `_progresion()` (por ruta) en vez del identificador global (ver lección abajo).
+
+### Lote 2.5 — Sistema de combos por secuencia + elección de nivel (IMPLEMENTADO ✓)
+- **Combos por secuencia (`forma.gd` + cada forma):** cada forma tiene `combos: Array[Dictionary]` — **SIMPLIFICADO: 1 solo combo por forma** (el primero, `secuencia = ["light", "heavy"]`, es decir `J → K`): `{"nombre", "secuencia", "dano", "knockback", "tamano", "rango"}`. `forma.perform_combo(player, combo)` = `enable_melee` con los stats del combo. (Se eliminaron los combo2 "K→L" y sus overrides de `perform_combo` por forma que quedaban muertos.)
+  - Humano: Remate (J→K, 42).
+  - Oso: Garra (J→K, 84).
+  - Lobo: Mordida (J→K, 22, dash en combo).
+  - Búho: Ala Cortante (J→K, 28).
+- **Elección al subir de nivel (`scenes/levelup.tscn` + `scripts/levelup.gd`):** `Progresion` emite `nivel_subio` **solo en `subir_nivel()`** (no en `set_nivel`, para no abrir el menú en tests/consola). Autoload `LevelUp` escucha: **pausa** el juego y muestra un panel con las formas desbloqueadas que aún pueden aprender su **único combo**; elegís con ↑/↓ + J/Enter → `Progresion.elegir_mejora(form_index)` desbloquea el combo de esa forma (`combos_desbloqueados` queda capado en `combos.size()`, o sea 1). API: `abrir()/cerrar()/seleccionar(i)/opciones()`.
+- **Player (`player.gd`):** rastrea la secuencia `_seq` (últimos 3 inputs dentro de `COMBO_WINDOW`); `_detectar_combo(tipo)` la coteja contra los combos **desbloqueados** de la forma (de mayor a menor longitud); si coincide → `_ejecutar_finisher` (`performa_combo` + FX `SLASH_COMBO` + `attack_performed("combo", nombre)`), prioridad sobre el escalado por repetición. `_seq` se limpia al expirar la ventana y al cambiar de forma. `attack_performed` ahora es `(String, Variant)`.
+- **HUD:** muestra el nombre del combo; aviso "¡Forma aprendió 'Combo'!".
+- **Consola:** `nivel <n>` (fuerza nivel sin abrir el menú) y `combos` (lista desbloqueados por forma).
+- **Autotest:** `nivel_subio` se auto-elege opción 0 (handler conectado temprano para no pausar). Nuevos tests: humano sin combos → `elegir_mejora(0)` desbloquea combo1 → J→K hace 42 (el finisher en el 2º golpe) → K→J no dispara → combo2 desbloquea K→L hace 60 → formas no elegidas bloqueadas. **(Nota test:** `_spawn_enemy_near` toma `group[0]`; hay que `kill_enemies` antes de cada spawn para que no devuelva un enemigo viejo/liberado.)
+- **Verificación:** import limpio, autotest **FALLOS = 0**, smoke limpio.
+
+### Lote 2.7 IMPLEMENTADO ✓ — Ritmo de combate (cooldowns + gateo) y textos de ataque del HUD
+- **Gateo real del combate (`player.gd`):** `_handle_attack` hace **early-return** si `_attacking and _attack_timer > 0` (decrementa el timer; al llegar a 0 llama `end_attack()`). Antes cada golpe **reseteaba** el timer, por lo que se podía spamear sin límite. Ahora el cooldown sí limita el ritmo. **Importante:** con este gateo, los tests que presionan ataques en frames consecutivos quedan bloqueados → hay que esperar la recuperación entre golpes en el autotest.
+- **Buffer de entrada en `player.gd`:** al presionar un botón de ataque **durante la recuperación** del ataque previo (gate activo), se guarda (`_buffered_attack`) y se ejecuta **apenas termina la recuperación** (`_lanzar_buffered`), con `_seq` intacto. Evita que el 2º botón de un combo se pierda por el gateo (sin esto, J→K fallaba y parecía que había que apretar los botones "a la vez"). Refactor: la lógica de golpe se extrajo a `_procesar_ataque(tipo, data, airborne)`; `_handle_attack` delega en ella (vía live o buffer); `_buffered_attack` se limpia al cambiar de forma.
+- **Cooldowns por tipo (`_recovery_for()` en `enable_melee`):** `RECOVERY_LIGHT 0.3 / RECOVERY_HEAVY 0.5 / RECOVERY_SPECIAL 0.8 / RECOVERY_COMBO 1.0` (subidos en la sesión para simular la animación del original, y luego **bajados en dos pasos** a estos valores actuales). `COMBO_WINDOW` **subido de 0.35 a 1.10** para que J→K / K→L sigan encadenando pese a la recuperación.
+- **Textos de ataque del HUD (fiel al diseño iterado con el usuario):**
+  - Nombres: ligero → **"Golpe"**, fuerte → **"Fuerte"**, especial → **"Especial"**; finisher → **solo el nombre del combo** (sin la palabra "COMBO"). Sin colores (texto **blanco**).
+  - Máx. **2 golpes** visibles en una **única fuente `FONT_BIG = 34`**.
+  - Posición a la izquierda: offsets **-560..-160** (hud.gd y hud.tscn), `SLOT_TOP = -128`, `BASE_TOP = -80`.
+  - Rotación: base vacía → texto + **fade-in 0.25s** (`_animar_aparicion`, TRANS_QUAD/EASE_OUT); si hay base → free top, promueve base a slot, nuevo texto abajo. Tras `TOP_FADE_DUR = 0.7s` el top se **desvanece en su lugar** (`_fade_top`: interval 0.05 + fade 0.35). En inactividad (`IDLE_CLARO = 2.5s`, `_limpiar_idle`) el bottom se **desliza a la izquierda** (`_animar_deslizar_izq`: x−320 en 0.35 TRANS_CUBIC/EASE_OUT) y tras `SALIDA_DUR = 0.85` libera.
+  - `_on_form_changed` limpia timers/`_subida`/texto.
+- **Acciones de navegación del menú de nivel:** agregadas `move_up` / `move_down` en `project.godot` (W/S + flechas + D-pad). Sin ellas el menú de elección no navegaba hacia abajo (bug de navegación).
+- **`_check_attack_hits` prioriza a los enemigos** (`player.gd`): primero recorre el overlap en busca de un `enemy` (golpe + knockback + break), y solo si no hay, busca un `rompible`. Antes rompía en el **primer body del iterable** (orden arbitrario), por lo que una urna/rompible cercano podía "robarle" el golpe al enemigo (el área tomaba `_hit_applied` y el enemigo quedaba intacto → tests de daño fallaban aleatoriamente según la posición).
+- **Autotest adaptado a la nueva mecánica (45 checks, FALLOS = 0):**
+  - Helpers: `_esperar_recuperacion(ataque)` (light 32 / heavy 50 / special 74 / combo 92 frames) y `_esperar_seq()` (70 frames, espera que expire `COMBO_WINDOW` para vaciar `_seq`).
+  - Se **flushea `_seq`** antes de los tests de heavy/especial y los combos por secuencia, para que un golpe residual de una prueba anterior no dispare un finisher equivocado (ej.: el K del test de heavy disparaba el Remate por `_seq=["light","light","heavy"]` residual).
+  - `_spawn_enemy_near` ahora es precedido por `kill_enemies` en los tests aislados (heavy/especial/salto) para que `enemy[0]` sea el enemigo recién spawneado y no uno viejo/dañado/muerto.
+  - Rompibles: se verifica la ruptura con `not is_instance_valid(...) or broken` (el rompible se libera al romperse); el check "suelta un pickup" usa un rompible aislado lejos del jugador (para que el pickup no se recoga al instante).
+  - Búho: el check del proyectil se mide justo tras 2 frames de la pulsación (el proyectil se despawna al chocar con el terreno).
+- **Verificación:** import limpio, autotest **FALLOS = 0**, smoke limpio.
+
+### Puzzles + plataformeo — documento de concepto (16/08, futuro)
+- **`docs/puzzles_diseno.md`** guarda el diseño conceptual (solo referencia, se tocará más adelante): desbloqueo de formas como "despertar espíritus guardianes"; bosque enseña / guarida de la secta aplica; principios de Ben 10:AF (enseñar-antes-de-exigir, transformarse para abrir camino, variedad combate↔plataformeo↔puzzle).
+- **Decisión de diseño (toma por el usuario):** modelo de 3 fases por forma (Descubrimiento → Tutoría natural → Aplicación/reto ligero); **símbolo/ícono de la forma requerida** sobre cada sello/puerta; **límite de transformación en tramos largos** (vuelve a Humano y re-reintentás) y **sin límite en tutoriales**. Cuando toque implementar: `forma_desbloqueada()` debe dejar de devolver siempre `true`.
+
+### Plan pendiente — Pseudo-2.5D por capas (RECHAZADO por el usuario en build, 13/08)
+- **Decisión (13/08, usuario):** NO convence. Feedback textual: *"No es el enfoque visual, siento que terminaría siendo lo mismo que lo que hay ahora."* Se descartó la "pseudo-2.5D por capas" (escalar `z` + offset sobre suelo plano).
+- **Por qué falla (lección):** escalar y levantar siluetas sobre un **suelo plano** no comunica profundidad; el jugador lo lee como el mismo side-scroller 2D de siempre. La profundidad real en el original viene de **geometría que retrocede** (piso/paredes en perspectiva) o de una **cámara/escena 3D**, no de variar el tamaño de los sprites.
+- **Qué era la opción por capas (para no repetirla sin cambio crítico):** eje `z` en `enemy.gd`/`spawn_point.gd`/`encounter.gd`/`projectile.gd`/`main.tscn`, dolly en `camera.gd`, `z` como presentación (no bloqueador). **Archivos de preview creados y verificados:** `scenes/pseudo2d_preview.tscn` + `scripts/pseudo2d_preview.gd` (toggle con `D`; correr con F6). Import limpio + autotest FALLOS = 0. → la preview se puede borrar si no sirve.
+- **ESTADO:** la dirección sigue **abierta**. Se probaron 2 enfoques visuales con preview y ambos se descartaron por el usuario (13/08): (1) pseudo-2.5D por capas (escalar/levantar siluetas sobre suelo plano → "se ve igual que ahora"); (2) arena con piso/paredes en perspectiva + personajes en "calles" (look beat'em-up), también no convenció. **Toda la preview fue borrada** (`pseudo2d_preview.*`, `arena_preview.*`, `scripts/preview/*`, `scenes/preview/*`). Solo quedan cachés de `.godot/editor/` (inofensivos). El juego real no se tocó (autotest FALLOS=0).
+- **Próximo paso:** redefinir con el usuario qué busca de "adaptar el ambiente 3D del original" antes de volver a prototipar.
+
+### Consola dev — comandos
+`help`, `form <humano|lobo|oso|murcielago>`, `god`, `mv`, `frags <n>`, `nivel <n>`, `kill`
+
+### Idiomas
+- **Preferencia del usuario (11/08):** todo **en español** — el código de interfaz del juego (labels, avisos, HUD) **y** la comunicación del asistente. Constante en adelante.
+
+### Pendiente para validar en Godot (probarlo a mano)
+- [ ] Sensación real de cada forma (velocidad/salto/peso) — los números son placeholders iniciales
+- [ ] Rebalancear stats según feedback del grupo
+- [ ] Sentir la Zona 1 completa y el ritmo tronco→arena→plataformeo→arena→santuario
+
+### Lote 1 APROBADO — Combate fiel al original (por implementar)
+- Mapeo original → nuestro: Light=`J` (existe), Heavy=`K` (nuevo), Special/Interact=`L` (nuevo), Jump+Light/Heavy en el aire, Block=`Shift` (nuevo).
+- **`forma.gd`:** atributos `heavy_damage/heavy_range/heavy_size/special_damage` + métodos `perform_light` (renombra `perform_attack`), `perform_heavy`, `perform_special`, `perform_jump_attack`, `perform_combo_finisher` + datos `combos: Array[Array[String]]`.
+- **Formas:** búho proyectil pasa de `J` a `L` (special), `J` = picotazo corto; lobo light sigue siendo el dash; 2 combos por forma (Humano L→L "Empuje"; Oso L→H "Demoledor"; Lobo H→L "Avalancha"; Búho L→L "Doble flecha").
+- **`player.gd`:** inputs nuevos, jump attacks, combo buffer (finisher = +daño +knockback +zoom punch), block (reduce 75%), `enable_melee(size, range, damage=-1, knockback=0)` sin romper la llamada actual de lobo.
+- **Interact contextual:** `L` cerca de un interactable de la forma correcta → interacción; si no → special. Nuevo `interactable.gd` + `Tronco` en main.tscn (solo lo rompe el Oso).
+- **`enemy.gd`:** `apply_knockback(vec)`. **`hud.gd`:** controles + línea de combo. **`project.godot`:** acciones `heavy`, `special`, `block`.
+- **Autotest:** 13 → ~20 checks.
+
+---
+
+## Referencia: Ben 10: Alien Force (Juego Original)
+
+### Ficha Técnica
+| Dato | Valor |
+|------|-------|
+| Desarrollador | Monkey Bar Games (Vicious Cycle Software) |
+| Publisher | D3 Publisher |
+| Motor | Vicious Engine |
+| Género | Action-adventure / Beat-'em-up 3D side-scrolling |
+| Plataformas | PS2, PSP, Wii, DS |
+| Lanzamiento | 28 Oct 2008 |
+| Metacritic | 45/100 (desfavorable) |
+
+### Gameplay del Original
+- **Perspectiva:** 3D side-scrolling (2.5D)
+- **Combate:** light + heavy + special, combos desbloqueables
+- **Progresión:** orbes amarillos → combos; Plumber Badges → extras
+- **Co-op:** PS2/Wii (2 jugadores, mismo personaje)
+- **Historia:** búsqueda del Abuelo Max, Gorvan, array climático Highbreed (8 capítulos)
+
+### Problemas del Original a EVITAR
+- Combate repetitivo con muros invisibles que forzaban peleas
+- Niveles planos y aburridos, demasiado largos
+- Detección de golpes y físicas pobres
+- Plataformas imprecisas
+- Co-op confuso (mismo personaje sin variante)
+
+---
+
+## Decisiones Pendientes / Próximos Pasos
+
+- [x] **Perspectiva: SIDE SCROLLER** (decisión tomada — fiel al original)
+- [ ] Definir y nombrar el juego
+- [ ] Diseñar las transformaciones (rol de combate + rol de exploración por cada una)
+- [x] **Transformación limitada por gauge de espíritu: DECIDIDO e IMPLEMENTADO (Lote 2)** (drena al transformarse, se recarga con kills/rompibles/pickups y regen de Humano)
+- [ ] Definir sistema de combate base del guardabosques (forma humana)
+- [ ] Prototipar movimiento + transformación + 1 combate básico en Godot
+- [ ] GDD orientado a producción
+- [ ] Detallar roles del equipo (3 personas)
+- [ ] Planificación de sprints (2 meses)
+
+---
+
+## Equipo
+
+- 3 personas (pendiente detallar integrantes y roles).
+
+---
+
+## Cronograma
+
+~2 meses para prototipo jugable, GDD, pitch y trailer (metodología ágil con sprints).
+
+---
+
+## Entregables (Unidad 3)
+
+1. Prototipo jugable (build ejecutable)
+2. Documento de Diseño (GDD orientado a producción)
+3. Pitch de venta
+4. Trailer del videojuego
+
+---
+
+## Notas / Lecciones Aprendidas
+
+- **(14/09) Contrato de daño del melee del jugador = `take_damage(cant, kb=0, dir=1, critico=false)` (4 args).** `_check_attack_hits` en `player.gd` la llama SIEMPRE con 4 argumentos contra cualquier body detectado (`get_overlapping_bodies`). Todo objetivo golpeable (enemigo, cristal, rompible, zona del jefe, dummy) DEBE aceptar esa firma; si solo acepta 3, el golpe falla en runtime sin señal de error clara (lagrimeando: "no le pego"). Esto rompió en silencio la barrera de cristales del jefe (los cristales eran inrompibles in-game; el autotest lo pasaba porque llamaba `take_damage(30)` directo). **Regla:** testear objetivos golpeables invocando el `take_damage` CON 4 args o, mejor, golpeándolos con el melee del jugador.
+- **(14/09) Un jefe "de fondo" (flotando atrás/arriba) necesita solo UNA superficie golpeable:** se desactiva el collider del cuerpo para siempre y la zona/weakpoint es un `StaticBody2D` aparte. El melee del player solo detecta `bodies` (no `Area2D`), así que la zona DEBE ser un body para ser golpeable.
+
+- **(13/09, jefe) Enum vs literales: `enum Fase { UNO, DOS, TRES }` vale 0/1/2, no 1/2/3.** Al testear el jefe con `_cambiar_fase(3)` (valor inexistente) el match no corría la rama TRES, `fase` quedaba en 3, y `_umbral_actual()` devolvía el umbral de F1 (17) → el golpe fatal se absorbía y el jefe nunca moría. Además el HUD tenía un **bug real por lo mismo**: `_on_boss_fase` hacía `match 1,2,3` + `pips: i <= fase-1`, con lo que colores y pips de la barra quedaban corridos una fase (se veía verde en lugar de púrpura, etc.). **Regla:** al consumir un enum ajeno, usar los símbolos (`boss.Fase.TRES`) o los valores reales (0/1/2), nunca literales supuestos.
+- **(13/09, jefe) `int(hijo.get("propiedad"))` crashea con "Nonexistent 'int' constructor" si la propiedad no existe** (`get` → `null`): el Encounter rompía el `_agregar_manual` cuando el enemigo manual no tenía `ola_asignada` (el jefe) y el script abortaba silenciosamente → la pelea nunca arrancaba. Hacerlo defensivo (`var val = hijo.get(...); var idx := int(val) if val is int else 0`).
+- **(13/09, jefe) GDScript no acepta `a, b = funcion()`** (destructuring de array de a dos sin corchetes): parse error en `boss.gd` que impedía cargar el script. Usar `var arr := funcion()` y leer índices, o `[a, b] = funcion()`.
+- **(13/09, jefe) Una transición de fase puede dejar máquina de estados infinita:** al pasar de F2 (aéreo, `_forzar_aereo=true`) a F3, si no se resetea `_forzar_aereo=false` en la rama de F3 el jefe entraba al bucle `_ronda_aerea` → continúa → re-entra → nunca atacaba en el suelo. Regla: toda flag que activa un ciclo temporal debe resetearse en las transiciones de estado que la dejan obsoleta.
+
+- **(13/08) Los `.tres` que son meras envolturas de un script (solo `script = ExtResource(...)` sin datos propios) se pueden borrar y cargar el script directo:** los 4 `.tres` de formas (`resources/formas/*.tres`) eran así; se reemplazaron en `player.gd` por `const FORM_SCRIPTS = [preload("...humano.gd"), ...]` + `script.new()` en `_ready()`. **Reversión parcial el 11/09:** los `.tres` de formas volvieron (`resources/formas/*.tres`) pero AHORA con datos propios (geometría de golpe + `combos` editables desde el Inspector); `player.gd` usa `const FORMAS`. Los `.tres` de enemigos SÍ tenían datos (stats); se hardcodearon en `enemy.gd::config_por_tipo(tipo)` y se eliminaron, con `@export var tipo` seteado en `main.tscn` y en los tests (`en.tipo = "cultista"` ANTES de `add_child` para que `_ready()` arme el `enemy_data`). Beneficio: menos recursos que reimportan y rompen UIDs/`AtlasTexture`; costo: los stats ya no se editan desde el inspector del editor. Regla: usar `.tres` solo cuando aportan datos reales (p.ej. `jugador_frames.tres`, y desde 11/09 las hitboxes de formas).
+- **(13/08) Los `.tres` generados "a mano" no necesitan esperar al editor:** el `SpriteFrames` (`resources/jugador_frames.tres`) se puede escribir directamente como texto con `ext_resource` de texturas (sin UID, solo `path`) + `sub_resource AtlasTexture` con `region` por frame + lista `animations`. Godot lo reimporta solo. Escribir un script generador `--script` puede colgar con timeout si no termina; verificar después si se creó el archivo.
+- **(13/08) Al pasar un `Sprite2D` a `AnimatedSprite2D`:** mantener el **mismo nombre de nodo** (`Sprite2D`) para que las rutas `$Sprite2D` y `get_node_or_null("Sprite2D/Tint")` sigan funcionando. Si se elimina el `Tint` hijo, el código debe usar `visual.self_modulate` (cae en el `else`) en vez de `tint.modulate`. El flip horizontal es `visual.flip_h = facing < 0`.
+- **(13/08) CAUSA REAL de "no se ve el personaje": las `AtlasTexture` de un `.tres` escrito a mano pierden la referencia a su textura al reimportar** (quedan frames vacíos, el `AnimatedSprite2D` no muestra nada pero no da error; la colisión `CollisionShape2D` sí funciona, por eso "los enemigos lo detectan"). La solución robusta: generar el `SpriteFrames` **por script** incrustando cada frame como `ImageTexture` (con `ImageTexture.create_from_image(imagen.get_region(...))`), NO usar `AtlasTexture` con `ext_resource` de textura. Verificación: `sf.get_frame_texture(anim,0).get_image() != null` y contar píxeles opacos. El "self_modulate verde" NO era la causa (solo un tinte).
+- **Scripts `extends SceneTree` por `--script`: usar `_init()` NO `_initialize()` y llamar `quit()` al final** — `_initialize()` no se ejecuta, el proceso se cuelga hasta el timeout. Verificar siempre que el archivo/que el recurso se creó.
+- **(13/08) Un `scale` en el nodo raíz agranda la hitbox sin que coincida con el editor:** con `Player scale=(3,3)`, la `CollisionShape2D` de 24.67×29.67 se multiplicaba a ~74×89 px reales mientras el editor (y el sprite del `AnimatedSprite2D` con su propio scale 0.993) no lo reflejaban igual. Solución: `scale=(1,1)` en el raíz, escala visual en el `AnimatedSprite2D`, y los valores de las formas expresados en **px reales del mundo** (multiplicar colisiones/rangos/tamaños por el factor que tenía el nodo, sin tocar velocidades ni fuerzas). Los tests de offsets relativos (enemigo a 60px, dummy a 40px) siguen pasando porque el alcance ligero humano pasó de 26→78 px reales (el 78 que ya era efectivo antes).
+- **(13/08) En un test "matar al enemigo con melee", reposicionar al player junto al enemigo en cada golpe:** el enemigo con `stop_distance` (50px) se detiene justo fuera del alcance del attack humano (área 11–41px), así que un solo golpe inicial conecta y los siguientes fallan → el enemigo nunca muere. Al teleportar al player a `enemy.position - (20,0)` antes de cada ataque, todos conectan.
+- **(13/08) Proyectiles de enemigo vs de player:** la escena `projectile.tscn` es compartida; la máscara debe distinguir quién dispara (`enemy_shot` bool → `collision_mask = 4` si es del enemigo para golpear al player, `3` si es del murciélago para golpear enemigos). El arquero/chamán apuntan al jugador: `direction = (player.global_position - global_position).normalized()` en `_disparar(player)`; los enemigos tienen gravedad (`GRAVITY=980`, `MAX_FALL_SPEED=950`) en `enemy.gd`.
+- **(13/08) `enemy.tscn` sin UID válido en el header no registra `.uid`:** escribir `uid="uid://foo"` inválido evita que el import genere el archivo. Dejarlo sin `uid` en el header (o con uno real regenerado) y referenciarlo por `path` (como `hud.tscn`). (Los `.tres` de enemigos que existían entonces ya no existen — ver lección sobre borrar `.tres`-envoltura arriba.)
+- **(13/08) Un objetivo de interacción grande (coloso) necesita `interact_range` que considere SU tamaño:** con un Tronco de 200px de ancho y `interact_range=90`, el jugador no puede acercarse a 90 px del centro sin pisar el cuerpo (move_and_slide lo empuja). Un `required_form` correcto + distancia "correcta" seguía fallando; la causa era puramente de alcance. Subir `interact_range` (220) resolvió. Al escribir tests de interacción con objetos grandes: usar plataforma de test controlada + `await _funcion_tronco()` (llamar la función con `await`, o los checks posteriores se cortan por `quit()`).
+- **(13/08) En tests `--script`, `get_tree().current_scene` es `null`** (no hay escena principal); `fire_projectile()` y `rompible._soltar_pickup()` hacían `add_child` a null. Fix: `var destino = get_tree().current_scene if get_tree().current_scene != null else get_parent()`. Pattern a reutilizar para cualquier `add_child` de un nodo spawneado.
+- **(13/08) Al reescribir tests, referenciar la API REAL:** `console._ejecutar(PackedStringArray([...]))` (1 arg) y `console.toggle()`, NO `_execute`/`_toggle`/`set_form`/`set_energia`/`get_form_name`. Los métodos heredados/asumidos rompen el autotest.
+- **(13/08) El HUD se actualiza por SEÑALES, no por polling:** asignar `player.energia = 40` directamente NO baja la barra (no emite `energia_changed`); hay que transformar (drena) o emitir. Al testear el HUD, disparar señales reales (daño, heal, transformación), no tocar vars a ciegas.
+- **(13/08) `_transformar(n)` retorna temprano si `n == current_form`:** si el test fija `current_form` y luego llama `_transformar` del mismo índice, la señal `form_changed` NO se emite y el aviso del HUD no aparece. Poner `current_form` a un valor distinto antes de `_transformar`.
+- **Nuevos `class_name` no se registran hasta reimportar:** crear un script con `class_name` nuevo y correr `--headless --script` falla con "Could not find type". Hay que correr `godot --headless --import` primero (o abrir el editor).
+- **`await physics_frame` retoma ANTES de que corra el `_physics_process`** del frame. En tests hay que esperar **2 frames** después de presionar una acción para ver su efecto (1 para procesar + 1 para leer). Y para cosas con tween/telegrafiado, esperar el tiempo completo (p.ej. ~0.7s del círculo ritual antes de ver enemigos).
+- **Las señales sin argumento no se conectan a handlers con parámetros:** `signal died` (sin args) falla con "Method expected 1 argument(s)" si el handler recibe un parámetro. Los handlers deben coincidir con la firma de la señal.
+- **En `enable_melee` hay que re-habilitar el hitbox** (`attack_hitbox.disabled = false`): `end_attack()` lo deshabilita y si no se reactiva, el Area2D nunca detecta al enemigo (bug silencioso, solo visible en el autotest de daño).
+- La captura de pantalla headless (`root.get_texture().get_image()`) devolvía toda gris con renderer D3D12/Forward+ y con gl_compatibility; incluso con `RenderingServer.frame_post_draw`. Pendiente resolver si es límite del pipeline o del método (diagnóstico abierto).
+
+### Lote 1 — lecciones nuevas (no repetir)
+- **`PackedVector2Array([Vector2(...), ...])` NO es expresión constante** en GDScript → error "Assigned value for constant isn't a constant expression". Usar `var` con arreglo plano `PackedVector2Array([x1,y1, x2,y2, ...])`.
+- **`get_nodes_in_group()` devuelve `Node` sin tipar:** al recorrer y usar `global_position`, declarar el loop tipado: `for body: Node2D in ...` (si no: "Cannot infer the type").
+- **`Input.is_action_just_pressed()` se consume en la primera llamada:** no hacer `print(... is_action_just_pressed ...)` dentro del mismo frame que el jugador lo va a leer, o el borde se pierde.
+- **`await physics_frame` retoma ANTES de `_physics_process`:** en tests, para que una pulsación registre hay que mantenerla presionada cruzando 2 frames (press → await → await → release) antes de soltar.
+- **El jugador empieza cayendo en main.tscn (spawn en (446,245), suelo en y≈540):** en tests con escena fresca hay que aterrizar (esperar ~10 frames) o el `light` del lobo hace jump-attack en vez de dash (y cualquier ataque "de suelo" no se ejecuta).
+- **`body_entered` no re-emite para cuerpos ya solapados:** para golpes de combo rápidos (re-habilitar el Area2D con el enemigo adentro), el sistema por eventos es frágil → usar **sondeo** (`get_overlapping_bodies()` + flag `_hit_applied`), 1 golpe por pulsación.
+- **La detección de golpe por sondeo aplica 1 frame después** de `enable_melee` (el Area necesita un physics step para computar solapamientos): en tests medir el HP después de 3 awaits, no 2.
+- **Enemigo que "flota" al recibir knockback (bug K):** el `enemy.gd` no aplicaba gravedad jamás; el impulso vertical del knockback lo dejaba levitando. Fix: aplicar gravedad **siempre** en `_physics_process` del enemigo (`velocity.y += GRAVITY * delta`, cap `MAX_FALL_SPEED`) y tratar el knockback como impulso único (`velocity = vec` una vez + decaimiento de `velocity.x`), no sobrescribir `velocity` cada frame.
+- **Joystick:** cada acción de input necesita su `InputEventJoypadButton`/`InputEventJoypadMotion` en `project.godot`. `Input.get_axis("move_left","move_right")` ya lee el eje del stick automáticamente (axis 0). Mapeo: A=0, B=1, X=2, Y=3, LB=9, RB=10, DPAD=13/14.
+- **`configure()` no puede correr antes de `add_child()`:** los `@onready` de un nodo instanciado recién existen cuando entra al árbol. Orden correcto: `instantiate()` → `position` → `add_child()` → `configure()`. (Aprendido en la prueba belt; aplica al spawner del prototipo si se reutiliza.)
+
+### Lote 2 — lecciones nuevas (no repetir)
+- **En modo `--script` los autoload NO se resuelven como identificador global al compilar** ("Identifier not found: Progresion") y el nodo no existe ni por ruta durante `_init`. El juego normal (`--headless --quit-after`) SÍ los resuelve. **Solución robusta en ambos modos:** acceder por ruta `get_node("/root/Progresion")` en vez del nombre global (aplica a player/rompible/hud/console y a autotest). No volver a usar el identificador global en scripts que se carguen bajo `--script`.
+- **`create_tween().set_loops().tween_property(...).tween_property(...)`:** la primera `tween_property` devuelve un `PropertyTweener` (no Tween), encadenar otra falla. Encadenar solo después de la primera: guardar en var `tw := create_tween(); tw.set_loops(); tw.tween_property(...); tw.tween_property(...)`.
+- **`setup()` no debe tocar `@onready`** si se puede llamar antes de entrar al árbol (en rompible se añade primero y luego setup; en tests se llamó antes → Nil). Hacer `setup` guardado con `if is_inside_tree()` o aplicar el color en `_ready`.
+- **Al reescribir `enemy.gd` no perder el bloque de knockback:** si `_knockback_timer` nunca se decrementa, `_seek_player` nunca vuelve y el enemigo queda deslizándose con `velocity.x` fijo (se va del rango y los golpes siguientes fallan). Restaurar: decrementar timer + decaer `velocity.x` + `_seek_player` al terminar.
+- **Si se reubican objetos, revisar el autotest:** un proyectil del búho disparado desde la posición de un test puede chocar con un rompible (StaticBody2D) recién colocado en el nivel y liberarse antes de contarse. Mantener la trayectoria de tests despejada.
+- **`match` es palabra reservada en GDScript** ("Expected expression to test after match"): no usar `var match := true`; renombrar la variable (p. ej. `coincide`).
+- **`_spawn_enemy_near` devuelve `get_nodes_in_group("enemy")[0]`:** si quedan enemigos vivos de tests previos, devuelve uno viejo (que puede morir → "previously freed" al leer `health`). Antes de cada spawn en tests, llamar `kill_enemies` para vaciar el grupo.
+- **Al ampliar un `signal` de `int` a `String`** (p. ej. `attack_performed` ahora acepta nombre de combo), cambiar el tipo a `Variant` para admitir ambos; ajustar el handler del HUD acorde.
+- **Si el rompible se instancia pegado al jugador (offset 30px), el pickup que suelta se recoge al instante** (el `body_entered` del pickup se dispara porque el player lo toca) → el check "suelta un pickup" falla por conteo. Para verificarlo, **mover al jugador lejos del pickup antes de contar los del grupo** en el test.
+
+### Lote 2.7 — lecciones nuevas (no repetir)- **Un cooldown que solo resetea un timer no gatea nada:** si cada golpe pone `_attack_timer` en el valor de recuperación, la cadencia es spameable. Para que la recuperación limite el ritmo, `_handle_attack` debe hacer **early-return** mientras `_attacking and _attack_timer > 0` (decrementar y `end_attack()` al llegar a 0) y **no** resetear el timer en los ataques nuevos mientras esté activo.
+- **En un `RichTextLabel`, el override de tamaño es `normal_font_size`, NO `font_size`:** usar `add_theme_font_size_override("normal_font_size", n)` o la propiedad del .tscn. Aplicar `font_size` no tiene efecto → el primer texto de ataque salía chico en el HUD.
+- **`_check_attack_hits` no debe romper en el primer body de `get_overlapping_bodies()`** (el orden es arbitrario): una urna/rompible cercano podía recibir el golpe antes que el enemigo y dejar el enemigo intacto. **Priorizar enemigos primero** (2 pases: 1º buscar `enemy`, 2º rompible).
+- **`_seq` persiste mientras `COMBO_WINDOW` esté viva y NO se limpia al terminar los ataques** (solo al expirar el timer o cambiar de forma). En tests, una secuencia residual de una prueba anterior puede disparar un finisher equivocado (p. ej. el K de un "heavy suelto" disparaba el Remate por `_seq=["light","light","heavy"]`). Flushear con `_esperar_seq()` (esperar > `COMBO_WINDOW`) antes de cada prueba de ataque/combo.
+- **Cambiar la cadencia/combo rompe los tests que presionan ataques en frames consecutivos** (ahora quedan bloqueados por el gateo): hay que intercalar `_esperar_recuperacion(ataque)` entre golpes y medir el daño respetando la recuperación.
+- **El rompible se libera al romperse** (tween → `queue_free`): para leer su estado usar `not is_instance_valid(x) or x.broken`. Y el proyectil del búho **se despawna al chocar con terreno** → medir el conteo justo tras spawmearlo, no al final de la recuperación.
+- **El buffer de entrada resuelve los combos con cooldown:** si un `is_action_just_pressed` se ignora durante la recuperación, el 2º botón del combo se pierde y el jugador cree que hay que apretar "a la vez". Al hacer el gateo hay que **bufferear** el botón presionado y ejecutarlo al terminar `end_attack()`, manteniendo `_seq` (que vive `COMBO_WINDOW`). Los tests de combos que esperan la recuperación antes del 2º botón siguen pasando igual.
+- **(13/08→16/08) Buffer de combos sin exigir mantener el botón:** antes el usuario pidió que el ataque guardado durante el cooldown SOLO se ejecute si seguís apretando al terminar (`_sigue_apretado`) y se cancelase si soltabas. Esto hacía que el combo J→K pidiera *"casi apretarlos a la vez"* (margen mínimo). **16/08** el usuario pidió dar margen → se ELIMINÓ `_sigue_apretado` y `_lanzar_buffered` ahora ejecuta el golpe bufferizado aunque ya hayas soltado el botón. `_seq` vive `COMBO_WINDOW=1.1s`. Los tests del Remate (J→K) siguen pasando (FALLOS=0).
+- **(13/08) Si se reemplaza el sprite del jugador, revisar nodos internos:** el juego tenía `@onready tint = $Sprite2D/Tint`; al cambiar a un sprite propio sin ese hijo, tiraba "Node not found" en cada carga. Fix: `get_node_or_null("Sprite2D/Tint")` (`_update_tint()` ya no usa `tint`).
+- **(13/08) El zoom 2x ocultaba el tamaño real:** con zoom 1 y 1920×1080, 1 unidad = 1 px; para cambiar el tamaño de lo que se ve hay que agrandar los sprites/objetos, no el zoom.
+- **(16/08) Combo por transformación — flujo completo (verificado en autotest):** cada forma tiene UN combo con secuencia `["light","heavy"]` (J y K): Humano=Remate(42), Lobo=Mordida(22), Oso=Garra(84), Murciélago=Ala Cortante(28) en `scripts/forms/<forma>.gd::combos`. Desbloqueo: al subir nivel, `levelup.gd` escucha `nivel_subio`, abre el menú con las formas desbloqueadas (↑/↓ + confirmar con J/ui_accept) y llama `Progresion.elegir_mejora(form_index)` → incrementa `combos_desbloqueados[form]` y emite `combo_desbloqueado`. `player.gd::_detectar_combo` / `_ejecutar_finisher` lo ejecutan si `combos_desbloqueados_forma(form)` >0. Checks nuevos en autotest: menú cerrado → subir nivel lo abre → ofrece las 4 → confirmar cierra → desbloquea el combo (Remate) → cuenta 1.
+- **(16/08) El menú LevelUp NO estaba instanciado en `main.tscn`** (solo pasaba el test porque el autotest lo pre-cargaba a mano) → en el juego real al subir de nivel no aparecía ningún menú. Se agregó `LevelUp` (instancia de `levelup.tscn`, `ext_resource` por `path` porque ese `.tscn` no declara `uid` en su header) a `main.tscn`.
+  - **(16/08) Pausa al elegir combo — con flag para tests:** el usuario quería que el juego se pause en el menú de elección. `levelup.gd::abrir()` ahora hace `if pausar_al_abrir: get_tree().paused = true` y `cerrar()` lo quita. `process_mode = PROCESS_MODE_ALWAYS` (en `_ready`) para que el menú input/render siga activo con el árbol pausado. **Clave:** `@export var pausar_al_abrir := true` (default juego real). El autotest lo setea `false` al instanciar `main` (`.set("pausar_al_abrir", false)`) porque cada `add_fragmentos` que cruza nivel abre el menú y pausar el árbol congelaba todos los tests de combate (los `await process_frame` nunca avanzan con `paused`). Ojo: en un script `--script` (SceneTree) NO existe `self.get_tree()`; se usa `paused` directo (property del SceneTree).
+- **(16/08) Parse error latente en `levelup.gd`:** `var op := _opciones[i]` / `=_opciones[_indice]` daban "Cannot infer the type of op" porque `_opciones` es un `Array` sin tipo (elementos Variant). Al recién pre-cargar `levelup.tscn` en el autotest el error salió a la luz. Fix: tipar `var op: Dictionary = _opciones[...]`. (Lección general: al acceder a elementos de un `Array` no tipado con `:=`, tipar la variable explícitamente.)
+- **(16/08) En `--script` (extends SceneTree) `self.get_node()` no existe:** usar `root.get_node("Progresion")` (el helper `_progresion()` del autotest) o `get_node` no está en SceneTree. En nodos normales sí existe.
+- **(16/08) Ataque melee como "línea" enfrente del personaje (BANDA VERTICAL uniforme, pegada al cuerpo):** en `player.gd::enable_melee` se ignora `size`/`range` de la forma (solo se usan `damage`/`knockback`) y se arma una banda vertical IDÉNTICA para light/heavy/special: `shape.size = Vector2(LINEA_ESPESOR=40, collision_shape.shape.size.y)` (longitud horizontal = constante, alto = cubre el collider del player). Se ancla justo al límite de la hitbox del player con `attack_area.position.x = facing*(coll.size.x*0.5 + LINEA_ESPESOR*0.5)` → cubre `[half_width, half_width+espesor]` desde el borde. Para humano (collider 48px) cubre `[24,64]`. Regla: los ataques de una forma solo difieren en daño, no en longitud.
+- **(16/08) Test de daño melee con hitbox delgada/pegada: el objetivo debe reposar en el piso y quedar dentro del frente que cubre el ataque.** (a) Instanciar al enemigo en plena caída (offset vertical alto, pocos frames) → la hitbox delgada no lo alcanza; esperar a que player y enemigo reposen (`_wait_frames(40)`+`_wait_frames(30)`) antes de golpear. (b) La banda cubre `[half_collider, half_collider+espesor]`; los objetivos de prueba deben quedar dentro: dummy melee y del combo del humano a `40` (espesor 40, collider 48). No usar offset global en y (rompe objetivos a `y≈0`).
+- **(16/08) Label de golpes del HUD — pila vertical estilo Ben 10 (macro):** `ComboLabel` (= fila 0) + `GOLPES_MAX=6` filas RichTextLabel clonadas por código, apiladas hacia ARRIBA cada `FILA_PASO=44` (ticos `anchor_left/right=1`, `anchor_top/bottom=1`, `offset_left=-560`, `offset_right=-160`; infer base `-80..-32`, fila i `-80-44i..`). Cada golpe muestra el TIPO sin "xN" (`LIGERO`/`FUERTE`/`ESPECIAL`, finishers con nombre) y se acumula en `_historial` (push_front, cap `GOLPES_MAX`). degradé `objetivo = clampf(1 - 0.16*i, 0.08, 1)` por índice (inferior sólido, superiores translúcidos), animado en 0.25s. `_idle_timer` (1.5s): si no se vuelve a golpear, la fila 0 se desliza a la IZQUIERDA (`position.x - 220`, CUBIC/IN, 0.6s) y luego `_limpiar_todo()` (vacía `_historial`, oculta filas, restaura `_combo_base_pos` de la fila 0 — el `position` de nodos anclados es calculado, guardarlo en `_ready`). Las filas superiores solo cambian `modulate.a`, nunca `position`.
+
+### Sesión 01/09 — Pulido de la enredadera (subida fluida y mejor control)
+- **Problema:** se trababa al subir por la enredadera (`_handle_enredadera` en `player.gd`). Causas: aceleración baja al invertir dirección (1800 → 0.29s para cambiar de -260 a +260 = sensación de pegado), tope contra el techo de la enredadera con jitter (se forzaba `velocity.y` y `position.x` contra la colisión), auto-agarre por sostener SALTAR al pasar corriendo (te congelaba en el aire/el piso), snap de `position.x` hacia el centro que empujaba contra paredes.
+- **Cambios en `player.gd::_handle_enredadera` (+ consts 95-99):**
+  - **Agarre solo con ↑/↓** (`quiere_trepar`): se eliminó `move_jump` y `_vine_buffer_timer` del gatillo de entrada — ya no te "chupa" la enredadera al saltar/avanzar junto a ella.
+  - **Suelta con input horizontal:** si `move_left/right` > 0.5, suelta la enredadera con empujón `velocity.x = dir*140` y cooldown 0.35s (guardado con `test_move` para no atravesar paredes).
+  - **Reverse casi instantáneo:** `accel = lerpf(1800, 6000, turbo_t)`; turbo progressive `TREPAR_TURBO_INICIO=0.2` / `RAMP=0.5` / `MULT=1.25` (antes saltaba a 320 de golpe a los 0.6s). Velocidad turbo = `climb_speed` exportada de la enredadera × 1.25 (respetando el `@export`).
+  - **Tope suave arriba:** `bloqueado_arriba = test_move(up, cs*delta+1)` → `velocity.y = minf(vy, 0)` (sin jitter contra el techo; se puede bajar/saltar igual).
+  - **Snap central sin empujar paredes:** `global_position.x` se ajusta con `test_move` (¡también en el agarre inicial!)
+- **2ª pasada de pulido (super fluido) — consts 95-101:** base `TREPAR_ACCEL=4200` / turbo `9000` (inversión de dirección ≤0.07s, arranque casi inmediato); turbo empieza a los 0.15s y se completa en 0.45s (RAMP), `MULT=1.4` → trepa a ~364 px/s (con `climb_speed=260`). **Descenso rápido `TREPAR_DOWN_MULT=1.5`** (bajar siempre más rápido que subir, estilo Metroid = satisfactorio). **Freno `TREPAR_STOP_LERP=8.0`** (soltar ↑/↓ → frena rápido, sin deriva).
+  - **Animación atada a la velocidad real:** en `_update_animacion()`, `speed_scale = clampf(|vy|/climb_speed, 0.12, 2.0)` — mientras subís rápido la animación va rápido; quieto (vy≈0) el "climb" se mueve muy lento (0.12) = enredadera "viva" en vez de frame congelado. El turbo visual es 1.4×, el descendente 1.5×.
+  - **Feedback de agarre aéreo:** al agarrar sin tocar piso → `squash_y(0.12,0.12)` + `_emitir_burst_hojas()` (impacto con la enredadera). Metadatos: turbo/descenso derivan del `@export climb_speed` de la enredadera (nada hardcodeado); el MULT/DOWN_MULT son consts de feel global en player.gd.
+- **Fix agarre aéreo (el jugador agarraba y caía):** 3 causas: (1) `quiere_trepar` solo con ↑/↓ (saltando hacia la enredadera NO agarraba); (2) `_trepado_cooldown` de 0.7s post-salto bloqueaba el re-agarre; (3) la **suelta por input horizontal soltaba al instante** — agarrás la enredadera mientras seguís apretando →/← → te escupía y caías. Fix en `player.gd`: `quiere_trepar` en el aire incluye `jump`/`_vine_buffer_timer`; el gate de cooldown pasa a `if _trepado_cooldown > 0 and is_on_floor(): return` (en el aire siempre podés re-agarrear); la suelta horizontal ahora exige **mantener la dirección 0.1s** (`TREPAR_EXIT_HOLD`, acumulado en `_vine_dir_hold_t`, reseteado en el agarre). El agarre sigue siendo instantáneo (`velocity.y = 0` al attach) y 1 frame después subís con la aceleración alta.
+- **Fix salto desde la enredadera con →/← (se trababa y no saltaba):** la excepción de cooldown en el aire provocaba **re-snag instantáneo** — saltabas y, como seguías sosteniendo salto+mover, la enredadera te re-agarraba y cancelaba el salto (por eso no saltaba hasta soltar el botón). Cambios: (1) el gate vuelve a `if _trepado_cooldown > 0.0: return` SIEMPRE (nada de excepción aérea → el salto queda libre durante toda la subida); (2) **el salto se evalúa ANTES del exit lateral** (salto gana en el mismo frame); (3) cooldown de salida bajado a `TREPAR_SALIR_COOLDOWN=0.45` (antes 0.7) en `_salir_enredadera()` para que re-agarrar otra enredadera siga fluido; (4) `_salto_enredadera` (flag que se setea en el salto desde la enredadera y se consume en el handler principal de salto, reset al inicio de `_handle_enredadera`) evita el **doble salto residual** (el salto manual de la enredadera + `try_jump` del handler principal en el mismo frame).
+- **Fix "se suelta y vuelve a agarrarse" al agarrar en el aire:** el exit lateral (dirección →/←) evaluaba SIEMPRE que trepabas → al agarrarte en el aire sosteniendo dirección (salto diagonal típico) te soltaba a los 0.1s del hold, caías y re-agarras tras el cooldown ≈ el "flash" de soltarse. **`dir_x` exit ahora solo aplica con `is_on_floor()`** (`if dir_x != 0.0 and is_on_floor():`) → en el aire/agarre el grip es sólido; en el piso podés caminarte fuera al llegar al pie de la enredadera. Salirse en el aire sigue siendo posible (y es lo natural) saltando con dirección (`velocity.x = facing*200` del salto de enredadera lleva a la plataforma de al lado).
+- **Recordatorio máquina:** Godot 4.7 NO está en esta máquina (la ruta de CLAUDE.md era de otra PC). Verificación manual pendiente con `--headless` en la PC con 4.7; encontrar `Godot_v4.4.1` en `Desktop\Carpeta_personal\Programas de Trabajo` si hace falta.
+
+### Sesión 01/09 (b) — Enemigos más agresivos (plan A stats + B IA)
+- **Pedido del usuario:** subir el peligro de los enemigos sin agregar niveles/enemigos/boss. Plan acordado: **A** = tuneo de stats en `enemy.gd::config_por_tipo()`; **B** = IA hostil (telegrafo + lunge del melee, presión constante y retroceso del ranged); **C** (más enemigos/olas en main) descartado por scope.
+- **Nuevos exports en `scripts/enemigos/enemigo.gd` (Recurso `Enemigo`):** `windup_tiempo`, `lunge_velocidad`, `lunge_tiempo=0.18`, `lunge_alcance=95.0`, `retrocede_dist`, `proyectil_speed=340.0` (editable en el inspector, respeta la regla de edición).
+- **B — IA en `enemy.gd::_physics_process` (melee):**
+  - Entra en `_windup_timer` si el jugador está en `attack_range` y el cooldown pasó → se queda quieto con `velocity.x=0` telegrafiando (animación `attack1` reproducida durante windup+lunge).
+  - Al terminar el windup, si `lunge_velocidad>0` arranca el `_lunge_timer`: se lanza con `velocity.x = dir*lunge_velocidad` (cultista 420 px/s × 0.18s); el daño NO conecta por proximidad sino solo si el jugador sigue en `lunge_alcance` al momento del dash (`_lunge_hit` evita doble hit) → **esquivable** saltando o alejándose, pero duele si no reaccionás. Si `lunge_velocidad==0`, ataca al instante tipo legacy.
+  - **Presión durante el cooldown:** en `_attack_timer>0` ya no frena seco: avanza hasta `attack_range*0.55` (`min_stop`) — el cultista te persigue durante la recarga para no darte tregua.
+  - El lunge/windup se **cancela al recibir daño** (resetea `_windup_timer`/`_lunge_timer` en `take_damage`) → golpearlo corta el ataque, premia el jugador ofensivo.
+- **B — IA ranged (arquero/chamán):** si el jugador entra en `retrocede_dist` **retrocede** (`velocity.x = -dir*speed`) mientras sigue en `shoot_range` → mantiene distancia y sigue disparando (antes se quedaba quieto y a corta distancia el proyectil era peor). `_disparar` usa `enemy_data.proyectil_speed` en vez del 340 hardcodeado.
+- **A — Stats aplicados (usuario eligió "Recomendados"):**
+  - **Cultista:** vel 75→**140**, cooldown 1.2→**0.7**, daño 8→**12** (windup 0.28 + lunge 420). Con cd 0.7 ahora ataca ~cada 0.7s y te persigue mientras recarga → ya no es pasivo.
+  - **Arquero:** vel 55→**95**, cooldown 2.2→**1.4**, daño 10→**15**, proyectil 340→**430**.
+  - **Chamán:** vel 40→**72**, cooldown 2.6→**1.6**, daño 12→**18**, proyectil 340→**470**.
+  - Vida sin tocar (75/60/155). `proyectil_speed` también por tipo en `config_por_tipo`.
+- **Verificación:** smoke `--headless --quit-after 5` limpio y **autotest FALLOS=5** (los fallos conocidos no-letales de siempre: muerte del enemigo, tronco/oso, rompible, pickup — ninguno relacionado con la IA/agresividad). Todos los checks de enemigos del autotest siguen verdes. Nota: se usó `Godot_v4.4.1-stable_win64.exe` (único disponible en esta PC); falta smokeide visual en la PC con Godot 4.7.
+- **Pendiente de probar a mano (4.7):** que el lunge del cultista no atraviese plataformas finas (es empuje horizontal a velocidad alta, el collider resuelve con `move_and_slide`); balance de daño con el `_invuln_timer=0.8` del player (2 golpes de cultista ≈ 24 dmg con 0.8s de ventana).
+- **Fix post-sesión (re-Jugabilidad):** spamear golpes impedía que el enemigo ataque nunca — `take_damage` cancelaba `_windup_timer`/`_lunge_timer` en CADA golpe, así que quedaba en loop "windup→reset→windup". Solución: **hiper-armadura durante el ataque** — nuevo `@export armadura_ataque: bool = true` en el recurso `Enemigo`; en `enemy.gd::take_damage`, si está en windup/lunge y `armadura_ataque`, los golpes hacen daño (modulate rojo + squash, feedback visual) pero NO aplican stun/knockback ni cancelan el ataque → el enemigo SIEMPRE completa su lunge telegrafiado. Fuera del ataque, el hitstun normal sigue (premia al agresivo pero no te deja lockearlo infinito). Editable en el inspector: `false` restaura el comportamiento anterior.
+
+### Sesión 01/09 (c) — Pulido: hitstop autoload, homing del murciélago, cooldown del special, cámara revertida
+- **Fix special del murciélago (homing apuntaba mal):** `_buscar_enemigo_cercano` (projectile.gd) y `_buscar_enemigo_homing` (player.gd) apuntaban a enemigos de olas **inactivos** (`_activo=false` en pre-wave) o muertos. Ahora filtran `_activo == false` y `health <= 0` (`_activo_y_vivo` en projectile.gd). Además: `homing_strength` 4.0→**6.5** (giro más agresivo) y hitbox del proyectil radio 7→**11** (scenes/projectile.tscn) para que conecte más fácil.
+- **Cooldown del special:** nuevos exports en `forma.gd` (`special_cooldown` / `special_cooldown_combate`); en `murcielago.gd` vale **0.8s fuera de combate** y **2.0s en combate**. En `player.gd`: `_special_cooldown` decrementa cada frame; el gate de la rama "special" hace early-return si `_special_cooldown > 0` y la forma definió cooldown. El criterio de "en combate" es la `_en_combate()` ya existente (encounter `estado==1`) — no se duplicó lógica de proximidad.
+- **Cámara:** se probó zoom-out 0.8 → **revertido a los valores originales** (humano 1.0, lobo 0.94, oso 0.9, murciélago 0.95) y se quitaron los `fijar_zoom` extras del `_ready`. Lo retomamos más adelante.
+- **Hitstop como autoload (`scripts/hitstop.gd`):** `Hitstop="*res://scripts/hitstop.gd"` en `project.godot` (patrón Progresion/Dialogo). `freeze(duracion=0.04)` pausa con `Engine.time_scale=0.0` y restaura vía `create_timer` + await. Aplicado en: `take_damage` de player y enemy (+40ms al recibir) y en `_hitstop_por_tipo()` de player.gd (que ya existía: light 0.03 / heavy 0.06 / special 0.075 / combo 0.09, OSO ×1.25, LOBO ×0.85) — su `Engine.time_scale` manual fue reemplazado por `_freeze_hitstop()` (`get_node_or_null("/root/Hitstop")`, con `has_method` guard).
+- **⚠️ LECCIÓN (recurrente en esta sesión):** los scripts nuevos que se registran como `class_name`/autoload/`preload` con previo historial de parse-error quedan con la versión COMPILADA OBSOLETA en `.godot` y siguen fallando hasta **borrar `.godot` + reimport**. Y en este Godot las **lambdas `func() -> void:` (multilínea Y de una línea) dentro del autoload dieron `Parse Error: Expected end of file` en el último token** aunque `--check-only` pasara. Esquema probado que SIEMPRE compila: autoload con método `await get_tree().create_timer(...)` (idéntico al patrón ya funcionaba en `_hitstop_por_tipo`). Para cambios que tocan scripts "nuevos": correr import contra cache limpia y leer el log completo (el `2>&1` de `--import` y `--script` sí atrapa los errores; el smoke solo no alcanza).
+- **⚠️ LECCIÓN MAYOR (hitstop NO funcionaba):** el patrón canónico `Engine.time_scale = 0` + `await get_tree().create_timer(dur, true, false, true).timeout` + restaurar **NUNCA se reanuda** en Godot 4.4.1 con `time_scale == 0` — el probe headless mostró `ts = 0.0` para siempre (el timer no hace tick con time_scale=0, incluso con `ignore_time_scale=true`). Es decir: el primer golpe **freezeaba el juego para siempre** (soft-lock). Y antes de eso, con el autoload roto, el juego corría sin pausar nada (por eso el usuario "no sentía el hitstop"). Solución probada: `scripts/hitstop.gd` restaura con **reloj real** — `_restore_ms = Time.get_ticks_msec() + int(dur*1000)` y un `_process` que, cuando el reloj real pasa el límite, pone `Engine.time_scale = 1`. `_process` sigue llamándose con delta 0 mientras time_scale=0 (el MainLoop itera igual), así el restore siempre ocurre. Probe verificó: 0 → 80ms congelado → 1.0.
+- **Golpes pegajosos (auto-lunge de persecución) — `melee_sticky`:** el lunge/impulso existe desde antes (`lunge_light`/`lunge_heavy` + imán suave en `enable_melee`), pero era un impulso único y la fricción lo mataba. Ahora hay **seguimiento real durante el golpe activo**: nuevo `@export melee_sticky` en `forma.gd` (0 = golpe estático) con valores por forma (humano 700 / lobo 950 / oso 1200 / murciélago 550); en `player.gd`, `_melee_sticky(data, delta)` corre cada frame mientras `_attacking` y NO `_hit_applied`, busca enemigo vivo a `MELEE_STICKY_REACH=240`, y con `move_toward` desliza `velocity.x` hacia el objetivo a `data.speed*0.85` (const `MELEE_STICKY_SPEED_MULT`). Si el enemigo está a menos de `MELEE_STICKY_PIVOT=28` aunque sea detrás, pivotea el facing hacia él. Con el golpe conectado deja de perseguir (no arrastra). No interfiere: si el jugador mantiene dirección, el input mueve antes y el sticky se superpone suave; `melee_sticky=0` desactiva por forma desde el editor.
+- **Regresión detectada a mano (02/09): "sigo sin sentir el hitstop, enemigos no me pegan bien o me empujan".** Tres diagnósticos reales (probe en escena real del juego = `scenes/main.tscn` + dummy):
+  1. **El hitstop SÍ se disparaba pero era imperceptible:** probe midió solo **2 frames** congelados en el golpe light (0.03s). Subí las duraciones a consts `HITSTOP_*` en player.gd: light **0.05**, heavy **0.09**, special **0.11**, combo **0.13**, y daño recibido `HITSTOP_DANO=0.06` (enemy `_freeze_hitstop` también 0.06). OSO ×1.25 / LOBO ×0.85 se mantienen. Ahora el probe mide 3 frames en light y ~5-7 en heavy/combo → se percibe.
+  2. **"Me empujan" / tosquedad = colisión asimétrica mal puesta:** el Player (mask **3** = tiles 1 + enemigos 2) chocaba con los enemigos → lo empujaban/lo trababan; los enemigos (mask 3, sin capa 4) lo **atravesaban**. Corrección: **Player mask = 1** (solo tiles, pasa a través de enemigos, NUNCA lo empujan; AttackArea conserva su mask 3 y el proyectil usa capas, nada se rompe) y **Enemy mask = 7** (tiles 1 + enemigos 2 + **player 4** → el enemigo SE FRENA contra el cuerpo del jugador y golpea ahí, sensación de presión). Beat-em-up del original: el jugador camina por entre la multitud, los enemigos te bloquean.
+  3. **"No me pegan bien":** `_invuln_timer` 0.8s traga golpes (cultista ataca cada 0.7s → la mitad no hacen daño pero sí conectan visualmente). Bajado a **0.55s** → más golpes efectivos = más peligro/peso.
+  - **Verificación:** autotest pasó de 6-8 fallos a **FALLOS = 1** (solo el flaky de siempre "Murciélago special dispara proyectil sónico"). La colisión asimétrica también destrabó tests que fallaban desde antes (sectario melee, reposa en el suelo). Smoke limpio, sin SCRIPT ERROR.
+- **⚠️ LECCIÓN (colisiones enemigo/jugador):** la mask del Player NO debe incluir la capa de enemigos (2) o te empujan y te bloquean feo; la del Enemy SÍ debe incluir la capa del player (4) para que frene contra vos. Antes de tocar máscaras, correr el autotest: los tests de melee a sectario y "reposa en el suelo" son sensibles a esto.
+
+### Sesión 01/09 (e) — Solidez/peso: 2º enemigo de la ola, hitstop real y colisiones
+- **Causa raíz del hitstop que "no aumentaba":** en `_check_attack_hits` el `body.take_damage()` (freeze del enemigo al recibir, const `HITSTOP_DANO`) se dispara ANTES que `_hitstop_por_tipo()`; el viejo `freeze()` con guard `if Engine.time_scale == 0.0: return` **descartaba el freeze del player** → TODOS los golpes (light/heavy/special/combo) congelaban lo mismo (~0.06s). El "peso por tipo de golpe" nunca se sentía. Fix en `scripts/hitstop.gd::freeze()`: si ya está congelado, **el freeze más largo gana** (`_restore_ms = maxi(_restore_ms, hasta)`), nunca descarta ni acorta. Ahora el player extiende el freeze base del enemigo con su duración por tipo. Probe en escena real: **golpe pesado = 6 frames congelados (~100ms)** (antes indistinguible). 
+- **Hitstop subido** (consts player.gd): light **0.07**, heavy **0.12**, special **0.14**, combo **0.17**, dano recibido **0.07** (enemy `_freeze_hitstop` default 0.07). OSO ×1.25 → heavy ~0.15 (≈9 frames); LOBO ×0.85 mantiene contraste.
+- **"El segundo enemigo de la ola no me llega a pegar" = colisión enemigo-enemigo:** la mask del Enemy incluía la capa de enemigos (2), así que el 2º de la ola quedaba **bloqueado detrás del 1º** (y en `edge` dos enemigos del mismo lado spawnaban en el MISMO punto, apilados). Fixes: (1) `enemy.tscn` mask **7 → 5** (tiles 1 + player 4, SIN enemigos 2) → se atraviesan entre ellos y todos llegan a presionarte; (2) `encounter.gd::_posicion_spawn` con `edge`: los del mismo lado ahora se escalonan **60px hacia el centro por fila** (`fila = i/2`) en vez de apilarse.
+- **"Lo empujo como si nada" / quiero sólidos:** vuelvo a la colisión **mutua** player↔enemigo, pero sin los problemas previos: player.tscn mask explícita **3** (choca contra enemigos: caminar hacia uno te detiene = sólido; ya NO lo atravesás) y enemy mask **5** (el enemigo también se frena contra tu cuerpo). El tosco anterior venía del par enemigo-enemigo (ahora eliminado) y del knockback alto no de hoy. **⚠️ LECCIÓN tscn:** Godot OMITE en el archivo los valores de máscara iguales al default (mask=1 desapareció de player.tscn al editarla a 1) — al querer un valor no-default hay que escribirlo explícito (3).
+- **Más peso:** `knockback_resist` subida por tipo (cultista **0.55** / arquero **0.45** / chamán **0.6**, default del recurso 0.3): los golpes ya no los deslizan a los enemigos como papel.
+- **Verificación:** smoke limpio, sin SCRIPT ERROR, autotest **FALLOS = 1** (solo el flaky de siempre "Murciélago special dispara proyectil sónico").
+- **Verificación:** import limpio + autotest en `Godot_v4.4.1-stable_win64.exe` → **FALLOS=6** (baseline histórico: muerte enemigo, tronco/oso, rompible, pickup — los de siempre, no relacionados). Sin `SCRIPT ERROR` en el log. Queda smokeide/pulido manual en la PC con 4.7.
+
+### Sesión 04/09 — Pinchos modulares, nivel2 con infra y herramienta de autoría (plugin de editor)
+- **Pinchos (`scenes/pinchos.tscn` + `scripts/pinchos.gd`, commit `945c611` pusheado):** Area2D modular con `@export cantidad/ancho_pincho/alto/dano`. Matan de un toque (`dano=9999` → `take_damage`), respetan god_mode/invuln. **LECCIÓN CRÍTICA:** el monitoreo del `Area2D` **NO re-barrer el espacio** si se redimensiona/reescribe su `CollisionShape2D` en `_ready` (verificado headless: `intersect_shape` coincidía pero `get_overlapping_bodies()` quedaba vacío). Solución: detección **manual y determinista** por overlap de rects (`_cuerpo_en_zona()` compara collider del player vs área de daño cada `_physics_process`, con cooldown interno si `dano < 9999`). El área de daño se extiende +46px hacia arriba para no fallar saltando a ras. Instancia de prueba en `nivel1.tscn` en (400,865) sobre el piso llano.
+- **`nivel2.tscn`:** creado por el usuario con `TileMap` (de `tile_map.tscn`); se le agregó la infraestructura de nivel: `Player` (spawn en (100,862)), `Camara` (Script `camera.gd`, limits -100/-2000/8000/1100 a ajustar al recorrido), `Santuario` (`activar_victoria=true`), y los overlays `Hud/Pause/LevelUp/Consola` con `visible=false`. El usuario ajusta spawn y límites según el mapa.
+- **Herramienta de autoría de niveles (`scripts/herramienta_nivel.gd` + `scenes/herramienta_nivel.tscn`, nodo `@tool extends Node2D`):** dibuja en el editor (y opcional en runtime con `activo_en_juego`) — 1) rect verde 1920×1080 en la posición de la cámara (sigue al nodo "Player" de la escena abierta + `desplazamiento_cam` (0,-310), export `punto_vista` si no; ajustable por `zoom_vista`); 2) trayectorias de salto simuladas de las 4 formas (toggle por forma en `formas_activas[4]`), con línea de distancia (px) y altura máxima; el doble salto del Lobo debe activarse con `doble_salto_lobo`; 3) grid de tiles (`grid_size` default 32).
+- **Simulación de salto fiel:** `_simular_salto(f)` replica la física de `player.gd` (lee `GRAVITY/FALL_GRAVITY_MULT/APEX_*` vía `preload("res://scripts/player.gd")` en vez de duplicarlos; axioma: `FALL_GRAVITY_MULT` solo aplica con `velocity.y > 0`, apex aplica subiendo y bajando). Velocidad X del salto = `f.speed * min(1, f.jump_h_speed_mult)`. Valores verificados headless: Humano 178px / 510px, Lobo 354px / 1495px (con doble), Oso 52px / 155px, Murciélago 93px / 392px. Valores de salto se leen de los `_init()` de cada `scripts/forms/*.gd` (instancia `preload().new()`), así la herramienta se sincroniza sola con cambios de balance.
+- **Plugin de editor (`addons/herramienta_nivel/plugin.cfg` + `plugin.gd`, activado en `project.godot` con `[editor_plugins]`):** botón "Herramienta de nivel" en un dock que inserta la herramienta en la escena abierta (`get_edited_scene_root()`); crea `HerramientaNivel` con `owner=raiz` para que se guarde en el `.tscn`. El plugin solo carga en la app de editor (no durante `--import`/smoke).
+- **Lecciones:** (1) `load(RUTA)` no infiere tipo → `var paq: PackedScene = load(...)` o parse-error "Cannot infer the type"; (2) los parámetros/props de scripts precargados sin `class_name` rompen la inferencia en scripts de test con `:=`; tipar las variables (`var vel_x: float = ...`). (3) Los diag `extends SceneTree` que instancian escenas `@tool` con `_process`+`queue_redraw` se cuelgan en headless si algo falla antes del primer print — aislar el cálculo (sin instanciar la escena) para depurar.
+- **Verificación:** import limpio, smoke limpio, diag de simulación OK, autotest **FALLOS = 1** (solo el flaky "Murciélago special dispara proyectil sónico").
+- **Pendiente manual (editor):** abrir el editor → botón "Herramienta de nivel" en la escena que quieras → mover el nodo `HerramientaNivel` al punto donde querés medir saltos (el origen del nodo es el pivote del salto).
+- **LECCIÓN (herramienta con Parse error "Cannot infer the type"):** `scripts/herramienta_nivel.gd` nunca compiló antes — los `:=` sobre valores de un `Array` sin tipo (instancias de `preload("res://scripts/forms/*.gd").new()`, cuyo tipo es Variant al no tener `class_name`) recién reventaron al instanciar el nodo en runtime (el `--import`/smoke/autotest NO cargan scripts @tool no referenciados). Solución: tipar TODAS las variables explícitamente (`var f: Variant`, `var res: Array`, `var color: Color = f.color`, `var vel_x: float = ...`, etc.) — prohibido `:=` con Variant en scripts tool que lean formas dinámicas.
+
+### Sesión 09/09 — Sensación de combate C+D: whiff vs hit y muerte con remate
+El usuario pidió que el combate no se sienta "tocar un botón y hacer daño soso". Diagnóstico previo (modo plan, solo lecturas): ya existían hitstop por tipo (con mult. por forma), zoom punch/shake por golpe, squash del enemigo, números flotantes, chispa al conectar, imán/sticky/lunge. Los huecos reales detectados: **sin sonido** (ningún audio en el repo), **`_play_attack_fx` es un `pass`** (el arco visual del golpe se quitó en el rebuild), **whiff == hit en timing** (recuperación fija) y **muerte plana**. El usuario eligió **solo C y D** (no audio ni arco por ahora).
+- **C — Whiff vs Hit (`player.gd`):** si un ataque light/heavy no conecta nada, la recuperación se alarga **×1.25** (`WHIFF_RECOVERY_MULT`). Implementación con miras a no romper el autotest: `_whiff_grace` acumula tiempo sin conectar y el penalty se aplica **una sola vez** (flag `_whiff_applied`) recién tras `WHIFF_GRACE_TIME=0.06` (el Area2D tarda 1-2 frames en registrar el overlap; penalizar en el frame 1 era un falso negativo). `enable_melee` resetea ambos.
+  - **LECCIÓN CRÍTICA (rompía 2 tests):** el whiff inicial se aplicaba a TODOS los tipos → rompía "J→K ejecuta el Remate" y "Interact: oso rompe el tronco" (FALLOS 2→4). Causa raíz real: golpear un cuerpo que NO tiene `take_damage`/`registrar_golpe` (ej. el tronco) = `objetivos.is_empty()` = whiff legítimo; el special del humano alargado quedaba en recuperación cuando el test esperaba lanzar el special del Oso (el press se bufferizaba y no rompía a tiempo en la ventana del assert). **Solución:** el whiff aplica SOLO a `light`/`heavy` (los specials ya tienen `_special_cooldown`, los finishers no deben castigarse). Lessons: el autotest tiene asserts de timing de 1-2 frames sensibles a cualquier cambio de recuperación; antes de tocar recovery correr autotest para fijar el baseline (era **FALLOS=2**: murciélago special flaky + consola `mv`).
+- **D — Muerte con remate:**
+  - `hitstop.gd`: nuevo método `slowmo(duracion, escala)` con restauración por **reloj real** (patrón del `freeze()`: `_slow_restore_ms` + `_slow_scale`). Compatible con `freeze()`: si hay freeze activo, el slow-mo queda pendiente y se aplica al restaurar (`freeze()` ahora restaura a `_slow_scale` si hay slow-mo pendiente, nunca salta a 1.0).
+  - `enemy.gd::_morir()`: cada muerte ahora hace `_freeze_hitstop(0.09)` + `cam.punch(1.05)` + flash blanco (`visual.modulate = Color(4,4,4,1)` antes del fade existente). Se suma a los 0.07 del take_damage (el freeze más largo gana).
+  - `player.gd::_check_attack_hits()`: si el golpe letal viene de un **finisher (`combo`)** y el cuerpo tiene `health <= 0` → `Hitstop.slowmo(0.3, 0.4)`.
+  - `encounter.gd::_on_enemy_died()`: al cerrar la **última ola** (`_ola_idx + 1 >= _total_olas()`) → `slowmo(0.3, 0.4)`. Los slow-mo usan reloj real, nunca `create_timer` (que se congela con `time_scale` bajo).
+- **Verificación final:** smoke `--headless --quit-after 5` limpio, `diag_nivel1prueba` **fallos=0**, autotest **FALLOS=2** (baseline exacto). Godot 4.7 en `C:\Users\Usuario\Downloads\Godot_v4.7-stable_win64_console.exe`.
+- **Pendiente (no elegido hoy):** sonido procedural + rumble (A) y arco de ataque visual vía `_play_attack_fx` (B). Suenan complementarios si el usuario quiere más jugo después.
+- **⚠️ REGLA ABSOLUTA (09/09, usuario enojado): NO tocar NADA del nivel (escenas como `nivel1.tscn`/`nivel2.tscn`, scripts de nivel, plataformas, pinchos, decoración) salvo pedido EXPLÍCITO del usuario.** Antes de editar cualquier `.tscn` de un nivel hay que (1) preguntarle si quiere el cambio, (2) NO correr smoke/editor que pueda rescribir el archivo (una corrida headless re-guardó `nivel1.tscn` y **borró sus movimientos manuales de plataformas en el editor** — las posiciones/rotaciones que él mueve desde el inspector se pierden si otro proceso rescribe el archivo). Si hay que tocar un nivel, respaldar primero `Copy-Item` a `%TEMP%` y restaurar con esas ediciones. `MEMORY.md` y scripts de sistema/combate SÍ se pueden tocar; los niveles NO.
+
+## Sesion 16/09 — expansion de nivel1 en main
+- Se trabajo en rama feature/decoracion-nivel1-vida, luego fast-forward a main (no hay divergencia; merge base = 29d454d).
+- Anadido tramo hasta x~62500 (+27k px) con sistema: recompensa/con enemigos -> parkour de pinchos (pitch 162) -> enredadera -> parkour+enredadera, intercalando ZONAS DE RESPIRO vacias (pasillos planos caminables sin enemigos ni pinchos, con un pickup al ras del piso) cada ~2 secciones, segun pedido explicito.
+- SalidaNivel movida a Vector2(62500,860) -> res://scenes/nivel2.tscn. Verificado: import --headless OK, smoke OK, autotest FALLOS=0.
+- Leccion aplicada: los edits acumulados des-sincronizan los offsets de lectura; la unica verdad es el disco (grep nativo de 1 linea) + corre el autotest. No editar de memoria.
+- Pendiente: expandir nivel2.tscn con el mismo sistema.
+
+- **Pinchos → estacas de madera (28/09):** `pinchos.gd` usa `estilo = MADERA` por defecto (ROCA sigue disponible). `_estaca()`: tronco con punta en bisel, betas, muesca de hachazo; `prob_sangre` (0.35) de estacas con sangre en la punta (`color_madera`, `color_sangre`, todos @export). Backup: `pinchos_antes_madera.gd`.
+
+## 🟢 Sesión 29/09 — Plan de mejora de sistemas (sin cámara/sonido/enemigos nuevos): Fase 0 hecha
+- Plan aprobado en `C:\Users\Usuario\.claude\plans\planea-como-mejorar-el-idempotent-globe.md` (Fase 0 bugs → 1 combate/enemigos existentes → 2 formas/energía → 3 game feel y entorno). Usuario: **sin enemigos nuevos, sin élites, sin chamán por ahora; más game feel**.
+- **Fase 0 (hecha):** `take_damage(cant, kb, dir, ignora_bloqueo=false)` en player; pinchos lo pasan en true (antes bloquear = inmune). `_transformar` limpia `_light_step/_heavy_step/_seq`. `zoom_combo_mult` ya no se aplica dos veces. Ataques aéreos usan knockback de forma. Borrado código muerto `_try_platform_snap/_try_coleccion_borde` y exports sin uso (`shake_*`, `hit_rotation`, `transform_duration`). Literales de forma → `Jugador.Form.*` (`const Jugador := preload("res://scripts/player.gd")`) en muro_lobo/cristal/barrera_bosque/hud. Hitstop acotado: `hitstop_max` 0.16, `hitstop_rafaga_mult` 0.7 dentro de `hitstop_rafaga_ventana` 0.4 s (`_limitar_hitstop`). Test: `tests/diag_fase0.gd`. Backups `player_antes_fase0.gd`, `forma_antes_fase0.gd`.
+- Decisión: el refactor de `if current_form` a métodos virtuales se hace **de a poco en Fase 2** (Lobo/Murciélago) en vez de todo junto.
+- **Fase 1 (hecha, 29/09):** `enemy.gd`: tiradores con **aviso antes de disparar** (`enemy_data.windup_disparo` 0.42/0.5 s con destello `_flash_aviso`; SIN línea de mira y NO se cancela al recibir golpe — pedido del usuario); **máx. atacantes melee simultáneos** `max_atacantes_melee`=2 (`_puede_atacar_melee()` cuenta enemigos en windup/lunge del grupo `enemy`; el resto espera); **poise anti-stunlock** (`poise_max` 3/3/4, `poise_ventana` 0.9 s, `poise_recupera` 1.4 s, `poise_rompe_dano` 24: golpe fuerte rompe la resistencia); sónico con `sonico_dano_mult` (arquero ×1.5, chamán ×1.2) aplicado en `projectile.gd`. `WaveOla`: `tipo_extra`/`cantidad_extra` (ola mixta) y `orbe_al_terminar` (respiro con orbe de vida en `encounter.gd::_soltar_orbe_respiro`). **Jefe (`boss.gd`):** aviso de 0.35 s antes de cada descarga, abanico de orbes por fase (1/3/5), orbes también en la zona marcada desde fase 2, y `_hablar` de combate usa `mostrar_tip` (no pausa) — solo la intro bloquea. Textos sin cambios. Tests: `diag_fase1.gd` (aviso, tokens, poise, ola mixta); `diag_flinch` ahora fija `poise_max=0`. Backups `enemy_/enemigo_/boss_antes_fase1.gd`. **Pendiente de probar a mano:** sentir de aviso de arqueros, abanico del jefe (balance), poise.
+- **Lección:** al agregar una mecánica que altera el ritmo del stun (poise), los diags que miden el stun con ráfagas (`diag_flinch`) deben neutralizarla (`poise_max = 0`).
+- **Fase 2 (hecha, 29/09; sin dash ni trepar pared del Lobo, pendientes de decidir botón):** `Forma` nuevos: `special_cost` (Lobo 4, Oso 8, Murciélago 5; sin energía no sale, `_denegar_transformacion`), `lunge_*` ahora en **px** (Lobo 40/80/130, Oso heavy 36), `lunge_para/hit_delay_para/mult_recuperacion_para/anim_frame_inicio/pose_ataque` (hooks por paso), `onda_transformacion_*` (Oso 300 px, 12 dmg), `flap_impulso/flap_costo` (Murciélago 330/4). **Lobo:** cadena de mordidas distinta por paso (avance ×1/×1.35/×2, 2.ª saltea el agazapado (frame 1), impacto sincronizado, cierre de cadena ×1.3 más lento, pose de cabeceo `pose_ataque`). **Humano:** parry al empezar a bloquear (`parry_ventana` 0.16 s): sin daño, +10 energía, aturde cercanos, slow-mo, y **refleja proyectiles** (`projectile._reflejar`); `parry_activo()`. **Oso:** pisotón (onda 230 px solo hacia atrás en el especial) y onda al transformarse. **Murciélago:** aleteo con salto en el aire (gasta energía, `flap_cooldown`), picada con ↓ en el aire (`_picada`, onda al aterrizar). **Sinergia:** cambiar de forma con racha ≥2 da `tag_bonus_mult` ×1.5 al siguiente golpe + `tag_energia` +8. `player.onda_area(radio, dano, kb, solo_atras)`. **Enredadera:** `required_form` (enum) ya se respeta (`_forma_requerida_enredadera`). Tests: `diag_fase2.gd`. Backups `*_antes_fase2.gd`.
+- **Lección:** los tests que tocan `take_damage` del jugador con un nivel real deben borrar los `dialog_trigger` (si el Dialogo está activo, todo daño se ignora y el test falla "en silencio").
+- **Pendiente Fase 2:** dash del Lobo y agarre de pared (necesitan decidir el botón); el bloqueo sigue siendo gratis (podría costar energía); actualizar pantalla de controles con aleteo/picada/parry.

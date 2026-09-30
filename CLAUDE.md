@@ -3,7 +3,8 @@
 Instrucciones de trabajo para el asistente en este proyecto.
 
 ## Cómo trabajar conmigo
-- **Leé `MEMORY.md` completo antes de tocar cualquier cosa.** Es la fuente de verdad del estado del proyecto (qué está implementado, qué no, decisiones tomadas y lecciones). Empezá por la sección "REALINEAMIENTO SPIRIT KEEPER" y la "Sesión 15/08" más reciente.
+- **Leé `MEMORY.md`** (corto: sesiones recientes, reglas, lecciones + índice). El historial completo está en `docs/MEMORY_HISTORIAL.md`: leelo SOLO por rango de líneas (índice al final de MEMORY.md).
+- **Ahorro de tokens:** Grep/Glob y Read con offset/limit; no releer ni verificar con Read tras Edit; llamadas en paralelo; respuestas mínimas; sin subagentes salvo pedido; verificar solo si cambió código.
 - **Comunicate SIEMPRE en español**, con respuestas concisas y directas. Sin relleno.
 - **Antes de implementar algo no trivial, preguntame** y ofrecé opciones concretas (recomendando una), salvo que yo te pida el cambio explícito. No me sorprendas con cambios grandes sin consultar.
 - **No hagas commits ni pushes sin que yo te lo pida.** Cuando corresponda, preguntame el mensaje.
@@ -30,15 +31,11 @@ Instrucciones de trabajo para el asistente en este proyecto.
 - **UIX ya implementada (15/08):** menú principal (`main_menu.tscn`, main scene), pausa (`pause.tscn`), controles (`controls.tscn`), HUD (`hud.tscn`).
 - **Consola dev:** `` ` `` abre consola; comandos `help`, `form <humano|lobo|oso|murcielago>`, `god`, `mv`, `frags <n>`, `nivel <n>`, `kill`.
 
-## Verificación (siempre al terminar un cambio)
-Usar el ejecutable de Godot (ajustá la ruta si cambió):
+## Verificación (solo si cambió código/escenas)
 ```
-& "C:\Users\Usuario\Downloads\Godot_v4.7-stable_win64_console.exe" --headless --import
-& "C:\Users\Usuario\Downloads\Godot_v4.7-stable_win64_console.exe" --headless --path . --quit-after 5
-& "C:\Users\Usuario\Downloads\Godot_v4.7-stable_win64_console.exe" --headless --path . --script res://tests/autotest.gd
+powershell -File tests/verificar.ps1 [-Diag diag_hud,diag_golpe]
 ```
-- Import limpio → smoke limpio → autotest **FALLOS = 0** (y `diag_formas` / `diag_hud` / `diag_feedback` / `diag_golpe` cuando el cambio aplique).
-- Reportame el resultado de la verificación al terminar.
+Muestra solo errores y `FALLOS`. Import limpio → smoke limpio → autotest **FALLOS = 0** (+ `diag_*` que apliquen). Reportar el resultado.
 
 ## Alcance
 Prototipo jugable en ~2 meses (equipo de 3). Pulido por encima de cantidad: pocas formas y enemigos, bien diferenciados, 4-5 niveles lineales, 1-2 jefes.
