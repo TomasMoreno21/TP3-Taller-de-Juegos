@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/console.tscn" id="8_cons"]
 [ext_resource type="PackedScene" uid="uid://bf8ohs7pjg025" path="res://scenes/pinchos.tscn" id="9_4hvoh"]
 [ext_resource type="Script" uid="uid://c20i4wytflcth" path="res://scripts/setup_progresion_nivel.gd" id="10_setup"]
+[ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="ck_1"]
 [ext_resource type="PackedScene" uid="uid://x0o25yeqfgsm" path="res://scenes/encounter.tscn" id="11_stua6"]
 [ext_resource type="PackedScene" uid="uid://bxsawwmlxb7mt" path="res://scenes/enemy.tscn" id="12_wnw5i"]
 [ext_resource type="PackedScene" path="res://scenes/enredadera.tscn" id="13_o066t"]
@@ -413,6 +414,21 @@ dialogo_id = "p1_plataformas"
 [node name="DialogoSantuario" parent="." unique_id=38420734 instance=ExtResource("32_dtg")]
 position = Vector2(4300, 4370)
 dialogo_id = "p1_santuario"
+
+[node name="CheckpointInicio" parent="." instance=ExtResource("ck_1")]
+position = Vector2(400, 50)
+
+[node name="CheckpointCueva1" parent="." instance=ExtResource("ck_1")]
+position = Vector2(1900, 1922)
+
+[node name="CheckpointCueva2" parent="." instance=ExtResource("ck_1")]
+position = Vector2(5300, 5554)
+
+[node name="CheckpointCueva3" parent="." instance=ExtResource("ck_1")]
+position = Vector2(-1000, 4834)
+
+[node name="CheckpointCueva4" parent="." instance=ExtResource("ck_1")]
+position = Vector2(-3400, 5106)
 
 [node name="Player" parent="." unique_id=780925585 instance=ExtResource("2_player")]
 position = Vector2(7, -86)

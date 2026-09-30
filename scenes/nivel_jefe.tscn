@@ -14,6 +14,7 @@
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="12_dialog"]
 [ext_resource type="PackedScene" uid="uid://cr2s0l8k2s5l4" path="res://scenes/rompible.tscn" id="13_romp"]
 [ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="14_pick"]
+[ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="ck_1"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
 size = Vector2(9200, 200)
@@ -84,6 +85,12 @@ position = Vector2(0, 130)
 
 [node name="ArenaShape" parent="Encounter/Arena" index="0"]
 shape = SubResource("RectangleShape2D_arena_jefe")
+
+[node name="CheckpointInicio" parent="." instance=ExtResource("ck_1")]
+position = Vector2(1300, 970)
+
+[node name="CheckpointPreJefe" parent="." instance=ExtResource("ck_1")]
+position = Vector2(4000, 970)
 
 [node name="Hud" parent="." unique_id=2014128999 instance=ExtResource("8_hud")]
 visible = false

@@ -43,10 +43,10 @@ var health: int = 40
 var _activo := true
 var _telegraph_timer := 0.0
 var _ritual: Polygon2D
-var _attack_anim := ""
+var _pies_h0 := 0.0
+var _attack_anim :=""
 var _attack_anim_timer := 0.0
 var _attack_timer := 0.0
-var _attack_anim_idx := -1
 var _dir := -1
 var _player_cache: Node2D
 var _stun_timer := 0.0
@@ -194,6 +194,10 @@ func _ready() -> void:
 			if collide_shape != null and collide_shape.shape is RectangleShape2D:
 				pies_y = collide_shape.position.y + collide_shape.shape.size.y * 0.5
 			visual.position.y = pies_y - enemy_data.visual_scale.y * (animated.position.y + tex_h * 0.5)
+			if tex_h > 0.0 and animated != null and DisplayServer.get_name() != "headless":
+				_pies_h0 = tex_h
+				animated.frame_changed.connect(_anclar_pies_frame)
+				animated.animation_changed.connect(_anclar_pies_frame)
 			# Corrige la asimetría del dibujo dentro de su lámina: si el centro visual
 			# del personaje no coincide con el centro de la textura, se corre el sprite
 			# para que la hitbox quede centrada sobre el personaje visible.
@@ -450,6 +454,16 @@ func _gap_x(player: Node2D) -> float:
 	return maxf(absf(player.global_position.x - global_position.x) - medio_enemigo - medio_player, 0.0)
 
 
+## Cada frame apoya su base donde la apoya el primer frame de idle (los pies no saltan entre animaciones).
+func _anclar_pies_frame() -> void:
+	var sf := animated.sprite_frames
+	if sf == null or not sf.has_animation(animated.animation):
+		return
+	var tex := sf.get_frame_texture(animated.animation, animated.frame)
+	if tex != null:
+		animated.offset.y = _pies_h0 * 0.5 - (tex.get_height() * 0.5 - Pies.relleno_inferior(tex))
+
+
 func _update_animacion() -> void:
 	if animated == null or not animated.visible:
 		return
@@ -482,21 +496,10 @@ func _reproducir_animacion_ataque(tipo: String) -> void:
 	# Solo los tipos con sprites propios animan el ataque (el chamán es un polígono: no debe aparecer el sprite del cultista).
 	if DisplayServer.get_name() != "headless" and _usa_sprite:
 		animated.visible = true
-		if _attack_anim_idx == 0:
-			animated.play("attack1")
-		elif _attack_anim_idx == 1:
-			animated.play("attack2")
-		else:
-			# Selección aleatoria al inicio: 0 = ataque1, 1 = ataque2
-			if _attack_anim_idx < 0:
-				_attack_anim_idx = randi() % 2
-				if _attack_anim_idx == 0:
-					animated.play("attack1")
-				else:
-					animated.play("attack2")
-			else:
-				animated.play(_attack_anim)
-		_attack_anim_timer = 0.35
+		var sf := animated.sprite_frames
+		if sf != null and sf.has_animation(tipo):
+			animated.play(tipo)
+			_attack_anim_timer = maxf(float(sf.get_frame_count(tipo)) / maxf(sf.get_animation_speed(tipo), 0.01), 0.2)
 
 
 func _usar_proyectil() -> bool:

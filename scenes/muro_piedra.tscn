@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/muro_piedra.gd" id="1_muro"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_muro"]
+size = Vector2(90, 260)
+
+[node name="MuroPiedra" type="StaticBody2D"]
+collision_mask = 0
+script = ExtResource("1_muro")
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+position = Vector2(0, -130)
+shape = SubResource("RectangleShape2D_muro")

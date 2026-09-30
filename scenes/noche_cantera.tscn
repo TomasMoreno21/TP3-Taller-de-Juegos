@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" uid="uid://65wfbu1kb774" path="res://scenes/noche.tscn" id="1_noche"]
+
+[node name="NocheCantera" instance=ExtResource("1_noche")]
+color_noche = Color(0.92, 0.72, 0.58, 1)
+color_fondo = Color(1, 0.88, 0.74, 1)
+color_vacio = Color(0.16, 0.08, 0.06, 1)
+
+[node name="Oscuridad" parent="." index="0"]
+color = Color(0.92, 0.72, 0.58, 1)
+
+[node name="LuciernagasAmbiente" parent="." index="1"]
+cantidad = 30
+con_luz = 2
+color = Color(1, 0.5, 0.2, 1)
+color_nucleo = Color(1, 0.9, 0.6, 1)
+tamano_halo = 0.18
+velocidad = Vector2(15, 45)
+giro = 1.5
+
+[node name="HojasAmbiente" parent="." index="2"]
+amount = 18

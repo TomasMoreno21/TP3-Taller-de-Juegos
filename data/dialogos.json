@@ -216,7 +216,11 @@
 		"modo": "Automatico",
 		"retraso": 0.6,
 		"una_vez": true,
-		"lineas": []
+		"lineas": [
+			"Esta cantera fue el santuario de un pueblo que veneraba al Oso... antes de que los cultistas lo tomaran.",
+			"Tu hijo pasó por aquí, Humano. Hay marcas frescas en la roca.",
+			"Más adelante el Oso va a despertar en ti. Con él, ninguna piedra va a cerrarte el paso."
+		]
 	},
 	"n3_oso": {
 		"tipo": "tip",
@@ -233,14 +237,22 @@
 		"modo": "Zona",
 		"retraso": 0.6,
 		"una_vez": true,
-		"lineas": []
+		"lineas": [
+			"Cuidado: siento un espíritu encadenado. El guardián de la cantera, dominado por el culto.",
+			"El chamán lo controla. Rompé su concentración con golpes fuertes, como los del Oso.",
+			"Libéralo, Humano. Ya no es su enemigo: es una víctima más."
+		]
 	},
 	"n3_final": {
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.6,
 		"una_vez": true,
-		"lineas": []
+		"lineas": [
+			"Lo lograste. El sello de los ancestros se rompió y la cantera vuelve a respirar.",
+			"Los espíritus del Oso descansan otra vez. Su fuerza ahora es tuya.",
+			"Sigamos, Humano. El rastro de tu hijo baja hacia el abismo."
+		]
 	},
 	"n4_intro": {
 		"hablante": "Amuleto",

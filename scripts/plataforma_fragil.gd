@@ -5,6 +5,8 @@ extends StaticBody2D
 
 enum Ruptura { DESTRUIR, CAER }
 
+## -1 = cede con cualquier forma; 2 = solo cede bajo el peso del Oso (el resto cruza sin romperla).
+@export var forma_requerida := -1
 @export var tiempo_temblor := 1.0
 @export var modo_ruptura := Ruptura.DESTRUIR
 @export var temblor_max := 3.0       # px de vaivén al temblar (crece hacia la ruptura)
@@ -65,7 +67,7 @@ func _physics_process(delta: float) -> void:
 		Fase.ESPERA:
 			var player: Node2D = get_tree().get_first_node_in_group("player")
 			if player is CharacterBody2D and player.is_on_floor():
-				if _pisa_plataforma(player):
+				if _pisa_plataforma(player) and (forma_requerida < 0 or int(player.get("current_form")) == forma_requerida):
 					_fase = Fase.TEMBLOR
 					_escombros(6, 0.6, sonido_crujir)
 		Fase.TEMBLOR:

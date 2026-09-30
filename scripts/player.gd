@@ -9,6 +9,9 @@ signal energia_changed(energia: float)
 signal transformacion_agotada
 signal racha_changed(cantidad: int)
 signal parry_exitoso
+signal transformacion_denegada
+signal aterrizaje_fuerte(pos: Vector2, impacto: float)
+signal pisoton(pos: Vector2)
 
 enum Form { HUMAN, LOBO, OSO, MURCIELAGO }
 
@@ -141,7 +144,7 @@ var _coyote_time := 0.0
 var _jump_buffer := 0.0
 var _attack_air_buffer := 0.0
 var _attack_air_buffer_type := ""
-const ATTACK_AIR_BUFFER_TIME := 0.12
+const ATTACK_AIR_BUFFER_TIME := 0.16
 var _light_step := 0
 var _heavy_step := 0
 var _seq: Array[String] = []
@@ -156,6 +159,14 @@ var _attack_anim_timer := 0.0
 var _attack_anim_actual := "attack1"
 var _attack_anim_cola: Array[String] = []
 var _attack_anim_speed_scale := 1.0
+static var _tips_vistos: Dictionary = {}
+@export var tips_ayuda := true             ## muestra avisos de ayuda la primera vez (parry, energía)
+@export_group("Defensa")
+@export var bloqueo_costo_energia := 4.0   ## energía que gasta cada golpe bloqueado (0 = gratis)
+@export_group("Alineación")
+@export var anclar_pies := true         ## apoya la base de cada frame en el piso (evita flotar/hundirse)
+@export var pies_hundidos := 4.0         ## px que los pies se meten en el suelo (sensación de peso)
+@export_group("")
 var _was_blocking := false
 var _was_on_floor := false
 var _fall_impact := 0.0
@@ -308,6 +319,7 @@ func _ready() -> void:
 	wall_min_slide_angle = deg_to_rad(15.0)
 	_apply_form()
 	visual.frame_changed.connect(_on_frame_animacion)
+	visual.animation_changed.connect(_anclar_pies)
 	_liana_loop = AudioStreamPlayer.new()
 	_liana_loop.stream = sonido_liana_deslizar
 	add_child(_liana_loop)
@@ -476,6 +488,7 @@ func _physics_process(delta: float) -> void:
 			_sonido_aterrizaje(_fall_impact)
 			_emitir_polvo(0.5)
 			if _fall_impact > 350.0:
+				aterrizaje_fuerte.emit(global_position, _fall_impact)
 				var amb := get_node_or_null("/root/Ambiente")
 				if amb != null:
 					amb.empujar(global_position, clampf(_fall_impact / 1000.0, 0.15, 0.6))
@@ -1556,6 +1569,19 @@ func _zoom_transform(data: Forma) -> void:
 	if cam != null:
 		cam.fijar_zoom(data.camera_zoom)
 	_flash_transformacion(data.color)
+	if current_form != Form.HUMAN:
+		_tip_una_vez("energia", "Las formas gastan energía. Al llegar a cero volvés a Humano; matá enemigos para recuperarla.")
+
+
+## Aviso de ayuda que se muestra una sola vez por partida (no bloquea el juego).
+func _tip_una_vez(clave: String, texto: String) -> void:
+	if not tips_ayuda or _tips_vistos.has(clave) or DisplayServer.get_name() == "headless":
+		return
+	var dlg := get_node_or_null("/root/Dialogo")
+	if dlg == null or not dlg.has_method("mostrar_tip"):
+		return
+	_tips_vistos[clave] = true
+	dlg.mostrar_tip([texto], "Amuleto")
 
 
 func _flash_transformacion(color: Color) -> void:
@@ -1589,11 +1615,13 @@ func _apply_form() -> void:
 	visual.modulate = Color.WHITE
 	visual.self_modulate = _tinte_forma(data.color)
 	visual.skew = 0.0
+	_cancelar_anim_ataque()
 	collision_shape.shape.size = data.collider_size
 	collision_shape.position.y = 142.5 - data.collider_size.y * 0.5
 	if _recoil_tween != null and _recoil_tween.is_valid():
 		_recoil_tween.kill()   # no debe pisar la Y de la forma nueva
 	visual.position = Vector2(_visual_base_x, _visual_base_y())
+	_anclar_pies()
 	_gravity_override = -1.0
 	blocking = false
 
@@ -1676,7 +1704,7 @@ func _update_animacion() -> void:
 			if _attack_anim_cola.size() > 1:
 				_attack_anim_cola.pop_front()
 				_attack_anim_actual = _attack_anim_cola[0]
-				_attack_anim_timer = _duracion_anim(_attack_anim_actual)
+				_attack_anim_timer = _duracion_anim(_attack_anim_actual) / maxf(_attack_anim_speed_scale, 0.05)
 				visual.play(_attack_anim_actual)
 			else:
 				_attack_anim_cola.clear()
@@ -1686,6 +1714,9 @@ func _update_animacion() -> void:
 			if visual.animation != anim:
 				visual.play(anim)
 			visual.speed_scale = _attack_anim_speed_scale
+		var dt_a := get_physics_process_delta_time()
+		visual.skew = lerpf(visual.skew, 0.0, minf(12.0 * dt_a, 1.0))
+		visual.rotation = lerpf(visual.rotation, _pose_rot, minf(12.0 * dt_a, 1.0))
 		return
 	if _trepando:
 		if visual.animation != "climb":
@@ -1719,7 +1750,6 @@ func _update_animacion() -> void:
 			anim = "murci_run"
 	elif current_form == Form.LOBO and _attacking and visual.sprite_frames.has_animation("lobo_attack"):
 		anim = "lobo_attack"
-		visual.speed_scale = 1.4
 	elif current_form == Form.LOBO and quieto and visual.sprite_frames.has_animation("lobo_idle"):
 		anim = "lobo_idle"
 	elif current_form == Form.LOBO and visual.sprite_frames.has_animation("lobo_run"):
@@ -1728,10 +1758,14 @@ func _update_animacion() -> void:
 		anim = "oso_idle"
 	elif current_form == Form.OSO and visual.sprite_frames.has_animation("oso_caminar"):
 		anim = "oso_caminar"
+	elif current_form == Form.HUMAN and quieto and visual.sprite_frames.has_animation("idle"):
+		anim = "idle"
 	if visual.animation != anim:
 		visual.play(anim)
 	var data: Forma = forms[current_form]
-	if anim == "lobo_idle" or anim == "oso_idle":
+	if anim == "lobo_attack":
+		visual.speed_scale = 1.4
+	elif anim == "lobo_idle" or anim == "oso_idle" or anim == "idle":
 		visual.speed_scale = 1.0
 	elif absf(velocity.x) < 10.0:
 		visual.speed_scale = 0.0
@@ -1894,6 +1928,9 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_blo
 		return
 	if blocking and not god_mode and _invuln_timer <= 0.0 and not _dialogo_bloquea_input():
 		_sfx(sonido_bloqueo, volumen_estado_db, 0.08)
+		if bloqueo_costo_energia > 0.0 and energia > 0.0:
+			energia = maxf(energia - bloqueo_costo_energia, 0.0)
+			energia_changed.emit(energia)
 	if god_mode or blocking or _invuln_timer > 0.0 or _dialogo_bloquea_input():
 		return
 	health -= cantidad
@@ -1905,6 +1942,8 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_blo
 	_freeze_hitstop(dur)
 	health_changed.emit(health, VIDA_MAX)
 	dano_recibido.emit(cantidad)
+	if health > 0:
+		_tip_una_vez("parry", "Bloqueá justo antes de que te golpeen para hacer un parry: no recibís daño y recuperás energía.")
 	_shake_dano_recibido(dir)
 	_flash_tint_dano()
 	stretch_y(-0.12, 0.14)
@@ -2426,7 +2465,24 @@ func _sfx_de(lista: Array[AudioStream], volumen_db: float, variacion_tono: float
 
 ## Pasos en tiempo real: suenan (y levantan polvo) en los frames de la animación en
 ## que el pie toca el suelo, así acompañan la velocidad real de la animación.
+## Apoya la base visible de cada frame en el piso: los frames de distinto alto ya no hacen flotar ni hundir al personaje.
+func _anclar_pies() -> void:
+	if not anclar_pies or visual == null or visual.sprite_frames == null:
+		return
+	var sf := visual.sprite_frames
+	if not sf.has_animation(visual.animation):
+		return
+	var tex := sf.get_frame_texture(visual.animation, visual.frame)
+	if tex == null:
+		return
+	var s := maxf(absf(_base_sprite_scale.y), 0.01)
+	var col_alto: float = collision_shape.shape.size.y
+	var falta := col_alto * 0.5 - 7.5 + pies_hundidos
+	visual.offset.y = falta / s - (tex.get_height() * 0.5 - Pies.relleno_inferior(tex))
+
+
 func _on_frame_animacion() -> void:
+	_anclar_pies()
 	if _trepando:
 		return
 	var anim := visual.animation
@@ -2514,3 +2570,4 @@ func _denegar_transformacion() -> void:
 		return
 	_denegar_cd = 0.3
 	_sfx(sonido_transformacion_bloqueada, volumen_estado_db)
+	transformacion_denegada.emit()

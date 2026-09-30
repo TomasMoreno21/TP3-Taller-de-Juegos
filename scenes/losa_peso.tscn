@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/losa_peso.gd" id="1_losa"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_losa"]
+size = Vector2(220, 66)
+
+[node name="LosaPeso" type="Area2D"]
+collision_layer = 0
+collision_mask = 4
+script = ExtResource("1_losa")
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+position = Vector2(0, -23)
+shape = SubResource("RectangleShape2D_losa")

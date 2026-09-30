@@ -149,6 +149,10 @@ func _connectar_player() -> void:
 	_player.transformacion_agotada.connect(_on_agotada)
 	_player.racha_changed.connect(_on_racha_changed)
 	_player.parry_exitoso.connect(_on_parry)
+	_player.transformacion_denegada.connect(func() -> void:
+		if dial != null and dial.has_method("rechazo"):
+			dial.rechazo()
+	)
 	_actualizar_dial()
 
 

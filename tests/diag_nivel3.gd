@@ -6,7 +6,7 @@ extends SceneTree
 ## riesgo real, checkpoints, y que ningún enemigo/pickup/checkpoint quede incrustado o flotando.
 
 const GAP_MAX := 200.0
-const ANCHO_FRAGIL := 160.0
+const ANCHO_FRAGIL := 246.0
 const HEADROOM_MIN := 400.0
 const LARGO_MIN := 28000.0   # nivel2 mide ~20000 de ancho de nodos
 
@@ -171,8 +171,8 @@ func _init() -> void:
 	_check(mal_puestos == 0, "Nivel3: checkpoints, pickups y enemigos apoyados sobre el piso, sin incrustar (%d mal puestos)" % mal_puestos)
 	_check(checkpoints >= 18, "Nivel3: checkpoints frecuentes (hay %d, nivel2 tiene 0)" % checkpoints)
 	_check(encounters == 6, "Nivel3: 6 encuentros (nivel2 tiene 4) (hay %d)" % encounters)
-	_check(enemigos == 23, "Nivel3: 23 enemigos (nivel2 tiene 12) (hay %d)" % enemigos)
-	_check(pickups == 14, "Nivel3: 14 pickups guía (hay %d)" % pickups)
+	_check(enemigos == 25, "Nivel3: 25 enemigos (nivel2 tiene 12) (hay %d)" % enemigos)
+	_check(pickups == 18, "Nivel3: 14 almas + 4 orbes de vida (hay %d)" % pickups)
 	_check(troncos == 5, "Nivel3: 5 troncos de Oso (3 de camino + 2 cuartos secretos) (hay %d)" % troncos)
 
 	# Largo del recorrido principal (suma de tramos entre puntos clave).

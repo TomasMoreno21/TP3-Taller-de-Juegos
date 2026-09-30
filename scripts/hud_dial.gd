@@ -181,6 +181,17 @@ func pulso_energia() -> void:
 	_tw_pulso.tween_property(self, "_flash", 0.0, 0.3)
 
 
+## Sacudida corta lateral cuando una transformación se deniega (cooldown / sin energía / sin espacio).
+func rechazo() -> void:
+	if _tw_pulso != null and _tw_pulso.is_valid():
+		_tw_pulso.kill()
+	scale = Vector2.ONE
+	rotation = 0.0
+	_tw_pulso = create_tween()
+	for r in [0.12, -0.12, 0.07, -0.05, 0.0]:
+		_tw_pulso.tween_property(self, "rotation", r, 0.045)
+
+
 func set_energia(valor: float, maximo := 100.0) -> void:
 	energia_max = maximo
 	if valor < _fantasma:

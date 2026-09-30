@@ -1,0 +1,49 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/capa_cantera.gd" id="1_capa"]
+
+[node name="FondoCantera" type="ParallaxBackground"]
+layer = -10
+
+[node name="Cielo" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.04, 1)
+script = ExtResource("1_capa")
+tipo = "cielo"
+color_a = Color(1, 0.66, 0.36, 1)
+color_b = Color(0.3, 0.14, 0.14, 1)
+semilla = 2
+
+[node name="MesasLejanas" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.14, 1)
+script = ExtResource("1_capa")
+tipo = "mesas"
+color_a = Color(1, 0.7, 0.42, 1)
+color_b = Color(0.6, 0.34, 0.24, 1)
+densidad = 0.8
+semilla = 3
+altura_relativa = 0.5
+
+[node name="MesasCerca" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.3, 1)
+script = ExtResource("1_capa")
+tipo = "mesas"
+color_a = Color(1, 0.66, 0.4, 1)
+color_b = Color(0.38, 0.21, 0.17, 1)
+semilla = 5
+altura_relativa = 0.66
+
+[node name="Totems" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.5, 1)
+script = ExtResource("1_capa")
+tipo = "totems"
+color_a = Color(0.9, 0.55, 0.32, 1)
+color_b = Color(0.22, 0.13, 0.12, 1)
+semilla = 9
+altura_relativa = 0.4
+
+[node name="Bruma" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.7, 1)
+script = ExtResource("1_capa")
+tipo = "bruma"
+semilla = 11
+niebla = 0.22

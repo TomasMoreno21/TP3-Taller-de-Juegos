@@ -8,7 +8,8 @@ extends Area2D
 @export var color_burst := Color(0.45, 0.72, 1.0)
 @export var sonido_recoger: AudioStream = preload("res://assets/audio/sfx/gen/pickup.wav")
 @export var volumen_recoger_db := -8.0
-@export var iman_radio := 150.0          ## px: dentro de este radio el alma vuela hacia el jugador (0 = sin imán)
+@export var texto_recoger := "+1 alma"   ## texto flotante al recoger ("" = sin texto)
+@export var iman_radio := 150.0         ## px: dentro de este radio el alma vuela hacia el jugador (0 = sin imán)
 @export var iman_velocidad := 700.0      ## velocidad máxima del imán (px/s)
 @export var iman_aceleracion := 1800.0
 
@@ -89,6 +90,21 @@ func _efecto_recoger() -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	Burst.emitir(self, visual.global_position, color_burst, 14)
+	if texto_recoger != "":
+		var lbl := Label.new()
+		lbl.text = texto_recoger
+		lbl.add_theme_font_size_override("font_size", 26)
+		lbl.add_theme_color_override("font_color", color_burst.lightened(0.3))
+		lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+		lbl.add_theme_constant_override("outline_size", 6)
+		lbl.z_index = 20
+		lbl.global_position = global_position + Vector2(-40, -70)
+		var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+		destino.add_child(lbl)
+		var tl := lbl.create_tween().set_parallel(true)
+		tl.tween_property(lbl, "position:y", lbl.position.y - 60.0, 0.7).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tl.tween_property(lbl, "modulate:a", 0.0, 0.7).set_delay(0.25)
+		tl.chain().tween_callback(lbl.queue_free)
 	# Copia del rombo + halo que se infla y desvanece donde estaba el alma.
 	var fx := Node2D.new()
 	fx.global_position = global_position
@@ -99,7 +115,7 @@ func _efecto_recoger() -> void:
 	if halo != null:
 		h = halo.duplicate() as Sprite2D
 		fx.add_child(h)
-	get_tree().current_scene.add_child(fx)
+	(get_tree().current_scene if get_tree().current_scene != null else get_parent()).add_child(fx)
 	var tw := fx.create_tween().set_parallel(true)
 	tw.tween_property(rombo, "scale", Vector2.ONE * 1.9, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(rombo, "modulate:a", 0.0, 0.2)

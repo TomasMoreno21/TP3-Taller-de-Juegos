@@ -1521,3 +1521,23 @@ El usuario pidió que el combate no se sienta "tocar un botón y hacer daño sos
 - **⚠️ `git checkout -- <archivo .tscn>` DESTRUYE los acomodamientos manuales del editor.** Al revertir el viento una vez hice checkout de `fondo_bosque.tscn` y se perdieron las posiciones/escalas/offsets que el usuario había movido a mano (Capa5 `(3569,-562)` + `offset (-621.98,-726.05)`, Capa6 `(2217,553)` escala `0.9711165`, Capa7 `(2897,409.00003)` escala `1.0179123`, Capa8 `(3330.0002,-698)`); se restauraron con `edit` y el diff quedó idéntico. **NUNCA usar `git checkout`/`git restore` sobre un `.tscn`: deshacer cambios propios con `edit` quirúrgico, y respaldar a `%TEMP%\opencode\` antes de correr el editor.**
 - **Antes de correr smoke/editor sobre escenas con acomodamientos manuales:** `Copy-Item` a `%TEMP%\opencode\`, correr, y comparar hash; si cambió, restaurar. En esta sesión el smoke no reescribió `fondo_bosque.tscn` (verificado por hash).
 - **Lección de método:** calcular mirroring/offsets con los valores LEÍDOS DEL DISCO en ese momento, no de memoria ni de un resumen anterior (se calculó con un `scale.x` viejo y se "arregló" una capa que no tenía el problema). Ante "algo desaparece", comparar `textura × scale.x` vs `motion_mirroring` de TODAS las capas antes de tocar efectos.
+
+## Sesión 29/09 (noche) — Pulido de animaciones y pies
+- Ataques del jugador: el timer de la cola usa duración/speed_scale; en ataque se restauran skew/rotación; `_apply_form` vacía la cola; Humano quieto usa `idle`; `lobo_attack` va a 1.4x.
+- Pies alineados: `scripts/pies.gd` (`Pies.relleno_inferior`) mide el vacío bajo cada frame; `player._anclar_pies()` y `enemy._anclar_pies_frame()` ajustan `offset.y` por frame (export `anclar_pies`, `pies_hundidos`). Test: `tests/diag_pies.gd`.
+- Enemigos: la animación de ataque dura lo real de sus frames y reproduce siempre `tipo` (se quitó `_attack_anim_idx`).
+- Buffer de ataque aéreo 0.12 → 0.16 s.
+- Pendiente: arquero con un solo frame (falta arte), Oso/Murciélago sin anim de ataque, checkpoints nivel2/jefe, tips, feedback de pickups, cueva reactiva. Nada probado en ventana.
+- Lección: los offsets por frame se calculan del contenido real (alpha), no del tamaño de textura.
+- Fases 3-5 (misma noche): bloqueo cuesta energía (`bloqueo_costo_energia` 4, decisión del usuario); dial del HUD se sacude al denegar transformación (señal `transformacion_denegada`); pickup con texto flotante `texto_recoger`; tips de una sola vez (`_tip_una_vez`: parry al primer golpe, energía al primer cambio de forma; export `tips_ayuda`); buffer de ataque aéreo 0.16.
+- Checkpoints nuevos (autorizado): nivel2 (Inicio, Cueva1-4, puestos sobre suelo medido con raycast) y nivel_jefe (Inicio, PreJefe). Test: `tests/diag_checkpoints_niveles.gd`.
+- Decisiones del usuario: Oso/Murciélago sin anim de ataque propia (se dejan), arquero: pondrá arte él.
+- No hecho: título de nivel en transición, goteo de cueva, foco del menú, arquero que retrocede, limpieza de coyote duplicado (el shake al aterrizar ya existía).
+
+## Sesión 29-30/09 — Nivel 3 "La Cantera de los Ancestros" (Oso)
+- Estética: atardecer cálido. `scenes/fondo_cantera.tscn` (+ `scripts/capa_cantera.gd`: cielo, mesas, tótems de oso, bruma) y `scenes/noche_cantera.tscn` (hereda `noche.tscn`, tinte cálido, brasas en vez de luciérnagas). Instanciados en `nivel3.tscn`.
+- Objetos del Oso: `muro_piedra` (solo Oso, golpe >= `dano_minimo`, `solo_por_losa` = compuerta, `derrumbe`), `losa_peso` (pisotón o aterrizaje fuerte del Oso, abre `objetivos` con `abrir()`), `plataforma_fragil.forma_requerida` (2 = solo cede al Oso). Señales nuevas del jugador: `aterrizaje_fuerte(pos, impacto)` y `pisoton(pos)`.
+- Colocación (nivel3.tscn): MuroTutorial, MuroPuente1/2, MuroSalida2, LosaPeso+PuertaLosa, MuroDerrumbe, MuroSello, 4 PickupVida, Decoracion (73 piedras/pasto), 2 enemigos más en EncounterGuardian (solo tipos existentes). PlataformaFragil4 movida a x=3730 (el hueco del puente I era > 200 px). Diálogos `n3_intro/guardian/final` escritos.
+- Tests: `tests/diag_nivel3_oso.gd` (nuevo), `diag_nivel3` actualizado (ANCHO_FRAGIL real 246, 25 enemigos, 18 pickups).
+- Lecciones: no usar `get_tree().current_scene` sin fallback en scripts que corren en tests; no hacer grep/sed sobre `.tscn` de nivel sin excluir `tile_data` (líneas de 1 MB); un nodo de nivel solo con `Array[NodePath]` tipado se asigna desde tests con variable tipada.
+- Pendiente: probar a mano el nivel completo (ritmo, altura de muros vs salto del Oso), goteo/ambiente extra, título de nivel.

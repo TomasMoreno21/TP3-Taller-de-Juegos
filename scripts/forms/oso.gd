@@ -71,6 +71,7 @@ func perform_special(player: CharacterBody2D) -> void:
 			return
 		player.emitir_eco()
 		player.onda_area(PISOTON_RADIO, PISOTON_DANO, PISOTON_KNOCKBACK, true, lado))
+	player.pisoton.emit(player.global_position)
 	var cam := player.get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("shake"):
 		cam.shake(10.0)
