@@ -19,13 +19,10 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Humano... yo soy el protector de los espíritus del bosque.",
-			"Este bosque tiene una guerra secreta con los cultistas.",
-			"Quieren apoderarse del bosque y toda la fuerza espiritual del mismo.",
-			"No entiendo por qué se llevaron a tu hijo, pero estoy seguro que no por buenos motivos.",
-			"Para derrotar a esos malditos, voy a prestarte de nuestro poder.",
-			"Movete con {mover} y saltá con {jump}.",
-			"{attack} es tu golpe rápido, {heavy} tu golpe fuerte."
+			"Humano... soy el Amuleto, guardián del bosque.",
+			"Una secta quiere su poder.",
+			"Sus cultistas atrajeron a tu hijo.",
+			"Te presto mi fuerza. ¡Vamos!"
 		]
 	},
 	"n1_combate": {
@@ -34,10 +31,9 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Esperá... siento una presencia cerca. No estás solo.",
-			"Preparate, Humano: vamos a tener que pelear.",
-			"Cuando los derrotes, puede que recuperemos los espiritus que asesinaron.",
-			"Si lo logramos, te los daré para que puedas curarte, te necesito vivo y tu hijo también"
+			"[alerta]Esperá... hay cultistas cerca.",
+			"[alerta]¡Preparate para pelear!",
+			"Las almas que liberes te curarán."
 		]
 	},
 	"n1_lobo": {
@@ -47,8 +43,8 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"El Lobo es más bajo y ágil: usá su doble salto para este paso.",
-			"Seleccioná la forma con {forma_swap} y transformate con {transform}. Ojo con la energía."
+			"Lobo: doble salto para este paso.",
+			"Cambiá con {forma_swap}, transformate con {transform}."
 		]
 	},
 	"n1_zona2": {
@@ -58,7 +54,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Esos cultistas dejaron energía espiritual en cajas. Rompelas a puños y recuperala."
+			"Rompé las cajas: dan energía."
 		]
 	},
 	"n1_zona3": {
@@ -68,7 +64,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Usá esas enredaderas para avanzar: agarrate con {trepar}, soltate con {jump}."
+			"Trepá con {trepar}, soltate con {jump}."
 		]
 	},
 	"n1_santuario": {
@@ -77,7 +73,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Ya estamos cerca de su guarida..."
+			"[susurro]Su guarida está cerca..."
 		]
 	},
 	"n1-joystick": {
@@ -87,7 +83,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"No vemos el lugar seguro desde acá, usá {camara} para mover la cámara."
+			"Mové la cámara con {camara}."
 		]
 	},
 	"n1_arquero": {
@@ -97,8 +93,8 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Ese cultista dispara flechas: esquivá el proyectil o bloqueá en el momento justo.",
-			"Atacalo entre disparo y disparo."
+			"Esquivá o bloqueá sus flechas.",
+			"Atacá entre disparos."
 		]
 	},
 	"n1_lobo_uso": {
@@ -108,7 +104,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Este abismo se cruza de Lobo: doble salto y volás sobre las púas."
+			"Cruzá el abismo con el Lobo."
 		]
 	},
 	"n1_fragil": {
@@ -118,8 +114,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Esas tablas viejas ceden apenas las pisás: corré y saltá antes de que caigan.",
-			"El camino alto de piedra es más seguro."
+			"Las tablas ceden: corré y saltá."
 		]
 	},
 	"p1_intro": {
@@ -128,8 +123,8 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Cuando los derrotes, puede que recuperemos los espiritus que asesinaron.",
-			"Si lo logramos, te los daré para que puedas curarte, te necesito vivo."
+			"Las almas que liberes te curarán.",
+			"Te necesito vivo."
 		]
 	},
 	"p1_enredadera": {
@@ -139,7 +134,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"De nuevo las enredaderas: agarrate con {trepar} para llegar a las plataformas altas."
+			"Otra enredadera: trepá con {trepar}."
 		]
 	},
 	"p1_combate": {
@@ -149,8 +144,8 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Tres cultistas en bloque: el Lobo perfila mejor y no te dejés encerrar.",
-			"Quedan almas flotando en la arena para recuperar energía."
+			"Tres cultistas: no te dejes encerrar.",
+			"Hay almas para recuperar energía."
 		]
 	},
 	"p1_combate2": {
@@ -159,7 +154,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Concentrate: esquivá y golpeá en los huecos."
+			"Esquivá y golpeá en los huecos."
 		]
 	},
 	"p1_combate3": {
@@ -168,7 +163,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Último grupo: no aflojes, ya está casi."
+			"[grito]¡Último grupo, ya casi!"
 		]
 	},
 	"p1_plataformas": {
@@ -178,7 +173,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Tablas podridas con el viento: cruzá de a una con carrerita y saltá antes de que caigan."
+			"Cruzá de a una y saltá rápido."
 		]
 	},
 	"p1_lobo": {
@@ -188,7 +183,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"El Lobo es la forma más ágil: usalo para saltar estos tramos."
+			"Usá el Lobo para estos saltos."
 		]
 	},
 	"p1_santuario": {
@@ -197,7 +192,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Ya estamos cerca de su guarida..."
+			"Su guarida está cerca..."
 		]
 	},
 	"jefe_intro": {
@@ -206,10 +201,11 @@
 		"retraso": 0.8,
 		"una_vez": true,
 		"lineas": [
-			"Ahí está... el ARZOBISPO. La entidad que venera la secta.",
-			"Usá cada forma con cabeza: el Oso rompe su guardia, el Murciélago llega donde no podés, y el Lobo esquiva lo que nadie puede.",
-			"Los cultistas que invoca nos devuelven energía. ¡No aflojes!"
-		]
+			"[alerta]Ahí está: el ARZOBISPO.",
+			"Oso rompe su guardia, Lobo esquiva.",
+			"[grito]¡No aflojes!"
+		],
+		"marcado": true
 	},
 	"n3_intro": {
 		"hablante": "Amuleto",
@@ -217,9 +213,9 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Esta cantera fue el santuario de un pueblo que veneraba al Oso... antes de que los cultistas lo tomaran.",
-			"Tu hijo pasó por aquí, Humano. Hay marcas frescas en la roca.",
-			"Más adelante el Oso va a despertar en ti. Con él, ninguna piedra va a cerrarte el paso."
+			"Esta cantera era un santuario del Oso.",
+			"Tu hijo pasó por aquí: hay marcas frescas.",
+			"Pronto el Oso despertará en ti."
 		]
 	},
 	"n3_oso": {
@@ -229,7 +225,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Desbloqueaste al Oso: es lento pero no hay pared que le resista. Golpe fuerte para lo pesado."
+			"Desbloqueaste al Oso: lento, pero imparable."
 		]
 	},
 	"n3_guardian": {
@@ -238,9 +234,9 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Cuidado: siento un espíritu encadenado. El guardián de la cantera, dominado por el culto.",
-			"El chamán lo controla. Rompé su concentración con golpes fuertes, como los del Oso.",
-			"Libéralo, Humano. Ya no es su enemigo: es una víctima más."
+			"[alerta]Hay un espíritu encadenado...",
+			"Rompé su control con golpes fuertes.",
+			"Libéralo: es una víctima más."
 		]
 	},
 	"n3_final": {
@@ -249,9 +245,9 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Lo lograste. El sello de los ancestros se rompió y la cantera vuelve a respirar.",
-			"Los espíritus del Oso descansan otra vez. Su fuerza ahora es tuya.",
-			"Sigamos, Humano. El rastro de tu hijo baja hacia el abismo."
+			"El sello se rompió. La cantera respira.",
+			"La fuerza del Oso ahora es tuya.",
+			"Sigamos: el rastro baja al abismo."
 		]
 	},
 	"n4_intro": {
@@ -268,7 +264,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"El Murciélago vuela: cruza por arriba donde las otras formas no llegan."
+			"El Murciélago vuela: cruzá por arriba."
 		]
 	},
 	"n4_abismo": {
@@ -278,7 +274,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"El Murciélago planea este abismo: mantene apretado para no caer."
+			"Mantené el salto para planear."
 		]
 	},
 	"n4_final": {
@@ -302,7 +298,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Última sección: combiná las formas. Oso para barrer, Lobo para lo rápido, Murciélago para los abismos."
+			"Combiná formas: Oso, Lobo y Murciélago."
 		]
 	},
 	"n5_umbral": {
@@ -311,5 +307,35 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": []
+	},
+	"tut_mover": {
+		"hablante": "Amuleto",
+		"lineas": [
+			"Movete con {mover}"
+		]
+	},
+	"tut_saltar": {
+		"hablante": "Amuleto",
+		"lineas": [
+			"Saltá con {jump}"
+		]
+	},
+	"tut_ligero": {
+		"hablante": "Amuleto",
+		"lineas": [
+			"Golpe rápido: {attack}"
+		]
+	},
+	"tut_fuerte": {
+		"hablante": "Amuleto",
+		"lineas": [
+			"Golpe fuerte: {heavy}"
+		]
+	},
+	"tut_bloqueo": {
+		"hablante": "Amuleto",
+		"lineas": [
+			"Bloqueá con {block}"
+		]
 	}
 }

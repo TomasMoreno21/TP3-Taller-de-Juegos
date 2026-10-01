@@ -65,6 +65,6 @@ func _initialize() -> void:
 	if dlg != null:
 		dlg.mostrar_tip(["uno", "dos"])
 		await create_timer(0.3).timeout
-		_check(str(dlg.tip_texto.text) == "uno", "el primer tip se muestra (%s)" % str(dlg.tip_texto.text))
+		_check(dlg.texto_actual() == "uno", "el primer tip se muestra (%s)" % dlg.texto_actual())
 	print("DIAG INTERFAZ FALLOS = ", fallos)
 	quit(1 if fallos > 0 else 0)

@@ -1,0 +1,125 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/comic_intro.gd" id="1_comic"]
+[ext_resource type="Script" path="res://scripts/vineta.gd" id="2_vineta"]
+
+[node name="ComicIntro" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_comic")
+
+[node name="Fondo" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.93, 0.90, 0.82, 1)
+
+[node name="Paginas" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Vineta1" type="Control" parent="Paginas"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 40.0
+offset_right = 800.0
+offset_bottom = 505.0
+mouse_filter = 2
+script = ExtResource("2_vineta")
+escena = 0
+forma = PackedVector2Array(0, 0, 750, 0, 695, 465, 0, 465)
+texto = "Los espíritus vivían en paz en el bosque… pero una sombra se acercaba."
+
+[node name="Vineta2" type="Control" parent="Paginas"]
+layout_mode = 0
+offset_left = 761.0
+offset_top = 40.0
+offset_right = 1350.0
+offset_bottom = 505.0
+mouse_filter = 2
+script = ExtResource("2_vineta")
+escena = 1
+forma = PackedVector2Array(55, 0, 529, 0, 589, 465, 0, 465)
+texto = "Aquella tarde, padre e hijo solo querían estar juntos."
+
+[node name="Vineta3" type="Control" parent="Paginas"]
+layout_mode = 0
+offset_left = 1306.0
+offset_top = 40.0
+offset_right = 1870.0
+offset_bottom = 560.0
+mouse_filter = 2
+script = ExtResource("2_vineta")
+escena = 2
+forma = PackedVector2Array(0, 0, 564, 0, 564, 520, 60, 465)
+texto = "Hasta que unas voces extrañas llamaron al niño desde la espesura."
+cartela_pos = Vector2(34, 18)
+
+[node name="Vineta4" type="Control" parent="Paginas"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 521.0
+offset_right = 520.0
+offset_bottom = 1010.0
+mouse_filter = 2
+script = ExtResource("2_vineta")
+escena = 3
+forma = PackedVector2Array(0, 0, 470, 0, 420, 489, 0, 489)
+texto = "¡Hijo! ¿Dónde estás? ¡Hijo!"
+
+[node name="Vineta5" type="Control" parent="Paginas"]
+layout_mode = 0
+offset_left = 486.0
+offset_top = 521.0
+offset_right = 1350.0
+offset_bottom = 1010.0
+mouse_filter = 2
+script = ExtResource("2_vineta")
+escena = 4
+forma = PackedVector2Array(50, 0, 864, 0, 804, 489, 0, 489)
+texto = "Sin pensarlo dos veces, se internó en el bosque para encontrarlo."
+
+[node name="Vineta6" type="Control" parent="Paginas"]
+layout_mode = 0
+offset_left = 1306.0
+offset_top = 521.0
+offset_right = 1870.0
+offset_bottom = 1010.0
+mouse_filter = 2
+script = ExtResource("2_vineta")
+escena = 5
+forma = PackedVector2Array(60, 0, 564, 55, 564, 489, 0, 489)
+hablante = "Amuleto"
+texto = "Humano… por fin alguien me encuentra. Juntos podremos salvarlo."
+cartela_pos = Vector2(40, 18)
+
+[node name="Pista" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -500.0
+offset_top = -62.0
+offset_right = 500.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.10, 0.10, 0.12, 1)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+vertical_alignment = 1

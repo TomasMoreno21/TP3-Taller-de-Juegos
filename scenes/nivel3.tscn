@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cddcm1b1r41q6"]
 
 [ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="cam"]
+[ext_resource type="Script" path="res://scripts/objetivo_lista.gd" id="obj_lista"]
 [ext_resource type="PackedScene" path="res://scenes/fondo_cantera.tscn" id="fondo_cantera"]
 [ext_resource type="PackedScene" path="res://scenes/noche_cantera.tscn" id="noche_cantera"]
 [ext_resource type="PackedScene" path="res://scenes/muro_piedra.tscn" id="muro_piedra"]
@@ -818,3 +819,15 @@ visible = false
 
 [node name="Consola" parent="." unique_id=493614865 instance=ExtResource("cons")]
 visible = false
+
+[node name="ObjetivoMuro" type="Node" parent="."]
+script = ExtResource("obj_lista")
+texto = "Rompé el muro de piedra con el Oso"
+origen = NodePath("../MuroTutorial")
+senal = &"roto"
+
+[node name="ObjetivoLosa" type="Node" parent="."]
+script = ExtResource("obj_lista")
+texto = "Abrí la compuerta con la losa de peso"
+origen = NodePath("../LosaPeso")
+senal = &"activada"

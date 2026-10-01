@@ -17,6 +17,7 @@ static var _cache_cargado := false
 @export_enum("Zona", "Automatico") var modo: String = "Zona"
 @export_enum("Narrativa", "Tip") var tipo: String = "Narrativa"
 @export var una_vez := true
+@export var marcado := false   ## escena importante: globo grande y un instante de cámara lenta
 @export var retraso := 0.6
 
 var _disparado := false
@@ -41,6 +42,7 @@ func _cargar_dialogo_por_id() -> void:
 	tipo = str(entrada.get("tipo", tipo)).capitalize()
 	una_vez = bool(entrada.get("una_vez", una_vez))
 	retraso = float(entrada.get("retraso", retraso))
+	marcado = bool(entrada.get("marcado", marcado))
 
 
 func _ready() -> void:
@@ -68,7 +70,7 @@ func _disparar() -> void:
 		_disparado = true
 		return
 	# Un tip no se muestra con un diálogo abierto: no lo marco como visto para que no se pierda para siempre.
-	if tipo == "Tip" and get_node("/root/Dialogo").esta_activo():
+	if tipo == "Tip" and get_node("/root/Dialogo").hay_narrativa():
 		return
 	var prog := get_node_or_null("/root/Progresion") as Node
 	if prog != null and not dialogo_id.is_empty():
@@ -86,4 +88,4 @@ func _disparar() -> void:
 	if tipo == "Tip":
 		get_node("/root/Dialogo").mostrar_tip(Array(lineas), hablante)
 	else:
-		get_node("/root/Dialogo").mostrar(Array(lineas), hablante)
+		get_node("/root/Dialogo").mostrar(Array(lineas), hablante, marcado)

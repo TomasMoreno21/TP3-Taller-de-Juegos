@@ -43,6 +43,7 @@
 [ext_resource type="Texture2D" uid="uid://24w01ki85t7j" path="res://Sprites/Elementos/arbusto_b.png" id="61_arb_b"]
 [ext_resource type="Texture2D" uid="uid://dfs1ehwixhmss" path="res://Sprites/Elementos/arbusto_c.png" id="62_arb_c"]
 [ext_resource type="PackedScene" path="res://scenes/punta_cueva.tscn" id="63_punta"]
+[ext_resource type="PackedScene" path="res://scenes/tutorial_paso.tscn" id="64_tut"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte"]
 shader = ExtResource("45_tinte")
@@ -2979,3 +2980,30 @@ emission_rect_extents = Vector2(260, 260)
 [editable path="PlataformaFragil4"]
 [editable path="PlataformaFragil4/PlataformaFragil4"]
 [editable path="PlataformaFragil2"]
+
+[node name="TutMover" parent="." instance=ExtResource("64_tut")]
+position = Vector2(87, 801)
+paso_id = "tut_mover"
+paso_siguiente = NodePath("../TutSaltar")
+
+[node name="TutSaltar" parent="." instance=ExtResource("64_tut")]
+position = Vector2(700, 801)
+paso_id = "tut_saltar"
+accion = 1
+
+[node name="TutLigero" parent="." instance=ExtResource("64_tut")]
+position = Vector2(6950, 801)
+paso_id = "tut_ligero"
+accion = 2
+paso_siguiente = NodePath("../TutFuerte")
+
+[node name="TutFuerte" parent="." instance=ExtResource("64_tut")]
+position = Vector2(7250, 801)
+paso_id = "tut_fuerte"
+accion = 3
+paso_siguiente = NodePath("../TutBloqueo")
+
+[node name="TutBloqueo" parent="." instance=ExtResource("64_tut")]
+position = Vector2(7550, 801)
+paso_id = "tut_bloqueo"
+accion = 4

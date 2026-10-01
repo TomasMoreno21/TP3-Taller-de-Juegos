@@ -6,6 +6,7 @@ extends Area2D
 @export var color := Color(0.8, 0.7, 0.3)
 @export var sonido_salida: AudioStream = preload("res://assets/audio/sfx/gen/zona_despejada.wav")
 @export var volumen_salida_db := -8.0
+@export var precargar_siguiente := true   ## carga la siguiente escena en segundo plano para que la transición no espere
 
 var _usada := false
 
@@ -22,6 +23,9 @@ func _ready() -> void:
 	var luz := get_node_or_null("Luz") as PointLight2D
 	if luz != null:
 		luz.color = Color(color, 1.0)
+	if precargar_siguiente and not siguiente_escena.is_empty():
+		await get_tree().create_timer(3.0, false).timeout
+		TransicionPantalla.de(get_tree()).precargar(siguiente_escena)
 
 
 func _on_body_entered(_body: Node2D) -> void:

@@ -9,7 +9,7 @@ func _init() -> void:
 	root.add_child(trigger)
 	await process_frame
 	var lineas: PackedStringArray = trigger.lineas
-	_check(lineas.size() == 7, "n1_intro carga 7 líneas (es %d)" % lineas.size())
+	_check(lineas.size() == 4, "n1_intro carga 4 líneas (es %d)" % lineas.size())
 	_check(String(trigger.hablante) == "Amuleto", "hablante Amuleto")
 	_check(String(trigger.modo) == "Automatico", "modo Automatico")
 	_check(trigger.una_vez == true, "una_vez true (no repetir)")

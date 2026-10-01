@@ -759,14 +759,14 @@ func _rugido() -> void:
 		_audio_mgr.play_sfx(_roar_audio, -8.0)
 
 
-## `bloquea` = false usa el panel TIP (no pausa el juego): los avisos en plena pelea
-## no congelan al jugador ni cortan el ritmo. Solo la presentación del jefe bloquea.
+## `bloquea` = false usa un globo chico (TIP); true es la presentación del jefe (globo grande, "marcado").
+## Ninguno frena al jugador.
 func _hablar(lineas: Array, bloquea: bool = false) -> void:
 	var dialogo := get_node_or_null("/root/Dialogo")
 	if dialogo == null:
 		return
 	if bloquea or not dialogo.has_method("mostrar_tip"):
-		dialogo.mostrar(lineas, "Amuleto")
+		dialogo.mostrar(lineas, "Amuleto", bloquea)
 	else:
 		dialogo.mostrar_tip(lineas, "Amuleto")
 

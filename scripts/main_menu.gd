@@ -1,6 +1,6 @@
 extends Control
 
-const SCENE_JUEGO := "res://scenes/nivel1.tscn"
+const SCENE_JUEGO := "res://scenes/comic_intro.tscn"   # intro en viñetas; al terminar carga nivel1
 const SCENE_CONTROLES := "res://scenes/controls.tscn"
 
 var _indice := 0
@@ -19,7 +19,12 @@ func _ready() -> void:
 		botones[i].pressed.connect(_on_boton_pressed.bind(i))
 		botones[i].focus_entered.connect(_on_focus.bind(i))
 	botones[0].grab_focus.call_deferred()
+	_precargar_juego.call_deferred()
 	_animar_entrada()
+
+
+func _precargar_juego() -> void:
+	TransicionPantalla.de(get_tree()).precargar(SCENE_JUEGO)
 
 
 func _animar_entrada() -> void:
