@@ -270,6 +270,7 @@ func _init() -> void:
 		if f != 2:   # el Oso no cabe en ese tramo llano de 300 px (tablas al oeste, pendiente al este): se transforma antes
 			await _poner(12100, _fl(12100, "Z5"), f)
 			var l3: bool = await _caminar_hasta(1, 12750.0)
+			await _frames(30)
 			_check(l3 and _player.is_on_floor(), "rampa de la orilla (pend. 0.3): el %s la sube caminando (x=%.0f)" % [nombres[f], _player.global_position.x])
 		await _poner(3300, _fl(3300, "Z5"), f)
 		var l4: bool = await _caminar_hasta(-1, 1900.0)
@@ -311,35 +312,17 @@ func _init() -> void:
 	await _frames(260)
 	_check(_player.is_on_floor() and _player.global_position.y > 3500.0, "caída del descenso: cae segura hasta el lago (y=%.0f)" % _player.global_position.y)
 
-	# --- Chimenea: torre de repisas con el Humano ---
-	await _poner(1400, 3888, 0)
-	var torre: Array = _d["torre"]
-	var cur := -1
-	var ok_torre := true
-	for i in torre.size():
-		var dest: Dictionary = torre[i]
-		var centro := (float(dest["x0"]) + float(dest["x1"])) * 0.5
-		var dir := 1 if centro > _player.global_position.x else -1
-		var borde: float
-		if cur < 0:
-			borde = float(dest["x1"]) + 90.0 if dir < 0 else float(dest["x0"]) - 90.0
-		else:
-			borde = float(torre[cur]["x1"]) if dir > 0 else float(torre[cur]["x0"])
-		var arranque := -1e9
-		if cur >= 0:
-			arranque = (float(torre[cur]["x1"]) - 105.0) if dir < 0 else (float(torre[cur]["x0"]) + 105.0)
-		await _correr_y_saltar(dir, borde, 22, 95.0, arranque, 60.0)
-		var py: float = dest["y"]
-		var sobre := _player.is_on_floor() and absf(_player.global_position.y - (py + _off)) < 16.0
-		if not sobre:
-			ok_torre = false
-			print("  [AVISO] chimenea: no llegó a la repisa ", i, " (x=%.0f y=%.0f, esperado y=%.0f)" % [_player.global_position.x, _player.global_position.y, py + _off])
-			break
-		cur = i
-	_check(ok_torre, "chimenea: el Humano sube las %d repisas en zigzag" % torre.size())
-	if ok_torre:
-		await _correr_y_saltar(1, float(torre[torre.size() - 1]["x1"]), 24)
-		_check(_player.global_position.x > 1500.0 and _player.is_on_floor() and _player.global_position.y < 3000.0, "chimenea: la última repisa lleva al corazón (x=%.0f y=%.0f)" % [_player.global_position.x, _player.global_position.y])
+	# --- Chimenea: dos vides con una repisa intermedia (Humano; las otras formas se transforman antes) ---
+	await _poner(1000, 3888, 0)
+	await _trepar_y_salir(1, 3360.0, 30)
+	_check(_player.is_on_floor() and absf(_player.global_position.y - (3360.0 + _off)) < 16.0 and _player.global_position.x > 1100.0, "chimenea: la primera vid lleva a la repisa intermedia (x=%.0f y=%.0f)" % [_player.global_position.x, _player.global_position.y])
+	await _poner(1400, 3360, 0)
+	await _trepar_y_salir(1, 2840.0, 40)
+	_check(_player.is_on_floor() and _player.global_position.x > 1520.0 and absf(_player.global_position.y - (2840.0 + _off)) < 16.0, "chimenea: la segunda vid sale al corazón (x=%.0f y=%.0f)" % [_player.global_position.x, _player.global_position.y])
+	for f in [1, 2, 3]:
+		await _poner(700, 3888, 0)
+		await _poner(700, 3888, f)   # en el piso de la chimenea cualquier forma puede transformarse y destransformarse
+	await _poner(700, 3888, 0)
 
 	# --- Vid de la repisa del cuenco (opcional, con premio) ---
 	await _poner(7200, _fl(7200, "Z2"), 0)
