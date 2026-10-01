@@ -1,0 +1,96 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/capa_cueva.gd" id="1_capa"]
+
+[node name="FondoCuevaProfunda" type="ParallaxBackground"]
+layer = -10
+
+[node name="Sombra" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.08, 1)
+script = ExtResource("1_capa")
+tipo = "sombra"
+color_a = Color(0.02, 0.05, 0.08, 1)
+color_b = Color(0.01, 0.02, 0.04, 1)
+semilla = 31
+ancho_total = 19000.0
+centro_x = 7400.0
+y_techo = -1000.0
+y_fondo = 5400.0
+color_niebla = Color(0.1, 0.4, 0.46, 1)
+niebla = 1.0
+
+[node name="Pared" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.22, 1)
+script = ExtResource("1_capa")
+tipo = "pared"
+color_a = Color(0.03, 0.08, 0.11, 1)
+color_b = Color(0.1, 0.26, 0.3, 1)
+semilla = 37
+ancho_total = 19000.0
+centro_x = 7400.0
+y_techo = -1000.0
+y_fondo = 5400.0
+color_niebla = Color(0.12, 0.42, 0.48, 1)
+niebla = 0.7
+
+[node name="Estalactitas" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.38, 1)
+script = ExtResource("1_capa")
+tipo = "estalactitas"
+color_a = Color(0.03, 0.07, 0.1, 1)
+color_b = Color(0.02, 0.05, 0.08, 1)
+densidad = 1.4
+semilla = 41
+ancho_total = 19000.0
+centro_x = 7400.0
+y_techo = -1000.0
+y_fondo = 5400.0
+color_niebla = Color(0.1, 0.4, 0.46, 1)
+niebla = 0.15
+
+[node name="Pilares" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.6, 1)
+script = ExtResource("1_capa")
+tipo = "pilares"
+color_a = Color(0.02, 0.06, 0.09, 1)
+color_b = Color(0.03, 0.08, 0.11, 1)
+y_base = 5100.0
+densidad = 0.9
+semilla = 43
+ancho_total = 19000.0
+centro_x = 7400.0
+y_techo = -1000.0
+y_fondo = 5400.0
+color_acento = Color(0.2, 0.9, 0.8, 1)
+color_niebla = Color(0.1, 0.38, 0.44, 1)
+niebla = 0.3
+
+[node name="Estalagmitas" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.8, 1)
+script = ExtResource("1_capa")
+tipo = "estalagmitas"
+color_a = Color(0.015, 0.04, 0.065, 1)
+color_b = Color(0.02, 0.05, 0.075, 1)
+y_base = 5200.0
+semilla = 47
+ancho_total = 19000.0
+centro_x = 7400.0
+y_techo = -1000.0
+y_fondo = 5400.0
+color_niebla = Color(0.1, 0.36, 0.42, 1)
+niebla = 0.15
+
+[node name="Agua" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(1, 1)
+script = ExtResource("1_capa")
+tipo = "agua"
+color_a = Color(0.02, 0.06, 0.1, 1)
+color_b = Color(0.12, 0.5, 0.52, 1)
+y_base = 4900.0
+semilla = 53
+ancho_total = 19000.0
+centro_x = 7400.0
+y_techo = -1000.0
+y_fondo = 5400.0
+color_niebla = Color(0.1, 0.4, 0.46, 1)
+niebla = 0.0

@@ -93,7 +93,7 @@ func registrar_golpe(dano: int) -> void:
 		return
 	golpes += 1
 	_sonar(sonido_golpe)
-	Burst.emitir(self, global_position + Vector2(0, -tam.y * 0.5), color_piedra, 6 + golpes * 3, 0.8)
+	Burst.emitir(self, _punto_impacto(jugador), color_piedra, 6 + golpes * 3, 0.8)
 	queue_redraw()
 	if golpes >= golpes_para_romper:
 		abrir()
@@ -109,7 +109,10 @@ func abrir() -> void:
 	collision_layer = 0
 	roto.emit()
 	_sonar(sonido_romper)
-	Burst.emitir(self, global_position + Vector2(0, -tam.y * 0.5), color_piedra, 26, 1.4)
+	# Muros altos: la piedra estalla a lo largo de toda la pared (no solo en el centro).
+	var tramos := clampi(int(tam.y / 220.0), 1, 5)
+	for i in tramos:
+		Burst.emitir(self, global_position + Vector2(0, -tam.y * (float(i) + 0.5) / float(tramos)), color_piedra, 20, 1.4)
 	var cam := get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("shake"):
 		cam.shake(shake_romper * (1.6 if derrumbe else 1.0), 0.25 if derrumbe else 0.15)
@@ -130,6 +133,14 @@ func abrir() -> void:
 	_tw.tween_property(self, "scale", Vector2(1.08, 0.2), 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	_tw.tween_property(self, "modulate:a", 0.0, 0.22)
 	_tw.chain().tween_callback(queue_free)
+
+
+## Dónde saltan las esquirlas al golpear: a la altura del jugador (el golpe real), dentro del muro.
+func _punto_impacto(jugador: Node) -> Vector2:
+	var y := -tam.y * 0.5
+	if jugador is Node2D:
+		y = clampf((jugador as Node2D).global_position.y - global_position.y, -tam.y + 40.0, -40.0)
+	return global_position + Vector2(0, y)
 
 
 func _sacudir(fuerza: float) -> void:

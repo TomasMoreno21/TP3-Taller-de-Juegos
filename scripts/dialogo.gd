@@ -12,8 +12,13 @@ extends CanvasLayer
 ## `marcado` (escenas importantes): globo más grande y un instante de cámara lenta.
 
 signal dialogo_terminado
+## El jugador hizo por primera vez una acción (mover, saltar, golpe_ligero, golpe_fuerte, bloquear, parry, transformar).
+signal accion_hecha(clave: String)
 
 enum Fase { LIBRE, ESCRIBIENDO, LEYENDO, SALIENDO }
+
+const AJUSTES := "user://ajustes.cfg"
+const NOMBRES_AYUDA := ["Ninguna", "Ligera", "Completa"]
 
 const SEG_POR_CARACTER := 0.016
 const LIMITE_TROZO := 44   ## un texto más largo se parte en globos cortos
@@ -22,8 +27,12 @@ const LIMITE_TROZO := 44   ## un texto más largo se parte en globos cortos
 @export var letras_por_sonido := 2       ## cada cuántas letras suena (espacios y signos no cuentan)
 @export var radio_peligro := 480.0       ## enemigos más cerca que esto → el globo se hace chico y translúcido
 @export var seg_tras_dano := 1.5         ## tras recibir daño el globo sigue chico este tiempo
+@export var seg_calma_tras_dano := 2.0   ## el Amuleto espera este tiempo sin daño para hablar
+@export var seg_tip_vence := 25.0        ## un consejo que esperó la calma más que esto ya no tiene sentido y se descarta
 
 var _cola: Array[Dictionary] = []
+var _en_espera: Array[Dictionary] = []   # charlas y consejos que esperan un lugar sin acción
+var _t_calma := 0.0
 var _fase := Fase.LIBRE
 var _item: Dictionary = {}
 var _espera := 0.0
@@ -45,6 +54,11 @@ var _tw_gema: Tween
 ## true si lo último que tocó el jugador fue un joystick: los tokens {accion} del
 ## texto se muestran como botones del mando; si no, como teclas.
 var _usa_joypad := false
+## Cuánta ayuda quiere el jugador: 0 = Ninguna, 1 = Ligera (lista sin pistas ni comentarios), 2 = Completa.
+var nivel_ayuda := 2
+var t_ultimo_globo := -99.0   ## reloj interno del último globo (lo usan las reacciones para no hablar de más)
+var _t_ultima_accion := 0.0
+var _pulso_gema := 0.0
 var _re_token := RegEx.create_from_string("\\{(\\w+)\\}")
 var _re_tag := RegEx.create_from_string("^\\[(\\w+)\\]\\s*")
 var _re_frase := RegEx.create_from_string("(?<=[.!?…])\\s+")
@@ -85,6 +99,7 @@ func _ready() -> void:
 	globo.visible = false
 	gema.modulate.a = 0.0
 	gema.visible = false
+	_cargar_ajustes()
 
 
 ## El diálogo ya no bloquea el control del jugador (se sigue jugando mientras habla).
@@ -100,6 +115,9 @@ func hay_narrativa() -> bool:
 	for it in _cola:
 		if not bool(it.get("tip", false)):
 			return true
+	for w in _en_espera:
+		if bool(w["narr"]):
+			return true
 	return false
 
 
@@ -108,6 +126,9 @@ func texto_actual() -> String:
 
 
 func mostrar(lineas: Array, hablante: String = "Amuleto", marcado: bool = false) -> void:
+	if not marcado and not _es_calma():
+		_en_espera.append({"narr": true, "lineas": lineas, "hablante": hablante, "t": _t})
+		return
 	_quitar_tips()
 	for l in lineas:
 		for it in _armar(String(l), hablante, false, marcado):
@@ -119,9 +140,18 @@ func mostrar(lineas: Array, hablante: String = "Amuleto", marcado: bool = false)
 
 
 ## Consejo corto, sin bloquear: globo chico. Se ignora si hay narrativa en curso.
-func mostrar_tip(lineas: Array, hablante: String = "Amuleto") -> void:
-	if hay_narrativa():
+func mostrar_tip(lineas: Array, hablante: String = "Amuleto", guardar_en_ayuda: bool = true) -> void:
+	if hay_narrativa() or nivel_ayuda == 0:
 		return
+	if not _es_calma():
+		for w in _en_espera:
+			if not bool(w["narr"]) and w["lineas"] == lineas:
+				return
+		_en_espera.append({"narr": false, "lineas": lineas, "hablante": hablante, "guardar": guardar_en_ayuda, "t": _t})
+		return
+	if guardar_en_ayuda:
+		for l in lineas:
+			_registrar_ayuda(String(l))
 	for l in lineas:
 		for it in _armar(String(l), hablante, true, false):
 			_cola.append(it)
@@ -176,6 +206,7 @@ func _siguiente() -> void:
 			dialogo_terminado.emit()
 		return
 	_item = _cola.pop_front()
+	t_ultimo_globo = _t
 	var marcado: bool = bool(_item.get("marcado", false))
 	var tip: bool = bool(_item.get("tip", false))
 	_texto_actual = _tokens(String(_item["texto"]))
@@ -252,6 +283,9 @@ func _ocultar_gema_luego() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
+	_rastrear_acciones()
+	_revisar_espera(delta)
+	_pulso_gema = maxf(_pulso_gema - delta * 2.0, 0.0)
 	if _fase == Fase.LIBRE and not gema.visible:
 		return
 	_actualizar_peligro(delta)
@@ -297,8 +331,8 @@ func _colocar() -> void:
 	var mirando := 1.0
 	if not is_instance_valid(_jugador):
 		_jugador = get_tree().get_first_node_in_group("player") as Node2D
-		if _jugador != null and _jugador.has_signal("dano_recibido") and not _jugador.dano_recibido.is_connected(_on_dano):
-			_jugador.dano_recibido.connect(_on_dano)
+		if _jugador != null:
+			_conectar_jugador(_jugador)
 	if is_instance_valid(_jugador):
 		centro = get_viewport().get_canvas_transform() * _jugador.global_position
 		var f: Variant = _jugador.get("facing")
@@ -310,6 +344,8 @@ func _colocar() -> void:
 	_gema_pos.x = clampf(_gema_pos.x, 60.0, vp.x - 60.0)
 	_gema_pos.y = clampf(_gema_pos.y, 90.0, vp.y - 60.0)
 	gema.position = _gema_pos - gema.size * 0.5
+	gema.pivot_offset = gema.size * 0.5
+	gema.scale = Vector2.ONE * (1.0 + 0.35 * sin(_pulso_gema * PI))
 	if not globo.visible:
 		return
 	var esc := lerpf(1.0, 0.78, _chico)
@@ -323,6 +359,39 @@ func _colocar() -> void:
 	if _tw_globo == null or not _tw_globo.is_running():
 		globo.scale = Vector2.ONE * esc
 	globo.cola_a = (_gema_pos + Vector2(0, -34.0)) - globo.position
+
+
+## Lugar sin acción: ningún enemigo cerca y sin daño reciente. El Amuleto habla (casi siempre) solo ahí,
+## para que el jugador pueda leerlo sin que le moleste una pelea.
+func _es_calma() -> bool:
+	if not is_instance_valid(_jugador):
+		_jugador = get_tree().get_first_node_in_group("player") as Node2D
+	if not is_instance_valid(_jugador):
+		return true
+	if _t - _ultimo_dano < seg_calma_tras_dano:
+		return false
+	for e in get_tree().get_nodes_in_group("enemy"):
+		if e is Node2D and is_instance_valid(e) and (e as Node2D).global_position.distance_to(_jugador.global_position) < radio_peligro:
+			return false
+	return true
+
+
+func _revisar_espera(delta: float) -> void:
+	if _en_espera.is_empty():
+		return
+	_t_calma -= delta
+	if _t_calma > 0.0:
+		return
+	_t_calma = 0.3
+	if not _es_calma():
+		return
+	var pendientes := _en_espera
+	_en_espera = []
+	for w in pendientes:
+		if bool(w["narr"]):
+			mostrar(w["lineas"], w["hablante"])
+		elif _t - float(w["t"]) < seg_tip_vence:
+			mostrar_tip(w["lineas"], w["hablante"], bool(w["guardar"]))
 
 
 func _on_dano(_cant: int) -> void:
@@ -349,6 +418,7 @@ func _actualizar_peligro(delta: float) -> void:
 func lista_agregar(id: String, texto: String, total: int = 1) -> void:
 	if lista != null:
 		lista.agregar(id, _tokens(texto), total)
+		_registrar_ayuda(texto)
 
 
 func lista_marcar_actual(id: String) -> void:
@@ -368,6 +438,91 @@ func lista_completar(id: String) -> void:
 
 func lista_existe(id: String) -> bool:
 	return lista != null and lista.existe(id)
+
+
+func lista_pista(id: String) -> void:
+	if lista != null:
+		lista.pista(id)
+
+
+# --------------------------------------------------------------- acciones del jugador y ayuda
+
+func _conectar_jugador(j: Node) -> void:
+	if j.has_signal("dano_recibido") and not j.dano_recibido.is_connected(_on_dano):
+		j.dano_recibido.connect(_on_dano)
+		j.attack_performed.connect(_on_ataque)
+		j.parry_exitoso.connect(func() -> void: hecho("parry"))
+		j.form_changed.connect(func(_n: String) -> void: hecho("transformar"))
+
+
+func _on_ataque(tipo: String, _paso: Variant) -> void:
+	_t_ultima_accion = _t
+	if tipo == "light":
+		hecho("golpe_ligero")
+	elif tipo == "heavy":
+		hecho("golpe_fuerte")
+
+
+func _rastrear_acciones() -> void:
+	if get_tree().paused:
+		return
+	if absf(Input.get_axis("move_left", "move_right")) > 0.3:
+		_t_ultima_accion = _t
+		hecho("mover")
+	if Input.is_action_just_pressed("jump"):
+		_t_ultima_accion = _t
+		hecho("saltar")
+	if Input.is_action_pressed("block"):
+		_t_ultima_accion = _t
+		hecho("bloquear")
+
+
+func hecho(clave: String) -> void:
+	var prog := get_node_or_null("/root/Progresion")
+	if prog == null or prog.acciones_hechas.has(clave):
+		return
+	prog.acciones_hechas[clave] = true
+	accion_hecha.emit(clave)
+
+
+func ya_hizo(clave: String) -> bool:
+	var prog := get_node_or_null("/root/Progresion")
+	return prog != null and prog.acciones_hechas.has(clave)
+
+
+## Segundos desde que el jugador hizo algo (moverse, saltar, atacar, bloquear).
+func segundos_inactivo() -> float:
+	return _t - _t_ultima_accion
+
+
+## La gema da un pulso breve (reconocimiento de un logro), aunque no esté hablando.
+func celebrar() -> void:
+	_pulso_gema = 1.0
+	_mostrar_gema()
+	_ocultar_gema_luego()
+
+
+func _registrar_ayuda(texto: String) -> void:
+	var prog := get_node_or_null("/root/Progresion")
+	if prog == null:
+		return
+	var t := _tokens(texto)
+	if not prog.ayuda_vista.has(t):
+		prog.ayuda_vista.append(t)
+
+
+func set_nivel_ayuda(n: int) -> void:
+	nivel_ayuda = clampi(n, 0, 2)
+	var cf := ConfigFile.new()
+	cf.load(AJUSTES)
+	cf.set_value("ayuda", "nivel", nivel_ayuda)
+	cf.save(AJUSTES)
+
+
+func _cargar_ajustes() -> void:
+	var cf := ConfigFile.new()
+	if cf.load(AJUSTES) == OK:
+		nivel_ayuda = clampi(int(cf.get_value("ayuda", "nivel", 2)), 0, 2)
 
 
 # --------------------------------------------------------------- entrada y tokens

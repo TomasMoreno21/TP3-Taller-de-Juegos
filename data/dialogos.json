@@ -203,6 +203,7 @@
 		"lineas": [
 			"[alerta]Ahí está: el ARZOBISPO.",
 			"Oso rompe su guardia, Lobo esquiva.",
+			"Murciélago te da altura. ¡Usalos!",
 			"[grito]¡No aflojes!"
 		],
 		"marcado": true
@@ -213,9 +214,9 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Esta cantera era un santuario del Oso.",
-			"Tu hijo pasó por aquí: hay marcas frescas.",
-			"Pronto el Oso despertará en ti."
+			"Esto es más hondo que la guarida.",
+			"Estas cuevas son antiguas... y raras.",
+			"Hay marcas frescas: tu hijo pasó."
 		]
 	},
 	"n3_oso": {
@@ -235,8 +236,8 @@
 		"una_vez": true,
 		"lineas": [
 			"[alerta]Hay un espíritu encadenado...",
-			"Rompé su control con golpes fuertes.",
-			"Libéralo: es una víctima más."
+			"Vencé a sus guardias.",
+			"Luego aplastá la losa con el Oso."
 		]
 	},
 	"n3_final": {
@@ -245,9 +246,9 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"El sello se rompió. La cantera respira.",
-			"La fuerza del Oso ahora es tuya.",
-			"Sigamos: el rastro baja al abismo."
+			"El sello cayó. El corazón late.",
+			"Más allá espera el Arzobispo.",
+			"[alerta]Usá todo lo que aprendiste."
 		]
 	},
 	"n4_intro": {
@@ -312,30 +313,144 @@
 		"hablante": "Amuleto",
 		"lineas": [
 			"Movete con {mover}"
-		]
+		],
+		"pista": "Avanzá, Humano: {mover}."
 	},
 	"tut_saltar": {
 		"hablante": "Amuleto",
 		"lineas": [
 			"Saltá con {jump}"
-		]
+		],
+		"pista": "Más impulso, Humano: {jump}.",
+		"cierre": "Bien. Así se mueve un guardián."
 	},
 	"tut_ligero": {
 		"hablante": "Amuleto",
 		"lineas": [
 			"Golpe rápido: {attack}"
-		]
+		],
+		"pista": "Golpeá con decisión: {attack}."
 	},
 	"tut_fuerte": {
 		"hablante": "Amuleto",
 		"lineas": [
 			"Golpe fuerte: {heavy}"
-		]
+		],
+		"pista": "El golpe pesado rompe guardias: {heavy}."
 	},
 	"tut_bloqueo": {
 		"hablante": "Amuleto",
 		"lineas": [
 			"Bloqueá con {block}"
+		],
+		"pista": "Cubrite cuando te ataquen: {block}.",
+		"cierre": "Bien. Así lucha un guardián."
+	},
+	"n3_muro": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": [
+			"[susurro]Esa piedra no cede... aún."
+		]
+	},
+	"n3_descenso": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": [
+			"Esta caída es larga, pero segura."
+		]
+	},
+	"n3_pozo": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": [
+			"Murciélago: mantené salto para planear."
+		]
+	},
+	"n3_lago": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": [
+			"El Oso pesa: las tablas no lo aguantan."
+		]
+	},
+	"n3_ascenso": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": [
+			"Subí por las repisas, de a una."
+		]
+	},
+	"n3_foso": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": [
+			"Foso ancho: el Lobo salta más lejos."
+		]
+	},
+	"reaccion_puas": {
+		"hablante": "Amuleto",
+		"lineas": [
+			"Cuidado con las púas.",
+			"Las púas no perdonan, Humano."
+		]
+	},
+	"reaccion_racha": {
+		"hablante": "Amuleto",
+		"lineas": [
+			"Bien peleado.",
+			"Así pelea un guardián."
+		]
+	},
+	"reaccion_quieto": {
+		"hablante": "Amuleto",
+		"lineas": [
+			"No te detengas. Tu hijo nos espera.",
+			"El tiempo apremia, Humano."
+		]
+	},
+	"reaccion_muertes": {
+		"hablante": "Amuleto",
+		"lineas": [
+			"Quizás otra forma te sirva.",
+			"Respirá. Probemos de nuevo."
+		]
+	},
+	"n3_salto": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": [
+			"Corré y mantené salto para cruzar."
+		]
+	},
+	"n3_cuenco": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": [
+			"Hay repisas arriba: atajo con premio."
 		]
 	}
 }

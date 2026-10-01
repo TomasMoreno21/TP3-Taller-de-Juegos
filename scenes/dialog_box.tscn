@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/dialogo.gd" id="1_dialogo"]
 [ext_resource type="Script" path="res://scripts/amuleto_retrato.gd" id="2_retrato"]
 [ext_resource type="Script" path="res://scripts/globo_dialogo.gd" id="3_globo"]
 [ext_resource type="Script" path="res://scripts/lista_tareas.gd" id="4_lista"]
+[ext_resource type="Script" path="res://scripts/amuleto_reacciones.gd" id="5_reac"]
 
 [node name="Dialogo" type="CanvasLayer"]
 script = ExtResource("1_dialogo")
@@ -42,3 +43,6 @@ layout_mode = 3
 anchors_preset = 0
 mouse_filter = 2
 script = ExtResource("3_globo")
+
+[node name="Reacciones" type="Node" parent="."]
+script = ExtResource("5_reac")

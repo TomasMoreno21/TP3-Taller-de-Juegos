@@ -39,7 +39,7 @@ func _init() -> void:
 	mult_recuperacion = 1.8
 	recovery_early_fraccion = 0.4
 	melee_sticky = 0.0
-	step_up_max = 0.0
+	step_up_max = 16.0   # sube escalones chicos (rampas suaves) pero no obstáculos
 	combos = [
 		{"nombre": "Ala Cortante", "secuencia": ["light", "heavy"], "dano": 32, "knockback": 240.0, "tamano": Vector2(192, 102), "rango": 114.0},
 	]

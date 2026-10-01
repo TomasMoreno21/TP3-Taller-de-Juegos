@@ -12,6 +12,12 @@ var combos_desbloqueados: Dictionary = {}
 var barreras_abiertas: Dictionary = {}
 ## Dialogos ya mostrados (persisten entre muertes; se limpian al resetear partida).
 var dialogos_vistos: Dictionary = {}
+## Acciones que el jugador ya hizo en esta partida (mover, saltar, golpe_ligero...): el tutorial no se las pide de nuevo.
+var acciones_hechas: Dictionary = {}
+## Consejos y controles que el Amuleto ya mostró (se releen en Ayuda del Amuleto).
+var ayuda_vista: Array = []
+## Veces que el jugador cayó en esta partida (el Amuleto reacciona si se repite).
+var muertes := 0
 ## Plataformas fragiles ya rotas (por escena/posicion; persisten entre muertes y reinicios de nivel).
 var plataformas_rotas: Dictionary = {}
 ## Si no está vacía, las formas se desbloquean SOLO por esta lista (ignora el nivel).
@@ -55,6 +61,9 @@ func reset() -> void:
 	combos_desbloqueados = {}
 	barreras_abiertas = {}
 	dialogos_vistos = {}
+	acciones_hechas = {}
+	ayuda_vista = []
+	muertes = 0
 	plataformas_rotas = {}
 	formas_forzadas = []
 	_extra_formas = {}

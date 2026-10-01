@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" uid="uid://65wfbu1kb774" path="res://scenes/noche.tscn" id="1_noche"]
+
+[node name="NocheProfunda" instance=ExtResource("1_noche")]
+color_noche = Color(0.5, 0.68, 0.8, 1)
+color_fondo = Color(0.7, 0.88, 0.95, 1)
+color_vacio = Color(0.02, 0.04, 0.07, 1)
+
+[node name="Oscuridad" parent="." index="0"]
+color = Color(0.5, 0.68, 0.8, 1)
+
+[node name="LuciernagasAmbiente" parent="." index="1"]
+cantidad = 24
+con_luz = 2
+color = Color(0.25, 0.9, 0.85, 1)
+color_nucleo = Color(0.75, 1, 0.95, 1)
+tamano_halo = 0.2
+velocidad = Vector2(8, 22)
+giro = 0.9
+
+[node name="HojasAmbiente" parent="." index="2"]
+amount = 10

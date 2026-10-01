@@ -40,6 +40,11 @@ func _ready() -> void:
 	collision_mask = 4
 	monitoring = true
 	add_to_group("losa_peso")
+	# Diferido: si el Player está más abajo en el árbol, todavía no entró al grupo en este _ready.
+	_conectar_jugador.call_deferred()
+
+
+func _conectar_jugador() -> void:
 	_jugador = get_tree().get_first_node_in_group("player")
 	if _jugador != null:
 		_jugador.aterrizaje_fuerte.connect(_al_aterrizar)

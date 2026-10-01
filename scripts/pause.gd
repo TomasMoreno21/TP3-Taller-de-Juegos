@@ -2,6 +2,7 @@ extends CanvasLayer
 
 const SCENE_CONTROLES := "res://scenes/controls.tscn"
 const SCENE_MENU := "res://scenes/main_menu.tscn"
+const SCENE_AYUDA := "res://scripts/ayuda_panel.gd"   # panel armado por código
 
 @export var duracion_fundido := 0.14   ## s del fundido al abrir/cerrar la pausa
 var _tween_fundido: Tween
@@ -12,6 +13,7 @@ var _controls: CanvasLayer
 @onready var botones: Array[Button] = [
 	$Panel/Margin/VBox/Reanudar,
 	$Panel/Margin/VBox/Controles,
+	$Panel/Margin/VBox/Ayuda,
 	$Panel/Margin/VBox/Menu,
 	$Panel/Margin/VBox/VolverMenu,
 	$Panel/Margin/VBox/Salir,
@@ -158,10 +160,12 @@ func _on_boton_pressed(i: int) -> void:
 		1:
 			_abrir_controles()
 		2:
-			_reiniciar_nivel()
+			_abrir_ayuda()
 		3:
-			_volver_menu()
+			_reiniciar_nivel()
 		4:
+			_volver_menu()
+		5:
 			get_tree().quit()
 
 
@@ -171,6 +175,12 @@ func _reiniciar_nivel() -> void:
 
 func _abrir_controles() -> void:
 	var c: CanvasLayer = (load(SCENE_CONTROLES) as PackedScene).instantiate()
+	_controls = c
+	add_child(c)
+
+
+func _abrir_ayuda() -> void:
+	var c: CanvasLayer = (load(SCENE_AYUDA) as GDScript).new()
 	_controls = c
 	add_child(c)
 

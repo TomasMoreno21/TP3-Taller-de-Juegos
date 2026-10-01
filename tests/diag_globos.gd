@@ -59,14 +59,33 @@ func _init() -> void:
 	dlg.lista_agregar("b", "Segunda tarea", 2)
 	await process_frame
 	_check(dlg.lista.visible and dlg.lista.hay_items(), "la lista aparece con tareas")
+	_check(dlg.lista._idx_mostrado() == 0, "la lista muestra una sola tarea: la primera")
 	dlg.lista_marcar_actual("a")
 	dlg.lista_completar("a")
 	_check(dlg.lista._items[0]["estado"] == 2, "completar tacha la tarea")
+	_check(dlg.lista._idx_mostrado() == 0, "la tarea hecha se ve un instante")
+	await create_timer(1.5).timeout
+	_check(dlg.lista._idx_mostrado() == 1, "después pasa a la tarea siguiente")
 	dlg.lista_progreso("b", 1)
 	_check(dlg.lista._items[1]["cuenta"] == 1, "el contador avanza")
 	dlg.lista_completar("b")
 	await create_timer(2.4).timeout
 	_check(not dlg.lista.visible, "la lista se guarda al completar todo")
+
+	# --- lugares sin acción: con un enemigo cerca el Amuleto espera
+	await create_timer(1.0).timeout
+	var enemigo := Node2D.new()
+	enemigo.add_to_group("enemy")
+	enemigo.position = player.position + Vector2(100, 0)
+	root.add_child(enemigo)
+	dlg.mostrar(["Charla con pelea cerca."])
+	await create_timer(0.6).timeout
+	_check(dlg.texto_actual() != "Charla con pelea cerca." and dlg.hay_narrativa(), "con un enemigo cerca la charla espera")
+	enemigo.remove_from_group("enemy")
+	enemigo.queue_free()
+	await create_timer(1.0).timeout
+	_check(dlg.texto_actual() == "Charla con pelea cerca.", "al calmarse, el Amuleto habla")
+	await create_timer(4.0).timeout
 
 	print("DIAG_GLOBOS: FALLOS = ", fallos)
 	quit(fallos)

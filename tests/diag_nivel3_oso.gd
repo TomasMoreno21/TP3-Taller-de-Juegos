@@ -1,5 +1,5 @@
 extends SceneTree
-## Nivel 3 (cantera): el muro solo cae con el Oso, la losa abre la compuerta solo con Oso,
+## Nivel 3 (cueva profunda): el muro solo cae con el Oso, la losa abre la compuerta solo con Oso,
 ## el suelo quebradizo pesado solo cede al Oso y el nivel carga con su fondo.
 
 var fallos := 0
@@ -19,8 +19,8 @@ func _initialize() -> void:
 			n.queue_free()
 	await physics_frame
 	await physics_frame
-	_chk(nivel.get_node_or_null("FondoCantera") != null, "nivel3 tiene FondoCantera")
-	_chk(nivel.get_node_or_null("NocheCantera") != null, "nivel3 tiene NocheCantera")
+	_chk(nivel.get_node_or_null("FondoProfundo") != null, "nivel3 tiene FondoProfundo")
+	_chk(nivel.get_node_or_null("NocheProfunda") != null, "nivel3 tiene NocheProfunda")
 	var player: CharacterBody2D = nivel.get_node("Player")
 	player.set("god_mode", true)
 

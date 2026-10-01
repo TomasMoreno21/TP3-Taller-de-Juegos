@@ -9,6 +9,7 @@ extends Node
 @export var senal: StringName = &""
 @export var veces := 1
 @export var retraso := 1.5   ## s tras empezar el nivel para que aparezca en la lista
+@export var activador: NodePath   ## Area2D opcional: si se asigna, el objetivo aparece al entrar el jugador ahí (en vez de por tiempo)
 
 var _id := ""
 var _cuenta := 0
@@ -25,9 +26,22 @@ func _ready() -> void:
 			args = (s["args"] as Array).size()
 	var cb := _on_senal if args == 0 else _on_senal.unbind(args)
 	fuente.connect(senal, cb)
+	var zona := get_node_or_null(activador) as Area2D
+	if zona != null:
+		zona.body_entered.connect(_on_activador, CONNECT_ONE_SHOT)
+		return
 	if retraso > 0.0 and DisplayServer.get_name() != "headless":
 		await get_tree().create_timer(retraso, false).timeout
 	_agregar()
+
+
+func _on_activador(body: Node) -> void:
+	if body.is_in_group("player"):
+		_agregar()
+	else:
+		var zona := get_node_or_null(activador) as Area2D
+		if zona != null and not zona.body_entered.is_connected(_on_activador):
+			zona.body_entered.connect(_on_activador, CONNECT_ONE_SHOT)
 
 
 func _agregar() -> void:
