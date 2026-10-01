@@ -39,11 +39,13 @@
 [ext_resource type="Script" uid="uid://2evt507mwee1" path="res://scripts/borde_musgo.gd" id="44_musgo"]
 [ext_resource type="Texture2D" uid="uid://bb22ddnrthtx3" path="res://Sprites/Elementos/cosito_frente2.png" id="45_cosito"]
 [ext_resource type="Shader" uid="uid://2gmi16mug215" path="res://resources/tinte_terreno.gdshader" id="45_tinte"]
-[ext_resource type="Texture2D" uid="uid://bdtkdmtt13ejp" path="res://Sprites/Elementos/arbusto_a.png" id="60_arb_a"]
-[ext_resource type="Texture2D" uid="uid://24w01ki85t7j" path="res://Sprites/Elementos/arbusto_b.png" id="61_arb_b"]
-[ext_resource type="Texture2D" uid="uid://dfs1ehwixhmss" path="res://Sprites/Elementos/arbusto_c.png" id="62_arb_c"]
+[ext_resource type="Script" path="res://scripts/viento_sprite.gd" id="69_vsp"]
 [ext_resource type="PackedScene" path="res://scenes/punta_cueva.tscn" id="63_punta"]
 [ext_resource type="PackedScene" path="res://scenes/tutorial_paso.tscn" id="64_tut"]
+[ext_resource type="Texture2D" uid="uid://dnwjj2u2vlg8h" path="res://Sprites/Fondos/Bosque/piso.png" id="65_piso"]
+[ext_resource type="Texture2D" uid="uid://c3jhi7ub5h7ar" path="res://Sprites/Elementos/arbusto1.png" id="66_arb1"]
+[ext_resource type="Texture2D" uid="uid://b1s3da000qxgx" path="res://Sprites/Elementos/arbusto2.png" id="67_arb2"]
+[ext_resource type="Texture2D" uid="uid://dafwvfq26r65w" path="res://Sprites/Elementos/arbusto3.png" id="68_arb3"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte"]
 shader = ExtResource("45_tinte")
@@ -55,7 +57,7 @@ shader_parameter/mezcla = 1.0
 shader_parameter/brillo = 1.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
-size = Vector2(32620, 401)
+size = Vector2(33001, 401)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_plat"]
 size = Vector2(280, 36)
@@ -93,35 +95,20 @@ script = ExtResource("2_cam")
 [node name="ArbustosSuelo" type="Node2D" parent="." unique_id=584944973]
 z_index = -4
 
-[node name="ArbustoA1" type="Sprite2D" parent="ArbustosSuelo" unique_id=455816943]
-position = Vector2(-400, 998)
-texture = ExtResource("60_arb_a")
-centered = false
-offset = Vector2(-156, -145)
+[node name="Arbusto1" type="Sprite2D" parent="ArbustosSuelo" unique_id=1916970635]
+position = Vector2(-358, 925)
+texture = ExtResource("66_arb1")
+script = ExtResource("69_vsp")
 
-[node name="ArbustoB1" type="Sprite2D" parent="ArbustosSuelo" unique_id=292502198]
-position = Vector2(6276, 1003)
-texture = ExtResource("61_arb_b")
-centered = false
-offset = Vector2(-428, -159)
+[node name="Arbusto2" type="Sprite2D" parent="ArbustosSuelo" unique_id=1305399687]
+position = Vector2(-71, 953)
+texture = ExtResource("67_arb2")
+script = ExtResource("69_vsp")
 
-[node name="ArbustoC1" type="Sprite2D" parent="ArbustosSuelo" unique_id=50924476]
-position = Vector2(9800, 998)
-texture = ExtResource("62_arb_c")
-centered = false
-offset = Vector2(-290, -158)
-
-[node name="ArbustoA2" type="Sprite2D" parent="ArbustosSuelo" unique_id=430140386]
-position = Vector2(18300, 998)
-texture = ExtResource("60_arb_a")
-centered = false
-offset = Vector2(-156, -145)
-
-[node name="ArbustoB2" type="Sprite2D" parent="ArbustosSuelo" unique_id=872979122]
-position = Vector2(23100, 998)
-texture = ExtResource("61_arb_b")
-centered = false
-offset = Vector2(-428, -159)
+[node name="Arbusto3" type="Sprite2D" parent="ArbustosSuelo" unique_id=1452096886]
+position = Vector2(468, 937)
+texture = ExtResource("68_arb3")
+script = ExtResource("69_vsp")
 
 [node name="CositoFrente1" type="Sprite2D" parent="." unique_id=4215667]
 z_index = 2
@@ -134,24 +121,38 @@ tile_set = ExtResource("4_tileset")
 [node name="Piso" type="StaticBody2D" parent="." unique_id=64631073]
 position = Vector2(8000, 1092)
 
+[node name="PisoNuevo" type="Sprite2D" parent="Piso" unique_id=892836326]
+z_index = -2
+texture_repeat = 2
+position = Vector2(-9574, -101)
+scale = Vector2(1.0074236, 1.1586207)
+texture = ExtResource("65_piso")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 32733, 145)
+
 [node name="PisoVisual" type="Polygon2D" parent="Piso" unique_id=1712558488]
+visible = false
 position = Vector2(6983.9995, -49.499985)
 scale = Vector2(2.03925, 0.5049998)
 color = Color(0.16, 0.32, 0.18, 1)
 polygon = PackedVector2Array(-8000, -100, 8000, -100, 8000, 2.3250732, 8000, 100, -20.410156, 100, -8000, 100)
 
 [node name="PisoCollision" type="CollisionShape2D" parent="Piso" unique_id=2085221829]
-position = Vector2(7128, 115)
+position = Vector2(6931.5, 102)
 shape = SubResource("RectangleShape2D_piso")
 
 [node name="Tierra" type="Polygon2D" parent="Piso" unique_id=880000010]
+visible = false
 z_index = -1
-position = Vector2(112, -77)
+position = Vector2(42.777203, -77)
+scale = Vector2(1.0029721, 0.85294116)
 color = Color(0.17, 0.13, 0.1, 1)
-polygon = PackedVector2Array(-9346, 0, 23290, 0, 23290, 60, 23290, 170, 3350.859, 170, -9346, 170, -9346, 60)
+polygon = PackedVector2Array(-9346, 0, 23290, 0, 23290, 60, 23290, 170, 3350.859, 170, -9346, 170, -9346, 84.66295, -9346, 60)
 vertex_colors = PackedColorArray(0.17, 0.13, 0.1, 1, 0.17, 0.13, 0.1, 1, 0.1, 0.08, 0.07, 0.75, 0.05, 0.05, 0.05, 0, 0.05, 0.05, 0.05, 0, 0.1, 0.08, 0.07, 0.75)
 
 [node name="Musgo" type="Node2D" parent="Piso" unique_id=609170245]
+visible = false
 script = ExtResource("44_musgo")
 raices = false
 
@@ -280,19 +281,19 @@ ancho = 60.0
 alto = 1200.0
 
 [node name="Enredadera2" parent="." unique_id=84208820 instance=ExtResource("44_liana")]
-position = Vector2(3168, -172)
+position = Vector2(3180, -337)
 ancho = 60.0
-alto = 800.0
+alto = 1200.0
 
 [node name="Enredadera3" parent="." unique_id=1758860922 instance=ExtResource("44_liana")]
-position = Vector2(4141, -155)
+position = Vector2(4141, -393)
 ancho = 60.0
-alto = 800.0
+alto = 1200.0
 
 [node name="Enredadera5" parent="." unique_id=1428130658 instance=ExtResource("16_enredadera")]
-position = Vector2(21640, -89)
-ancho = 36.0
-alto = 1500.0
+position = Vector2(21635, -124)
+ancho = 60.0
+alto = 1200.0
 
 [node name="Enredadera16" parent="." unique_id=114899656 instance=ExtResource("16_enredadera")]
 position = Vector2(16955, 2185)
@@ -300,9 +301,9 @@ ancho = 36.0
 alto = 1200.0
 
 [node name="Enredadera4" parent="." unique_id=2089772587 instance=ExtResource("44_liana")]
-position = Vector2(4819, -142)
+position = Vector2(4824, -364)
 ancho = 60.0
-alto = 800.0
+alto = 1200.0
 
 [node name="Plataforma1" type="StaticBody2D" parent="." unique_id=800000002]
 position = Vector2(1618, 826)
@@ -511,8 +512,9 @@ color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Enredadera6" parent="." unique_id=2100000148 instance=ExtResource("16_enredadera")]
-position = Vector2(27070, 361)
-alto = 700.0
+position = Vector2(27085, -48)
+ancho = 60.0
+alto = 1200.0
 
 [node name="Plataforma15" type="StaticBody2D" parent="." unique_id=2100000149]
 position = Vector2(27646, 598)
@@ -2972,6 +2974,33 @@ position = Vector2(560, 380)
 amount = 18
 emission_rect_extents = Vector2(260, 260)
 
+[node name="TutMover" parent="." unique_id=1116250360 instance=ExtResource("64_tut")]
+position = Vector2(87, 801)
+paso_id = "tut_mover"
+paso_siguiente = NodePath("../TutSaltar")
+
+[node name="TutSaltar" parent="." unique_id=1659047055 instance=ExtResource("64_tut")]
+position = Vector2(700, 801)
+paso_id = "tut_saltar"
+accion = 1
+
+[node name="TutLigero" parent="." unique_id=1708229887 instance=ExtResource("64_tut")]
+position = Vector2(6950, 801)
+paso_id = "tut_ligero"
+accion = 2
+paso_siguiente = NodePath("../TutFuerte")
+
+[node name="TutFuerte" parent="." unique_id=1466138322 instance=ExtResource("64_tut")]
+position = Vector2(7250, 801)
+paso_id = "tut_fuerte"
+accion = 3
+paso_siguiente = NodePath("../TutBloqueo")
+
+[node name="TutBloqueo" parent="." unique_id=876738195 instance=ExtResource("64_tut")]
+position = Vector2(7550, 801)
+paso_id = "tut_bloqueo"
+accion = 4
+
 [editable path="EncounterA"]
 [editable path="EncounterB"]
 [editable path="EncounterE"]
@@ -2980,30 +3009,3 @@ emission_rect_extents = Vector2(260, 260)
 [editable path="PlataformaFragil4"]
 [editable path="PlataformaFragil4/PlataformaFragil4"]
 [editable path="PlataformaFragil2"]
-
-[node name="TutMover" parent="." instance=ExtResource("64_tut")]
-position = Vector2(87, 801)
-paso_id = "tut_mover"
-paso_siguiente = NodePath("../TutSaltar")
-
-[node name="TutSaltar" parent="." instance=ExtResource("64_tut")]
-position = Vector2(700, 801)
-paso_id = "tut_saltar"
-accion = 1
-
-[node name="TutLigero" parent="." instance=ExtResource("64_tut")]
-position = Vector2(6950, 801)
-paso_id = "tut_ligero"
-accion = 2
-paso_siguiente = NodePath("../TutFuerte")
-
-[node name="TutFuerte" parent="." instance=ExtResource("64_tut")]
-position = Vector2(7250, 801)
-paso_id = "tut_fuerte"
-accion = 3
-paso_siguiente = NodePath("../TutBloqueo")
-
-[node name="TutBloqueo" parent="." instance=ExtResource("64_tut")]
-position = Vector2(7550, 801)
-paso_id = "tut_bloqueo"
-accion = 4

@@ -58,7 +58,7 @@ var _player_cache: Node2D
 # justo para que la línea del piso quede `margen_piso` px sobre el borde inferior.
 @export var piso_visible := true
 @export var pies_offset := 142.5  # y local de los pies respecto al origen del player
-@export var margen_piso := 180.0  # px libres que se quieren ver bajo la línea del piso
+@export var margen_piso := 150.0  # px libres bajo la línea del piso; ~153 = fin de la franja de tierra (no mostrar vacío debajo)
 @export var piso_offset_max := 420.0  # tope de bajada extra de la cámara
 @export var probe_largo := 1100.0  # alcance del rayo hacia abajo
 @export var probe_adelante := 1.0  # multiplicador del lookahead para el 2º rayo

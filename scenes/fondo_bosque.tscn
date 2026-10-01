@@ -11,7 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://bqlvt6hwnlmc2" path="res://Sprites/Fondos/Bosque/Boske9.png" id="9_tex9"]
 [ext_resource type="Texture2D" uid="uid://dx1okiwvyra2y" path="res://Sprites/Fondos/Bosque/Boske10.png" id="10_tex10"]
 [ext_resource type="Texture2D" uid="uid://byhji0617vexm" path="res://Sprites/Fondos/Bosque/Boske11.png" id="11_tex11"]
-[ext_resource type="Script" path="res://scripts/viento_capa.gd" id="12_viento"]
+[ext_resource type="Script" uid="uid://cu1ydjfn4p8x1" path="res://scripts/viento_capa.gd" id="12_viento"]
 
 [node name="FondoBosque" type="ParallaxBackground" unique_id=1013814485]
 layer = -10
@@ -87,7 +87,8 @@ scale = Vector2(0.9711165, 1.358805)
 texture = ExtResource("6_tex6")
 offset = Vector2(0, -1096.56)
 script = ExtResource("12_viento")
-viento_amplitud = 0.013
+viento_amplitud = 0.018
+viento_velocidad = 0.5
 fase = 0.4
 
 [node name="Capa7" type="ParallaxLayer" parent="." unique_id=1363217738]
@@ -103,9 +104,9 @@ scale = Vector2(1.0179123, 1.3076203)
 texture = ExtResource("7_tex7")
 offset = Vector2(0, -1082.71)
 script = ExtResource("12_viento")
-viento_amplitud = 0.015
+viento_amplitud = 0.018
 viento_velocidad = 0.9
-fase = 0.8
+fase = 0.4
 
 [node name="Capa8" type="ParallaxLayer" parent="." unique_id=1846744976]
 motion_scale = Vector2(0.63, 1.212)
