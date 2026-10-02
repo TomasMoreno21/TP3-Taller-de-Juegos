@@ -25,7 +25,7 @@ func _init() -> void:
 	special_cooldown_combate = 1.0
 	color = Color(0.52, 0.4, 0.62)
 	collider_size = Vector2(135, 133)
-	flight_lift = 30.0
+	flight_lift = 52.0
 	camera_lookahead_mult = 1.0
 	lean_angulo = 3.5
 	accel = 3000.0
