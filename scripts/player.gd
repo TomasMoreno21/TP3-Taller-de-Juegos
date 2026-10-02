@@ -91,6 +91,10 @@ const HITSTOP_COMBO := 0.11
 @export var eco_alpha := 0.32               # opacidad inicial de los ecos espectrales (0 = sin ecos)
 @export var magnetismo_alcance := 340.0     # px: a qué distancia busca enemigo para el magnetismo
 @export var magnetismo_mult := 1.6         # el avance del golpe se estira hasta este múltiplo para llegar al enemigo (1 = sin)
+@export var escalon_distancia := 20.0       # px de avance con que el sprite alcanza la recta ajustada (menor = más pegado, mayor = más suave)
+@export var rampa_distancia := 80.0         # px de recorrido sobre los que se ajusta la recta (una escalera de peldaños se vuelve rampa recta)
+@export var suavizado_escalon := 6.0       # rapidez con que el sprite se asienta cuando estás quieto o en el aire (0 = sin suavizar)
+@export var suavizado_escalon_max := 24.0   # px: desniveles mayores no se suavizan (teletransportes, caídas)
 @export_group("")
 @export var hitstop_rafaga_ventana := 0.4   # segundos entre golpes para considerarlo ráfaga
 @export var racha_spark_3 := 1.35           # escala del spark al llegar a racha 3
@@ -170,6 +174,14 @@ static var _tips_vistos: Dictionary = {}
 @export_group("")
 var _was_blocking := false
 var _was_on_floor := false
+var _suave_y := 0.0   # desfase visual (px) que absorbe el brinco del cuerpo en un desnivel y decae a 0
+var _suave_x_prev := 0.0   # x del cuerpo en el frame anterior
+
+var _suave_s := 0.0        # altura suavizada del suelo (mundo)
+var _suave_hist_x: Array[float] = []   # muestras recientes (x, y) del cuerpo en el suelo para ajustar la recta
+var _suave_hist_y: Array[float] = []
+var _suave_entero := 0.0   # parte entera de _suave_y ya aplicada a visual.position.y
+var _mat_suave: ShaderMaterial   # absorbe la fracción de píxel de _suave_y
 var _fall_impact := 0.0
 var _esc_off := Vector2.ZERO      # desvío de escala del resorte (0 = forma normal)
 var _esc_vel := Vector2.ZERO
@@ -226,6 +238,7 @@ var _murci_glide_t: float = 0.0
 var _was_gliding: bool = false
 var _apex_squash_t: float = 0.0
 var _step_up_cd: float = 0.0
+var _step_up_hecho := false   # el último _try_step_up subió un escalón
 var _salto_aereo_limitado: bool = false
 @export var limite_caida := 12000.0
 @export var sonido_golpe_liviano: AudioStream
@@ -320,7 +333,12 @@ func _ready() -> void:
 	_spawn_position = global_position
 	_base_sprite_scale = Vector2(absf(visual.scale.x), visual.scale.y)
 	_visual_base_x = visual.position.x
-	floor_snap_length = 5.0
+	_suave_s = global_position.y
+	_suave_x_prev = global_position.x
+	_mat_suave = ShaderMaterial.new()
+	_mat_suave.shader = preload("res://resources/suave_vertical.gdshader")
+	visual.material = _mat_suave
+	floor_snap_length = 8.0
 	floor_stop_on_slope = false
 	floor_max_angle = deg_to_rad(45.0)
 	wall_min_slide_angle = deg_to_rad(15.0)
@@ -474,13 +492,29 @@ func _physics_process(delta: float) -> void:
 			var m := 1.35 if current_form == Form.MURCIELAGO else 1.1
 			var a := 0.9 if current_form == Form.MURCIELAGO else 0.6
 			velocity.x = move_toward(velocity.x, dir_glide * data.speed * m, data.accel * a * delta)
+	var x_ini := global_position.x
+	var vx_antes := velocity.x
 	if is_on_floor() and not _trepando and absf(velocity.x) > 2.0:
 		_try_step_up()
 	move_and_slide()
 	if _trepando:
 		pass
 	elif is_on_wall() and is_on_floor() and absf(velocity.x) > 2.0:
-		_try_step_up()
+		# Chocar con el borde anuló la velocidad: al subir el escalón se conserva el impulso y se
+		# termina el avance de este frame (rampas de peldaños muy juntos: varios escalones por frame).
+		for _i in 3:
+			_try_step_up()
+			if not _step_up_hecho:
+				break
+			if absf(vx_antes) > absf(velocity.x):
+				velocity.x = vx_antes
+			var resto := vx_antes * delta - (global_position.x - x_ini)
+			if absf(resto) < 0.5 or signf(resto) != signf(vx_antes):
+				break
+			move_and_collide(Vector2(resto, 0.0))
+	if _step_up_hecho and not _trepando and velocity.y >= 0.0:
+		apply_floor_snap()   # la holgura de la subida no se acumula: el cuerpo vuelve a apoyarse en el escalón
+	_suavizar_desnivel(delta)
 	if is_on_floor() and velocity.y > 0:
 		velocity.y = 0
 	_sprint_zoom(data)
@@ -1622,11 +1656,75 @@ func _flash_transformacion(color: Color) -> void:
 	)
 
 
+## Desniveles chicos (escalones de 1 px, rampas hechas de peldaños, pegado al piso): el cuerpo se
+## mueve a saltitos, pero el sprite sigue un terreno SUAVIZADO. `_suave_s` es la altura suave del
+## suelo; avanza con la pendiente media reciente (así una escalera de peldaños se ve como una rampa
+## recta) y se corrige hacia el cuerpo según la distancia recorrida en horizontal. El desfase
+## resultante (`_suave_y` = suave - cuerpo) es lo que se aplica al sprite.
+func _suavizar_desnivel(delta: float) -> void:
+	var x := global_position.x
+	var y := global_position.y
+	if absf(y - _suave_s) > suavizado_escalon_max * 2.0:
+		_suave_s = y   # teletransporte / caída larga: no hay nada que suavizar
+		_suave_hist_x.clear()
+		_suave_hist_y.clear()
+	if suavizado_escalon <= 0.0 or _trepando or not is_on_floor():
+		# En el aire o trepando no hay terreno que suavizar: se sincroniza rápido con el cuerpo.
+		_suave_hist_x.clear()
+		_suave_hist_y.clear()
+		_suave_s = lerpf(_suave_s, y, 1.0 - exp(-30.0 * delta)) if suavizado_escalon > 0.0 else y
+	else:
+		var u := absf(x - _suave_x_prev)
+		var n := _suave_hist_x.size()
+		if n == 0 or absf(x - _suave_hist_x[n - 1]) >= 1.5:
+			_suave_hist_x.append(x)
+			_suave_hist_y.append(y)
+		else:
+			_suave_hist_y[n - 1] = y
+		# Ventana: solo las posiciones de los últimos `rampa_distancia` px de recorrido.
+		while _suave_hist_x.size() > 1 and absf(x - _suave_hist_x[0]) > rampa_distancia:
+			_suave_hist_x.remove_at(0)
+			_suave_hist_y.remove_at(0)
+		n = _suave_hist_x.size()
+		var objetivo := y
+		if n >= 3 and absf(_suave_hist_x[n - 1] - _suave_hist_x[0]) >= 8.0:
+			# Recta de mínimos cuadrados y(x) sobre la ventana, evaluada en la x actual: sobre una
+			# escalera de peldaños de 1 px es la rampa recta que los une (sin retraso en rampas).
+			var mx := 0.0
+			var my := 0.0
+			for i in n:
+				mx += _suave_hist_x[i]
+				my += _suave_hist_y[i]
+			mx /= n
+			my /= n
+			var sxx := 0.0
+			var sxy := 0.0
+			for i in n:
+				sxx += (_suave_hist_x[i] - mx) * (_suave_hist_x[i] - mx)
+				sxy += (_suave_hist_x[i] - mx) * (_suave_hist_y[i] - my)
+			if sxx > 1.0:
+				objetivo = my + sxy / sxx * (x - mx)
+		# Pequeña inercia en distancia para que al entrar/salir muestras de la ventana no haya tirones.
+		_suave_s = lerpf(_suave_s, objetivo, 1.0 - exp(-u / maxf(escalon_distancia, 1.0))) if u > 0.25 else lerpf(_suave_s, y, 1.0 - exp(-suavizado_escalon * delta))
+	_suave_x_prev = x
+	_suave_y = clampf(_suave_s - y, -suavizado_escalon_max, suavizado_escalon_max)
+	if absf(_suave_y) < 0.01:
+		_suave_y = 0.0
+	# El motor dibuja los nodos en píxeles enteros: la parte entera va a la posición y la
+	# fracción la absorbe el shader del sprite (movimiento sub-píxel, sin brincos de 1 px).
+	var entero := roundf(_suave_y)
+	visual.position.y += entero - _suave_entero
+	_suave_entero = entero
+	if _mat_suave != null:
+		_mat_suave.set_shader_parameter("desfase_px", _suave_y - entero)
+		_mat_suave.set_shader_parameter("escala_y", absf(visual.scale.y))
+
+
 func _visual_base_y() -> float:
 	var lift := 0.0
 	if current_form >= 0 and current_form < forms.size():
 		lift = forms[current_form].flight_lift
-	return collision_shape.position.y + 7.5 - lift
+	return collision_shape.position.y + 7.5 - lift + _suave_entero
 
 
 func _apply_form() -> void:
@@ -2272,6 +2370,7 @@ func _try_interact() -> bool:
 
 
 func _try_step_up() -> void:
+	_step_up_hecho = false
 	if _step_up_cd > 0.0:
 		return
 	if not is_on_floor():
@@ -2286,15 +2385,17 @@ func _try_step_up() -> void:
 	# Anticipa: detecta el escalón DENTRO del avance de este frame (o ya pegado),
 	# para subir antes de chocar y no perder velocidad. No espera contacto exacto.
 	var avance := maxf(absf(velocity.x), 130.0) * get_physics_process_delta_time() + 2.0
+	var adelante := minf(avance, 16.0)   # lo que realmente va a avanzar este frame (con tope)
 	if not test_move(global_transform, Vector2(facing * avance, 0)):
 		return
-	for h in [1.0, 2.0, 4.0, 8.0, 16.0, 24.0, 32.0, 48.0]:
+	# Alturas con 0.2 px de holgura sobre el peldaño entero (a ras de la esquina move_and_slide vuelve a chocar).
+	for h in [0.6, 1.2, 1.8, 2.4, 3.2, 4.2, 5.2, 6.2, 7.2, 8.2, 10.2, 12.2, 16.2, 24.2, 32.2, 48.2]:
 		if h > max_h:
 			break
 		# Probar "pararse sobre el escalón": en frente y a h px de altura.
 		# test_move usa un transform ABSOLUTO (posición real en el mundo), así que
 		# siempre se parte de global_transform, nunca de Transform2D(0, Vector2.ZERO).
-		var sobre := global_transform.translated(Vector2(facing * 6.0, -h))
+		var sobre := global_transform.translated(Vector2(facing * adelante, -h))
 		if test_move(sobre, Vector2(0, 0)):
 			continue
 		# Verifica que delante hay piso a esa altura (no un hueco): lanza hacia abajo.
@@ -2303,13 +2404,14 @@ func _try_step_up() -> void:
 			continue
 		# Espacio libre subiendo justo desde la posición actual.
 		var vertical := global_transform.translated(Vector2(0, -h))
-		if test_move(vertical, Vector2(facing * 6.0, 0)):
+		if test_move(vertical, Vector2(facing * adelante, 0)):
 			continue
 		global_position.y -= h
 		if h >= 8.0:
 			velocity.x = facing * maxf(absf(velocity.x), 140.0)
 			_emitir_polvo(0.4)
-		_step_up_cd = 0.03
+		_step_up_hecho = true
+		_step_up_cd = 0.03 if h >= 8.0 else 0.0
 		return
 
 
