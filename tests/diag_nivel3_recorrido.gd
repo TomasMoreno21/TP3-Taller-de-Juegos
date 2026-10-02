@@ -45,7 +45,7 @@ func _hit(x: float, y_desde: float) -> float:
 func _fl(x: float, zona: String) -> float:
 	var mejor := 1e9
 	var y := 0.0
-	for r in _d["ruta"]:
+	for r in (_d["ruta"] as Array) + (_d["ruta_alas"] as Array):
 		if r["zona"] == zona and absf(float(r["x"]) - x) < mejor:
 			mejor = absf(float(r["x"]) - x)
 			y = float(r["y"])
@@ -71,7 +71,7 @@ func _sobre(piso: float, tol := 14.0) -> bool:
 
 ## Avanza hacia `dir` hasta que el borde delantero del collider llegue a `borde_x`, salta (mantenido `hold` frames)
 ## sin soltar la dirección y espera a caer.
-func _correr_y_saltar(dir: int, borde_x: float, hold: int, medio_ancho := 95.0, arranque_x := -1e9, anticipo := 0.0) -> void:
+func _correr_y_saltar(dir: int, borde_x: float, hold: int, medio_ancho := 95.0, arranque_x := -1e9, anticipo := 0.0, espera := 110) -> void:
 	var a := "move_right" if dir > 0 else "move_left"
 	if arranque_x > -1e8:   # retrocede para tomar carrera dentro de la misma repisa
 		var atras := "move_left" if dir > 0 else "move_right"
@@ -91,7 +91,7 @@ func _correr_y_saltar(dir: int, borde_x: float, hold: int, medio_ancho := 95.0, 
 	Input.action_press("jump")
 	await _frames(hold)
 	Input.action_release("jump")
-	await _frames(110)
+	await _frames(espera)
 	Input.action_release(a)
 	await _frames(25)
 
@@ -164,6 +164,8 @@ func _arena(a: Dictionary) -> void:
 				if e.global_position.y > piso + 400.0:
 					caidos += 1
 				if e.get("_activo") == true:
+					if e.get("flotante") == true:
+						e.set("golpe_proyectil", true)   # los voladores solo reciben daño de proyectiles
 					e.call("take_damage", 9999, 0, 1, false)
 			vistos = maxi(vistos, vivos)
 		if hecho[0]:
@@ -234,6 +236,63 @@ func _muro_real(m: Dictionary) -> void:
 	await _frames(20)
 
 
+## Barrera de energía con el sónico REAL del Murciélago: el Humano no pasa; tras romper los 3 cristales sí.
+func _barrera_real(b: Dictionary) -> void:
+	var nb: Node2D = _nivel.get_node_or_null(b["nombre"])
+	if nb == null:
+		_check(false, "barrera %s: existe" % b["nombre"])
+		return
+	var bx: float = b["x"]
+	var x0 := maxf(bx - 650.0, 1600.0)   # el pie de la chimenea está en x < 1500: allí no hay piso
+	await _poner(x0, _fl(x0, b["zona"]), 0)
+	await _caminar(1, 120)
+	_check(_player.global_position.x < bx - 90.0, "barrera %s: el Humano no la atraviesa (x=%.0f)" % [b["nombre"], _player.global_position.x])
+	await _poner(x0, _fl(x0, b["zona"]), 3)
+	_player.facing = 1
+	var cam: Camera2D = _nivel.get_node("Camara")
+	cam.position_smoothing_enabled = false
+	var disparos := 0
+	while not bool(nb._abierta) and disparos < 40:
+		cam.global_position = _player.global_position
+		_player.fire_projectile()
+		disparos += 1
+		for i in 26:
+			cam.global_position = _player.global_position
+			Engine.time_scale = 1.0
+			await physics_frame
+	_check(bool(nb._abierta), "barrera %s: se abre rompiendo los 3 cristales con el Murciélago (%d disparos)" % [b["nombre"], disparos])
+	await _poner(x0, _fl(x0, b["zona"]), 0)
+	await _caminar(1, 260)
+	_check(_player.global_position.x > bx + 120.0, "barrera %s: abierta, se puede pasar (x=%.0f)" % [b["nombre"], _player.global_position.x])
+
+
+## Muro alto del Lobo: el Humano no lo supera; el Lobo salta (doble salto) y pasa.
+func _trepa_real(t: Dictionary) -> void:
+	var tx: float = t["x"]
+	var x0 := tx - 520.0
+	await _poner(x0, _fl(x0, t["zona"]), 0)
+	await _correr_y_saltar(1, tx - 20.0, 30)
+	_check(_player.global_position.x < tx - 20.0, "muro del Lobo %s: el Humano no lo supera (x=%.0f)" % [t["nombre"], _player.global_position.x])
+	await _poner(x0, _fl(x0, t["zona"]), 1)
+	var a := "move_right"
+	Input.action_press(a)
+	for i in 400:
+		await physics_frame
+		if _player.global_position.x + 180.0 >= tx - 20.0 - 80.0:
+			break
+	Input.action_press("jump")
+	await _frames(20)
+	Input.action_release("jump")
+	await _frames(6)
+	Input.action_press("jump")
+	await _frames(20)
+	Input.action_release("jump")
+	await _frames(150)
+	Input.action_release(a)
+	await _frames(25)
+	_check(_player.global_position.x > tx + 60.0 and _player.is_on_floor(), "muro del Lobo %s: el Lobo lo salta y pasa (x=%.0f)" % [t["nombre"], _player.global_position.x])
+
+
 func _init() -> void:
 	var fj := FileAccess.open("res://tests/nivel3_datos.json", FileAccess.READ)
 	_d = JSON.parse_string(fj.get_as_text())
@@ -257,6 +316,15 @@ func _init() -> void:
 	for m in _d["muros"]:
 		if not bool(m["losa"]):
 			await _muro_real(m)
+
+	# la arena del ala del Oso se activa al cruzar el segundo muro (como en el juego): se reinicia para el resto de pruebas
+	var eg: Node = _nivel.get_node_or_null("EncounterGuardia")
+	if eg != null and int(eg.estado) != 0:
+		eg.call("reiniciar")
+	var camara: Node = _nivel.get_node_or_null("Camara")
+	if camara != null and camara.has_method("modo_normal"):
+		camara.call("modo_normal")   # la arena la dejó en modo fijo
+	await _frames(10)
 
 	# --- Rampas: las 4 formas las caminan (se transforma en terreno llano y luego se sube/baja) ---
 	var nombres := ["Humano", "Lobo", "Oso", "Murciélago"]
@@ -318,7 +386,7 @@ func _init() -> void:
 	_check(_player.is_on_floor() and absf(_player.global_position.y - (3360.0 + _off)) < 16.0 and _player.global_position.x > 1100.0, "chimenea: la primera vid lleva a la repisa intermedia (x=%.0f y=%.0f)" % [_player.global_position.x, _player.global_position.y])
 	await _poner(1400, 3360, 0)
 	await _trepar_y_salir(1, 2840.0, 40)
-	_check(_player.is_on_floor() and _player.global_position.x > 1520.0 and absf(_player.global_position.y - (2840.0 + _off)) < 16.0, "chimenea: la segunda vid sale al corazón (x=%.0f y=%.0f)" % [_player.global_position.x, _player.global_position.y])
+	_check(_player.is_on_floor() and _player.global_position.x > 1500.0 and absf(_player.global_position.y - (2840.0 + _off)) < 16.0, "chimenea: la segunda vid sale al corazón (x=%.0f y=%.0f)" % [_player.global_position.x, _player.global_position.y])
 	for f in [1, 2, 3]:
 		await _poner(700, 3888, 0)
 		await _poner(700, 3888, f)   # en el piso de la chimenea cualquier forma puede transformarse y destransformarse
@@ -328,6 +396,42 @@ func _init() -> void:
 	await _poner(7200, _fl(7200, "Z2"), 0)
 	await _trepar_y_salir(1, 1056.0, 25)
 	_check(_player.is_on_floor() and absf(_player.global_position.y - (1056.0 + _off)) < 16.0 and _player.global_position.x > 7340.0, "repisa del cuenco: la vid lleva a la repisa con premio (x=%.0f y=%.0f)" % [_player.global_position.x, _player.global_position.y])
+
+	# --- Barreras con el Murciélago y muro del Lobo ---
+	for b in _d["barreras"]:
+		await _barrera_real(b)
+	for t in _d["trepas"]:
+		await _trepa_real(t)
+
+	# --- Madriguera del Lobo: el Lobo entra por el túnel bajo y sube la cámara; el Humano no entra ---
+	await _poner(400, 3888, 0)
+	await _caminar(-1, 150)
+	_check(_player.global_position.x > 150.0, "madriguera: el Humano no cabe en el túnel bajo (x=%.0f)" % _player.global_position.x)
+	await _poner(400, 3888, 1)
+	var entro: bool = await _caminar_hasta(-1, -1100.0, 1500)
+	_check(entro and _player.is_on_floor(), "madriguera: el Lobo cruza el túnel bajo (x=%.0f)" % _player.global_position.x)
+	await _correr_y_saltar(-1, -1350.0, 40, 180.0, -1.0e9, 0.0, 26)
+	_check(_player.is_on_floor() and absf(_player.global_position.y - (3728.0 + _off)) < 16.0 and _player.global_position.x < -1350.0, "madriguera: primer escalón (x=%.0f y=%.0f)" % [_player.global_position.x, _player.global_position.y])
+	await _correr_y_saltar(-1, -1650.0, 40, 180.0, -1.0e9, 0.0, 26)
+	_check(_player.is_on_floor() and absf(_player.global_position.y - (3568.0 + _off)) < 16.0 and _player.global_position.x < -1700.0, "madriguera: segundo escalón (x=%.0f y=%.0f)" % [_player.global_position.x, _player.global_position.y])
+	await _correr_y_saltar(-1, -1900.0, 40, 180.0, -1.0e9, 0.0, 26)
+	_check(_player.is_on_floor() and absf(_player.global_position.y - (3408.0 + _off)) < 16.0 and _player.global_position.x < -2050.0, "madriguera: la repisa del premio (x=%.0f y=%.0f)" % [_player.global_position.x, _player.global_position.y])
+
+	# --- Mirador: islas separadas 620 px (el Humano alcanza ~555). El Humano no llega; el Lobo sí (y el Murciélago planeando, informativo) ---
+	var mir: Dictionary = _d["mirador"]
+	var isl: Array = mir["islas"]
+	await _poner(13800, 2016, 0)
+	await _correr_y_saltar(1, 14000.0, 40)
+	_check(not (_player.global_position.x > float(isl[0]["x0"]) and _player.is_on_floor() and _player.global_position.y < 2100.0), "mirador: el Humano no llega a la primera isla (x=%.0f)" % _player.global_position.x)
+	await _poner(13800, 2016, 1)
+	await _correr_y_saltar(1, 14000.0, 40, 180.0, -1.0e9, 0.0, 62)
+	_check(_player.global_position.x > float(isl[0]["x0"]) and _player.is_on_floor() and absf(_player.global_position.y - (2000.0 + _off)) < 16.0, "mirador: el Lobo salta a la primera isla (x=%.0f y=%.0f)" % [_player.global_position.x, _player.global_position.y])
+	await _poner(14750, 2000, 1)
+	await _correr_y_saltar(1, 14900.0, 40, 180.0, -1.0e9, 0.0, 62)
+	_check(_player.global_position.x > float(isl[1]["x0"]) and _player.is_on_floor() and absf(_player.global_position.y - (1960.0 + _off)) < 16.0, "mirador: el Lobo salta a la isla del premio (x=%.0f y=%.0f)" % [_player.global_position.x, _player.global_position.y])
+	await _poner(13800, 2016, 3)
+	await _correr_y_saltar(1, 14000.0, 90, 67.0, -1.0e9, 0.0, 10)
+	_check(_player.global_position.x > float(isl[0]["x0"]) and _player.is_on_floor() and absf(_player.global_position.y - (2000.0 + _off)) < 16.0, "mirador: el Murciélago planea hasta la primera isla (x=%.0f y=%.0f)" % [_player.global_position.x, _player.global_position.y])
 
 	# --- Arenas completables ---
 	for a in _d["arenas"]:

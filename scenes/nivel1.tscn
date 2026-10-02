@@ -14,7 +14,7 @@
 [ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="13_pause"]
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="14_levelup"]
 [ext_resource type="PackedScene" path="res://scenes/console.tscn" id="15_cons"]
-[ext_resource type="PackedScene" uid="uid://dih4mbupyhdag" path="res://scenes/enredadera.tscn" id="16_enredadera"]
+[ext_resource type="PackedScene" path="res://scenes/enredadera.tscn" id="16_enredadera"]
 [ext_resource type="PackedScene" uid="uid://bf8ohs7pjg025" path="res://scenes/pinchos.tscn" id="17_pinchos"]
 [ext_resource type="Script" uid="uid://c20i4wytflcth" path="res://scripts/setup_progresion_nivel.gd" id="18_setup"]
 [ext_resource type="Script" uid="uid://cgg1nj46f30jo" path="res://scripts/ambiente_sonoro.gd" id="19_ambiente"]
@@ -75,12 +75,13 @@ script = ExtResource("18_setup")
 [node name="AmbienteSonoro" type="Node" parent="." unique_id=1846330003]
 script = ExtResource("19_ambiente")
 capas_loop = Array[AudioStream]([ExtResource("20_amb_viento"), ExtResource("21_amb_grillos"), ExtResource("24_amb_viento2")])
+capas_silencio_mult = Array[float]([0.4, 1.0, 0.4])
 capas_loop_volumen_db = Array[float]([0.0, -22.0, -4.0])
 acentos = Array[AudioStream]([ExtResource("22_amb_buho"), ExtResource("23_amb_lobo")])
 acento_volumen_db = -2.0
 
 [node name="Player" parent="." unique_id=1763988589 instance=ExtResource("1_player")]
-position = Vector2(31007, 5094)
+position = Vector2(-717, 802)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
 position = Vector2(20, 120)

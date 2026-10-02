@@ -30,6 +30,13 @@ const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 @export var zoom_encuadre_arena := 0.96
 @export var zoom_encuadre_duracion := 0.7
 
+# Antesala: al acercarse a la arena el ambiente se calla y una viñeta fría cierra la pantalla (ver antesala.gd).
+@export var antesala_activa := true
+@export var antesala_distancia := 1500.0   ## px desde el borde de la arena donde empieza a notarse
+@export_range(0.0, 1.0, 0.05) var antesala_silencio := 1.0   ## cuánto se calla el ambiente (0 = nada, 1 = lo máximo de ambiente_sonoro)
+@export_range(0.0, 0.6, 0.01) var antesala_vineta := 0.25   ## opacidad máxima de la viñeta fría
+@export var antesala_suavizado := 2.0   ## rapidez del cambio (1/s)
+
 var estado: int = Estado.INACTIVE
 var _ola_idx := -1
 var _gen := 0             # "generación" de la pelea: descarta corrutinas de una pelea anterior
@@ -54,6 +61,11 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	_preparar_manuales()
 	_ocultar_bounds()
+	if antesala_activa:
+		var antesala := preload("res://scripts/encounters/antesala.gd").new()
+		antesala.name = "Antesala"
+		add_child(antesala)
+		antesala.configurar(self, antesala_distancia, antesala_silencio, antesala_vineta, antesala_suavizado)
 
 
 func _physics_process(_delta: float) -> void:

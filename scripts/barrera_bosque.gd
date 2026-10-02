@@ -1,5 +1,7 @@
 extends Node2D
 
+signal abierta   ## al romperse el último cristal (los objetivos de lista se tachan con esto)
+
 @export var barrera_id: String = "barrera_1"
 
 var _destruidos := 0
@@ -127,6 +129,7 @@ func _abrir_animado() -> void:
 	if _abierta:
 		return
 	_abierta = true
+	abierta.emit()
 	var prog := _progresion()
 	if prog != null:
 		prog.barreras_abiertas[barrera_id] = true

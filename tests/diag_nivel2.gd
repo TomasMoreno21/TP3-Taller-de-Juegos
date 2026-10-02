@@ -115,5 +115,57 @@ func _initialize() -> void:
 	_chk(capas >= 7, "fondo con %d capas" % capas)
 	_chk(nivel.get_node_or_null("PrimerPlano") == null, "nivel2 sin elementos de primer plano")
 
+	# Expansión del nivel 2: todo lo agregado apoya en piso real y los textos existen.
+	var exp: Node = nivel.get_node_or_null("Expansion")
+	_chk(exp != null, "nivel2 tiene el grupo Expansion")
+	var espacio := nivel.get_viewport().world_2d.direct_space_state
+	var piso_de := func(pos: Vector2, desde: float, hasta: float) -> float:
+		var h := espacio.intersect_ray(PhysicsRayQueryParameters2D.create(pos + Vector2(0, desde), pos + Vector2(0, hasta), 1))
+		return h.position.y - pos.y if not h.is_empty() else INF
+	for g in exp.get_children():
+		for n in g.get_children():
+			var nm := String(n.name)
+			if n is Area2D and n.has_signal("activado") and nm.begins_with("Checkpoint"):
+				var d: float = piso_de.call(n.global_position, 0.0, 250.0)
+				_chk(d >= 30.0 and d <= 130.0, "%s apoya en piso (a %d px)" % [nm, int(d)])
+			elif nm.begins_with("Pinchos"):
+				var d2: float = piso_de.call(n.global_position, -120.0, 120.0)
+				_chk(absf(d2) <= 40.0, "%s asentado en el piso (%d px)" % [nm, int(d2)])
+			elif nm.begins_with("Premio") or nm.begins_with("Vida"):
+				var p := PhysicsPointQueryParameters2D.new()
+				p.position = n.global_position
+				p.collision_mask = 1
+				_chk(espacio.intersect_point(p, 1).is_empty(), "%s no está dentro de la roca" % nm)
+			elif nm.begins_with("Encuentro"):
+				var d3: float = piso_de.call(n.global_position, 0.0, 600.0)
+				_chk(absf(d3 - 250.0) <= 40.0, "%s: el piso está a ~250 px bajo el centro (%d)" % [nm, int(d3)])
+				for e in n.get_children():
+					if e is CharacterBody2D:
+						var d4: float = piso_de.call(e.global_position, -100.0, 700.0)
+						_chk(d4 < INF and d4 > -10.0, "%s/%s tiene piso debajo (%d px)" % [nm, e.name, int(d4)])
+	var ids: Array[String] = []
+	for g in exp.get_children():
+		for n in g.get_children():
+			if n.get("dialogo_id") != null and String(n.dialogo_id) != "":
+				ids.append(String(n.dialogo_id))
+	_chk(ids.size() >= 5, "la expansión usa %d diálogos" % ids.size())
+	for id in ids:
+		_chk(datos is Dictionary and (datos as Dictionary).has(id), "dialogos.json tiene " + id)
+		for l in (datos as Dictionary)[id]["lineas"]:
+			_chk(str(l).length() <= 48, "%s: línea corta (%d)" % [id, str(l).length()])
+	# Tablas del puente de la galería B: cadena con saltos cortos (<= 340 px entre centros).
+	var xs: Array[float] = []
+	for n in nivel.get_children():
+		if String(n.name).begins_with("PlataformaFragil") and n.global_position.x > 3000.0 and n.global_position.x < 4700.0 and n.global_position.y < 2000.0 and n.global_position.y > 1600.0:
+			xs.append(n.global_position.x)
+	for n in exp.get_node("B").get_children():
+		if String(n.name).begins_with("PlataformaFragil"):
+			xs.append(n.global_position.x)
+	xs.sort()
+	var salto_max := 0.0
+	for i in range(1, xs.size()):
+		salto_max = maxf(salto_max, xs[i] - xs[i - 1])
+	_chk(xs.size() >= 5 and salto_max <= 340.0, "puente B: %d tablas, salto máx %d px" % [xs.size(), int(salto_max)])
+
 	print("FALLOS = ", fallos)
 	quit(1 if fallos > 0 else 0)

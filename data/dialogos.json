@@ -258,6 +258,87 @@
 			"Más arqueros voladores: usá el Murciélago."
 		]
 	},
+	"n2_pozo": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"Pinchos en el piso: saltá a tiempo."
+		]
+	},
+	"n2_mirador": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"Trepá por las lianas: hay premios arriba."
+		]
+	},
+	"n2_chaman": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"[alerta]Un chamán: su escudo es duro.",
+			"Solo los golpes pesados lo frenan."
+		]
+	},
+	"n2_abismo": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"Más adelante hay una mina de cultistas.",
+			"El techo es alto: aprovechá el vuelo."
+		]
+	},
+	"n2_campamento": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"[susurro]Un respiro. Aprovechalo.",
+			"Recuperá fuerzas antes de seguir."
+		]
+	},
+	"n2_vacio": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"El piso se corta: usá las tablas.",
+			"Murciélago: planeá para ir más lejos."
+		]
+	},
+	"n2_guardia": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"[alerta]La guardia del santuario.",
+			"Usá todo lo que aprendiste."
+		]
+	},
+	"n2_final": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"El santuario está cerca.",
+			"[susurro]Más abajo, algo pesado respira..."
+		]
+	},
 	"jefe_intro": {
 		"hablante": "Amuleto",
 		"modo": "Zona",
@@ -432,10 +513,10 @@
 		"tipo": "tip",
 		"hablante": "Amuleto",
 		"modo": "Zona",
-		"retraso": 0.6,
+		"retraso": 0.5,
 		"una_vez": true,
 		"lineas": [
-			"Murciélago: mantené salto para planear."
+			"Mantené salto para planear."
 		]
 	},
 	"n3_lago": {
@@ -514,6 +595,147 @@
 		"una_vez": true,
 		"lineas": [
 			"Hay repisas arriba: atajo con premio."
+		]
+	},
+	"n3_latido": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"[susurro]¿Lo sentís? Algo late bajo la roca."
+		]
+	},
+	"n3_rastro": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"Huellas de cultistas. Bajaron hace poco.",
+			"[susurro]Van hacia el corazón de la cueva."
+		]
+	},
+	"n3_campamento": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"Un campamento cultista, vacío.",
+			"[susurro]Huyeron. Algo los asustó."
+		]
+	},
+	"n3_cristal": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"Una barrera de energía sella el altar.",
+			"Sus cristales caen con el sónico.",
+			"[alerta]Usá el Murciélago."
+		]
+	},
+	"n3_sala": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"Tres sellos, tres formas.",
+			"Cristales, un muro alto y una losa."
+		]
+	},
+	"n3_sala_lobo": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"Muro alto: el Lobo escala más."
+		]
+	},
+	"n3_sala_losa": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"Una losa. Ahora, el Oso."
+		]
+	},
+	"n3_madriguera": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"[susurro]Un hueco muy bajo en la pared.",
+			"Solo el Lobo cabe ahí."
+		]
+	},
+	"n3_madriguera_dentro": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"Subí por los escalones con doble salto."
+		]
+	},
+	"n3_mirador": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"Islas flotantes más adelante.",
+			"Planeá con el Murciélago o saltá lejos."
+		]
+	},
+	"n3_ala_oso": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"Una cámara de piedra, sellada.",
+			"El Oso puede romper estos muros."
+		]
+	},
+	"n3_ala_fin": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"[susurro]Un recuerdo del Oso ancestral.",
+			"Esperaba a quien lo despertara."
+		]
+	},
+	"n3_diario": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"Un diario cultista, a medio quemar:",
+			"\"El sello se debilita.\"",
+			"\"El Arzobispo necesita el corazón.\""
+		]
+	},
+	"n3_corazon": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"[susurro]El latido se acelera.",
+			"Ya falta poco para el sello."
 		]
 	}
 }

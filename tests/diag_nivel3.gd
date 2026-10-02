@@ -83,6 +83,8 @@ func _init() -> void:
 			mal_f += 1
 		if g["req"] == "lobo" and (a < 560.0 or a > 700.0):
 			mal_f += 1
+		if g["req"] == "ala" and (a < 600.0 or a > 680.0):   # islas del mirador: el Humano (470) no llega; Lobo y planeo sí
+			mal_f += 1
 	_check(mal_f == 0, "Saltos: fosos de Humano <= 420 px y fosos de Lobo/planeo entre 560 y 700 px (%d fuera)" % mal_f)
 	_check(float(fosos[0]["ancho"]) <= 300.0, "Saltos: el primer foso es fácil (%d px)" % int(fosos[0]["ancho"]))
 	var mal_t := 0
@@ -131,8 +133,8 @@ func _init() -> void:
 						print("  [AVISO] enemigo mal apoyado: ", hijo.name, "/", sub.name, " pies=", pos.y + pies, " piso=", piso)
 	_check(mal_puestos == 0, "Nivel3: checkpoints, pickups y enemigos apoyados, sin incrustar (%d mal puestos)" % mal_puestos)
 	_check(checkpoints >= 18, "Nivel3: checkpoints frecuentes (hay %d)" % checkpoints)
-	_check(encounters == 4 and enemigos == 21, "Nivel3: 4 arenas y 21 enemigos (hay %d / %d)" % [encounters, enemigos])
-	_check(pickups >= 30 and orbes >= 8, "Nivel3: almas (%d en total) y orbes de vida (%d)" % [pickups, orbes])
+	_check(encounters == 5 and enemigos == 30, "Nivel3: 5 arenas y 30 enemigos (hay %d / %d)" % [encounters, enemigos])
+	_check(pickups >= 45 and orbes >= 11, "Nivel3: almas (%d en total) y orbes de vida (%d)" % [pickups, orbes])
 
 	# --- Decoración mínima y apoyada ---
 	var deco_root: Node = nivel.get_node_or_null("Decoracion")
@@ -182,7 +184,47 @@ func _init() -> void:
 				break
 	_check(cerca == _d["muros"].size() + _d["losas"].size(), "Nivel3: cada obstáculo del Oso tiene almas (energía) cerca (%d)" % cerca)
 
+	# --- Barreras de energía (cristales del Murciélago) y muros del Lobo: bien puestos ---
+	var bar_mal := 0
+	for b in _d["barreras"]:
+		var nb: Node2D = nivel.get_node_or_null(b["nombre"])
+		if nb == null:
+			bar_mal += 1
+			continue
+		var bx: float = b["x"]
+		var by: float = b["piso"]
+		if not (_solido(bx - 170.0, by + 40.0) and _solido(bx + 170.0, by + 40.0) and not _solido(bx - 170.0, by - 60.0)):   # el piso a ambos lados (la barrera misma es sólida)
+			bar_mal += 1
+			print("  [AVISO] barrera mal apoyada: ", b["nombre"])
+		var cr := 0
+		for c in nb.get_children():
+			if c.is_in_group("cristal"):
+				cr += 1
+				if _solido(c.global_position.x, c.global_position.y) or absf(c.global_position.x - bx) > 700.0 or c.global_position.y > by - 200.0:
+					bar_mal += 1
+					print("  [AVISO] cristal mal puesto: ", b["nombre"], "/", c.name, " ", c.global_position)
+				# a la vista: sin roca entre el cristal y el punto de tiro (a la altura del Murciélago, delante de la barrera)
+				var q := PhysicsRayQueryParameters2D.create(Vector2(c.global_position.x, c.global_position.y), Vector2(c.global_position.x, by - 100.0), 1)
+				if not root.world_2d.direct_space_state.intersect_ray(q).is_empty():
+					bar_mal += 1
+					print("  [AVISO] cristal tapado por roca: ", b["nombre"], "/", c.name)
+		if cr != 3:
+			bar_mal += 1
+	_check(bar_mal == 0, "Nivel3: %d barreras con 3 cristales visibles delante y apoyadas en el piso (%d malas)" % [_d["barreras"].size(), bar_mal])
+	var trepa_mal := 0
+	for t in _d["trepas"]:
+		var nt: Node2D = nivel.get_node_or_null(t["nombre"])
+		var tx: float = t["x"]
+		var ty: float = t["piso"]
+		# 250 de alto: más que el salto del Humano (~194) y menos que el del Lobo con doble salto (~380)
+		if nt == null or not _solido(tx - 120.0, ty + 8.0) or _solido(tx, ty - 250.0 - 200.0) or float(t["alto"]) <= 200.0 or float(t["alto"]) >= 330.0:
+			trepa_mal += 1
+	_check(trepa_mal == 0, "Nivel3: %d muro(s) del Lobo bien apoyados y solo escalables con el Lobo (%d malos)" % [_d["trepas"].size(), trepa_mal])
+
 	# --- Los 4 personajes CABEN en todo el camino principal y las rampas son subibles ---
+	for hijo in nivel.get_children():
+		if String(hijo.name).begins_with("Barrera") or String(hijo.name).begins_with("Trepa"):
+			hijo.queue_free()   # obstáculos pensados: se prueban en el recorrido
 	for hijo in nivel.get_children():
 		if hijo.is_in_group("muro_piedra") or String(hijo.name).begins_with("Muro") or String(hijo.name).begins_with("Puerta"):
 			hijo.call("abrir")   # los muros/compuertas son obstáculos pensados: se prueban aparte
@@ -195,7 +237,7 @@ func _init() -> void:
 	cs.shape = RectangleShape2D.new()
 	probe.add_child(cs)
 	nivel.add_child(probe)
-	var ruta: Array = _d["ruta"]
+	var ruta: Array = (_d["ruta"] as Array) + (_d["ruta_alas"] as Array)
 	for fm in FORMAS:
 		var sz: Vector2 = fm[1]
 		var malos := 0
@@ -204,7 +246,7 @@ func _init() -> void:
 		for r in ruta:
 			var x: float = r["x"]
 			var hw := sz.x * 0.5 + 24.0
-			if x < 300.0 + hw or (r["zona"] == "Z5" and x > 13550.0 - hw) or (r["zona"] == "Z7" and x > 10700.0 - hw):
+			if x < 300.0 + hw or (r["zona"] == "Z5" and x > 13550.0 - hw) or (r["zona"] == "Z7" and x > 10700.0 - hw) 					or (r["zona"] == "Z8" and x > 16100.0 - hw) or (r["zona"] == "Z4b" and (x < 13550.0 + hw or x > 14380.0)):
 				continue   # pegado a la pared del extremo del mapa: no es un lugar donde se camine
 			# suelo más alto bajo el collider (la parte cuesta arriba) y el resto del apoyo
 			var alto := INF
@@ -228,6 +270,32 @@ func _init() -> void:
 				salto_malo += 1
 				print("  [AVISO] pendiente fuerte en x=", ruta[i]["x"])
 	_check(salto_malo == 0, "Camino principal: ninguna pendiente exige más que el paso máximo del Oso (%d)" % salto_malo)
+
+	# --- Madriguera del Lobo: el túnel (200 de alto) solo lo cruzan el Lobo y el Murciélago; Humano y Oso no caben ---
+	var mad: Dictionary = _d["madriguera"]
+	for fm in FORMAS:
+		var szm: Vector2 = fm[1]
+		(cs.shape as RectangleShape2D).size = szm
+		var traba_tunel := 0
+		for r in mad["tunel"]:
+			probe.global_position = Vector2(float(r["x"]), float(r["y"]) - szm.y * 0.5 - 1.0)
+			if probe.test_move(probe.global_transform, Vector2.ZERO):
+				traba_tunel += 1
+		var cabe_camara := true
+		for r in mad["camara"]:
+			probe.global_position = Vector2(float(r["x"]), float(r["y"]) - szm.y * 0.5 - 1.0)
+			if probe.test_move(probe.global_transform, Vector2.ZERO):
+				cabe_camara = false
+		var debe_pasar: bool = fm[0] == "Lobo" or fm[0] == "Murciélago"
+		_check((traba_tunel == 0) == debe_pasar and (not debe_pasar or cabe_camara), "Madriguera: el %s %s por el túnel bajo (%d puntos trabados)" % [fm[0], "pasa" if debe_pasar else "NO pasa", traba_tunel])
+	var esc: Array = mad["escalones"]
+	var alto_ok := true
+	var piso_prev := 3888.0
+	for e in esc:
+		if piso_prev - float(e["y"]) > 170.0:
+			alto_ok = false
+		piso_prev = float(e["y"])
+	_check(alto_ok, "Madriguera: los escalones de la cámara suben <= 170 px (alcanza el salto del Lobo)")
 	probe.queue_free()
 
 	var santuario: Node2D = nivel.get_node_or_null("Santuario")
