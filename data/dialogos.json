@@ -195,6 +195,69 @@
 			"Su guarida está cerca..."
 		]
 	},
+	"n2_intro": {
+		"hablante": "Amuleto",
+		"modo": "Automatico",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": [
+			"Esta cueva es de los cultistas.",
+			"Hay huellas frescas: tu hijo pasó.",
+			"[susurro]Avanzá con cuidado."
+		]
+	},
+	"n2_aleteos": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.3,
+		"una_vez": true,
+		"lineas": [
+			"[susurro]¿Oís eso? Alas en la oscuridad..."
+		]
+	},
+	"n2_murcielago": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"Los murciélagos te reconocen.",
+			"Desbloqueaste al Murciélago.",
+			"Cambiá con {forma_swap}."
+		]
+	},
+	"n2_planeo": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"Murciélago: mantené salto para planear.",
+			"Planeá sobre los pinchos."
+		]
+	},
+	"n2_voladores": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"[alerta]Arqueros flotando: un aura los eleva.",
+			"Los golpes rebotan.",
+			"Dispará con {special} como Murciélago."
+		]
+	},
+	"n2_voladores2": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"Más arqueros voladores: usá el Murciélago."
+		]
+	},
 	"jefe_intro": {
 		"hablante": "Amuleto",
 		"modo": "Zona",

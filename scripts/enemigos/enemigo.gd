@@ -29,4 +29,5 @@ extends Resource
 @export var poise_ventana: float = 0.9     # tiempo (s) que resiste el aturdimiento tras agotar el poise
 @export var poise_recupera: float = 1.4    # s sin ser golpeado para volver a 0 golpes acumulados
 @export var poise_rompe_dano: int = 24     # un golpe de este daño o más rompe la resistencia y aturde igual
+@export var energia_al_morir: float = 10.0  # energía que recupera el jugador al matarlo
 @export var sonico_dano_mult: float = 1.0  # multiplicador de daño del disparo sónico del Murciélago

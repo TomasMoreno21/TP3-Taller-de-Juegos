@@ -71,7 +71,7 @@ func _physics_process(delta: float) -> void:
 			var to_target: Vector2 = target.global_position - global_position
 			if to_target.length_squared() > 0.01:
 				var dir_deseada: Vector2 = to_target.normalized()
-				var blended: Vector2 = direction.lerp(dir_deseada, homing_strength * delta)
+				var blended: Vector2 = direction.lerp(dir_deseada, clampf(homing_strength * HOMING_TICK, 0.0, 1.0))
 				if blended.length_squared() > 0.01:
 					direction = blended.normalized()
 	# Rechaza el terreno (evita atravesar el tilemap a alta velocidad), pero
@@ -153,7 +153,8 @@ func _fuera_de_camara() -> bool:
 		return false
 	var view_size: Vector2 = get_viewport_rect().size / _cam.zoom
 	var cam_pos: Vector2 = _cam.global_position
-	var half: Vector2 = view_size * 0.5 + Vector2(80, 80)
+	# Los disparos enemigos nacen a veces fuera de pantalla (arquero lejano): margen amplio para que no se borren al aparecer.
+	var half: Vector2 = view_size * 0.5 + (Vector2(400, 400) if enemy_shot else Vector2(80, 80))
 	return global_position.x < cam_pos.x - half.x or global_position.x > cam_pos.x + half.x or global_position.y < cam_pos.y - half.y or global_position.y > cam_pos.y + half.y
 
 
@@ -205,6 +206,8 @@ func _on_body_entered(body: Node2D) -> void:
 			if ed != null and ed.get("sonico_dano_mult") != null:
 				dano_final = int(round(damage * float(ed.sonico_dano_mult)))
 		_consumido = true
+		if not enemy_shot and "golpe_proyectil" in body:
+			body.golpe_proyectil = true   # el flotante solo recibe daño de proyectiles
 		# Signo de la dirección (int() de un vector normalizado daba 0 en disparos inclinados: sin retroceso).
 		body.take_damage(dano_final, 120.0, 1 if direction.x >= 0.0 else -1)
 		if homing and not enemy_shot and body.is_in_group("enemy"):

@@ -33,6 +33,16 @@ const MAX_FALL_SPEED := 950.0
 @export var pop_aparicion := true              # pequeño "pop" al aparecer sin ritual
 @export var flinch_reflash := 0.55           # intensidad del flash si lo golpean de nuevo en pleno stun (0-1)
 
+@export_group("Flotante")
+@export var flotante: bool = false             # flota sobre el suelo sostenido por un aura mística (sin gravedad)
+@export var alcance_flotante_mult := 1.2       # multiplica shoot_range del flotante (ve y dispara desde más lejos)
+@export var altura_flote := 360.0             # px que se eleva sobre el piso donde lo pusiste en el editor
+@export var flote_amplitud := 14.0             # vaivén vertical (px)
+@export var flote_velocidad := 1.8             # velocidad del vaivén (rad/s)
+@export var solo_proyectil := true             # flotante: el cuerpo a cuerpo rebota; solo daña el proyectil
+@export var aura_escena: PackedScene = preload("res://scenes/aura_mistica.tscn")
+@export_group("")
+
 const FRAMES_POR_TIPO := {
 	"cultista": preload("res://resources/enemigo1_frames.tres"),
 	"arquero": preload("res://resources/enemigo2_frames.tres"),
@@ -73,6 +83,12 @@ var _squash_tween: Tween
 var _base_pos := Vector2.ZERO      # pose de reposo del visual (evita "drift" con golpes repetidos)
 var _base_scale := Vector2.ONE
 var _base_valida := false
+var _flote_y := 0.0
+var _flotando := false
+var _flote_t := 0.0
+var _aura: Node2D
+## Lo pone el proyectil del jugador justo antes de llamar a take_damage (distingue disparo de cuerpo a cuerpo).
+var golpe_proyectil := false
 
 @onready var visual: Node2D = $Visual
 @onready var poly: Polygon2D = $Visual/Poly
@@ -94,9 +110,9 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.max_health = 75
 			d.speed = 140.0
 			d.stop_distance = 30.0
-			d.attack_damage = 12
+			d.attack_damage = 10
 			d.attack_range = 110.0
-			d.attack_cooldown = 0.7
+			d.attack_cooldown = 0.9
 			d.windup_tiempo = 0.28
 			d.lunge_velocidad = 420.0
 			d.color = Color(0.55, 0.38, 0.3)
@@ -110,12 +126,12 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.tipo_nombre = "Arquero"
 			d.max_health = 60
 			d.speed = 95.0
-			d.attack_damage = 15
+			d.attack_damage = 12
 			d.attack_cooldown = 1.4
 			d.projectile = true
-			d.shoot_range = 850.0
-			d.retrocede_dist = 170.0
-			d.proyectil_speed = 430.0
+			d.shoot_range = 1150.0
+			d.retrocede_dist = 260.0
+			d.proyectil_speed = 650.0
 			d.color = Color(0.42, 0.3, 0.5)
 			d.collider_size = Vector2(103, 410)
 			d.visual_scale = Vector2.ONE
@@ -130,7 +146,7 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.max_health = 155
 			d.speed = 72.0
 			d.stop_distance = 40.0
-			d.attack_damage = 18
+			d.attack_damage = 15
 			d.attack_cooldown = 1.6
 			d.projectile = true
 			d.shoot_range = 950.0
@@ -146,6 +162,7 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.windup_disparo = 0.5
 			d.poise_max = 4
 			d.sonico_dano_mult = 1.2
+			d.energia_al_morir = 20.0
 			d.armor_umbral = 18  # solo golpes pesados (18+) rompen su ataque; Lobo/Murciélago no pueden
 	return d
 
@@ -234,6 +251,8 @@ func ajustar_al_suelo() -> void:
 
 func activar() -> void:
 	ajustar_al_suelo()
+	if flotante:
+		_elevar()
 	if spawn_telegrafiado:
 		_telegraph_timer = maxf(ritual_duracion, 0.05)
 		_mostrar_circulo_ritual()
@@ -242,6 +261,34 @@ func activar() -> void:
 		_activo = true
 		_colision(true)
 		_pop_al_aparecer()
+
+
+## Sube al enemigo `altura_flote` sobre el piso y le pone el aura que lo sostiene.
+func _elevar() -> void:
+	if _flotando:
+		return
+	global_position.y -= altura_flote
+	if enemy_data != null and enemy_data.projectile:
+		enemy_data = enemy_data.duplicate()
+		enemy_data.shoot_range *= alcance_flotante_mult
+	_flote_y = global_position.y
+	_flotando = true
+	_flote_t = randf() * TAU
+	if aura_escena != null:
+		_aura = aura_escena.instantiate() as Node2D
+		var pies := 0.0
+		if collide_shape != null and collide_shape.shape is RectangleShape2D:
+			pies = collide_shape.position.y + collide_shape.shape.size.y * 0.5
+		_aura.position = Vector2(0.0, pies + 8.0)
+		add_child(_aura)
+		_aura.show_behind_parent = true
+
+
+## Velocidad vertical: el flotante sigue su vaivén en vez de caer.
+func _vel_y(delta: float) -> float:
+	if flotante and _flotando:
+		return (_flote_y + sin(_flote_t) * flote_amplitud - global_position.y) * 6.0
+	return minf(velocity.y + GRAVITY * delta, MAX_FALL_SPEED)
 
 
 func _colision(on: bool) -> void:
@@ -334,7 +381,8 @@ func _physics_process(delta: float) -> void:
 				move_and_slide()
 				return
 		velocity.x = move_toward(velocity.x, 0.0, 180.0 * delta)
-		velocity.y = minf(velocity.y + GRAVITY * delta, MAX_FALL_SPEED)
+		_flote_t += delta * flote_velocidad
+		velocity.y = _vel_y(delta)
 		_update_animacion()
 		move_and_slide()
 		return
@@ -344,8 +392,9 @@ func _physics_process(delta: float) -> void:
 	if _attack_anim_timer > 0.0:
 		_attack_anim_timer -= delta
 
-	# gravedad
-	velocity.y = minf(velocity.y + GRAVITY * delta, MAX_FALL_SPEED)
+	# gravedad (el flotante sigue su vaivén)
+	_flote_t += delta * flote_velocidad
+	velocity.y = _vel_y(delta)
 
 	if player == null:
 		velocity.x = 0.0
@@ -482,12 +531,18 @@ func _update_animacion() -> void:
 		return
 	if _attack_anim_timer > 0.0:
 		nombre = _attack_anim
-	elif not is_on_floor():
+	elif not is_on_floor() and not flotante:
 		nombre = "jump"
 	elif absf(velocity.x) > 10.0:
 		nombre = "run"
 	if animated.animation != nombre:
 		animated.play(nombre)
+	# El trote acompaña la velocidad real (frena, acelera o es empujado).
+	if nombre == "run" and enemy_data != null and enemy_data.speed > 0.0:
+		var obj := clampf(absf(velocity.x) / enemy_data.speed, 0.4, 1.5)
+		animated.speed_scale = lerpf(animated.speed_scale, obj, minf(12.0 * get_physics_process_delta_time(), 1.0))
+	else:
+		animated.speed_scale = 1.0
 
 
 func _reproducir_animacion_ataque(tipo: String) -> void:
@@ -557,6 +612,11 @@ func _disparar(player: Node2D) -> void:
 
 func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: bool = false) -> void:
 	if health <= 0:
+		return
+	var es_proyectil := golpe_proyectil
+	golpe_proyectil = false
+	if flotante and solo_proyectil and not es_proyectil:
+		_rebotar_golpe()
 		return
 	health -= cantidad
 	var murio := health <= 0
@@ -635,6 +695,19 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 
 ## Also muestra la cifra de daño flotando sobre el enemigo: pop de escala al
 ## golpear, subida más larga en críticos/remates y outline para legibilidad.
+## El aura repele el cuerpo a cuerpo: destello violeta y chispas, sin daño.
+func _rebotar_golpe() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	Burst.emitir(self, global_position, Color(0.7, 0.55, 1.0), 8, 0.8)
+	if visual != null:
+		if _tint_tween != null and _tint_tween.is_valid():
+			_tint_tween.kill()
+		visual.modulate = Color(0.75, 0.6, 1.6)
+		_tint_tween = create_tween()
+		_tint_tween.tween_property(visual, "modulate", Color(1, 1, 1), 0.2)
+
+
 func _mostrar_dano(cantidad: int, critico: bool, murio: bool) -> void:
 	var fuerte := critico or murio
 	var lbl := Label.new()
@@ -745,7 +818,7 @@ func _morir() -> void:
 		_tint_tween.kill()
 	var player := get_tree().get_first_node_in_group("player")
 	if player != null and player.has_method("on_enemy_killed"):
-		(player as Node2D).on_enemy_killed()
+		(player as Node2D).on_enemy_killed(enemy_data.energia_al_morir if enemy_data != null else 8.0)
 	died.emit()
 	var audio_m := get_node_or_null("/root/AudioManager")
 	if audio_m != null:
@@ -758,6 +831,8 @@ func _morir() -> void:
 	_liberar_only()
 	set_physics_process(false)
 	_colision(false)
+	if is_instance_valid(_aura):
+		_aura.visible = false
 	_burst_particulas()
 	_soltar_orbe_vida()
 	visual.self_modulate = Color.WHITE

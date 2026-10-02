@@ -34,6 +34,8 @@ var _jumps_usados := 0
 @export var special_knockback: float = 240.0
 @export var heavy_knockback: float = 150.0
 @export var special_cost: float = 0.0            # energía que cuesta cada especial (0 = gratis; si no alcanza, no sale)
+@export var drenaje_mult: float = 1.0            # multiplicador del drenaje de energía mientras está transformado (>1 = dura menos)
+@export var dano_recibido_mult: float = 1.0      # multiplicador del daño que recibe el jugador en esta forma (<1 = resistente, >1 = frágil)
 @export var onda_transformacion_radio: float = 0.0  # al transformarse empuja/daña alrededor (0 = sin onda)
 @export var onda_transformacion_dano: int = 0
 @export var onda_transformacion_knockback: float = 0.0
@@ -43,6 +45,7 @@ var _jumps_usados := 0
 @export var salto_estiramiento: float = 0.0      # estirado vertical al subir en el aire (0 = sin)
 @export var caida_estiramiento: float = 0.0      # estirado vertical al caer (0 = sin)
 @export var apex_compacto: float = 0.0           # cuerpo compacto en el ápice del salto (0 = sin)
+@export var congelar_en_aire: bool = true        # en el aire el ciclo de piernas se detiene (no corre en el vacío)
 @export var special_cooldown: float = 0.0        # espera entre especiales fuera de combate (0 = sin límite)
 @export var special_cooldown_combate: float = 0.0  # espera entre especiales en combate (0 = sin límite)
 

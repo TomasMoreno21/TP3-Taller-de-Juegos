@@ -113,7 +113,7 @@ func _init() -> void:
 		if e_combo.health < hp_tras_j:
 			break
 	var remate_dmg: int = hp_tras_j - e_combo.health
-	_check(remate_dmg == 38, "J→K ejecuta el Remate (38 dmg, fue %d)" % remate_dmg)
+	_check(remate_dmg == 52, "J→K ejecuta el Remate (52 dmg, fue %d)" % remate_dmg)
 	await _esperar_recuperacion("combo")
 	_limpiar_dummies()
 

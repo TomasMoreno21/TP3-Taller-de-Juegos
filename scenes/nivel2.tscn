@@ -10,7 +10,6 @@
 [ext_resource type="PackedScene" path="res://scenes/console.tscn" id="8_cons"]
 [ext_resource type="PackedScene" uid="uid://bf8ohs7pjg025" path="res://scenes/pinchos.tscn" id="9_4hvoh"]
 [ext_resource type="Script" uid="uid://c20i4wytflcth" path="res://scripts/setup_progresion_nivel.gd" id="10_setup"]
-[ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="ck_1"]
 [ext_resource type="PackedScene" uid="uid://x0o25yeqfgsm" path="res://scenes/encounter.tscn" id="11_stua6"]
 [ext_resource type="PackedScene" uid="uid://bxsawwmlxb7mt" path="res://scenes/enemy.tscn" id="12_wnw5i"]
 [ext_resource type="PackedScene" path="res://scenes/enredadera.tscn" id="13_o066t"]
@@ -22,9 +21,16 @@
 [ext_resource type="PackedScene" path="res://scenes/salida_nivel.tscn" id="30_salida"]
 [ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="31_pick"]
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="32_dtg"]
-[ext_resource type="PackedScene" uid="uid://brxhgshnil6nd" path="res://scenes/fondo_cueva.tscn" id="33_cueva"]
+[ext_resource type="PackedScene" path="res://scenes/fondo_cueva_natural.tscn" id="33_cueva"]
+[ext_resource type="PackedScene" path="res://scenes/noche_cueva.tscn" id="34_noche"]
+[ext_resource type="PackedScene" path="res://scenes/niebla.tscn" id="80_niebla"]
+[ext_resource type="Script" path="res://scripts/seguir_camara.gd" id="81_seguir"]
 [ext_resource type="PackedScene" uid="uid://skni1dec001" path="res://scenes/decorativo.tscn" id="60_deco"]
 [ext_resource type="Shader" uid="uid://2gmi16mug215" path="res://resources/tinte_terreno.gdshader" id="61_tinte"]
+[ext_resource type="PackedScene" uid="uid://bhxju6lap2tcq" path="res://scenes/unlock_forma.tscn" id="70_unlock"]
+[ext_resource type="PackedScene" path="res://scenes/murcielagos_pasan.tscn" id="71_bats"]
+[ext_resource type="Script" uid="uid://b2cqvgaiasjup" path="res://scripts/objetivo_lista.gd" id="72_obj"]
+[ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="ck_1"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte2"]
 shader = ExtResource("61_tinte")
@@ -42,7 +48,9 @@ metadata/_custom_type_script = "uid://cui53h2x6gwlf"
 [node name="Node2D" type="Node2D" unique_id=157205862]
 position = Vector2(13, 0)
 
-[node name="FondoCueva" parent="." unique_id=2100000600 instance=ExtResource("33_cueva")]
+[node name="FondoCuevaNatural" parent="." unique_id=2100000600 instance=ExtResource("33_cueva")]
+
+[node name="Noche" parent="." instance=ExtResource("34_noche")]
 
 [node name="HerramientaNivel" type="Node2D" parent="." unique_id=1996213001]
 script = ExtResource("16_herramienta")
@@ -51,7 +59,7 @@ desplazamiento_cam = Vector2(0, -250)
 [node name="SetupProgresion" type="Node" parent="." unique_id=1846330001]
 script = ExtResource("10_setup")
 nivel_minimo = 4
-formas_forzadas = Array[int]([0, 1, 3])
+formas_forzadas = Array[int]([0, 1])
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
 position = Vector2(2, 8)
@@ -90,52 +98,52 @@ visible = false
 
 [node name="Pinchos" parent="Pinchos" unique_id=1559597765 instance=ExtResource("9_4hvoh")]
 z_index = -1
-position = Vector2(1586, 138)
+position = Vector2(1573.0001, 173)
 rotation = 0.38821685
 
 [node name="Pinchos2" parent="Pinchos" unique_id=210700907 instance=ExtResource("9_4hvoh")]
 z_index = -1
-position = Vector2(1731.0004, 203.00014)
+position = Vector2(1718.0004, 238.00014)
 rotation = 0.38262516
 
 [node name="Pinchos3" parent="Pinchos" unique_id=1607972992 instance=ExtResource("9_4hvoh")]
 z_index = -1
-position = Vector2(1875.0001, 272.00012)
+position = Vector2(1861.9999, 307.00012)
 rotation = 0.45227796
 
 [node name="Pinchos4" parent="Pinchos" unique_id=2067067604 instance=ExtResource("9_4hvoh")]
 z_index = -1
-position = Vector2(2018.0002, 346.00006)
+position = Vector2(2005.0002, 381.00006)
 rotation = 0.503768
 
 [node name="Pinchos5" parent="Pinchos" unique_id=1860292747 instance=ExtResource("9_4hvoh")]
 z_index = -1
-position = Vector2(2163, 423.00006)
+position = Vector2(2150, 458.00006)
 rotation = 0.5189721
 
 [node name="Pinchos6" parent="Pinchos" unique_id=1165559757 instance=ExtResource("9_4hvoh")]
 z_index = -1
-position = Vector2(2309, 497.00006)
+position = Vector2(2296, 532.00006)
 rotation = 0.4869643
 
 [node name="Pinchos7" parent="Pinchos" unique_id=1902720798 instance=ExtResource("9_4hvoh")]
 z_index = -1
-position = Vector2(2453.9998, 569.0001)
+position = Vector2(2440.9995, 604.0001)
 rotation = 0.45641473
 
 [node name="Pinchos8" parent="Pinchos" unique_id=1269588205 instance=ExtResource("9_4hvoh")]
 z_index = -1
-position = Vector2(2598.9998, 646)
+position = Vector2(2585.9998, 681)
 rotation = 0.53413486
 
 [node name="Pinchos9" parent="Pinchos" unique_id=1645332304 instance=ExtResource("9_4hvoh")]
 z_index = -1
-position = Vector2(2744, 725.00006)
+position = Vector2(2731, 760.00006)
 rotation = 0.5174726
 
 [node name="Pinchos10" parent="Pinchos" unique_id=109770024 instance=ExtResource("9_4hvoh")]
 z_index = -1
-position = Vector2(2886, 800.99994)
+position = Vector2(2873, 835.99994)
 rotation = 0.52421844
 
 [node name="Pinchos11" parent="Pinchos" unique_id=1478876443 instance=ExtResource("9_4hvoh")]
@@ -208,16 +216,16 @@ rotation = -0.22669415
 position = Vector2(4408, 611)
 
 [node name="Enemy" parent="Encounter" unique_id=87872202 instance=ExtResource("12_wnw5i")]
-position = Vector2(-221, 191)
+position = Vector2(-374, 219)
 spawn_telegrafiado = true
 
 [node name="Enemy2" parent="Encounter" unique_id=1833604320 instance=ExtResource("12_wnw5i")]
-position = Vector2(283, 189)
+position = Vector2(740, 213)
 spawn_telegrafiado = true
 ritual_duracion = 1.5
 
 [node name="Enemy3" parent="Encounter" unique_id=1222775088 instance=ExtResource("12_wnw5i")]
-position = Vector2(-306, 187)
+position = Vector2(-621, 215)
 ola_asignada = 1
 spawn_telegrafiado = true
 
@@ -233,18 +241,33 @@ tiempo_temblor = 0.4
 position = Vector2(2152, 1697)
 
 [node name="Enemy" parent="Encounter2" unique_id=639472890 instance=ExtResource("12_wnw5i")]
-position = Vector2(-221, 191)
+position = Vector2(-512, 226)
 spawn_telegrafiado = true
 
 [node name="Enemy2" parent="Encounter2" unique_id=1507395065 instance=ExtResource("12_wnw5i")]
-position = Vector2(283, 189)
+position = Vector2(652, 222)
 spawn_telegrafiado = true
 ritual_duracion = 1.5
 
 [node name="Enemy3" parent="Encounter2" unique_id=1128412215 instance=ExtResource("12_wnw5i")]
-position = Vector2(-306, 187)
+position = Vector2(-710, 225)
 ola_asignada = 1
 spawn_telegrafiado = true
+
+[node name="Volador1" parent="Encounter2" unique_id=395421887 instance=ExtResource("12_wnw5i")]
+position = Vector2(-284, 227)
+tipo = "arquero"
+spawn_telegrafiado = true
+ritual_duracion = 1.2
+flotante = true
+
+[node name="Volador2" parent="Encounter2" unique_id=1676814001 instance=ExtResource("12_wnw5i")]
+position = Vector2(457, 227)
+tipo = "arquero"
+ola_asignada = 1
+spawn_telegrafiado = true
+ritual_duracion = 1.2
+flotante = true
 
 [node name="PlataformaFragil3" parent="." unique_id=2090279618 instance=ExtResource("14_5uo66")]
 position = Vector2(9432, 3133)
@@ -282,18 +305,34 @@ alto = 1550.0
 position = Vector2(5708, 5339)
 
 [node name="Enemy" parent="Encounter3" unique_id=1597108656 instance=ExtResource("12_wnw5i")]
-position = Vector2(-221, 191)
+position = Vector2(-561, 217)
 spawn_telegrafiado = true
 
 [node name="Enemy2" parent="Encounter3" unique_id=608240344 instance=ExtResource("12_wnw5i")]
-position = Vector2(283, 189)
+position = Vector2(474, 227)
 spawn_telegrafiado = true
 ritual_duracion = 1.5
 
 [node name="Enemy3" parent="Encounter3" unique_id=829211085 instance=ExtResource("12_wnw5i")]
-position = Vector2(-306, 187)
+position = Vector2(-727, 210)
 ola_asignada = 1
 spawn_telegrafiado = true
+
+[node name="Volador1" parent="Encounter3" unique_id=1736677152 instance=ExtResource("12_wnw5i")]
+position = Vector2(817, 215)
+tipo = "arquero"
+spawn_telegrafiado = true
+ritual_duracion = 1.2
+flotante = true
+
+[node name="Volador2" parent="Encounter3" unique_id=414619600 instance=ExtResource("12_wnw5i")]
+position = Vector2(-750, 215)
+tipo = "arquero"
+ola_asignada = 1
+spawn_telegrafiado = true
+ritual_duracion = 1.2
+flotante = true
+altura_flote = 330.0
 
 [node name="Enredadera5" parent="." unique_id=295549758 instance=ExtResource("13_o066t")]
 position = Vector2(3660, 5027)
@@ -347,12 +386,12 @@ enemy_data = SubResource("Resource_h4t55")
 spawn_telegrafiado = true
 
 [node name="Enemy2" parent="Encounter4" unique_id=225436884 instance=ExtResource("12_wnw5i")]
-position = Vector2(283, 189)
+position = Vector2(665, 227)
 spawn_telegrafiado = true
 ritual_duracion = 1.5
 
 [node name="Enemy3" parent="Encounter4" unique_id=1026632783 instance=ExtResource("12_wnw5i")]
-position = Vector2(-306, 187)
+position = Vector2(-565, 222)
 ola_asignada = 1
 spawn_telegrafiado = true
 
@@ -378,20 +417,8 @@ position = Vector2(3501, -988)
 [node name="Rompible6" parent="." unique_id=917328464 instance=ExtResource("18_gjjf1")]
 position = Vector2(3593, -906)
 
-[node name="Pickup1" parent="." unique_id=2112665036 instance=ExtResource("31_pick")]
-position = Vector2(6220, 5550)
-
-[node name="Pickup2" parent="." unique_id=464127985 instance=ExtResource("31_pick")]
-position = Vector2(5570, 5550)
-
-[node name="Pickup3" parent="." unique_id=683797833 instance=ExtResource("31_pick")]
-position = Vector2(6120, 5550)
-
 [node name="Pickup4" parent="." unique_id=2101227707 instance=ExtResource("31_pick")]
 position = Vector2(-377, 4537)
-
-[node name="Pickup5" parent="." unique_id=679684242 instance=ExtResource("31_pick")]
-position = Vector2(2050, 4056)
 
 [node name="Pickup6" parent="." unique_id=344931999 instance=ExtResource("31_pick")]
 position = Vector2(4065, 5181)
@@ -401,7 +428,7 @@ position = Vector2(-656, 4537)
 
 [node name="DialogoIntro" parent="." unique_id=122008778 instance=ExtResource("32_dtg")]
 position = Vector2(6320, 5442)
-dialogo_id = "p1_intro"
+dialogo_id = "n2_intro"
 
 [node name="DialogoCombate" parent="." unique_id=2143550590 instance=ExtResource("32_dtg")]
 position = Vector2(6030, 5442)
@@ -411,24 +438,11 @@ dialogo_id = "p1_combate"
 position = Vector2(7505, 3390)
 dialogo_id = "p1_plataformas"
 
-[node name="DialogoSantuario" parent="." unique_id=38420734 instance=ExtResource("32_dtg")]
-position = Vector2(4300, 4370)
-dialogo_id = "p1_santuario"
-
-[node name="CheckpointInicio" parent="." instance=ExtResource("ck_1")]
+[node name="CheckpointInicio" parent="." unique_id=1107863889 instance=ExtResource("ck_1")]
 position = Vector2(400, 50)
 
-[node name="CheckpointCueva1" parent="." instance=ExtResource("ck_1")]
-position = Vector2(1900, 1922)
-
-[node name="CheckpointCueva2" parent="." instance=ExtResource("ck_1")]
-position = Vector2(5300, 5554)
-
-[node name="CheckpointCueva3" parent="." instance=ExtResource("ck_1")]
-position = Vector2(-1000, 4834)
-
-[node name="CheckpointCueva4" parent="." instance=ExtResource("ck_1")]
-position = Vector2(-3400, 5106)
+[node name="CheckpointCueva2" parent="." unique_id=716925053 instance=ExtResource("ck_1")]
+position = Vector2(2990, 5411)
 
 [node name="Player" parent="." unique_id=780925585 instance=ExtResource("2_player")]
 position = Vector2(7, -86)
@@ -436,14 +450,14 @@ position = Vector2(7, -86)
 [node name="Decoracion" type="Node2D" parent="." unique_id=770000001]
 z_index = -5
 
-[node name="D1" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(3981, 864)
+[node name="D1" parent="Decoracion" unique_id=1837568877 instance=ExtResource("60_deco")]
+position = Vector2(3481, 864)
 tipo = 12
 escala = 3.2
 sombra = false
 viento = false
 
-[node name="D2" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D2" parent="Decoracion" unique_id=2044428865 instance=ExtResource("60_deco")]
 position = Vector2(3801, 864)
 tipo = 8
 variante = 2
@@ -452,14 +466,14 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D3" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(4861, 864)
+[node name="D3" parent="Decoracion" unique_id=118357452 instance=ExtResource("60_deco")]
+position = Vector2(5361, 864)
 tipo = 12
 escala = 3.2
 sombra = false
 viento = false
 
-[node name="D4" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D4" parent="Decoracion" unique_id=1425412249 instance=ExtResource("60_deco")]
 position = Vector2(5041, 864)
 tipo = 8
 variante = 7
@@ -468,15 +482,15 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D5" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(1725, 1952)
+[node name="D5" parent="Decoracion" unique_id=516640677 instance=ExtResource("60_deco")]
+position = Vector2(1225, 1952)
 tipo = 12
 escala = 3.2
 flip_h = true
 sombra = false
 viento = false
 
-[node name="D6" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D6" parent="Decoracion" unique_id=1685593503 instance=ExtResource("60_deco")]
 position = Vector2(1545, 1952)
 tipo = 8
 variante = 2
@@ -485,15 +499,15 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D7" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(2605, 1952)
+[node name="D7" parent="Decoracion" unique_id=728010647 instance=ExtResource("60_deco")]
+position = Vector2(3105, 1952)
 tipo = 12
 escala = 3.2
 flip_h = true
 sombra = false
 viento = false
 
-[node name="D8" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D8" parent="Decoracion" unique_id=1254119243 instance=ExtResource("60_deco")]
 position = Vector2(2785, 1952)
 tipo = 8
 variante = 10
@@ -502,14 +516,14 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D9" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(5281, 5584)
+[node name="D9" parent="Decoracion" unique_id=521966723 instance=ExtResource("60_deco")]
+position = Vector2(4781, 5584)
 tipo = 12
 escala = 3.2
 sombra = false
 viento = false
 
-[node name="D10" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D10" parent="Decoracion" unique_id=626019134 instance=ExtResource("60_deco")]
 position = Vector2(5101, 5584)
 tipo = 8
 variante = 10
@@ -519,14 +533,14 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D11" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(6161, 5584)
+[node name="D11" parent="Decoracion" unique_id=1428956626 instance=ExtResource("60_deco")]
+position = Vector2(6661, 5584)
 tipo = 12
 escala = 3.2
 sombra = false
 viento = false
 
-[node name="D12" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D12" parent="Decoracion" unique_id=1450437262 instance=ExtResource("60_deco")]
 position = Vector2(6341, 5584)
 tipo = 8
 escala = 3.8
@@ -534,14 +548,14 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D13" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(-4378, 5600)
+[node name="D13" parent="Decoracion" unique_id=130306617 instance=ExtResource("60_deco")]
+position = Vector2(-4878, 5600)
 tipo = 12
 escala = 3.2
 sombra = false
 viento = false
 
-[node name="D14" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D14" parent="Decoracion" unique_id=756739448 instance=ExtResource("60_deco")]
 position = Vector2(-4558, 5600)
 tipo = 8
 variante = 9
@@ -551,14 +565,14 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D15" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(-3498, 5600)
+[node name="D15" parent="Decoracion" unique_id=1535819059 instance=ExtResource("60_deco")]
+position = Vector2(-2998, 5600)
 tipo = 12
 escala = 3.2
 sombra = false
 viento = false
 
-[node name="D16" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D16" parent="Decoracion" unique_id=67396679 instance=ExtResource("60_deco")]
 position = Vector2(-3318, 5600)
 tipo = 8
 variante = 6
@@ -568,7 +582,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D17" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D17" parent="Decoracion" unique_id=85480123 instance=ExtResource("60_deco")]
 position = Vector2(-200, 80)
 tipo = 8
 variante = 3
@@ -578,7 +592,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D18" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D18" parent="Decoracion" unique_id=178228622 instance=ExtResource("60_deco")]
 position = Vector2(380, 80)
 tipo = 4
 variante = 2
@@ -588,7 +602,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D19" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D19" parent="Decoracion" unique_id=323968399 instance=ExtResource("60_deco")]
 position = Vector2(-5046, 4288)
 tipo = 4
 variante = 3
@@ -597,7 +611,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D20" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D20" parent="Decoracion" unique_id=2070742314 instance=ExtResource("60_deco")]
 position = Vector2(32, 5600)
 tipo = 8
 escala = 2.68
@@ -606,7 +620,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D21" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D21" parent="Decoracion" unique_id=1335973713 instance=ExtResource("60_deco")]
 position = Vector2(-5028, 5600)
 tipo = 8
 variante = 9
@@ -615,7 +629,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D22" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D22" parent="Decoracion" unique_id=107497469 instance=ExtResource("60_deco")]
 position = Vector2(-2432, 5600)
 tipo = 8
 variante = 3
@@ -625,8 +639,8 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D23" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(-5345, 5150)
+[node name="D23" parent="Decoracion" unique_id=1471371176 instance=ExtResource("60_deco")]
+position = Vector2(-5345, 5077)
 tipo = 9
 variante = 2
 escala = 4.24
@@ -635,7 +649,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D24" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D24" parent="Decoracion" unique_id=682480443 instance=ExtResource("60_deco")]
 position = Vector2(-3898, 4192)
 tipo = 8
 variante = 3
@@ -644,7 +658,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D25" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D25" parent="Decoracion" unique_id=1197097110 instance=ExtResource("60_deco")]
 position = Vector2(-3027, 4256)
 tipo = 8
 variante = 5
@@ -653,7 +667,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D26" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D26" parent="Decoracion" unique_id=820085969 instance=ExtResource("60_deco")]
 position = Vector2(931, 80)
 tipo = 16
 variante = 2
@@ -663,7 +677,7 @@ color_noche = Color(0.84, 0.8, 0.96, 1)
 sombra = false
 viento = false
 
-[node name="D27" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D27" parent="Decoracion" unique_id=1085110554 instance=ExtResource("60_deco")]
 position = Vector2(1339, -546)
 tipo = 9
 variante = 10
@@ -672,7 +686,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D28" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D28" parent="Decoracion" unique_id=225543053 instance=ExtResource("60_deco")]
 position = Vector2(375, 3680)
 tipo = 4
 variante = 5
@@ -682,7 +696,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D29" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D29" parent="Decoracion" unique_id=719371092 instance=ExtResource("60_deco")]
 position = Vector2(1571, 7040)
 tipo = 16
 variante = 5
@@ -691,7 +705,7 @@ color_noche = Color(0.84, 0.8, 0.96, 1)
 sombra = false
 viento = false
 
-[node name="D30" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D30" parent="Decoracion" unique_id=524598587 instance=ExtResource("60_deco")]
 position = Vector2(615, 7040)
 tipo = 8
 variante = 6
@@ -700,7 +714,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D31" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D31" parent="Decoracion" unique_id=436886127 instance=ExtResource("60_deco")]
 position = Vector2(2664, 7168)
 tipo = 8
 variante = 4
@@ -710,7 +724,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D32" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D32" parent="Decoracion" unique_id=1479936654 instance=ExtResource("60_deco")]
 position = Vector2(1952, 7168)
 tipo = 4
 variante = 3
@@ -720,8 +734,8 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D33" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(1488, 6414)
+[node name="D33" parent="Decoracion" unique_id=1185725606 instance=ExtResource("60_deco")]
+position = Vector2(1498, 6331)
 tipo = 9
 variante = 2
 escala = 4.45
@@ -729,7 +743,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D34" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D34" parent="Decoracion" unique_id=1636041438 instance=ExtResource("60_deco")]
 position = Vector2(1667, 3840)
 tipo = 8
 variante = 6
@@ -739,7 +753,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D35" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D35" parent="Decoracion" unique_id=279835379 instance=ExtResource("60_deco")]
 position = Vector2(1133, 3840)
 tipo = 4
 escala = 3.25
@@ -747,8 +761,8 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D36" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(1747, 2638)
+[node name="D36" parent="Decoracion" unique_id=624085860 instance=ExtResource("60_deco")]
+position = Vector2(1747, 2598)
 tipo = 9
 variante = 3
 escala = 3.2
@@ -757,7 +771,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D37" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D37" parent="Decoracion" unique_id=1231746930 instance=ExtResource("60_deco")]
 position = Vector2(905, 4976)
 tipo = 8
 variante = 9
@@ -767,8 +781,8 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D38" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(1071, 4302)
+[node name="D38" parent="Decoracion" unique_id=653791048 instance=ExtResource("60_deco")]
+position = Vector2(1071, 4240)
 tipo = 9
 variante = 6
 escala = 3.74
@@ -776,7 +790,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D39" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D39" parent="Decoracion" unique_id=896720992 instance=ExtResource("60_deco")]
 position = Vector2(1478, 1198)
 tipo = 9
 variante = 2
@@ -785,7 +799,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D40" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D40" parent="Decoracion" unique_id=420245715 instance=ExtResource("60_deco")]
 position = Vector2(2129, 1166)
 tipo = 9
 variante = 3
@@ -794,7 +808,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D41" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D41" parent="Decoracion" unique_id=797730606 instance=ExtResource("60_deco")]
 position = Vector2(2627, 5600)
 tipo = 8
 variante = 7
@@ -804,7 +818,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D42" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D42" parent="Decoracion" unique_id=1390810742 instance=ExtResource("60_deco")]
 position = Vector2(2901, 3968)
 tipo = 8
 variante = 9
@@ -814,7 +828,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D43" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D43" parent="Decoracion" unique_id=625685201 instance=ExtResource("60_deco")]
 position = Vector2(3225, 864)
 tipo = 4
 variante = 6
@@ -823,7 +837,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D44" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D44" parent="Decoracion" unique_id=627913851 instance=ExtResource("60_deco")]
 position = Vector2(4249, 174)
 tipo = 9
 variante = 10
@@ -833,7 +847,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D45" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D45" parent="Decoracion" unique_id=1217830014 instance=ExtResource("60_deco")]
 position = Vector2(5265, 3680)
 tipo = 8
 variante = 4
@@ -843,7 +857,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D46" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D46" parent="Decoracion" unique_id=2090620809 instance=ExtResource("60_deco")]
 position = Vector2(4601, 3840)
 tipo = 8
 escala = 2.87
@@ -851,8 +865,8 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D47" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(6359, 4766)
+[node name="D47" parent="Decoracion" unique_id=907633462 instance=ExtResource("60_deco")]
+position = Vector2(6352, 4696)
 tipo = 9
 variante = 3
 escala = 4.54
@@ -860,7 +874,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D48" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D48" parent="Decoracion" unique_id=1301527731 instance=ExtResource("60_deco")]
 position = Vector2(6199, 3760)
 tipo = 4
 escala = 3.65
@@ -868,8 +882,8 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D49" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(6318, 2382)
+[node name="D49" parent="Decoracion" unique_id=1630864848 instance=ExtResource("60_deco")]
+position = Vector2(6318, 2305)
 tipo = 9
 variante = 4
 escala = 3.35
@@ -877,7 +891,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D50" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D50" parent="Decoracion" unique_id=371894657 instance=ExtResource("60_deco")]
 position = Vector2(8547, 5552)
 tipo = 4
 escala = 4.03
@@ -885,7 +899,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D51" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D51" parent="Decoracion" unique_id=995529292 instance=ExtResource("60_deco")]
 position = Vector2(9031, 976)
 tipo = 4
 escala = 3.95
@@ -893,7 +907,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D52" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D52" parent="Decoracion" unique_id=508964974 instance=ExtResource("60_deco")]
 position = Vector2(11621, 880)
 tipo = 8
 variante = 4
@@ -902,7 +916,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D53" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D53" parent="Decoracion" unique_id=670778918 instance=ExtResource("60_deco")]
 position = Vector2(9360, 5632)
 tipo = 8
 variante = 8
@@ -911,8 +925,8 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D54" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(9339, 4734)
+[node name="D54" parent="Decoracion" unique_id=18493652 instance=ExtResource("60_deco")]
+position = Vector2(9312, 4671)
 tipo = 9
 variante = 7
 escala = 3.43
@@ -920,7 +934,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D55" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D55" parent="Decoracion" unique_id=1797768130 instance=ExtResource("60_deco")]
 position = Vector2(9844, 3376)
 tipo = 8
 variante = 5
@@ -930,8 +944,8 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D56" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(9987, 1998)
+[node name="D56" parent="Decoracion" unique_id=106718633 instance=ExtResource("60_deco")]
+position = Vector2(9990, 1931)
 tipo = 9
 variante = 3
 escala = 3.28
@@ -940,7 +954,7 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D57" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D57" parent="Decoracion" unique_id=195365211 instance=ExtResource("60_deco")]
 position = Vector2(10847, 5552)
 tipo = 16
 variante = 8
@@ -950,7 +964,7 @@ color_noche = Color(0.84, 0.8, 0.96, 1)
 sombra = false
 viento = false
 
-[node name="D58" parent="Decoracion" instance=ExtResource("60_deco")]
+[node name="D58" parent="Decoracion" unique_id=1183818938 instance=ExtResource("60_deco")]
 position = Vector2(10968, 3232)
 tipo = 4
 variante = 4
@@ -959,8 +973,8 @@ color_noche = Color(0.66, 0.66, 0.92, 1)
 sombra = false
 viento = false
 
-[node name="D59" parent="Decoracion" instance=ExtResource("60_deco")]
-position = Vector2(10898, 1966)
+[node name="D59" parent="Decoracion" unique_id=592957773 instance=ExtResource("60_deco")]
+position = Vector2(10895, 1923)
 tipo = 9
 variante = 5
 escala = 3.1
@@ -972,7 +986,7 @@ viento = false
 [node name="DecoracionFrente" type="Node2D" parent="." unique_id=635974107]
 z_index = 3
 
-[node name="D60" parent="DecoracionFrente" instance=ExtResource("60_deco")]
+[node name="D60" parent="DecoracionFrente" unique_id=1350164496 instance=ExtResource("60_deco")]
 position = Vector2(2251, 3680)
 tipo = 8
 variante = 5
@@ -982,7 +996,7 @@ color_noche = Color(0.74, 0.72, 0.84, 1)
 sombra = false
 viento = false
 
-[node name="D61" parent="DecoracionFrente" instance=ExtResource("60_deco")]
+[node name="D61" parent="DecoracionFrente" unique_id=1262564315 instance=ExtResource("60_deco")]
 position = Vector2(-63, 7040)
 tipo = 8
 variante = 4
@@ -991,7 +1005,7 @@ color_noche = Color(0.74, 0.72, 0.84, 1)
 sombra = false
 viento = false
 
-[node name="D62" parent="DecoracionFrente" instance=ExtResource("60_deco")]
+[node name="D62" parent="DecoracionFrente" unique_id=2045523440 instance=ExtResource("60_deco")]
 position = Vector2(5206, 1696)
 tipo = 8
 escala = 3.06
@@ -1000,7 +1014,7 @@ color_noche = Color(0.74, 0.72, 0.84, 1)
 sombra = false
 viento = false
 
-[node name="D63" parent="DecoracionFrente" instance=ExtResource("60_deco")]
+[node name="D63" parent="DecoracionFrente" unique_id=1433400392 instance=ExtResource("60_deco")]
 position = Vector2(7195, 3600)
 tipo = 8
 variante = 9
@@ -1009,7 +1023,7 @@ color_noche = Color(0.74, 0.72, 0.84, 1)
 sombra = false
 viento = false
 
-[node name="D64" parent="DecoracionFrente" instance=ExtResource("60_deco")]
+[node name="D64" parent="DecoracionFrente" unique_id=1564290894 instance=ExtResource("60_deco")]
 position = Vector2(12084, 928)
 tipo = 8
 variante = 8
@@ -1019,11 +1033,83 @@ color_noche = Color(0.74, 0.72, 0.84, 1)
 sombra = false
 viento = false
 
-[node name="D65" parent="DecoracionFrente" instance=ExtResource("60_deco")]
-position = Vector2(10373, 5632)
+[node name="D65" parent="DecoracionFrente" unique_id=608085904 instance=ExtResource("60_deco")]
+position = Vector2(10373, 5579)
 tipo = 8
 variante = 9
 escala = 2.94
 color_noche = Color(0.74, 0.72, 0.84, 1)
 sombra = false
 viento = false
+
+[node name="MurcielagosPasan" parent="." unique_id=1751006873 instance=ExtResource("71_bats")]
+position = Vector2(650, 80)
+
+[node name="UnlockMurcielago" parent="." unique_id=850254496 instance=ExtResource("70_unlock")]
+position = Vector2(1250, -100)
+forma = 3
+color_sello = Color(0.72, 0.5, 1, 1)
+
+[node name="DialogoAleteos" parent="." unique_id=2027091373 instance=ExtResource("32_dtg")]
+position = Vector2(620, -120)
+dialogo_id = "n2_aleteos"
+
+[node name="DialogoMurcielago" parent="." unique_id=447152655 instance=ExtResource("32_dtg")]
+position = Vector2(1330, -120)
+dialogo_id = "n2_murcielago"
+
+[node name="DialogoPlaneo" parent="." unique_id=712188632 instance=ExtResource("32_dtg")]
+position = Vector2(1480, -120)
+dialogo_id = "n2_planeo"
+
+[node name="DialogoVoladores" parent="." unique_id=854736739 instance=ExtResource("32_dtg")]
+position = Vector2(2950, 1752)
+dialogo_id = "n2_voladores"
+
+[node name="DialogoVoladores2" parent="." unique_id=820105970 instance=ExtResource("32_dtg")]
+position = Vector2(6600, 5384)
+dialogo_id = "n2_voladores2"
+
+[node name="ObjetivoMurcielago" type="Node" parent="." unique_id=311058085]
+script = ExtResource("72_obj")
+texto = "Encontrá el sello del Murciélago"
+origen = NodePath("../UnlockMurcielago")
+senal = &"desbloqueada"
+
+[node name="ObjetivoVolador" type="Node" parent="." unique_id=761569192]
+script = ExtResource("72_obj")
+texto = "Derribá un arquero volador"
+origen = NodePath("../Encounter2/Volador1")
+senal = &"died"
+activador = NodePath("../DialogoVoladores")
+
+[node name="ObjetivoGuardias" type="Node" parent="." unique_id=720502095]
+script = ExtResource("72_obj")
+texto = "Vencé a los guardias de la cueva"
+origen = NodePath("../Encounter4")
+senal = &"completado"
+
+[node name="ObjetivoSantuario" type="Node" parent="." unique_id=2010137263]
+script = ExtResource("72_obj")
+texto = "Llegá al santuario"
+origen = NodePath("../Santuario")
+senal = &"activado"
+
+[node name="Atmosfera" type="Node2D" parent="."]
+z_index = -4
+
+[node name="NieblaPiso" type="Node2D" parent="Atmosfera"]
+script = ExtResource("81_seguir")
+desplazamiento = Vector2(0, 330)
+
+[node name="Niebla1" parent="Atmosfera/NieblaPiso" instance=ExtResource("80_niebla")]
+amount = 18
+emission_rect_extents = Vector2(1300, 40)
+
+[node name="NieblaMedia" type="Node2D" parent="Atmosfera"]
+script = ExtResource("81_seguir")
+desplazamiento = Vector2(0, -60)
+
+[node name="Niebla2" parent="Atmosfera/NieblaMedia" instance=ExtResource("80_niebla")]
+amount = 8
+emission_rect_extents = Vector2(1300, 220)

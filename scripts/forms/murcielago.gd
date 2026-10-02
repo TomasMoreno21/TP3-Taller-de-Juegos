@@ -9,7 +9,7 @@ func _init() -> void:
 	gravity_scale = 0.50
 	max_health = 100
 	melee_hit_delay = 0.06
-	attack_damage = 8
+	attack_damage = 9
 	attack_range = 90.0
 	attack_size = Vector2(110, 70)
 	light_combo_steps = 3
@@ -18,6 +18,7 @@ func _init() -> void:
 	heavy_size = Vector2(130, 85)
 	heavy_combo_steps = 2
 	special_damage = 15
+	dano_recibido_mult = 1.1
 	special_cost = 5.0
 	flap_impulso = 330.0
 	flap_costo = 4.0
@@ -36,7 +37,7 @@ func _init() -> void:
 	jump_cut_multiplier = 0.20
 	camera_zoom = Vector2(0.88, 0.88)
 	landing_squash = 0.06
-	mult_recuperacion = 1.8
+	mult_recuperacion = 1.4
 	recovery_early_fraccion = 0.4
 	melee_sticky = 0.0
 	step_up_max = 16.0   # sube escalones chicos (rampas suaves) pero no obstáculos

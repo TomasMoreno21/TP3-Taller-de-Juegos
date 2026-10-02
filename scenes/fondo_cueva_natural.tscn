@@ -1,0 +1,83 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://Sprites/Fondos/Cueva2/pared.png" id="t0"]
+[ext_resource type="Texture2D" path="res://Sprites/Fondos/Cueva2/lejanas.png" id="t1"]
+[ext_resource type="Texture2D" path="res://Sprites/Fondos/Cueva2/lejanas_piso.png" id="t2"]
+[ext_resource type="Texture2D" path="res://Sprites/Fondos/Cueva2/columnas_a.png" id="t3"]
+[ext_resource type="Texture2D" path="res://Sprites/Fondos/Cueva2/medias.png" id="t4"]
+[ext_resource type="Texture2D" path="res://Sprites/Fondos/Cueva2/columnas_b.png" id="t5"]
+[ext_resource type="Texture2D" path="res://Sprites/Fondos/Cueva2/cercanas.png" id="t6"]
+
+[node name="FondoCuevaNatural" type="ParallaxBackground"]
+layer = -10
+
+[node name="Pared" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.03, 0)
+motion_mirroring = Vector2(3840, 0)
+
+[node name="Sprite" type="Sprite2D" parent="Pared"]
+texture_filter = 2
+texture_repeat = 2
+centered = false
+texture = ExtResource("t0")
+
+[node name="Lejanas" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.08, 0)
+motion_mirroring = Vector2(3840, 0)
+
+[node name="Sprite" type="Sprite2D" parent="Lejanas"]
+texture_filter = 2
+texture_repeat = 2
+centered = false
+texture = ExtResource("t1")
+
+[node name="LejanasPiso" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.12, 0)
+motion_mirroring = Vector2(3840, 0)
+
+[node name="Sprite" type="Sprite2D" parent="LejanasPiso"]
+texture_filter = 2
+texture_repeat = 2
+centered = false
+texture = ExtResource("t2")
+
+[node name="ColumnasA" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.22, 0)
+motion_mirroring = Vector2(3840, 0)
+
+[node name="Sprite" type="Sprite2D" parent="ColumnasA"]
+texture_filter = 2
+texture_repeat = 2
+centered = false
+texture = ExtResource("t3")
+
+[node name="Medias" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.34, 0)
+motion_mirroring = Vector2(3840, 0)
+
+[node name="Sprite" type="Sprite2D" parent="Medias"]
+texture_filter = 2
+texture_repeat = 2
+centered = false
+texture = ExtResource("t4")
+
+[node name="ColumnasB" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.46, 0)
+motion_mirroring = Vector2(3840, 0)
+
+[node name="Sprite" type="Sprite2D" parent="ColumnasB"]
+texture_filter = 2
+texture_repeat = 2
+centered = false
+texture = ExtResource("t5")
+
+[node name="Cercanas" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.62, 0)
+motion_mirroring = Vector2(3840, 0)
+
+[node name="Sprite" type="Sprite2D" parent="Cercanas"]
+texture_filter = 2
+texture_repeat = 2
+centered = false
+texture = ExtResource("t6")
+

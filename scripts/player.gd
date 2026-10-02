@@ -33,8 +33,8 @@ const TINT_ALPHA := 1.0  # antes 0.45; hacer self_modulate x form fue reportado 
 const COMBO_WINDOW := 1.1
 const LINEA_ESPESOR := 40.0
 const ENERGIA_MAX := 100.0
-const ENERGIA_DRAIN := 5.0
-const ENERGIA_REGEN := 5.0
+const ENERGIA_DRAIN := 4.0
+const ENERGIA_REGEN := 8.0
 const ENERGIA_KILL := 20.0
 const ENERGIA_PICKUP := 30.0
 const ENERGIA_RESPAWN := 50.0
@@ -72,7 +72,7 @@ const HITSTOP_COMBO := 0.11
 @export var hitstop_max := 0.16             # tope del hitstop de un golpe (evita que la suma de multiplicadores trabe)
 @export var hitstop_rafaga_mult := 0.7      # si el golpe llega poco después del anterior, el hitstop se acorta (ráfagas fluidas)
 @export var parry_ventana := 0.16           # Humano: al empezar a bloquear, ventana (s) donde el golpe se devuelve (parry)
-@export var parry_energia := 10.0           # energía que da un parry exitoso
+@export var parry_energia := 12.0          # energía que da un parry exitoso
 @export var parry_onda_radio := 170.0       # el parry aturde a los enemigos cercanos
 @export var tag_bonus_mult := 1.5           # cambiar de forma a mitad de racha: el próximo golpe pega esto de más
 @export var tag_bonus_tiempo := 2.0         # cuánto dura ese bonus (s)
@@ -102,7 +102,7 @@ const HITSTOP_COMBO := 0.11
 @export_range(0.05, 0.6) var swing_grosor := 0.3   ## grosor de la medialuna (fracción del radio)
 @export_range(0.0, 1.0) var spark_altura := 0.42  # altura del impacto dentro del hitbox (0 = arriba, 1 = pies); 0.42 ≈ puño
 @export var lobo_landing_squash_extra := 1.4  # multiplicador squash al aterrizar como Lobo (item 18)
-@export var slowmo_transformacion := 0.18  # s de cámara lenta al transformarse (0 = off)
+@export var slowmo_transformacion := 0.07 # s de cámara lenta al transformarse (0 = off)
 @export var slowmo_transformacion_escala := 0.4  # escala del tiempo mientras transforma
 @export var tint_dano := Color(1.0, 0.28, 0.28)  # tinte del sprite al recibir daño
 @export var tint_dano_duracion := 0.11  # s que tarda en volver al color normal
@@ -162,7 +162,7 @@ var _attack_anim_speed_scale := 1.0
 static var _tips_vistos: Dictionary = {}
 @export var tips_ayuda := true             ## muestra avisos de ayuda la primera vez (parry, energía)
 @export_group("Defensa")
-@export var bloqueo_costo_energia := 4.0   ## energía que gasta cada golpe bloqueado (0 = gratis)
+@export var bloqueo_costo_energia := 3.0  ## energía que gasta cada golpe bloqueado (0 = gratis)
 @export_group("Alineación")
 @export var anclar_pies := true         ## apoya la base de cada frame en el piso (evita flotar/hundirse)
 @export var pies_hundidos := 4.0         ## px que los pies se meten en el suelo (sensación de peso)
@@ -195,12 +195,12 @@ var _velo_muerte: CanvasLayer
 var _invuln_timer := 0.0
 var _invuln_sin_parpadeo := false
 var _cooldown_formas: Dictionary = {}
-const COOLDOWN_AGOTADA := 3.0
-const COOLDOWN_TRANSFORM := 1.8
+const COOLDOWN_AGOTADA := 2.0
+const COOLDOWN_TRANSFORM := 0.35   # anti-spam: el freno real son la energía mínima y el drenaje
 var _cooldown_transform := 0.0
 var _special_cooldown := 0.0
 var _transform_buffer: float = 0.0
-const TRANSFORM_BUFFER_TIME := 0.15
+const TRANSFORM_BUFFER_TIME := 0.25
 var _trepando: bool = false
 var _enredadera_actual: Area2D = null
 var _trepado_cooldown: float = 0.0
@@ -283,6 +283,12 @@ var _salto_aereo_limitado: bool = false
 @export var volumen_golpe_pesado_db := 0.0
 @export var volumen_special_db := 0.0
 @export var invuln_transformacion := 0.8
+@export var transformacion_pop := 0.32          ## rebote del cuerpo (resorte) al transformarse (0 = sin)
+@export var transformacion_anillo := 230.0       ## radio del aro de onda al transformarse (0 = sin)
+@export var golpe_rapido_tras_transformar := 1.0 ## s tras transformarte en que el primer ataque conecta sin retardo (0 = off)
+var _golpe_rapido_t := 0.0
+@export var invuln_dano := 0.8                  ## s de invulnerabilidad tras recibir un golpe
+@export var energia_min_transformar := 25.0      ## energía mínima para transformarse (el retorno a Humano no la pide)
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $Collision
@@ -824,6 +830,9 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	elif _current_attack_type == "heavy":
 		paso = maxi(_heavy_step, 1)
 	_hit_delay = data.hit_delay_para(_current_attack_type, paso)
+	if _golpe_rapido_t > 0.0:
+		_hit_delay = 0.0   # primer ataque tras transformarte: conecta de inmediato
+		_golpe_rapido_t = 0.0
 	var rec := _recovery_for(_current_attack_type) * data.mult_recuperacion_para(_current_attack_type, paso)
 	_attack_timer = rec
 	# El lobo usa la misma cola que el humano: _iniciar_anim_ataque estira la
@@ -1383,6 +1392,8 @@ func _punch_sprite(amount: float) -> void:
 func _handle_energia(delta: float) -> void:
 	if _cooldown_transform > 0.0:
 		_cooldown_transform = maxf(_cooldown_transform - delta, 0.0)
+	if _golpe_rapido_t > 0.0:
+		_golpe_rapido_t = maxf(_golpe_rapido_t - delta, 0.0)
 	for k in _cooldown_formas.keys():
 		_cooldown_formas[k] -= delta
 		if _cooldown_formas[k] <= 0.0:
@@ -1390,7 +1401,7 @@ func _handle_energia(delta: float) -> void:
 	if current_form == Form.HUMAN:
 		energia = minf(energia + ENERGIA_REGEN * delta, ENERGIA_MAX)
 	else:
-		var drain := ENERGIA_DRAIN * (0.45 if not _en_combate() else 1.0)
+		var drain := ENERGIA_DRAIN * forms[current_form].drenaje_mult * (0.45 if not _en_combate() else 1.0)
 		energia -= drain * delta
 		if energia <= 0.0:
 			energia = 0.0
@@ -1502,6 +1513,9 @@ func _transformar(nueva: int, forzar: bool = false) -> bool:
 		return false
 	if nueva == current_form or (not forzar and _forma_en_cooldown(nueva)):
 		return false
+	if not forzar and nueva != Form.HUMAN and energia < energia_min_transformar:
+		_denegar_transformacion()
+		return false
 	var data_nueva: Forma = forms[nueva]
 	var prev_size: Vector2 = (collision_shape.shape as RectangleShape2D).size
 	var prev_pos: Vector2 = collision_shape.position
@@ -1534,7 +1548,12 @@ func _transformar(nueva: int, forzar: bool = false) -> bool:
 	if slowmo_transformacion > 0.0:
 		_freeze_slowmo(slowmo_transformacion, slowmo_transformacion_escala)
 	_particulas_regreso(data.color)
+	if transformacion_pop > 0.0:
+		_punch_sprite(transformacion_pop)
+	if transformacion_anillo > 0.0:
+		_anillo_onda(transformacion_anillo)
 	if not forzar:
+		_golpe_rapido_t = golpe_rapido_tras_transformar
 		if _racha >= 2 and _racha_timer > 0.0:
 			_tag_t = tag_bonus_tiempo
 			energia = minf(energia + tag_energia, ENERGIA_MAX)
@@ -1742,6 +1761,10 @@ func _update_animacion() -> void:
 		visual.rotation = lerpf(visual.rotation, deg_to_rad(ang) * facing, minf(6.0 * get_physics_process_delta_time(), 1.0))
 		return
 	var quieto := absf(velocity.x) < 10.0 and is_on_floor()
+	var data: Forma = forms[current_form]
+	var en_aire := not is_on_floor() and current_form != Form.MURCIELAGO
+	# Salto en el lugar: se conserva la pose de reposo en vez de pasar a la de correr.
+	var idle_aire := en_aire and absf(velocity.x) < 10.0 and visual.animation in ["idle", "lobo_idle", "oso_idle"]
 	var anim := "run"
 	if current_form == Form.MURCIELAGO and visual.sprite_frames.has_animation("murci_volar"):
 		if not is_on_floor() and absf(velocity.y) > 20.0:
@@ -1760,20 +1783,30 @@ func _update_animacion() -> void:
 		anim = "oso_caminar"
 	elif current_form == Form.HUMAN and quieto and visual.sprite_frames.has_animation("idle"):
 		anim = "idle"
+	if idle_aire:
+		anim = visual.animation
 	if visual.animation != anim:
 		visual.play(anim)
-	var data: Forma = forms[current_form]
+	var dt_s := get_physics_process_delta_time()
+	var escala_obj := 0.0
 	if anim == "lobo_attack":
-		visual.speed_scale = 1.4
+		escala_obj = 1.4
 	elif anim == "lobo_idle" or anim == "oso_idle" or anim == "idle":
-		visual.speed_scale = 1.0
+		escala_obj = 1.0
+	elif en_aire and data.congelar_en_aire:
+		escala_obj = 0.0  # congelado: sigue en el frame que traía al despegar y retoma al aterrizar
 	elif absf(velocity.x) < 10.0:
-		visual.speed_scale = 0.0
+		escala_obj = 0.0
 	else:
 		var speed_min := 0.35 if current_form != Form.MURCIELAGO else 0.7
-		visual.speed_scale = clampf(absf(velocity.x) / maxf(data.speed, 1.0), speed_min, 1.6)
+		escala_obj = clampf(absf(velocity.x) / maxf(data.speed, 1.0), speed_min, 1.6)
 		if current_form == Form.LOBO:
-			visual.speed_scale = pow(visual.speed_scale, 0.82)
+			escala_obj = pow(escala_obj, 0.82)
+	# El ritmo de las piernas acompaña la velocidad con suavidad (antes saltaba de golpe).
+	if anim == "lobo_attack" or escala_obj == 0.0 or visual.speed_scale == 0.0:
+		visual.speed_scale = escala_obj
+	else:
+		visual.speed_scale = lerpf(visual.speed_scale, escala_obj, minf(14.0 * dt_s, 1.0))
 	var base_lean := clampf(velocity.x / maxf(data.speed, 1.0), -1.0, 1.0) * deg_to_rad(data.lean_angulo)
 	var lean_mult := 1.4 if not is_on_floor() else 1.0
 	var lean := base_lean * lean_mult
@@ -1933,6 +1966,7 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_blo
 			energia_changed.emit(energia)
 	if god_mode or blocking or _invuln_timer > 0.0 or _dialogo_bloquea_input():
 		return
+	cantidad = maxi(roundi(cantidad * forms[current_form].dano_recibido_mult), 1)
 	health -= cantidad
 	_sfx(sonido_dano, volumen_dano_db, 0.08)
 	# Golpe fuerte = más daño = más pausa de impacto (y el cel el umbral queda sin pausa).
@@ -1952,7 +1986,7 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_blo
 		velocity.x = dir * knockback
 	if dano_flotante and DisplayServer.get_name() != "headless":
 		_mostrar_dano_recibido(cantidad)
-	_invuln_timer = 0.55
+	_invuln_timer = invuln_dano
 	_invuln_sin_parpadeo = false
 	_handle_death()
 
@@ -2179,8 +2213,8 @@ func recoger_energia() -> void:
 	energia_changed.emit(energia)
 
 
-func on_enemy_killed() -> void:
-	energia = minf(energia + ENERGIA_KILL, ENERGIA_MAX)
+func on_enemy_killed(cantidad: float = ENERGIA_KILL) -> void:
+	energia = minf(energia + cantidad, ENERGIA_MAX)
 	energia_changed.emit(energia)
 
 

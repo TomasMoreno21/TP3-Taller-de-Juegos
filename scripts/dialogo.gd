@@ -100,6 +100,11 @@ func _ready() -> void:
 	gema.modulate.a = 0.0
 	gema.visible = false
 	_cargar_ajustes()
+	# Con un mando conectado los textos nombran sus botones desde el inicio (sin esperar un toque).
+	_usa_joypad = not Input.get_connected_joypads().is_empty()
+	Input.joy_connection_changed.connect(func(_id: int, conectado: bool) -> void:
+		if conectado:
+			_usa_joypad = true)
 
 
 ## El diálogo ya no bloquea el control del jugador (se sigue jugando mientras habla).

@@ -10,15 +10,15 @@ func _init() -> void:
 	jumps = 2
 	max_health = 100
 	melee_hit_delay = 0.04
-	attack_damage = 6
+	attack_damage = 8
 	attack_range = 205.0
 	attack_size = Vector2(140, 85)
 	light_combo_steps = 3
-	heavy_damage = 10
+	heavy_damage = 13
 	heavy_range = 105.0
 	heavy_size = Vector2(150, 95)
 	heavy_combo_steps = 2
-	special_damage = 14
+	special_damage = 18
 	special_size = Vector2(210, 120)
 	special_range = 180.0
 	special_knockback = 220.0
@@ -53,7 +53,7 @@ func _init() -> void:
 	lunge_combo = 130.0
 	melee_sticky = 0.0
 	combos = [
-		{"nombre": "Mordida", "secuencia": ["light", "heavy"], "dano": 26, "knockback": 240.0, "tamano": Vector2(180, 102), "rango": 102.0},
+		{"nombre": "Mordida", "secuencia": ["light", "heavy"], "dano": 40, "knockback": 240.0, "tamano": Vector2(180, 102), "rango": 102.0},
 	]
 
 

@@ -5,6 +5,8 @@ extends Area2D
 ## Visible en el mundo: un sello de espíritu que flota y brilla; al tocarlo estalla
 ## con cámara lenta y un destello del color de la forma.
 
+signal desbloqueada
+
 @export_enum("Humano:0", "Lobo:1", "Oso:2", "Murcielago:3") var forma: int = 1
 @export var una_vez := true
 @export var orbe_offset := Vector2(0, 40)     ## posición del sello respecto del centro del área
@@ -66,6 +68,7 @@ func _on_body_entered(body: Node2D) -> void:
 		set_deferred("monitoring", false)
 	_efecto_desbloqueo()
 	(prog as Node).desbloquear_forma(forma)
+	desbloqueada.emit()
 
 
 func _efecto_desbloqueo() -> void:

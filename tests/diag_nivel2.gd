@@ -1,0 +1,119 @@
+extends SceneTree
+## Nivel 2 (entrada de los cultistas): Murciélago por evento, presagio de murciélagos, arqueros
+## flotantes (aura, sin gravedad, solo los daña el proyectil) y objetivos de la lista.
+
+var fallos := 0
+
+
+func _chk(ok: bool, msg: String) -> void:
+	print(("[PASS] " if ok else "[FAIL] ") + msg)
+	if not ok:
+		fallos += 1
+
+
+func _initialize() -> void:
+	var nivel: Node = load("res://scenes/nivel2.tscn").instantiate()
+	root.add_child(nivel)
+	await physics_frame
+	await physics_frame
+	var prog: Node = root.get_node("Progresion")
+	var player: CharacterBody2D = nivel.get_node("Player")
+	player.set("god_mode", true)
+
+	# Formas: Humano y Lobo al entrar; el Murciélago llega por el sello.
+	_chk(prog.forma_desbloqueada(1), "Lobo disponible al entrar")
+	_chk(not prog.forma_desbloqueada(3), "Murciélago bloqueado al entrar")
+	var sello: Area2D = nivel.get_node("UnlockMurcielago")
+	var gano := [false]
+	sello.desbloqueada.connect(func() -> void: gano[0] = true)
+	player.global_position = sello.global_position
+	player.velocity = Vector2.ZERO
+	await physics_frame
+	await physics_frame
+	_chk(gano[0] and prog.forma_desbloqueada(3), "el sello desbloquea el Murciélago y emite la señal")
+
+	# Presagio: lanza murciélagos que vuelan y se liberan.
+	var bats: Area2D = nivel.get_node("MurcielagosPasan")
+	var antes := bats.get_child_count()
+	bats.lanzar()
+	_chk(bats.get_child_count() == antes + bats.cantidad, "MurcielagosPasan lanza %d murciélagos" % bats.cantidad)
+
+	# Diálogos nuevos existen en el json.
+	var datos: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/dialogos.json"))
+	for id in ["n2_intro", "n2_aleteos", "n2_murcielago", "n2_planeo", "n2_voladores", "n2_voladores2"]:
+		_chk(datos is Dictionary and (datos as Dictionary).has(id), "dialogos.json tiene " + id)
+		for l in (datos as Dictionary)[id]["lineas"]:
+			_chk(str(l).length() <= 48, "%s: línea corta (%d)" % [id, str(l).length()])
+
+	# Arqueros flotantes: 2 arenas, 2 voladores cada una.
+	for arena in ["Encounter2", "Encounter3"]:
+		var enc: Node = nivel.get_node(arena)
+		for nom in ["Volador1", "Volador2"]:
+			var v: CharacterBody2D = enc.get_node(nom)
+			_chk(v.flotante and v.tipo == "arquero", "%s/%s es arquero flotante" % [arena, nom])
+			v.preparar_ola()
+			v.activar()
+			v._telegraph_timer = 0.0
+			v._activo = true
+			v._colision(true)
+			var y0: float = v.global_position.y
+			# Despeje: hay piso debajo (a ~altura_flote) y techo suficiente arriba.
+			var sp := nivel.get_viewport().world_2d.direct_space_state
+			var pies: float = v.collide_shape.position.y + v.collide_shape.shape.size.y * 0.5
+			var q := PhysicsRayQueryParameters2D.create(v.global_position + Vector2(0, pies), v.global_position + Vector2(0, pies + 900), 1)
+			var h := sp.intersect_ray(q)
+			var alto_piso: float = h.position.y - (v.global_position.y + pies) if not h.is_empty() else -1.0
+			_chk(absf(alto_piso - 0.0) < 1.0 or alto_piso >= 0.0, "%s/%s: hay piso debajo" % [arena, nom])
+			var q2 := PhysicsRayQueryParameters2D.create(v.global_position + Vector2(0, -v.collide_shape.shape.size.y * 0.5), v.global_position + Vector2(0, -v.collide_shape.shape.size.y * 0.5 - 200), 1)
+			_chk(sp.intersect_ray(q2).is_empty(), "%s/%s: techo libre sobre la cabeza" % [arena, nom])
+			for i in 30:
+				await physics_frame
+			_chk(absf(v.global_position.y - y0) < 40.0, "%s/%s: flota (no cae) y=%d→%d" % [arena, nom, int(y0), int(v.global_position.y)])
+			_chk(alto_piso > 250.0, "%s/%s: está a %d px sobre el piso (fuera del salto del Humano)" % [arena, nom, int(alto_piso)])
+			_chk(v.get_node_or_null("AuraMistica") != null or v._aura != null, "%s/%s: tiene aura" % [arena, nom])
+			var vida: int = v.health
+			v.take_damage(40, 0.0, 1, false)
+			_chk(v.health == vida, "%s/%s: el cuerpo a cuerpo rebota" % [arena, nom])
+			v.golpe_proyectil = true
+			v.take_damage(15, 0.0, 1, false)
+			_chk(v.health == vida - 15, "%s/%s: el proyectil daña" % [arena, nom])
+
+	# Proyectil real del Murciélago contra un volador.
+	var v1: CharacterBody2D = nivel.get_node("Encounter2/Volador1")
+	player.set("current_form", 3)
+	player.global_position = Vector2(v1.global_position.x - 400, v1.global_position.y + 200)
+	player.set("facing", 1)
+	var v2: CharacterBody2D = nivel.get_node("Encounter2/Volador2")
+	var vida1: int = v1.health + v2.health
+	var cam: Camera2D = nivel.get_node("Camara")
+	cam.position_smoothing_enabled = false
+	cam.global_position = player.global_position
+	player.fire_projectile()
+	for i in 90:
+		cam.global_position = player.global_position
+		await physics_frame
+	_chk(v1.health + v2.health < vida1, "el proyectil del Murciélago alcanza a un volador (%d→%d)" % [vida1, v1.health + v2.health])
+
+	# Objetivos de la lista apuntan a señales reales.
+	for o in ["ObjetivoMurcielago", "ObjetivoVolador", "ObjetivoGuardias", "ObjetivoSantuario"]:
+		var on: Node = nivel.get_node(o)
+		var fuente: Node = on.get_node_or_null(on.origen)
+		_chk(fuente != null and fuente.has_signal(on.senal), "%s conectado a %s" % [o, on.senal])
+
+	# Fondo de cueva natural: capas que repiten en horizontal (cubren todo el mapa), sin primer plano.
+	var fondo: Node = nivel.get_node_or_null("FondoCuevaNatural")
+	_chk(fondo != null and nivel.get_node_or_null("Noche") != null, "nivel2 tiene FondoCuevaNatural y Noche")
+	var capas := 0
+	for c in fondo.get_children():
+		if c is ParallaxLayer:
+			capas += 1
+			_chk(c.motion_mirroring.x > 0.0 and c.get_child_count() > 0 and (c.get_child(0) as Sprite2D).texture != null, "capa %s repite y tiene textura" % c.name)
+			# El fondo se escala con el zoom de la cámara (mín. ~0.7): debe cubrir 1080/0.7 px de alto, sin franja negra.
+			var sp := c.get_child(0) as Sprite2D
+			var alto: float = (sp.position.y + sp.texture.get_height() * sp.scale.y)
+			_chk(sp.position.y <= 0.0 and alto >= 1080.0 / 0.7, "capa %s cubre el alto con zoom 0.7 (%d px)" % [c.name, int(alto)])
+	_chk(capas >= 7, "fondo con %d capas" % capas)
+	_chk(nivel.get_node_or_null("PrimerPlano") == null, "nivel2 sin elementos de primer plano")
+
+	print("FALLOS = ", fallos)
+	quit(1 if fallos > 0 else 0)

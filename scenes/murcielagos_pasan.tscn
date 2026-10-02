@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/murcielagos_pasan.gd" id="1_mp"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_mp"]
+size = Vector2(200, 600)
+
+[node name="MurcielagosPasan" type="Area2D"]
+script = ExtResource("1_mp")
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+position = Vector2(0, -250)
+shape = SubResource("RectangleShape2D_mp")

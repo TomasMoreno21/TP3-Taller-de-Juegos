@@ -29,7 +29,9 @@ func _init() -> void:
 	special_size = Vector2(390, 210)
 	special_range = 234.0
 	special_knockback = 320.0
-	special_cost = 8.0
+	special_cost = 10.0
+	drenaje_mult = 1.3
+	dano_recibido_mult = 0.75
 	onda_transformacion_radio = 300.0
 	onda_transformacion_dano = 12
 	onda_transformacion_knockback = 380.0
@@ -48,12 +50,12 @@ func _init() -> void:
 	jump_cut_multiplier = 0.55
 	camera_zoom = Vector2(0.83, 0.83)
 	turn_tilt_cam = 0.05
-	mult_recuperacion = 1.15
+	mult_recuperacion = 1.35
 	recovery_early_fraccion = 0.25
 	lunge_heavy = 36.0
 	melee_sticky = 0.0
 	combos = [
-		{"nombre": "Garra", "secuencia": ["light", "heavy"], "dano": 48, "knockback": 360.0, "tamano": Vector2(288, 186), "rango": 198.0},
+		{"nombre": "Garra", "secuencia": ["light", "heavy"], "dano": 70, "knockback": 360.0, "tamano": Vector2(288, 186), "rango": 198.0},
 	]
 
 
