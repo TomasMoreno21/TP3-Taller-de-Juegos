@@ -14,7 +14,7 @@
 [ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="13_pause"]
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="14_levelup"]
 [ext_resource type="PackedScene" path="res://scenes/console.tscn" id="15_cons"]
-[ext_resource type="PackedScene" path="res://scenes/enredadera.tscn" id="16_enredadera"]
+[ext_resource type="PackedScene" uid="uid://dih4mbupyhdag" path="res://scenes/enredadera.tscn" id="16_enredadera"]
 [ext_resource type="PackedScene" uid="uid://bf8ohs7pjg025" path="res://scenes/pinchos.tscn" id="17_pinchos"]
 [ext_resource type="Script" uid="uid://c20i4wytflcth" path="res://scripts/setup_progresion_nivel.gd" id="18_setup"]
 [ext_resource type="Script" uid="uid://cgg1nj46f30jo" path="res://scripts/ambiente_sonoro.gd" id="19_ambiente"]
@@ -39,13 +39,13 @@
 [ext_resource type="Script" uid="uid://2evt507mwee1" path="res://scripts/borde_musgo.gd" id="44_musgo"]
 [ext_resource type="Texture2D" uid="uid://bb22ddnrthtx3" path="res://Sprites/Elementos/cosito_frente2.png" id="45_cosito"]
 [ext_resource type="Shader" uid="uid://2gmi16mug215" path="res://resources/tinte_terreno.gdshader" id="45_tinte"]
-[ext_resource type="Script" path="res://scripts/viento_sprite.gd" id="69_vsp"]
 [ext_resource type="PackedScene" path="res://scenes/punta_cueva.tscn" id="63_punta"]
 [ext_resource type="PackedScene" path="res://scenes/tutorial_paso.tscn" id="64_tut"]
 [ext_resource type="Texture2D" uid="uid://dnwjj2u2vlg8h" path="res://Sprites/Fondos/Bosque/piso.png" id="65_piso"]
 [ext_resource type="Texture2D" uid="uid://c3jhi7ub5h7ar" path="res://Sprites/Elementos/arbusto1.png" id="66_arb1"]
 [ext_resource type="Texture2D" uid="uid://b1s3da000qxgx" path="res://Sprites/Elementos/arbusto2.png" id="67_arb2"]
 [ext_resource type="Texture2D" uid="uid://dafwvfq26r65w" path="res://Sprites/Elementos/arbusto3.png" id="68_arb3"]
+[ext_resource type="Script" uid="uid://gq2nr6gop4t4" path="res://scripts/viento_sprite.gd" id="69_vsp"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte"]
 shader = ExtResource("45_tinte")
@@ -80,7 +80,7 @@ acentos = Array[AudioStream]([ExtResource("22_amb_buho"), ExtResource("23_amb_lo
 acento_volumen_db = -2.0
 
 [node name="Player" parent="." unique_id=1763988589 instance=ExtResource("1_player")]
-position = Vector2(-613, 838)
+position = Vector2(31007, 5094)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
 position = Vector2(20, 120)
@@ -296,8 +296,8 @@ ancho = 60.0
 alto = 1200.0
 
 [node name="Enredadera16" parent="." unique_id=114899656 instance=ExtResource("16_enredadera")]
-position = Vector2(16955, 2185)
-ancho = 36.0
+position = Vector2(16955, 2149)
+ancho = 60.0
 alto = 1200.0
 
 [node name="Enredadera4" parent="." unique_id=2089772587 instance=ExtResource("44_liana")]
@@ -573,8 +573,9 @@ color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Enredadera7" parent="." unique_id=2100000158 instance=ExtResource("16_enredadera")]
-position = Vector2(31371, 1999)
-alto = 800.0
+position = Vector2(31350, 1702)
+ancho = 60.0
+alto = 1200.0
 
 [node name="Plataforma17" type="StaticBody2D" parent="." unique_id=2100000159]
 position = Vector2(31594, 1451)
@@ -1677,7 +1678,8 @@ position = Vector2(26711, 2407)
 position = Vector2(-8066, 3384)
 
 [node name="Enredadera" parent="." unique_id=1957323541 instance=ExtResource("16_enredadera")]
-position = Vector2(16230, 2218)
+position = Vector2(16230, 2149)
+ancho = 60.0
 alto = 1200.0
 
 [node name="Pinchos" parent="." unique_id=1045702486 instance=ExtResource("17_pinchos")]
@@ -2211,10 +2213,12 @@ scale = Vector2(1.737508, 1.4583364)
 
 [node name="Enredadera17" parent="." unique_id=1025144374 instance=ExtResource("16_enredadera")]
 position = Vector2(12571, 3349)
+ancho = 60.0
 alto = 3400.0
 
 [node name="Enredadera18" parent="." unique_id=178403607 instance=ExtResource("16_enredadera")]
 position = Vector2(15942, 4822)
+ancho = 60.0
 alto = 1600.0
 
 [node name="FondoSubsuelo" parent="." unique_id=1174921253 instance=ExtResource("43_subsuelo")]
@@ -2960,7 +2964,7 @@ z_index = 2
 position = Vector2(31240, 995)
 
 [node name="Sombra" type="Polygon2D" parent="BocaCueva" unique_id=880000002]
-position = Vector2(-1685, -439)
+position = Vector2(-1391, -482)
 polygon = PackedVector2Array(-80, -700, 3200, -700, 3200, 300, 3200, 2200, 700, 2200, -80, 2200)
 vertex_colors = PackedColorArray(0, 0, 0, 0, 0, 0, 0, 0, 0.01, 0.02, 0.03, 0.66, 0.01, 0.02, 0.03, 0.66, 0.01, 0.02, 0.03, 0.66, 0, 0, 0, 0)
 

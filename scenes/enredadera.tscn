@@ -1,25 +1,27 @@
-[gd_scene format=3 uid="uid://enredadera_001"]
+[gd_scene format=3 uid="uid://dih4mbupyhdag"]
 
-[ext_resource type="Script" path="res://scripts/enredadera.gd" id="1_enredadera"]
+[ext_resource type="Script" uid="uid://dvvj72axabf7d" path="res://scripts/enredadera.gd" id="1_enredadera"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_enredadera"]
 resource_local_to_scene = true
 size = Vector2(32, 400)
 
-[node name="Enredadera" type="Area2D" groups=["enredadera"]]
+[node name="Enredadera" type="Area2D" unique_id=1975433634 groups=["enredadera"]]
 z_index = -1
 collision_layer = 0
 collision_mask = 4
 script = ExtResource("1_enredadera")
 
-[node name="Visual" type="Node2D" parent="."]
+[node name="Visual" type="Node2D" parent="." unique_id=1547033669]
 
-[node name="Poly" type="Polygon2D" parent="Visual"]
-color = Color(0.18, 0.42, 0.2, 1)
-polygon = PackedVector2Array(-16, -200, 16, -200, 16, 200, -16, 200)
+[node name="Poly" type="Polygon2D" parent="Visual" unique_id=2073305851]
+visible = false
+color = Color(0.07, 0.17, 0.1, 1)
+polygon = PackedVector2Array(-4.0353403, -200, -4.83935, -186, -5.9094424, -172, -7.1537876, -158, -8.465602, -144, -9.732311, -130, -10.845213, -116, -11.708804, -102, -12.248974, -88, -12.419368, -74, -12.205365, -60, -11.625328, -46, -10.729034, -32, -9.5934, -18, -8.315878, -4, -7.0060997, 10, -5.7764645, 24, -4.7324934, 38, -3.9637754, 52, -3.5362778, 66, -3.4866865, 80, -3.819257, 94, -4.50545, 108, -5.4863796, 122, -6.677867, 136, -7.9776645, 150, -9.27423, 164, -10.456298, 178, -11.42243, 192, 4.45757, 192, 5.423702, 178, 6.60577, 164, 7.9023356, 150, 9.202133, 136, 10.3936205, 122, 11.37455, 108, 12.060743, 94, 12.393313, 80, 12.343722, 66, 11.9162245, 52, 11.147507, 38, 10.103536, 24, 8.8739, 10, 7.564122, -4, 6.2866006, -18, 5.150965, -32, 4.2546716, -46, 3.6746352, -60, 3.4606318, -74, 3.6310265, -88, 4.1711965, -102, 5.0347867, -116, 6.147689, -130, 7.414398, -144, 8.7262125, -158, 9.970557, -172, 11.040649, -186, 11.84466, -200)
 
-[node name="Hojas" type="Node2D" parent="Visual"]
+[node name="Hojas" type="Node2D" parent="Visual" unique_id=1535021702]
+visible = false
 
-[node name="Collision" type="CollisionShape2D" parent="."]
+[node name="Collision" type="CollisionShape2D" parent="." unique_id=486487838]
 shape = SubResource("RectangleShape2D_enredadera")
 debug_color = Color(0.26, 0.8, 0.32, 0.42)

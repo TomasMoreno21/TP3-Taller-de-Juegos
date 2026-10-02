@@ -291,14 +291,17 @@ tiempo_temblor = 0.4
 
 [node name="Enredadera2" parent="." unique_id=737452717 instance=ExtResource("13_o066t")]
 position = Vector2(11993, 3001)
-alto = 1300.0
+ancho = 60.0
+alto = 1200.0
 
 [node name="Enredadera3" parent="." unique_id=1706938185 instance=ExtResource("13_o066t")]
-position = Vector2(11956, 5092)
-alto = 1100.0
+position = Vector2(11978, 5089)
+ancho = 60.0
+alto = 1200.0
 
 [node name="Enredadera4" parent="." unique_id=833828820 instance=ExtResource("13_o066t")]
 position = Vector2(11528, 4023)
+ancho = 60.0
 alto = 1550.0
 
 [node name="Encounter3" parent="." unique_id=1950576395 instance=ExtResource("11_stua6")]
@@ -335,28 +338,34 @@ flotante = true
 altura_flote = 330.0
 
 [node name="Enredadera5" parent="." unique_id=295549758 instance=ExtResource("13_o066t")]
-position = Vector2(3660, 5027)
-alto = 1000.0
+position = Vector2(3660, 4945)
+ancho = 60.0
+alto = 1200.0
 
 [node name="Enredadera6" parent="." unique_id=1133224779 instance=ExtResource("13_o066t")]
-position = Vector2(4473, 5038)
-alto = 1000.0
+position = Vector2(4473, 4945)
+ancho = 60.0
+alto = 1200.0
 
 [node name="Enredadera7" parent="." unique_id=1427689834 instance=ExtResource("13_o066t")]
-position = Vector2(5230, -1176)
-alto = 700.0
+position = Vector2(5239, -1253)
+ancho = 60.0
+alto = 1200.0
 
 [node name="Enredadera8" parent="." unique_id=265072204 instance=ExtResource("13_o066t")]
-position = Vector2(5732, -524)
+position = Vector2(5732, -497)
+ancho = 60.0
 alto = 1800.0
 
 [node name="Enredadera9" parent="." unique_id=2056804281 instance=ExtResource("13_o066t")]
-position = Vector2(-1736, 6667)
-alto = 800.0
+position = Vector2(-1736, 6477)
+ancho = 60.0
+alto = 1200.0
 
 [node name="Enredadera10" parent="." unique_id=1067013996 instance=ExtResource("13_o066t")]
-position = Vector2(-1101, 6667)
-alto = 800.0
+position = Vector2(-1101, 6486)
+ancho = 60.0
+alto = 1200.0
 
 [node name="BarreraBosque" parent="." unique_id=1383386149 instance=ExtResource("15_5uo66")]
 position = Vector2(-1444, 5473)
@@ -369,12 +378,14 @@ position = Vector2(11406.999, 2906)
 tiempo_temblor = 0.4
 
 [node name="Enredadera11" parent="." unique_id=741503427 instance=ExtResource("13_o066t")]
-position = Vector2(-6463, 6164)
-alto = 800.0
+position = Vector2(-6496, 6217)
+ancho = 60.0
+alto = 860.0
 
 [node name="Enredadera12" parent="." unique_id=686824938 instance=ExtResource("13_o066t")]
 position = Vector2(7427, 5211)
-alto = 1100.0
+ancho = 60.0
+alto = 1200.0
 
 [node name="Encounter4" parent="." unique_id=1498742733 instance=ExtResource("11_stua6")]
 position = Vector2(-3951, 5347)
@@ -396,8 +407,9 @@ ola_asignada = 1
 spawn_telegrafiado = true
 
 [node name="Enredadera13" parent="." unique_id=559796096 instance=ExtResource("13_o066t")]
-position = Vector2(5578, 1173)
-alto = 500.0
+position = Vector2(5578, 1198)
+ancho = 60.0
+alto = 600.0
 
 [node name="Rompible" parent="." unique_id=1685828451 instance=ExtResource("18_gjjf1")]
 position = Vector2(-564, 4616)

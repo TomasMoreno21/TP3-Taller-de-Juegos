@@ -78,6 +78,7 @@ const HITSTOP_COMBO := 0.11
 @export var tag_bonus_tiempo := 2.0         # cuánto dura ese bonus (s)
 @export var tag_energia := 8.0              # energía que da el cambio de forma dentro de una racha
 @export var flap_cooldown := 0.28           # s entre aleteos del Murciélago
+@export var aleteo := 1.0                    # ritmo del aleteo visual quieto/planeando (0 = alas quietas)
 @export_group("Cuerpo elástico")
 @export var resorte_rigidez := 420.0        # cuánto tira el cuerpo de vuelta a su forma (más alto = más rápido)
 @export var resorte_amort := 22.0           # freno del resorte (más bajo = más rebote)
@@ -1751,8 +1752,7 @@ func _update_animacion() -> void:
 	if current_form == Form.MURCIELAGO and data_glide.is_gliding(self):
 		if visual.animation != "murci_volar":
 			visual.play("murci_volar")
-		visual.frame = 1
-		visual.speed_scale = 0.0
+		visual.speed_scale = aleteo
 		var base_lean_g := clampf(velocity.x / maxf(data_glide.speed, 1.0), -1.0, 1.0) * deg_to_rad(data_glide.lean_angulo)
 		visual.skew = lerpf(visual.skew, base_lean_g, minf(8.0 * get_physics_process_delta_time(), 1.0))
 		var prog_rot := clampf(_murci_glide_t / 1.4, 0.0, 1.0)
@@ -1796,7 +1796,8 @@ func _update_animacion() -> void:
 	elif en_aire and data.congelar_en_aire:
 		escala_obj = 0.0  # congelado: sigue en el frame que traía al despegar y retoma al aterrizar
 	elif absf(velocity.x) < 10.0:
-		escala_obj = 0.0
+		# El Murciélago sigue aleteando aunque esté quieto o no avance (0 = alas quietas).
+		escala_obj = aleteo if current_form == Form.MURCIELAGO else 0.0
 	else:
 		var speed_min := 0.35 if current_form != Form.MURCIELAGO else 0.7
 		escala_obj = clampf(absf(velocity.x) / maxf(data.speed, 1.0), speed_min, 1.6)
