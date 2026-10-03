@@ -46,6 +46,8 @@
 [ext_resource type="Texture2D" uid="uid://b1s3da000qxgx" path="res://Sprites/Elementos/arbusto2.png" id="67_arb2"]
 [ext_resource type="Texture2D" uid="uid://dafwvfq26r65w" path="res://Sprites/Elementos/arbusto3.png" id="68_arb3"]
 [ext_resource type="Script" uid="uid://gq2nr6gop4t4" path="res://scripts/viento_sprite.gd" id="69_vsp"]
+[ext_resource type="Script" path="res://scripts/intro_nivel.gd" id="70_intro"]
+[ext_resource type="Script" path="res://scripts/plano_intro.gd" id="71_plano"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte"]
 shader = ExtResource("45_tinte")
@@ -379,10 +381,6 @@ position = Vector2(10909, 664)
 
 [node name="Pickup10" parent="." unique_id=473048980 instance=ExtResource("7_pick")]
 position = Vector2(10199, 719)
-
-[node name="DialogoIntro" parent="." unique_id=1685442069 instance=ExtResource("8_dialog")]
-position = Vector2(87, 801)
-dialogo_id = "n1_intro"
 
 [node name="DialogoCombate" parent="." unique_id=1063822624 instance=ExtResource("8_dialog")]
 position = Vector2(6272, 793)
@@ -3005,6 +3003,28 @@ paso_siguiente = NodePath("../TutBloqueo")
 position = Vector2(7550, 801)
 paso_id = "tut_bloqueo"
 accion = 4
+
+[node name="IntroNivel" type="Node2D" parent="."]
+script = ExtResource("70_intro")
+caminar_hasta_x = 80.0
+velocidad_caminata = 0.25
+
+[node name="Plano1" type="Marker2D" parent="IntroNivel"]
+script = ExtResource("71_plano")
+duracion = 9.6
+zoom = 1.15
+seguir_jugador = true
+camina = true
+zoom_desde = 1.15
+globo = PackedStringArray("[humano] ¿Salvarlo? ¿Qué le pasó a mi hijo?", "Una secta lo atrajo con sus voces.", "[humano] ¿Y adónde lo llevaron?", "Su guarida. ¡Juntos lo traeremos de vuelta!")
+retraso_globo = 0.8
+pulso = true
+pulso_en = 3.0
+
+[node name="Plano2" type="Marker2D" parent="IntroNivel"]
+script = ExtResource("71_plano")
+seguir_jugador = true
+devolver_control = true
 
 [editable path="EncounterA"]
 [editable path="EncounterB"]

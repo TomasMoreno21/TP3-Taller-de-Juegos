@@ -181,6 +181,7 @@ func _armar(linea: String, hablante: String, tip: bool, marcado: bool) -> Array[
 			"alerta": tono = 1
 			"grito": tono = 2
 			"susurro": tono = 3
+			"humano": hablante = "Humano"   # habla el jugador: el globo sale de su cabeza, no de la gema
 		linea = linea.substr(m.get_end())
 	var trozos: Array[String] = []
 	var actual := ""
@@ -359,11 +360,19 @@ func _colocar() -> void:
 	var pos := _gema_pos + Vector2(-tam.x * 0.3, -tam.y - 62.0)
 	pos.x = clampf(pos.x, 24.0, maxf(vp.x - tam.x - 24.0, 24.0))
 	pos.y = clampf(pos.y, 24.0, maxf(vp.y - tam.y - 24.0, 24.0))
+	var punta := _gema_pos + Vector2(0, -34.0)
+	if str(_item.get("hablante", "")) == "Humano":
+		var cabeza := centro + Vector2(0, -158.0)
+		var lado := 0.12 if mirando >= 0.0 else 0.88   # el globo se abre hacia donde mira, lejos de la gema
+		pos = cabeza + Vector2(-tam.x * lado, -tam.y - 52.0)
+		pos.x = clampf(pos.x, 24.0, maxf(vp.x - tam.x - 24.0, 24.0))
+		pos.y = clampf(pos.y, 24.0, maxf(vp.y - tam.y - 24.0, 24.0))
+		punta = cabeza
 	if _fase != Fase.SALIENDO:
 		globo.position = pos
 	if _tw_globo == null or not _tw_globo.is_running():
 		globo.scale = Vector2.ONE * esc
-	globo.cola_a = (_gema_pos + Vector2(0, -34.0)) - globo.position
+	globo.cola_a = punta - globo.position
 
 
 ## Lugar sin acción: ningún enemigo cerca y sin daño reciente. El Amuleto habla (casi siempre) solo ahí,

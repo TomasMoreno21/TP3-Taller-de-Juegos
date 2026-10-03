@@ -127,6 +127,8 @@ func _process(delta: float) -> void:
 	else:
 		offset = _look_offset
 
+	if _modo == "cine":
+		return   # la intro de nivel mueve posición y zoom por tween
 	# Zoom por velocidad (1) + punch + encuadre de arena
 	var objetivo := _zoom_objetivo * _punch_scale * _zoom_velocidad * _framing_scale
 	if zoom.distance_to(objetivo) > 0.0001:
@@ -147,6 +149,8 @@ func _process(delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _modo == "cine":
+		return
 	if _modo == "fija":
 		global_position = global_position.lerp(_fija_pos, minf(suavizado * delta, 1.0))
 		return
@@ -309,6 +313,15 @@ func modo_arena(centro: Vector2) -> void:
 	_fija_pos = centro
 	global_position = centro
 	modo_cambio.emit("arena")
+
+
+## Cámara libre para cinemáticas: deja de seguir al jugador y no toca zoom ni posición
+## (quien la llama los mueve). Se sale con modo_normal().
+func modo_cine() -> void:
+	if _modo_tween != null and _modo_tween.is_valid():
+		_modo_tween.kill()
+	_modo = "cine"
+	modo_cambio.emit("cine")
 
 
 ## instantaneo: salta directo al jugador (p. ej. al reaparecer con la pantalla en

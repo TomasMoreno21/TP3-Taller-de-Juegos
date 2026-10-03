@@ -47,7 +47,7 @@ func configurar(texto: String, hablante: String, tono_nuevo: Tono, tam_fuente: i
 	_label.text = txt
 	_label.add_theme_font_size_override("font_size", tam_fuente)
 	_label.visible_ratio = 0.0
-	var mostrar_nombre := not hablante.is_empty() and hablante != "Amuleto"
+	var mostrar_nombre := not hablante.is_empty() and hablante != "Amuleto" and hablante != "Humano"
 	_nombre.text = hablante.to_upper() + ":" if mostrar_nombre else ""
 	_nombre.visible = mostrar_nombre
 	var medida := _fuente.get_multiline_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, ancho_max, tam_fuente)

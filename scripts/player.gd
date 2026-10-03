@@ -200,6 +200,8 @@ var _checkpoint_forma := Form.HUMAN
 var _checkpoint_vida := VIDA_MAX
 var _checkpoint_energia := ENERGIA_MAX
 var _derrota_activa := false
+var cinematica_dir := 0.0         ## durante la intro: el jugador camina solo en esta dirección (0 = quieto; 0.35 = paso tranquilo)
+var cinematica_activa := false   ## intro de nivel en curso: sin control ni daño (lo maneja intro_nivel.gd)
 var _velo_muerte: CanvasLayer
 var _invuln_timer := 0.0
 var _invuln_sin_parpadeo := false
@@ -375,15 +377,18 @@ func _physics_process(delta: float) -> void:
 	var cmd_axis := Input.get_axis("move_left", "move_right")
 	if absf(cmd_axis) < 0.35:
 		cmd_axis = 0.0
-	if dialogo_bloquea or _trepando:
+	var cine_camina := cinematica_activa and cinematica_dir != 0.0 and not _derrota_activa
+	if (dialogo_bloquea and not cine_camina) or _trepando:
 		cmd_axis = 0.0
+	elif cine_camina:
+		cmd_axis = cinematica_dir
 	# Durante el ataque solo se puede girar (cambiar de lado), no desplazarse.
 	# El early-exit (pasar el umbral de recovery) libera el desplazamiento aunque siga recuperando.
 	if _attacking and cmd_axis != 0.0:
 		facing = 1 if cmd_axis > 0 else -1
 		attack_area.position.x = absf(attack_area.position.x) * facing   # la hitbox acompaña el giro
 	var dir := 0.0 if (_attacking and not _early_liberado) else cmd_axis
-	if dialogo_bloquea:
+	if dialogo_bloquea and not cine_camina:
 		dir = 0.0
 	if _trepando:
 		dir = 0.0
@@ -613,6 +618,8 @@ func _physics_process(delta: float) -> void:
 
 
 func _dialogo_bloquea_input() -> bool:
+	if cinematica_activa:
+		return true
 	if _derrota_activa:
 		return true   # muerto: sin control ni daño hasta reaparecer (evita golpes extra y acciones durante la caída)
 	var dialogo := get_node_or_null("/root/Dialogo")
