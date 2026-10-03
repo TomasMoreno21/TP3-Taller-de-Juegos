@@ -54,9 +54,6 @@ const HITSTOP_COMBO := 0.11
 @export var hitstop_dano_umbral := 20       # daño mínimo para considerarlo golpe fuerte
 @export var recoil_sprite := 8.0            # px que empuja el sprite hacia atrás al recibir daño
 @export var temblor_dano := 0.13            # s que dura el micro-temblor del sprite (sin rotar)
-@export var dano_flotante_size_base := 22   # tamaño del número de daño recibido
-@export var dano_flotante_size_max := 34    # tamaño máximo según la cantidad de daño
-@export var dano_flotante_umbral := 30      # daño para alcanzar el tamaño máximo
 @export var zoom_heavy_mult := 1.025        # zoom punch extra en golpes pesados
 @export var zoom_special_mult := 1.04       # zoom punch extra en el golpe especial
 @export var zoom_combo_mult := 1.05         # zoom punch extra en el golpe que cierra combo
@@ -111,7 +108,6 @@ const HITSTOP_COMBO := 0.11
 @export var slowmo_transformacion_escala := 0.4  # escala del tiempo mientras transforma
 @export var tint_dano := Color(1.0, 0.28, 0.28)  # tinte del sprite al recibir daño
 @export var tint_dano_duracion := 0.11  # s que tarda en volver al color normal
-@export var dano_flotante := true  # número de daño recibido sobre el jugador
 const VIDA_MAX := 100
 
 var forms: Array[Forma] = []
@@ -2083,8 +2079,6 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_blo
 	_recoil_dano(dir)
 	if knockback > 0.0:
 		velocity.x = dir * knockback
-	if dano_flotante and DisplayServer.get_name() != "headless":
-		_mostrar_dano_recibido(cantidad)
 	_invuln_timer = invuln_dano
 	_invuln_sin_parpadeo = false
 	_handle_death()
@@ -2191,25 +2185,6 @@ func _flash_tint_dano() -> void:
 	visual.modulate = tint_dano
 	_tint_tween = create_tween()
 	_tint_tween.tween_property(visual, "modulate", Color.WHITE, tint_dano_duracion)
-
-
-func _mostrar_dano_recibido(cantidad: int) -> void:
-	var lbl := Label.new()
-	lbl.text = "-" + str(cantidad)
-	var tam := int(lerpf(float(dano_flotante_size_base), float(dano_flotante_size_max), clampf(float(cantidad) / float(dano_flotante_umbral), 0.0, 1.0)))
-	lbl.add_theme_font_size_override("font_size", tam)
-	lbl.add_theme_constant_override("outline_size", 4)
-	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
-	lbl.add_theme_color_override("font_color", Color(1.0, 0.35, 0.3))
-	lbl.z_index = 12
-	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
-	destino.add_child(lbl)
-	var pos := visual.global_position + Vector2(randf_range(-14, 14), -96)
-	lbl.global_position = pos
-	var tw := lbl.create_tween()
-	tw.tween_property(lbl, "global_position:y", pos.y - 26, 0.5).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.5)
-	tw.tween_callback(lbl.queue_free)
 
 
 func heal_full() -> void:
@@ -2390,7 +2365,7 @@ func _try_step_up() -> void:
 		return
 	# Alturas con 0.2 px de holgura sobre el peldaño entero (a ras de la esquina move_and_slide vuelve a chocar).
 	for h in [0.6, 1.2, 1.8, 2.4, 3.2, 4.2, 5.2, 6.2, 7.2, 8.2, 10.2, 12.2, 16.2, 24.2, 32.2, 48.2]:
-		if h > max_h:
+		if h - 0.2 > max_h:   # la holgura de 0.2 px no cuenta para el tope de la forma
 			break
 		# Probar "pararse sobre el escalón": en frente y a h px de altura.
 		# test_move usa un transform ABSOLUTO (posición real en el mundo), así que

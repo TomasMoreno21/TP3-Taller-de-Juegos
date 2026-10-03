@@ -193,13 +193,11 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 	if _muerto or not _activo or health <= 0:
 		return
 	if _shield_active:
-		_mostrar_absorbido(cantidad)
 		return
 	health = maxi(health - cantidad, 0)
 	salud_cambio.emit(health, vida_max)
 	_flash_tint()
 	if DisplayServer.get_name() != "headless":
-		_mostrar_dano(cantidad, critico, health <= 0)
 		if health > 0:
 			_reaccion_golpe(dir, critico)
 	if health <= 0:
@@ -217,7 +215,6 @@ func _golpe_en_zona(_cantidad: int) -> void:
 	if _muerto or not _activo or _gate != "zona":
 		return
 	if _shield_active:
-		_mostrar_absorbido(_cantidad)
 		return
 	var p := get_tree().get_first_node_in_group("player") as Node2D
 	var lado := 1 if p == null or global_position.x >= p.global_position.x else -1   # el retroceso se aleja del jugador
@@ -680,53 +677,6 @@ func _reaccion_golpe(dir: int, critico: bool) -> void:
 	_retroceso_tween.parallel().tween_property(visual, "scale:y", _visual_esc_y_base * 0.94, 0.04)
 	_retroceso_tween.tween_property(visual, "position", _visual_pos_base, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_retroceso_tween.parallel().tween_property(visual, "scale:y", _visual_esc_y_base, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-
-
-func _mostrar_absorbido(cantidad: int) -> void:
-	if DisplayServer.get_name() == "headless":
-		return
-	var lbl := Label.new()
-	lbl.text = "·" if cantidad <= 0 else str(cantidad)
-	lbl.add_theme_font_size_override("font_size", 24)
-	lbl.add_theme_constant_override("outline_size", 4)
-	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
-	lbl.add_theme_color_override("font_color", Color(0.75, 0.8, 0.85))
-	lbl.z_index = 12
-	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
-	destino.add_child(lbl)
-	lbl.global_position = global_position + Vector2(randf_range(-18, 18), -180)
-	var tw := lbl.create_tween()
-	tw.tween_property(lbl, "global_position:y", lbl.global_position.y - 26, 0.4)
-	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.4)
-	tw.tween_callback(lbl.queue_free)
-
-
-func _mostrar_dano(cantidad: int, critico: bool, murio: bool) -> void:
-	var fuerte := critico or murio
-	var lbl := Label.new()
-	lbl.text = str(cantidad)
-	var tam := 30 if fuerte else 24
-	lbl.add_theme_font_size_override("font_size", tam)
-	lbl.add_theme_constant_override("outline_size", maxi(4, tam / 5))
-	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
-	if murio:
-		lbl.add_theme_color_override("font_color", Color(1, 0.92, 0.55))
-	elif critico:
-		lbl.add_theme_color_override("font_color", Color(1, 0.6, 0.18))
-	else:
-		lbl.add_theme_color_override("font_color", Color(1, 0.85, 0.3))
-	lbl.z_index = 12
-	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
-	destino.add_child(lbl)
-	lbl.scale = Vector2(1.6, 1.6)
-	lbl.global_position = global_position + Vector2(randf_range(-18, 18), -190)
-	var subida := 52.0 if fuerte else 34.0
-	var dur := 0.8 if fuerte else 0.55
-	var tw := lbl.create_tween()
-	tw.tween_property(lbl, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(lbl, "global_position:y", lbl.global_position.y - subida, dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(lbl, "modulate:a", 0.0, dur)
-	tw.tween_callback(lbl.queue_free)
 
 
 func _aplicar_color(color: Color) -> void:

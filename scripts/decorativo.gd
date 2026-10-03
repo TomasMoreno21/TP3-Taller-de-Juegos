@@ -54,6 +54,11 @@ const LUZ_RADIAL := preload("res://resources/luz_radial.tres")
 	set(value):
 		tono = value
 		_tmp = Vector4.ZERO
+## Solo utilería de cueva: 0 = colores propios (azul-violeta), 1 = grises neutros (los tiñe la Noche del nivel).
+@export_range(0.0, 1.0) var neutralizar := 0.0:
+	set(value):
+		neutralizar = value
+		queue_redraw()
 @export var color_noche := Color(0.8, 0.85, 0.97):
 	set(value):
 		color_noche = value
@@ -533,6 +538,12 @@ func _ancho_silueta_base() -> float:
 # ------------------------------------------------------------------ utilería de cueva
 func _generar_silueta_cueva(t: int, v: int) -> Array[Polygon2D]:
 	var colores: Dictionary = COLORES_CUEVA[t]
+	if neutralizar > 0.0:
+		colores = colores.duplicate()
+		for k in colores:
+			var col: Color = colores[k]
+			var gris := col.get_luminance()
+			colores[k] = col.lerp(Color(gris, gris, gris, col.a), neutralizar)
 	var salida: Array[Polygon2D] = []
 	var tinte := 1.0 + 0.12 * float((v - 1) % 4) - 0.06
 	match t:

@@ -3,21 +3,17 @@
 [ext_resource type="PackedScene" uid="uid://65wfbu1kb774" path="res://scenes/noche.tscn" id="1_noche"]
 
 [node name="NocheCueva" instance=ExtResource("1_noche")]
-color_noche = Color(0.8, 0.86, 1, 1)
-color_fondo = Color(0.62, 0.78, 1, 1)
-color_vacio = Color(0.02, 0.025, 0.05, 1)
+color_noche = Color(0.58, 0.62, 0.78, 1)
+color_fondo = Color(0.58, 0.62, 0.78, 1)
+color_vacio = Color(0.035, 0.045, 0.06, 1)
 
 [node name="Oscuridad" parent="." index="0"]
-color = Color(0.8, 0.86, 1, 1)
+color = Color(0.58, 0.62, 0.78, 1)
 
 [node name="LuciernagasAmbiente" parent="." index="1"]
-cantidad = 26
-con_luz = 2
-color = Color(0.7, 0.5, 1, 1)
-color_nucleo = Color(0.92, 0.85, 1, 1)
-tamano_halo = 0.2
-velocidad = Vector2(8, 22)
-giro = 0.9
+visible = false
+process_mode = 4
+cantidad = 1
 
 [node name="HojasAmbiente" parent="." index="2"]
 emitting = false

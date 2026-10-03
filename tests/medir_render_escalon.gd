@@ -34,7 +34,7 @@ func _initialize() -> void:
 	player.set("_suave_y", 1.0)
 	var serie: Array = []
 	for i in 22:
-		player.call("_suavizar_desnivel", 0.0, true, 1.0 / 60.0)
+		player.call("_suavizar_desnivel", 1.0 / 60.0)
 		await process_frame
 		await process_frame
 		serie.append(_centroide(root.get_texture().get_image(), fondo) - base)

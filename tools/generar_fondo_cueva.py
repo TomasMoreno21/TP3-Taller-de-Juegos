@@ -208,7 +208,7 @@ def capa_pared():
     d = ImageDraw.Draw(base)
     for y in range(0, H * S, 2):
         t = y / (H * S)
-        v = 0.19 + 0.20 * math.exp(-((t - 0.5) / 0.28) ** 2) - 0.06 * (t > 0.9)
+        v = 0.15 + 0.12 * math.exp(-((t - 0.5) / 0.28) ** 2) - 0.05 * (t > 0.9)
         d.line([(0, y), (W * S, y)], fill=gris(v), width=2)
     L.img = base
     # manchas grandes de roca (2 tonos): periodo entero en W
@@ -218,7 +218,7 @@ def capa_pared():
         rx, ry = rng.uniform(260, 700), rng.uniform(90, 260)
         capa = L.capa()
         dc = ImageDraw.Draw(capa)
-        v = rng.choice([0.17, 0.2, 0.28, 0.33])
+        v = rng.choice([0.14, 0.17, 0.23, 0.27])
 
         def uno(dx, cx=cx, cy=cy, rx=rx, ry=ry, v=v):
             pts = []
@@ -296,14 +296,44 @@ def capa_estalagmitas_lejanas(v=0.34, n=11, semilla=27):
     return L
 
 
+def capa_lomas(v=0.58, semilla=61, base=1180, n=9, alto=(330, 560), ancho=(560, 980)):
+    """Lomas de roca redondeadas (dos tonos), como las masas de bruma del bosque (Boske8)."""
+    rng = random.Random(semilla)
+    L = Lienzo()
+    for i in range(n):
+        cx = (i + rng.uniform(0.2, 0.8)) * W / n
+        rx, ry = rng.uniform(*ancho) / 2, rng.uniform(*alto)
+
+        def uno(dx, cx=cx, rx=rx, ry=ry, sem=rng.randint(0, 9999)):
+            f = ruido(random.Random(sem))
+            capa = L.capa()
+            d = ImageDraw.Draw(capa)
+            pts = [(cx + dx - rx, base)]
+            for k in range(1, 40):
+                a = math.pi * k / 40
+                r = 1.0 + 0.10 * f(a * 4.0)
+                pts.append((cx + dx - math.cos(a) * rx * r, base - math.sin(a) * ry * r))
+            pts.append((cx + dx + rx, base))
+            poligono(d, pts, gris(v))
+            # luz: lóbulo más claro arriba-izquierda
+            lob = [(cx + dx - rx * 0.62 + math.cos(a) * rx * 0.42, base - ry * 0.62 + math.sin(a) * ry * 0.30) for a in [math.tau * q / 28 for q in range(28)]]
+            poligono(d, lob, gris(v + 0.09))
+            L.pegar(capa)
+
+        envolver(uno)
+    return L
+
+
 def main():
     capa_pared().guardar("pared.png")
-    capa_estalactitas_lejanas(0.42, 17, 21).guardar("lejanas.png")
-    capa_estalagmitas_lejanas().guardar("lejanas_piso.png")
-    capa_columnas_naturales(0.31, 7, 31).guardar("columnas_a.png")
-    capa_estalactitas_lejanas(0.25, 11, 23, (420, 760), (170, 300)).guardar("medias.png")
-    capa_columnas_naturales(0.21, 5, 33).guardar("columnas_b.png")
-    capa_estalactitas_cercanas(0.15, 41).guardar("cercanas.png")
+    capa_estalactitas_lejanas(0.65, 17, 21).guardar("lejanas.png")
+    capa_estalagmitas_lejanas(0.57).guardar("lejanas_piso.png")
+    capa_columnas_naturales(0.46, 7, 31).guardar("columnas_a.png")
+    capa_estalactitas_lejanas(0.38, 11, 23, (420, 760), (170, 300)).guardar("medias.png")
+    capa_columnas_naturales(0.27, 5, 33).guardar("columnas_b.png")
+    capa_lomas(0.60, 61).guardar("lomas_a.png")
+    capa_lomas(0.50, 73, 1220, 8, (300, 520), (640, 1100)).guardar("lomas_b.png")
+    capa_estalactitas_cercanas(0.14, 41).guardar("cercanas.png")
 
 
 if __name__ == "__main__":
