@@ -827,5 +827,25 @@
 			"[susurro]Lo que buscamos está más allá.",
 			"Prepará todo lo que aprendiste."
 		]
+	},
+	"n2_calma_inicio": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"[susurro]Se oyen alas más adelante.",
+			"Sigamos con cuidado."
+		]
+	},
+	"n2_derrumbe_fin": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.3,
+		"una_vez": true,
+		"lineas": [
+			"Uf... eso estuvo cerca.",
+			"Las lianas bajan hacia lo más profundo."
+		]
 	}
 }

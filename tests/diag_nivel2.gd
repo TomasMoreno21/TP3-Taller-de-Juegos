@@ -162,10 +162,36 @@ func _initialize() -> void:
 		_chk(datos is Dictionary and (datos as Dictionary).has(id), "dialogos.json tiene " + id)
 		for l in (datos as Dictionary)[id]["lineas"]:
 			_chk(str(l).length() <= 48, "%s: línea corta (%d)" % [id, str(l).length()])
+	# Evento de derrumbe: cableado y simulación (shake + escombros dentro de la zona, nada fuera).
+	var der: Node = exp.get_node_or_null("C/Derrumbe")
+	_chk(der != null and der.inicio != null and der.fin != null, "Derrumbe tiene inicio y fin")
+	if der != null and der.inicio != null and der.fin != null:
+		_chk(der.inicio.global_position.x < der.fin.global_position.x, "Derrumbe: inicio antes que fin")
+		_chk(exp.get_node("C/DialogoDerrumbe").dialogo_id == "n2_derrumbe_fin", "Derrumbe: diálogo final")
+		_chk((datos as Dictionary).has("n2_derrumbe_fin"), "dialogos.json tiene n2_derrumbe_fin")
+		var camd: Camera2D = nivel.get_node("Camara")
+		player.global_position = Vector2(der.inicio.global_position.x + 600.0, der.inicio.global_position.y - 100.0)
+		player.velocity = Vector2.ZERO
+		var shake_visto := false
+		var max_esc := 0
+		for f in 360:
+			player.global_position.y = minf(player.global_position.y, der.inicio.global_position.y)
+			camd.global_position = player.global_position
+			await physics_frame
+			if float(camd.get("_shake_timer")) > 0.0 and float(camd.get("_shake_strength")) >= 6.0:
+				shake_visto = true
+			var c := 0
+			for n in der.get_parent().get_children():
+				if "radio" in n and "giro" in n:
+					c += 1
+			max_esc = maxi(max_esc, c)
+		_chk(shake_visto, "Derrumbe: shake fuerte durante la zona")
+		_chk(max_esc >= 1, "Derrumbe: caen escombros (%d a la vez)" % max_esc)
+
 	# Tablas del puente de la galería B: cadena con saltos cortos (<= 340 px entre centros).
 	var xs: Array[float] = []
 	for n in nivel.get_children():
-		if String(n.name).begins_with("PlataformaFragil") and n.global_position.x > 3000.0 and n.global_position.x < 4700.0 and n.global_position.y < 2000.0 and n.global_position.y > 1600.0:
+		if String(n.name).begins_with("PlataformaFragil") and n.global_position.y < 2000.0 and n.global_position.y > 1600.0:
 			xs.append(n.global_position.x)
 	for n in exp.get_node("B").get_children():
 		if String(n.name).begins_with("PlataformaFragil"):

@@ -355,3 +355,14 @@ Al cerrar una sesión: agregar el resumen ARRIBA de este archivo (máx. ~15 lín
 ## Nivel 2: tramos de respiro con texto del Amuleto (03/10)
 - El terreno entre picos ya era plano (piso 80/864/1952/3680/5600/7040), así que no se tocó el TileMap: se agregó `Expansion/Calma` con 9 `dialog_trigger` (`n2_calma_a, b1, c1, c2, d1, d2, d3, e1, e2`) en tramos sin enemigos a >450 px. B2 se descartó: la Arena 2 llega hasta x≈1440.
 - `diag_nivel2` valida Calma (sobre piso, sin enemigos cerca). Backup: %TEMP%\nivel2_antes_calma.tscn.
+
+## Nivel 2: 4 tramos planos nuevos entre picos (03/10)
+- Se insertó terreno plano de 704 px (44 tiles) corriendo el resto del nivel (aire, roca y nodos aguas abajo del corte). Tramos finales: A x1216-1920 (piso 80, antes del sello), A x3704-4408 (piso 864, tras la rampa), B x3934-4638 (piso 1952, entre la Arena 2 y el puente de pinchos), D x6680-7384 (piso 5584, entre los pozos y la Arena 3). Triggers del Amuleto dentro de cada uno (`Expansion/Calma`: CalmaINICIO, CalmaA, CalmaB1, CalmaD1).
+- Herramienta (no está en el repo): corte transversal del pasillo → red de aire aguas arriba/abajo (BFS, sin el anillo exterior) → roca por vecino más cercano → se mueve lo de abajo, se copia la columna del corte en el hueco, se conserva la silueta de roca y se rellenan bolsas. Coordenadas del nivel 2 cambiadas: todo lo posterior a A x1215 corre +704 (×2 con el segundo corte de A), B/C/D/E −704 por el corte de B, etc.
+- `diag_nivel2`: el puente B ya no usa rango de x fijo (detecta tablas por y 1600-2000).
+- Backup del estado previo: %TEMP%\nivel2_antes_calma.tscn (sin los tramos) o `git checkout 4f0f3f2 -- scenes/nivel2.tscn`.
+
+## Nivel 2: evento de derrumbe en el Abismo (03/10)
+- `scripts/derrumbe_evento.gd` (Node2D, exports `inicio`/`fin` = nodos de referencia, pausa, fuerza de shake, cantidad de escombros). En `Expansion/C/Derrumbe`: inicio = CheckpointAbismo1, fin = DialogoDerrumbe (x≈12420, antes de las lianas, diálogo `n2_derrumbe_fin`: "Uf... eso estuvo cerca.").
+- Mientras el jugador esté entre ambos: oleadas cada 3-6 s con shake 9 (≥6 desprende polvo del techo vía Ambiente) y 4-7 escombros que caen del techo (raycast hacia arriba) y se deshacen en polvo (Burst) al tocar el piso. Solo ambientación, sin daño.
+- `diag_nivel2` simula la zona y comprueba shake ≥6 y escombros.
