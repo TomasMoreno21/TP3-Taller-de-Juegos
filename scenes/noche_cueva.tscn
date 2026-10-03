@@ -16,4 +16,4 @@ process_mode = 4
 cantidad = 1
 
 [node name="HojasAmbiente" parent="." index="2"]
-emitting = false
+activa = false

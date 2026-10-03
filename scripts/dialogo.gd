@@ -176,13 +176,14 @@ func _quitar_tips() -> void:
 func _armar(linea: String, hablante: String, tip: bool, marcado: bool) -> Array[Dictionary]:
 	var tono := 0
 	var m := _re_tag.search(linea)
-	if m != null:
+	while m != null:   # se pueden combinar: "[humano][susurro] ..."
 		match m.get_string(1).to_lower():
 			"alerta": tono = 1
 			"grito": tono = 2
 			"susurro": tono = 3
 			"humano": hablante = "Humano"   # habla el jugador: el globo sale de su cabeza, no de la gema
 		linea = linea.substr(m.get_end())
+		m = _re_tag.search(linea)
 	var trozos: Array[String] = []
 	var actual := ""
 	for fr in _re_frase.sub(linea, "\n", true).split("\n"):

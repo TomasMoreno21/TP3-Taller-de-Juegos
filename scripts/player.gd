@@ -1323,7 +1323,9 @@ func _emitir_burst_hojas() -> void:
 		return
 	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
 	p.global_position = global_position + Vector2(randf_range(-10, 10), -10)
-	p.self_modulate = Color(0.32, 0.6, 0.26, 0.9)
+	var amb := get_node_or_null("/root/Ambiente")
+	var hojas: bool = amb == null or bool(amb.hay_hojas)
+	p.self_modulate = Color(0.32, 0.6, 0.26, 0.9) if hojas else Color(0.6, 0.62, 0.7, 0.85)   # en la cueva: esquirlas de roca, no hojas
 	p.amount = 6
 	p.lifetime = 0.35
 	get_tree().current_scene.add_child(p)

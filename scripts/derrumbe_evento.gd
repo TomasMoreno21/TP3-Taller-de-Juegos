@@ -5,17 +5,19 @@ extends Node2D
 
 @export var inicio: Node2D                          ## el evento arranca al pasar por la x de este nodo
 @export var fin: Node2D                             ## y se corta al llegar a la x de este nodo
-@export var pausa_min := 3.0                        ## s entre oleadas
-@export var pausa_max := 6.0
-@export var primera_espera := 1.2                   ## s hasta la primera oleada tras entrar
-@export var fuerza_shake := 9.0                     ## shake de cada oleada (>= 6 desprende polvo del techo)
-@export var duracion_shake := 1.1
-@export var escombros_por_oleada := Vector2i(4, 7)
+@export var pausa_min := 1.5                        ## s entre oleadas de escombros
+@export var pausa_max := 3.0
+@export var primera_espera := 0.8                   ## s hasta la primera oleada tras entrar
+@export var fuerza_shake := 12.0                    ## shake constante mientras dura la zona (>= 6 desprende polvo del techo)
+@export var intervalo_shake := 0.25                 ## s entre sacudidas (cada una dura un poco más, así no hay huecos)
+@export var duracion_oleada := 1.4                  ## s en que se reparten los escombros de cada oleada
+@export var escombros_por_oleada := Vector2i(9, 15)
 @export var dispersion := Vector2(-500.0, 800.0)    ## x relativa al jugador donde caen (más hacia adelante)
 @export var color_escombro := Color(0.28, 0.29, 0.36)
 
 var _activo := false
 var _espera := 0.0
+var _t_shake := 0.0
 var _jugador: Node2D
 
 
@@ -35,10 +37,17 @@ func _physics_process(delta: float) -> void:
 	if dentro and not _activo:
 		_activo = true
 		_espera = primera_espera
+		_t_shake = 0.0
 	elif not dentro and _activo:
 		_activo = false
 	if not _activo:
 		return
+	_t_shake -= delta
+	if _t_shake <= 0.0:
+		_t_shake = intervalo_shake
+		var cam := get_viewport().get_camera_2d()
+		if cam != null and cam.has_method("shake"):
+			cam.shake(fuerza_shake, intervalo_shake * 1.8)
 	_espera -= delta
 	if _espera <= 0.0:
 		_espera = randf_range(pausa_min, pausa_max)
@@ -46,12 +55,9 @@ func _physics_process(delta: float) -> void:
 
 
 func _oleada() -> void:
-	var cam := get_viewport().get_camera_2d()
-	if cam != null and cam.has_method("shake"):
-		cam.shake(fuerza_shake, duracion_shake)
 	var n := randi_range(escombros_por_oleada.x, escombros_por_oleada.y)
 	for i in n:
-		get_tree().create_timer(randf_range(0.0, duracion_shake)).timeout.connect(_soltar_escombro)
+		get_tree().create_timer(randf_range(0.0, duracion_oleada)).timeout.connect(_soltar_escombro)
 
 
 func _soltar_escombro() -> void:

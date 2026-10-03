@@ -4,6 +4,7 @@ extends CPUParticles2D
 ## cámara por arriba de la pantalla y las hojas caen lento con ráfagas de viento.
 ## Bajo tierra (cámara por debajo de y_max) dejan de emitir.
 
+@export var activa := true               ## false: este nivel no tiene hojas (cueva)
 @export var y_max := 1300.0               ## más abajo que esto (cuevas) no caen hojas
 @export var margen_arriba := 160.0        ## px por encima del borde superior de la vista
 @export var viento_fuerza := 26.0         ## empuje lateral de las ráfagas
@@ -22,6 +23,7 @@ func _ready() -> void:
 	add_to_group("reactivo")
 	var amb := get_node_or_null("/root/Ambiente")
 	if amb != null:
+		amb.hay_hojas = activa
 		amb.sacudida_fuerte.connect(_polvo_techo)
 
 
@@ -37,7 +39,7 @@ func empujar(pos: Vector2, fuerza: float) -> void:
 ## En la cueva no caen hojas, pero un shake fuerte desprende polvo del techo.
 func _polvo_techo(fuerza: float) -> void:
 	var cam := get_viewport().get_camera_2d()
-	if cam == null or DisplayServer.get_name() == "headless" or cam.get_screen_center_position().y < y_max:
+	if cam == null or DisplayServer.get_name() == "headless" or (activa and cam.get_screen_center_position().y < y_max):
 		return
 	var tam := get_viewport_rect().size / cam.zoom
 	var c := cam.get_screen_center_position()
@@ -77,5 +79,5 @@ func _process(delta: float) -> void:
 	var c := cam.get_screen_center_position()
 	global_position = Vector2(c.x, c.y - tam.y * 0.5 - margen_arriba)
 	emission_rect_extents = Vector2(tam.x * 0.5 + 240.0, 10.0)
-	emitting = c.y < y_max
+	emitting = activa and c.y < y_max
 	gravity.x = (sin(_t * TAU / maxf(viento_periodo, 0.1)) * viento_fuerza + viento_fuerza * 0.4) * (1.0 + tension * tension_viento) + _racha

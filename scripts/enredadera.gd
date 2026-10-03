@@ -13,6 +13,11 @@ extends Area2D
 		if is_inside_tree():
 			_actualizar_visual()
 @export_enum("Humano:0", "Lobo:1", "Oso:2", "Murciélago:3") var required_form: int = 0  ## forma con la que se puede trepar
+@export var con_hojas := true:   ## false: raíz desnuda (cuevas), solo las hebras trenzadas
+	set(v):
+		con_hojas = v
+		if is_inside_tree():
+			_actualizar_visual()
 @export var color_hoja := Color(0.28, 0.56, 0.26, 1):
 	set(v):
 		color_hoja = v
@@ -103,7 +108,7 @@ func _actualizar_visual() -> void:
 		_agregar(hojas_root, _cinta(-1.0, g, PI), color_tallo.lightened(0.18))
 		var y := -alto * 0.5 + 34.0
 		var i := 0
-		while y < alto * 0.5 - 40.0:
+		while con_hojas and y < alto * 0.5 - 40.0:
 			var lado := 1.0 if i % 2 == 0 else -1.0
 			var x0 := _desvio(y)
 			var largo := (34.0 + float((i * 7) % 5) * 6.0) * (ancho / 32.0) * 0.9 + 6.0

@@ -16,6 +16,11 @@ var _t := 0.0
 var _inicial := true
 
 
+## Intensidad del latido actual (la usan efectos que acompañan la tensión, como las motas violetas).
+func intensidad_actual() -> float:
+	return _int
+
+
 func _ready() -> void:
 	_osc = get_node_or_null(oscuridad) as CanvasModulate
 	for z in get_children():

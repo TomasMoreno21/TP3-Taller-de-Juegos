@@ -366,3 +366,11 @@ Al cerrar una sesión: agregar el resumen ARRIBA de este archivo (máx. ~15 lín
 - `scripts/derrumbe_evento.gd` (Node2D, exports `inicio`/`fin` = nodos de referencia, pausa, fuerza de shake, cantidad de escombros). En `Expansion/C/Derrumbe`: inicio = CheckpointAbismo1, fin = DialogoDerrumbe (x≈12420, antes de las lianas, diálogo `n2_derrumbe_fin`: "Uf... eso estuvo cerca.").
 - Mientras el jugador esté entre ambos: oleadas cada 3-6 s con shake 9 (≥6 desprende polvo del techo vía Ambiente) y 4-7 escombros que caen del techo (raycast hacia arriba) y se deshacen en polvo (Burst) al tocar el piso. Solo ambientación, sin daño.
 - `diag_nivel2` simula la zona y comprueba shake ≥6 y escombros.
+
+## Plataformas frágiles: más grandes y nuevo aspecto (03/10)
+- `scenes/plataforma_fragil_grande.tscn` (hereda de `plataforma_fragil.tscn`): colisión 340×36 (tope sin cambios, centro x=+43 como antes) y visual 340×36 alineado a la colisión; la usa solo el nivel 2 (nivel 1/3/5 siguen con la base).
+- `borde_musgo.gd::_dibujar_fragil` rehecho (afecta a todas las frágiles): tablones con juntas y clavos, vetas, herrajes de hierro en los extremos, grietas, astillas colgando y sombra en el canto.
+
+## Cadenas en las plataformas frágiles grandes (03/10)
+- `scripts/cadenas_plataforma.gd` (@tool, nodo `Visual/Cadenas` de `plataforma_fragil_grande.tscn`) + sprite `Sprites/Elementos/cadena.png` (eslabones apilados sin deformar, como la liana). Exports: `largo` (a mano), `ajustar_a_techo` (en juego sube por raycast hasta el techo), `cantidad` (1-4), `margen`, `ancho_cadena`, `textura`, `tinte`, `mostrar_ancla`.
+- Al ser hijas de `Visual` tiemblan, se desvanecen y reaparecen junto con la plataforma. `diag_nivel2` verifica que cada plataforma tenga cadena que llegue al techo.

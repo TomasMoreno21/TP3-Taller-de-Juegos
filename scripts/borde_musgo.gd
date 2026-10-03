@@ -156,21 +156,57 @@ func _dibujar_cuerpo(r: Rect2, rng: RandomNumberGenerator) -> void:
 		draw_circle(Vector2(mx, my), rng.randf_range(1.5, 3.4), color_mota)
 
 
-## Estilo frágil: fisuras en zigzag de lado a lado y astillas en los bordes.
+## Estilo frágil: tablones de madera vieja con herrajes, clavos, vetas, grietas y astillas colgando.
 func _dibujar_fragil(r: Rect2, rng: RandomNumberGenerator) -> void:
-	var cy := r.position.y + r.size.y * 0.5
+	var x0 := r.position.x
+	var x1 := r.end.x
+	var y0 := r.position.y
+	var y1 := r.end.y
+	var h := r.size.y
+	# Sombra del canto inferior y brillo del borde superior.
+	draw_rect(Rect2(x0, y1 - h * 0.28, r.size.x, h * 0.28), Color(0.07, 0.04, 0.03, 0.42))
+	draw_rect(Rect2(x0, y0, r.size.x, 3.0), Color(0.93, 0.80, 0.60, 0.55))
+	# Tablones: junta vertical oscura + vetas largas dentro de cada uno.
+	var junta := x0
+	while true:
+		var ancho := rng.randf_range(54.0, 86.0)
+		var fin := minf(junta + ancho, x1)
+		for g in 2:
+			var gy := y0 + h * (0.32 + 0.3 * g) + rng.randf_range(-2.0, 2.0)
+			var gx := junta + rng.randf_range(6.0, 16.0)
+			draw_line(Vector2(gx, gy), Vector2(minf(gx + rng.randf_range(22.0, 44.0), fin - 6.0), gy + rng.randf_range(-1.5, 1.5)), Color(0.16, 0.10, 0.06, 0.32), 1.5)
+		if fin >= x1 - 1.0:
+			break
+		draw_line(Vector2(fin, y0 + 3.0), Vector2(fin, y1), Color(0.10, 0.06, 0.04, 0.7), 2.2)
+		draw_line(Vector2(fin + 2.0, y0 + 3.0), Vector2(fin + 2.0, y1 - h * 0.28), Color(0.9, 0.76, 0.56, 0.18), 1.2)
+		for lado in [-9.0, 9.0]:
+			var c := Vector2(fin + lado, y0 + h * 0.36)
+			draw_circle(c, 2.4, Color(0.11, 0.09, 0.08))
+			draw_circle(c + Vector2(-0.7, -0.7), 1.0, Color(0.55, 0.52, 0.5, 0.8))
+		junta = fin
+	# Herrajes de hierro en los extremos con remaches.
+	for bx in [x0, x1 - 12.0]:
+		draw_rect(Rect2(bx, y0, 12.0, h), Color(0.20, 0.22, 0.28))
+		draw_rect(Rect2(bx, y0, 12.0, 2.5), Color(0.42, 0.45, 0.55, 0.8))
+		draw_circle(Vector2(bx + 6.0, y0 + h * 0.3), 2.0, Color(0.5, 0.52, 0.6))
+		draw_circle(Vector2(bx + 6.0, y0 + h * 0.72), 2.0, Color(0.5, 0.52, 0.6))
+	# Grietas en zigzag que recorren la tabla.
 	for f in 2:
 		var pts := PackedVector2Array()
-		var x := r.position.x + rng.randf_range(4.0, r.size.x * 0.25)
-		while x < r.end.x - 6.0:
-			pts.append(Vector2(x, cy + (float(f) - 0.5) * r.size.y * 0.4 + rng.randf_range(-r.size.y * 0.22, r.size.y * 0.22)))
-			x += rng.randf_range(10.0, 22.0)
+		var x := x0 + rng.randf_range(20.0, r.size.x * 0.3)
+		while x < x1 - 20.0:
+			pts.append(Vector2(x, y0 + h * (0.35 + 0.3 * f) + rng.randf_range(-h * 0.2, h * 0.2)))
+			x += rng.randf_range(12.0, 26.0)
 		if pts.size() >= 2:
-			draw_polyline(pts, Color(0.16, 0.10, 0.06, 0.6), 1.8)
-	for i in 5:
-		var px := rng.randf_range(r.position.x, r.end.x)
-		draw_rect(Rect2(px, r.position.y, rng.randf_range(4.0, 10.0), 2.5), Color(0.85, 0.72, 0.52, 0.55))
-	# Grieta profunda oscura en un extremo.
+			draw_polyline(pts, Color(0.08, 0.05, 0.03, 0.75), 2.2)
+	# Astillas y pedazos que cuelgan del canto inferior.
+	var ax := x0 + 18.0
+	while ax < x1 - 22.0:
+		var aw := rng.randf_range(6.0, 14.0)
+		var al := rng.randf_range(5.0, h * 0.7)
+		draw_colored_polygon(PackedVector2Array([Vector2(ax, y1 - 1.0), Vector2(ax + aw, y1 - 1.0), Vector2(ax + aw * rng.randf_range(0.2, 0.8), y1 + al)]), Color(0.30, 0.21, 0.13))
+		ax += rng.randf_range(26.0, 60.0)
+	# Grieta profunda hacia un extremo.
 	draw_colored_polygon(PackedVector2Array([
-		Vector2(r.end.x - 34.0, r.position.y), Vector2(r.end.x - 28.0, r.position.y + r.size.y * 0.5),
-		Vector2(r.end.x - 36.0, r.end.y), Vector2(r.end.x - 24.0, r.end.y), Vector2(r.end.x - 20.0, r.position.y)]), Color(0.10, 0.06, 0.04, 0.5))
+		Vector2(x1 - 46.0, y0), Vector2(x1 - 38.0, y0 + h * 0.5),
+		Vector2(x1 - 48.0, y1), Vector2(x1 - 32.0, y1), Vector2(x1 - 28.0, y0)]), Color(0.07, 0.04, 0.03, 0.6))

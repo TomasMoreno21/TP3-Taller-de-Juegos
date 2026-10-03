@@ -18,6 +18,7 @@ signal sacudida_fuerte(fuerza: float)
 @export var latido_hz_max := 2.6         ## latidos/s con vida casi en cero
 
 var tension := 0.0
+var hay_hojas := true   ## false en cuevas: ni hojas cayendo ni hojitas al agarrar lianas (lo fija hojas_ambiente.gd al cargar el nivel)
 ## Pulso compartido "lub-dub" (0..1) y qué tan herido estás (0..1). Lo leen la viñeta del HUD,
 ## la respiración del jugador y el orbe de vida: todo late a la vez cuando quedás con poca vida.
 var latido := 0.0

@@ -188,6 +188,21 @@ func _initialize() -> void:
 		_chk(shake_visto, "Derrumbe: shake fuerte durante la zona")
 		_chk(max_esc >= 1, "Derrumbe: caen escombros (%d a la vez)" % max_esc)
 
+	# Cadenas de las plataformas frágiles: llegan hasta el techo.
+	var con_cadena := 0
+	for n in nivel.find_children("PlataformaFragil*", "StaticBody2D", true, false):
+		var cad: Node = n.get_node_or_null("Visual/Cadenas")
+		if cad != null:
+			con_cadena += 1
+			var largos: Array = cad.get("_largos")
+			_chk(largos.size() == int(cad.get("cantidad")), "%s: una medición de techo por cadena" % n.name)
+			var rr: Rect2 = cad.call("_rect")
+			for i in largos.size():
+				var xl: float = cad.call("_x_cadena", rr, i)
+				var tope: Vector2 = cad.to_global(Vector2(xl, rr.position.y + 3.0 - float(largos[i])))
+				var hit := espacio.intersect_ray(PhysicsRayQueryParameters2D.create(tope + Vector2(0, 20), tope + Vector2(0, -2), 1))
+				_chk(not hit.is_empty() and float(largos[i]) > 20.0, "%s: cadena %d toca el techo (%d px)" % [n.name, i, int(largos[i])])
+	_chk(con_cadena >= 10, "plataformas frágiles con cadenas: %d" % con_cadena)
 	# Tablas del puente de la galería B: cadena con saltos cortos (<= 340 px entre centros).
 	var xs: Array[float] = []
 	for n in nivel.get_children():

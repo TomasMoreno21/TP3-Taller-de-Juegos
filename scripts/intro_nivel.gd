@@ -12,11 +12,13 @@ signal terminada
 @export var una_vez := true
 @export var fundido_inicial := 0.8
 @export var alto_barra := 110.0
+@export var bajar_camara := 150.0           ## px que la cámara se corre hacia abajo mientras sigue al jugador, para que la barra inferior no lo tape
 @export var tam_cartela := 34
 @export var seg_mantener_saltar := 1.0
 @export var resplandor: CanvasItem            ## luz lejana: aparece con la intro y se apaga al entregar el control
 @export var velocidad_caminata := 0.35     ## fracción de la velocidad del jugador al caminar solo
 @export var inicio_x := -1400.0             ## el jugador arranca la intro en esta x (para que el paseo dure toda la charla)
+@export var distancia_max_inicio := 2000.0   ## si el jugador aparece más lejos de `inicio_x` (p. ej. probando otro tramo) la intro se omite
 @export var caminar_hasta_x := 0.0          ## el jugador se detiene al llegar a esta x (tope de seguridad)
 @export var color_pulso := Color(0.6, 0.85, 1.0, 0.55)
 @export var sonido_pulso: AudioStream         ## opcional: sonido grave del Amuleto al despertar
@@ -26,6 +28,7 @@ var _planos: Array[PlanoIntro] = []
 var _cam: Camera2D
 var _jugador: Node2D
 var _hud: CanvasLayer
+var _hud_visible := true
 var _capa: CanvasLayer
 var _negro: ColorRect
 var _flash: ColorRect
@@ -60,6 +63,8 @@ func _ready() -> void:
 	_cam = get_viewport().get_camera_2d()
 	if _jugador == null or _cam == null or not _cam.has_method("modo_cine"):
 		return
+	if absf(_jugador.global_position.x - inicio_x) > distancia_max_inicio or not _hay_lugar(inicio_x):
+		return
 	if prog != null:
 		prog.marcar_dialogo_visto(id_visto)   # morir o saltearla no la repite
 	_activa = true
@@ -67,6 +72,7 @@ func _ready() -> void:
 	_jugador.set("cinematica_activa", true)
 	_hud = get_tree().get_first_node_in_group("hud") as CanvasLayer
 	if _hud != null:
+		_hud_visible = _hud.visible
 		_hud.visible = false
 	_construir_capa()
 	_cam.call("modo_cine")
@@ -74,12 +80,24 @@ func _ready() -> void:
 	_correr()
 
 
+## True si el cuerpo del jugador entra en esa x (a su altura actual) sin quedar dentro del terreno.
+func _hay_lugar(x: float) -> bool:
+	var espacio := get_world_2d().direct_space_state
+	var q := PhysicsPointQueryParameters2D.new()
+	q.collision_mask = 1
+	for d in [Vector2(0, -120), Vector2.ZERO, Vector2(0, 120), Vector2(-45, 0), Vector2(45, 0)]:
+		q.position = Vector2(x, _jugador.global_position.y) + d
+		if not espacio.intersect_point(q, 1).is_empty():
+			return false
+	return true
+
+
 func _process(delta: float) -> void:
 	if not _activa:
 		return
 	_t += delta
 	if _seguir:
-		var meta := _jugador.global_position + (_cam.get("desplazamiento") as Vector2)
+		var meta := _jugador.global_position + (_cam.get("desplazamiento") as Vector2) + Vector2(0, bajar_camara)
 		_cam.global_position = _cam.global_position.lerp(meta, 1.0 - exp(-3.5 * delta))
 	if _camina and _jugador.global_position.x >= caminar_hasta_x:
 		_camina = false
@@ -123,7 +141,7 @@ func _correr() -> void:
 func _arrancar_plano(p: PlanoIntro) -> void:
 	var destino := p.global_position
 	if p.seguir_jugador:
-		destino = _jugador.global_position + (_cam.get("desplazamiento") as Vector2)
+		destino = _jugador.global_position + (_cam.get("desplazamiento") as Vector2) + Vector2(0, bajar_camara)
 	if p.zoom_desde > 0.0:
 		_cam.global_position = destino if p.seguir_jugador else p.global_position + p.arranca_desde
 		_cam.zoom = Vector2.ONE * p.zoom_desde
@@ -210,7 +228,7 @@ func _entregar_control() -> void:
 		_cam.call("modo_normal")
 	_jugador.set("cinematica_activa", false)
 	if _hud != null:
-		_hud.visible = true
+		_hud.visible = _hud_visible
 	_cartela.modulate.a = 0.0
 	_barra_skip.visible = false
 	_barras(false)
