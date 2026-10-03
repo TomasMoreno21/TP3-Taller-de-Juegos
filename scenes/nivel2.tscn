@@ -1636,3 +1636,42 @@ separacion = 26.0
 raices = false
 cuerpo = false
 semilla = 7
+
+[node name="Calma" type="Node2D" parent="Expansion"]
+
+[node name="CalmaA" parent="Expansion/Calma" instance=ExtResource("32_dtg")]
+position = Vector2(3300, 664)
+dialogo_id = "n2_calma_a"
+
+[node name="CalmaB1" parent="Expansion/Calma" instance=ExtResource("32_dtg")]
+position = Vector2(5800, 1608)
+dialogo_id = "n2_calma_b1"
+
+
+[node name="CalmaC1" parent="Expansion/Calma" instance=ExtResource("32_dtg")]
+position = Vector2(1600, 3480)
+dialogo_id = "n2_calma_c1"
+
+[node name="CalmaC2" parent="Expansion/Calma" instance=ExtResource("32_dtg")]
+position = Vector2(5000, 3480)
+dialogo_id = "n2_calma_c2"
+
+[node name="CalmaD1" parent="Expansion/Calma" instance=ExtResource("32_dtg")]
+position = Vector2(10000, 5352)
+dialogo_id = "n2_calma_d1"
+
+[node name="CalmaD2" parent="Expansion/Calma" instance=ExtResource("32_dtg")]
+position = Vector2(2200, 5400)
+dialogo_id = "n2_calma_d2"
+
+[node name="CalmaD3" parent="Expansion/Calma" instance=ExtResource("32_dtg")]
+position = Vector2(-800, 5400)
+dialogo_id = "n2_calma_d3"
+
+[node name="CalmaE1" parent="Expansion/Calma" instance=ExtResource("32_dtg")]
+position = Vector2(600, 6840)
+dialogo_id = "n2_calma_e1"
+
+[node name="CalmaE2" parent="Expansion/Calma" instance=ExtResource("32_dtg")]
+position = Vector2(2000, 6840)
+dialogo_id = "n2_calma_e2"

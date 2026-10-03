@@ -351,3 +351,7 @@ El usuario pidió que el combate no se sienta "tocar un botón y hacer daño sos
 - L1280-1343: referencia Alien Force, decisiones pendientes, equipo, entregables
 - L1498-1515: sesiones 16/09 y 29/09 (Fase 0 plan de sistemas)
 Al cerrar una sesión: agregar el resumen ARRIBA de este archivo (máx. ~15 líneas) y mover lo viejo al historial.
+
+## Nivel 2: tramos de respiro con texto del Amuleto (03/10)
+- El terreno entre picos ya era plano (piso 80/864/1952/3680/5600/7040), así que no se tocó el TileMap: se agregó `Expansion/Calma` con 9 `dialog_trigger` (`n2_calma_a, b1, c1, c2, d1, d2, d3, e1, e2`) en tramos sin enemigos a >450 px. B2 se descartó: la Arena 2 llega hasta x≈1440.
+- `diag_nivel2` valida Calma (sobre piso, sin enemigos cerca). Backup: %TEMP%\nivel2_antes_calma.tscn.

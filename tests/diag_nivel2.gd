@@ -143,6 +143,15 @@ func _initialize() -> void:
 					if e is CharacterBody2D:
 						var d4: float = piso_de.call(e.global_position, -100.0, 700.0)
 						_chk(d4 < INF and d4 > -10.0, "%s/%s tiene piso debajo (%d px)" % [nm, e.name, int(d4)])
+	var calma: Node = exp.get_node_or_null("Calma")
+	_chk(calma != null and calma.get_child_count() >= 8, "Expansion/Calma tiene tramos de respiro")
+	if calma != null:
+		for n in calma.get_children():
+			var dc: float = piso_de.call(n.global_position, 0.0, 600.0)
+			_chk(dc >= 150.0 and dc <= 260.0, "%s: sobre el piso (%d px)" % [n.name, int(dc)])
+			for e in nivel.find_children("*", "CharacterBody2D", true, false):
+				if e.has_method("take_damage") and e.name != "Player" and e.global_position.distance_to(n.global_position) < 450.0:
+					_chk(false, "%s: hay un enemigo cerca (%s)" % [n.name, e.name])
 	var ids: Array[String] = []
 	for g in exp.get_children():
 		for n in g.get_children():

@@ -737,5 +737,95 @@
 			"[susurro]El latido se acelera.",
 			"Ya falta poco para el sello."
 		]
+	},
+	"n2_calma_a": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"[susurro]Pisá firme. Adelante hay un vigía.",
+			"Los pinchos de piedra no perdonan."
+		]
+	},
+	"n2_calma_b1": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"Las galerías bajan hacia el abismo.",
+			"Cuidá las tablas: ceden al pisarlas."
+		]
+	},
+	"n2_calma_c1": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"Este tramo es largo. Caminá sin apuro.",
+			"Cuando haya vacío, el vuelo es tu aliado."
+		]
+	},
+	"n2_calma_c2": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"Más allá, las tablas cruzan el abismo.",
+			"Si una cede, abrí las alas."
+		]
+	},
+	"n2_calma_d1": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"La cámara inferior está llena de cultistas.",
+			"[susurro]Respirá. Todavía no te vieron."
+		]
+	},
+	"n2_calma_d2": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"El pasaje se ensancha. Pronto, el campamento.",
+			"Recuperá aire antes del próximo combate."
+		]
+	},
+	"n2_calma_d3": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"Una barrera de luz bloquea el paso.",
+			"[susurro]Algo la sostiene. Buscalo."
+		]
+	},
+	"n2_calma_e1": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"Ya casi llegamos al santuario.",
+			"Siento el latido de la cueva más fuerte."
+		]
+	},
+	"n2_calma_e2": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.4,
+		"una_vez": true,
+		"lineas": [
+			"[susurro]Lo que buscamos está más allá.",
+			"Prepará todo lo que aprendiste."
+		]
 	}
 }
