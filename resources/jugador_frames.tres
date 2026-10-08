@@ -127,16 +127,16 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("19_lidle1")
-}, {
-"duration": 1.0,
 "texture": ExtResource("20_lidle2")
 }, {
 "duration": 1.0,
-"texture": ExtResource("21_lidle3")
+"texture": ExtResource("22_lidle4")
 }, {
 "duration": 1.0,
-"texture": ExtResource("22_lidle4")
+"texture": ExtResource("19_lidle1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_lidle3")
 }],
 "loop": 1,
 "name": &"lobo_idle",

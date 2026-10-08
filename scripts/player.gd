@@ -190,6 +190,7 @@ static var _tips_vistos: Dictionary = {}
 @export_group("Alineación")
 @export var anclar_pies := true         ## apoya la base de cada frame en el piso (evita flotar/hundirse)
 @export var pies_hundidos := 4.0         ## px que los pies se meten en el suelo (sensación de peso)
+@export var ajuste_frames: Dictionary = {}  ## offset por frame encima del anclaje; clave "anim:frame" o "anim" -> Vector2 (px). Ej: "lobo_idle:2" -> Vector2(0, -6)
 @export_group("")
 var _was_blocking := false
 var _was_on_floor := false
@@ -2102,12 +2103,13 @@ func _update_animacion() -> void:
 	_vx_prev = velocity.x
 	# Cansancio: con poca vida/energía el cuerpo se encorva y tiembla apenas.
 	var cansancio := _factor_cansancio()
+	var aj := _ajuste_frame()
 	if cansancio > 0.0:
 		if quieto:
 			target_rot += deg_to_rad(4.0) * facing * cansancio
-		visual.offset.x = sin(Time.get_ticks_msec() * 0.06) * cansancio * (1.0 if current_form != Form.HUMAN else 0.0)
-	elif visual.offset.x != 0.0:
-		visual.offset.x = 0.0
+		visual.offset.x = sin(Time.get_ticks_msec() * 0.06) * cansancio * (1.0 if current_form != Form.HUMAN else 0.0) + aj.x
+	else:
+		visual.offset.x = aj.x
 	visual.rotation = lerpf(visual.rotation, target_rot + _pose_rot, minf(10.0 * dt, 1.0))
 	# Polvo al correr (Oso más espaciado y pesado).
 	if polvo_correr_intervalo > 0.0 and is_on_floor() and not _attacking and absf(velocity.x) > data.speed * 0.6:
@@ -2788,7 +2790,10 @@ func _sfx_de(lista: Array[AudioStream], volumen_db: float, variacion_tono: float
 ## que el pie toca el suelo, así acompañan la velocidad real de la animación.
 ## Apoya la base visible de cada frame en el piso: los frames de distinto alto ya no hacen flotar ni hundir al personaje.
 func _anclar_pies() -> void:
+	var aj := _ajuste_frame()
 	if not anclar_pies or visual == null or visual.sprite_frames == null:
+		if visual != null:
+			visual.offset.y = aj.y
 		return
 	var sf := visual.sprite_frames
 	if not sf.has_animation(visual.animation):
@@ -2799,7 +2804,19 @@ func _anclar_pies() -> void:
 	var s := maxf(absf(_base_sprite_scale.y), 0.01)
 	var col_alto: float = collision_shape.shape.size.y
 	var falta := col_alto * 0.5 - 7.5 + pies_hundidos
-	visual.offset.y = falta / s - (tex.get_height() * 0.5 - Pies.relleno_inferior(tex))
+	visual.offset.y = falta / s - (tex.get_height() * 0.5 - Pies.relleno_inferior(tex)) + aj.y
+
+
+func _ajuste_frame() -> Vector2:
+	if ajuste_frames.is_empty() or visual == null:
+		return Vector2.ZERO
+	var clave := "%s:%d" % [visual.animation, visual.frame]
+	if ajuste_frames.has(clave):
+		return ajuste_frames[clave]
+	var solo_anim := String(visual.animation)
+	if ajuste_frames.has(solo_anim):
+		return ajuste_frames[solo_anim]
+	return Vector2.ZERO
 
 
 func _on_frame_animacion() -> void:
