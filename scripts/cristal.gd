@@ -91,6 +91,11 @@ func take_damage(_cant: int, _kb: float = 0.0, _dir: int = 1, _critico: bool = f
 	_roto = true
 	cristal_destruido.emit()
 	_burst()
+	JuiceFx.nota_cristal(get_tree())
+	JuiceFx.escombros(get_tree(), global_position, cristal_color, 7, 0.8)
+	var hs := get_node_or_null("/root/Hitstop")
+	if hs != null and DisplayServer.get_name() != "headless":
+		hs.freeze(0.05)
 	var tw := create_tween()
 	tw.tween_property(visual_root, "scale", Vector2(1.4, 1.4), 0.12)
 	tw.parallel().tween_property(visual_root, "modulate:a", 0.0, 0.12)
@@ -131,7 +136,7 @@ func _crack_visual() -> void:
 func _burst() -> void:
 	if DisplayServer.get_name() == "headless":
 		return
-	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+	var p: CPUParticles2D = (preload("res://scenes/burst.tscn") as PackedScene).instantiate()
 	p.global_position = global_position
 	p.self_modulate = cristal_color
 	p.amount = 14

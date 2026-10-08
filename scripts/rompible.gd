@@ -63,6 +63,10 @@ func _feedback_golpe() -> void:
 func _romper() -> void:
 	broken = true
 	_burst_particulas()
+	JuiceFx.escombros(get_tree(), global_position, box_color, 9, 1.0)
+	var cam_p := get_viewport().get_camera_2d()
+	if cam_p != null and cam_p.has_method("punch") and DisplayServer.get_name() != "headless":
+		cam_p.punch(1.025)
 	var audio := get_node_or_null("/root/AudioManager")
 	if audio != null:
 		audio.play_sfx(sonido_romper, volumen_db, 0.08)
@@ -81,7 +85,7 @@ func _romper() -> void:
 func _burst_particulas() -> void:
 	if DisplayServer.get_name() == "headless":
 		return
-	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+	var p: CPUParticles2D = (preload("res://scenes/burst.tscn") as PackedScene).instantiate()
 	p.global_position = global_position
 	p.self_modulate = box_color
 	get_tree().root.add_child(p)

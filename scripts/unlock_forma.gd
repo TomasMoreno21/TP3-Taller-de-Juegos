@@ -2,15 +2,17 @@ extends Area2D
 ## Desbloquea una forma de transformación cuando el jugador entra al área.
 ## Colocable en el editor: elegir `forma` (0=Humano, 1=Lobo, 2=Oso, 3=Murciélago).
 ## Se da una sola vez por partida (Progresion es autoload, persiste al morir/reintentar).
-## Visible en el mundo: un sello de espíritu que flota y brilla; al tocarlo estalla
-## con cámara lenta y un destello del color de la forma.
+## Visible en el mundo: un tótem de piedra con la cabeza del animal de la forma (nodo `Totem`,
+## ver totem_forma.gd) y un sello de espíritu que flota sobre él; al tocarlo estalla con cámara
+## lenta y un destello del color de la forma. El tótem se apoya solo en el suelo bajo el nodo.
 
 signal desbloqueada
 
 @export_enum("Humano:0", "Lobo:1", "Oso:2", "Murcielago:3") var forma: int = 1
 @export var una_vez := true
 @export var orbe_offset := Vector2(0, 40)     ## posición del sello respecto del centro del área
-@export var color_sello := Color(0.66, 0.8, 1.0)
+@export var color_sello := Color(0, 0, 0, 0)   ## transparente = color propio de la forma (Lobo celeste, Oso ámbar, Murciélago violeta)
+@export var altura_sello := 330.0               ## px sobre el suelo a los que flota el sello
 @export var flote_amplitud := 10.0
 @export var slowmo_duracion := 0.5
 @export_range(0.05, 1.0) var slowmo_escala := 0.3
@@ -19,8 +21,10 @@ signal desbloqueada
 
 var _dado := false
 var _t := 0.0
+var _color := Color(0.66, 0.8, 1.0)
 
 @onready var orbe: Node2D = get_node_or_null("Orbe")
+@onready var totem: Node2D = get_node_or_null("Totem")
 
 
 func _ready() -> void:
@@ -28,20 +32,42 @@ func _ready() -> void:
 	collision_mask = 4
 	monitoring = true
 	body_entered.connect(_on_body_entered)
+	_color = color_sello if color_sello.a > 0.0 else _color_de_forma()
 	if orbe != null:
 		orbe.position = orbe_offset
 		for n in orbe.get_children():
 			if n is Polygon2D:
-				(n as Polygon2D).color = Color(color_sello, (n as Polygon2D).color.a)
+				(n as Polygon2D).color = Color(_color, (n as Polygon2D).color.a)
 			elif n is Sprite2D:
-				(n as Sprite2D).modulate = Color(color_sello, (n as Sprite2D).modulate.a)
+				(n as Sprite2D).modulate = Color(_color, (n as Sprite2D).modulate.a)
 			elif n is PointLight2D:
-				(n as PointLight2D).color = color_sello
+				(n as PointLight2D).color = _color
 		# Ya desbloqueada (reintento tras morir): el sello no vuelve a aparecer.
 		var prog := get_node_or_null("/root/Progresion")
 		if una_vez and prog != null and "_extra_formas" in prog and prog._extra_formas.has(forma):
 			orbe.visible = false
 			_dado = true
+	if totem != null:
+		totem.configurar(forma, _color, orbe, _dado)
+		_apoyar_en_suelo()
+
+
+func _color_de_forma() -> Color:
+	return preload("res://scripts/totem_forma.gd").ACENTOS.get(forma, _color)
+
+
+## Baja un rayo hasta el piso y apoya ahí el tótem; el sello flota `altura_sello` sobre él.
+func _apoyar_en_suelo() -> void:
+	var suelo := 120.0
+	await get_tree().physics_frame
+	if not is_inside_tree():
+		return
+	var q := PhysicsRayQueryParameters2D.create(global_position + Vector2(0, -150), global_position + Vector2(0, 800), 1)
+	var hit := get_world_2d().direct_space_state.intersect_ray(q)
+	if not hit.is_empty():
+		suelo = (hit["position"] as Vector2).y - global_position.y
+	totem.position = Vector2(0, suelo)
+	orbe_offset = Vector2(0, suelo - altura_sello)
 
 
 func _process(delta: float) -> void:
@@ -67,6 +93,8 @@ func _on_body_entered(body: Node2D) -> void:
 	if una_vez:
 		set_deferred("monitoring", false)
 	_efecto_desbloqueo()
+	if totem != null:
+		totem.despertar()
 	(prog as Node).desbloquear_forma(forma)
 	desbloqueada.emit()
 
@@ -83,7 +111,7 @@ func _efecto_desbloqueo() -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("punch"):
 		cam.punch(1.08)
-	Burst.emitir(self, orbe.global_position, color_sello, 32, 1.8)
+	Burst.emitir(self, orbe.global_position, _color, 32, 1.8)
 	# El sello se infla y se disuelve.
 	var tw := orbe.create_tween().set_parallel(true)
 	tw.tween_property(orbe, "scale", orbe.scale * 2.2, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -95,7 +123,7 @@ func _efecto_desbloqueo() -> void:
 	var flash := ColorRect.new()
 	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
 	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	flash.color = Color(color_sello, 0.55)
+	flash.color = Color(_color, 0.55)
 	capa.add_child(flash)
 	get_tree().root.add_child(capa)
 	var tf := flash.create_tween().set_ignore_time_scale(true)

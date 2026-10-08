@@ -116,6 +116,9 @@ func abrir() -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("shake"):
 		cam.shake(shake_romper * (1.6 if derrumbe else 1.0), 0.25 if derrumbe else 0.15)
+	if cam != null and cam.has_method("punch") and DisplayServer.get_name() != "headless":
+		cam.punch(1.05 if derrumbe else 1.03)
+	JuiceFx.escombros(get_tree(), global_position + Vector2(0, -tam.y * 0.5), color_piedra, clampi(int(tam.y / 40.0), 8, 22), 1.2 if derrumbe else 1.0)
 	var hs := get_node_or_null("/root/Hitstop")
 	if hs != null and hitstop_romper > 0.0:
 		hs.freeze(hitstop_romper)

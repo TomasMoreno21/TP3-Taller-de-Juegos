@@ -39,6 +39,8 @@ var _combo_base_pos: Vector2
 @export var vineta_fade_dur := 0.4
 @onready var boss_bar: MarginContainer = $BossBar
 @onready var boss_fill: ProgressBar = $BossBar/Panel/Col/Envoltura/Fill
+@onready var boss_eco: ProgressBar = $BossBar/Panel/Col/Envoltura/FillEco   ## franja clara que baja con retraso tras un golpe
+var _eco_tween: Tween
 @onready var boss_valor: Label = $BossBar/Panel/Col/Fila/Valor
 @onready var boss_pips: Array[PanelContainer] = [
 	$BossBar/Panel/Col/Pips/P1,
@@ -184,6 +186,21 @@ func _boss_bar_mostrar(hp: int, max_hp: int) -> void:
 	boss_fill.max_value = 1.0
 	boss_fill.value = clampf(float(hp) / float(max_hp), 0.0, 1.0)
 	boss_valor.text = str(hp)
+	var frac := boss_fill.value
+	if boss_eco != null:
+		boss_eco.max_value = 1.0
+		if entra or frac >= boss_eco.value:
+			if _eco_tween != null and _eco_tween.is_valid():
+				_eco_tween.kill()
+			boss_eco.value = frac
+		elif DisplayServer.get_name() != "headless":
+			if _eco_tween != null and _eco_tween.is_valid():
+				_eco_tween.kill()
+			_eco_tween = create_tween()
+			_eco_tween.tween_interval(0.4)
+			_eco_tween.tween_property(boss_eco, "value", frac, 0.6).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		else:
+			boss_eco.value = frac
 	if DisplayServer.get_name() == "headless":
 		return
 	if entra:

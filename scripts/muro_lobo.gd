@@ -17,9 +17,14 @@ func _ready() -> void:
 		poly.visible = sprite == null or sprite.texture == null or not sprite.visible
 
 
+var _player_cache: Node2D
+
+
 func _physics_process(_delta: float) -> void:
-	var player := get_tree().get_first_node_in_group("player") as Node2D
-	if player == null or not is_instance_valid(player):
+	if not is_instance_valid(_player_cache):
+		_player_cache = get_tree().get_first_node_in_group("player") as Node2D
+	var player := _player_cache
+	if player == null:
 		return
 	if int(player.get("current_form")) != Jugador.Form.LOBO:
 		return

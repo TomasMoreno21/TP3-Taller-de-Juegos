@@ -57,7 +57,7 @@ func _physics_process(delta: float) -> void:
 func _oleada() -> void:
 	var n := randi_range(escombros_por_oleada.x, escombros_por_oleada.y)
 	for i in n:
-		get_tree().create_timer(randf_range(0.0, duracion_oleada)).timeout.connect(_soltar_escombro)
+		get_tree().create_timer(randf_range(0.0, duracion_oleada), false).timeout.connect(_soltar_escombro)
 
 
 func _soltar_escombro() -> void:

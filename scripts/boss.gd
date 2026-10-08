@@ -21,6 +21,7 @@ signal died
 const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 const CRISTAL_SCENE := preload("res://scenes/cristal.tscn")
 const PROYECTIL_SCENE := preload("res://scenes/projectile.tscn")
+const ATAQUE_SCENE := preload("res://scenes/ataque_jefe.tscn")
 
 enum Fase { UNO, DOS, TRES }
 
@@ -32,23 +33,52 @@ const ZONA_SLOTS: Array[float] = [-190.0, 0.0, 190.0]
 @export var ola_asignada := 0  # para integrarse al Encounter como enemigo manual
 @export var dano_orb := 14
 @export var dano_zona := 60    # daño real al jefe por golpe en la zona marcada
+@export var umbral_garra := 60    # un golpe de este daño o más (Garra del Oso) cuenta doble en la zona
+@export var mult_garra := 2.0     # multiplicador de daño de la Garra en la zona
 
 @export_group("Gates")
 @export var legion_base := 2
-@export var legion_max := 6
+@export var legion_max := 5
 @export var cristales_por_ciclo := 3
 @export var golpes_para_romper_cristal := 2
 @export var toques_base_zona := 3
 @export var ventana_zona := 6.5
 @export var ventana_zona_por_vuelta := 0.7
 @export var ventana_zona_min := 3.2
-@export var intervalo_orbes := 2.2
+@export var intervalo_orbes := 2.8
 @export var aviso_orbe := 0.35            # aviso (s) con destello antes de cada disparo de orbes
 @export var orbes_abanico_fase2 := 3      # orbes por descarga en fase 2 (1 = disparo simple)
 @export var orbes_abanico_fase3 := 5      # orbes por descarga en fase 3
 @export var abanico_apertura := 0.24      # separación angular (rad) entre orbes del abanico
 @export var orbes_en_zona := true         # desde la fase 2 también dispara durante la zona marcada
-@export var pausa_entre_ciclos := 1.4
+@export var legion_espaciado := 150.0    # px entre cultistas de la legión (más aire para moverse)
+@export var legion_intervalo_spawn := 1.3 # s entre oleadas de 2 cultistas (no aparecen todos juntos)
+
+@export_group("Ataques")
+## Cada ataque dice qué forma lo resuelve: orbes = parry (Humano), onda = salto (Humano/Lobo),
+## barrido a la altura de la cabeza = pasar por debajo (Lobo/Murciélago), cristales = sónico, zona marcada = Garra del Oso (daño doble).
+@export var dano_reflejo := 30            # daño al jefe de un orbe devuelto con parry (ignora el escudo)
+@export var radio_reflejo := 170.0        # distancia al jefe a la que el orbe devuelto le pega
+@export var dano_onda := 18
+@export var velocidad_onda := 430.0
+@export var aviso_onda := 0.85
+@export var intervalo_onda := 5.5         # en la zona marcada
+@export var dano_barrido := 16
+@export var velocidad_barrido := 560.0
+@export var aviso_barrido := 0.95
+@export var intervalo_barrido := 6.0      # durante los cristales
+@export var barrido_alto := 200.0         # tamaño vertical de la franja del barrido
+@export var barrido_base := 200.0         # px sobre el piso donde empieza (Lobo y Murciélago pasan por debajo)
+@export var aviso_minimo := 0.4           # el aviso nunca baja de esto (justicia en fase 3)
+@export var combo_fase3_demora := 0.7     # fase 3: tras onda/barrido sigue una descarga de orbes
+
+@export_group("Ritmo")
+## Valle = pausa sin ataques entre barreras (aura verde, el Amuleto avisa qué viene y cura si la vida está baja).
+@export var valle_entre_barreras := 3.0
+@export var valle_cambio_fase := 4.5      # el valle que sigue a un cambio de fase es más largo
+@export var valle_minimo := 2.0           # los valles se acortan por vuelta pero nunca bajan de esto
+@export var curacion_valle := 15
+@export var vida_baja_valle := 0.5        # solo cura si la vida del jugador está por debajo de esta fracción
 
 @export_group("Vuelo")
 @export var altura_vuelo := 260.0   # px sobre el piso a los que preside
@@ -66,6 +96,12 @@ const ZONA_SLOTS: Array[float] = [-190.0, 0.0, 190.0]
 @export var retroceso_px := 10.0          ## micro-retroceso del cuerpo al recibir un golpe
 @export var hitstop_fase := 0.12          ## hitstop al cambiar de fase
 @export var slowmo_fase := 0.5            ## s de cámara lenta al cambiar de fase (0 = sin)
+@export var nombre_jefe := "EL ARZOBISPO"  ## nombre que aparece al entrar en pantalla
+@export var intro_cine := true             ## barras de cine + nombre + silencio al empezar la pelea
+@export var intro_duracion := 2.6
+@export var fase_grieta := true            ## grieta de luz en la pantalla al cambiar de fase
+@export var muerte_slowmo := 2.6           ## s de cámara muy lenta al morir el jefe
+@export var muerte_slowmo_escala := 0.2
 # Si se deja vacío, el rugido se genera por código (ruido grave sintetizado).
 @export var sonido_roar: AudioStream
 
@@ -77,7 +113,12 @@ var _activo := false
 var _muerto := false
 var _invocado := false
 var _shield_active := false
-var _gate := "inactivo"   # inactivo | legion | cristales | zona
+var _gate := "inactivo"   # inactivo | legion | cristales | zona | valle
+var _valle_largo := false   # un cambio de fase alarga el próximo valle
+var _suelo_y := 0.0   # superficie real del piso de la arena (_piso_y es el origen del jefe, que puede estar más abajo)
+var _ataque_t := 0.0
+var _orbes: Array[Node] = []
+var _tips_dados := {}
 var _vuelta := 0
 
 var _cristales: Array[Node] = []
@@ -157,6 +198,8 @@ func preparar_ola() -> void:
 	apuntar_zona(false)
 	_limpiar_cristales()
 	_limpiar_invocados()
+	_limpiar_ataques()
+	_valle_largo = false
 
 
 func activar() -> void:
@@ -169,8 +212,10 @@ func activar() -> void:
 	_medio_arena = arena[1]
 	visual.visible = true
 	_vuelta = 0
+	_medir_suelo()
 	salud_cambio.emit(health, vida_max)
 	_ritual_entrada()
+	_cine_entrada()
 	_hablar([
 		"¡EL ARZOBISPO! Preside desde su trono de energía corrupta.",
 		"Para herirlo tendrás que: matar a sus fieles, romper sus cristales",
@@ -194,6 +239,11 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 		return
 	if _shield_active:
 		return
+	_aplicar_dano(cantidad, dir, critico)
+
+
+## Resta vida y dispara reacciones/fase/muerte. take_damage filtra el escudo; el orbe devuelto con parry lo ignora.
+func _aplicar_dano(cantidad: int, dir: int, critico: bool) -> void:
 	health = maxi(health - cantidad, 0)
 	salud_cambio.emit(health, vida_max)
 	_flash_tint()
@@ -211,17 +261,18 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 
 
 ## Un golpe conectó con la zona marcada → daño real al jefe.
-func _golpe_en_zona(_cantidad: int) -> void:
+func _golpe_en_zona(cantidad: int) -> void:
 	if _muerto or not _activo or _gate != "zona":
 		return
 	if _shield_active:
 		return
 	var p := get_tree().get_first_node_in_group("player") as Node2D
 	var lado := 1 if p == null or global_position.x >= p.global_position.x else -1   # el retroceso se aleja del jugador
-	take_damage(dano_zona, 0, lado, false)
+	var garra := cantidad >= umbral_garra   # la Garra del Oso: daño doble y cuenta como dos toques
+	take_damage(int(dano_zona * (mult_garra if garra else 1.0)), 0, lado, garra)
 	if _muerto:
 		return
-	_zona_toques = maxi(_zona_toques - 1, 0)
+	_zona_toques = maxi(_zona_toques - (2 if garra else 1), 0)
 	if _zona_toques > 0:
 		_mover_zona_slot()
 
@@ -234,6 +285,8 @@ func _physics_process(delta: float) -> void:
 	_hover(delta)
 	_telegraph_tick(delta)
 	_orbe_tick(delta)
+	_ataque_tick(delta)
+	_revisar_orbes_devueltos()
 	if zona != null and zona.visible:
 		_pulso_zona_visual()
 
@@ -320,22 +373,40 @@ func _ronda() -> void:
 		await _gate_legion()
 		if gen != _gen or not _activo or _muerto:
 			break
-		_hablar(["Su guardia cede... ¡Rompe sus cristales de energía!"])
-		await _esperar(0.9)
-		if gen != _gen:
+		_hablar(["Respirá. Sigue: cristales de energía.", "Solo el sónico del Murciélago los rompe. Cuidado con el barrido a la altura de la cabeza."])
+		await _valle()
+		if gen != _gen or not _activo or _muerto:
 			break
 		await _gate_cristales()
 		if gen != _gen or not _activo or _muerto:
 			break
-		_hablar(["¡Cae! Golpea la zona marcada."])
-		await _esperar(0.7)
-		if gen != _gen:
+		_hablar(["Respirá. Sigue: la zona marcada.", "Golpeala rápido, y saltá las ondas del piso."])
+		await _valle()
+		if gen != _gen or not _activo or _muerto:
 			break
 		await _gate_zona()
 		if gen != _gen or not _activo or _muerto:
 			break
 		_vuelta += 1
-		await _esperar(pausa_entre_ciclos)
+		_hablar(["Se rehace... Otra vez sus fieles."])
+		await _valle()
+
+
+## Pausa sin ataques entre barreras: el jugador respira, se cura si lo necesita y entiende qué viene.
+## Se acorta por vuelta (nunca menos de `valle_minimo`) y tras un cambio de fase dura más.
+func _valle() -> void:
+	var dur := valle_entre_barreras - _vuelta * 0.25
+	if _valle_largo:
+		dur = maxf(dur, valle_cambio_fase)
+		_valle_largo = false
+	dur = maxf(dur, valle_minimo)
+	_gate = "valle"
+	_orbe_aviso_t = 0.0
+	_pulso_aura(Color(0.5, 0.9, 0.6))
+	var p := _obtener_player()
+	if p != null and "health" in p and p.has_method("curar") and float(p.health) < float(p.VIDA_MAX) * vida_baja_valle:
+		p.curar(curacion_valle)
+	await _esperar(dur)
 
 
 # Barrera 1: Legión de fieles (le dan escudo).
@@ -345,13 +416,21 @@ func _gate_legion() -> void:
 	_shield_active = true
 	_pulso_aura(color_fase2)
 	var cant := _legion_size()
-	_legion_vivos = 0
-	for i in range(cant):
-		_spawn_cultista(i, cant)
-	_hablar(["Sus fieles lo protegen.", "Acaba con ellos para abrir su guardia."])
+	_legion_vivos = cant   # se cuentan por adelantado: llegan en oleadas de 2
 	var gen := _gen
-	while gen == _gen and _legion_vivos > 0 and _activo and not _muerto:
-		await _esperar(0.4)
+	_hablar(["Sus fieles lo protegen. Acaba con ellos para abrir su guardia."])
+	var i := 0
+	var t_spawn := 0.0
+	while gen == _gen and _activo and not _muerto and (i < cant or _legion_vivos > 0):
+		if i < cant and t_spawn <= 0.0:
+			for _k in 2:
+				if i < cant:
+					_spawn_cultista(i, cant)
+					i += 1
+			t_spawn = legion_intervalo_spawn
+		await _esperar(0.2)
+		t_spawn -= 0.2
+
 
 
 func _legion_size() -> int:
@@ -365,7 +444,7 @@ func _spawn_cultista(i: int, total: int) -> void:
 	e.set("ritual_duracion", 0.7)
 	var lado := 1.0 if i % 2 == 0 else -1.0
 	var fila := floori(i / 2.0)
-	var x := _centro_arena + lado * (_medio_arena - 60.0 * (fila + 1.0))
+	var x := _centro_arena + lado * (_medio_arena - legion_espaciado * (fila + 1.0))
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	destino.add_child(e)
 	e.global_position = Vector2(x, _piso_y)
@@ -373,7 +452,6 @@ func _spawn_cultista(i: int, total: int) -> void:
 	if e.has_signal("died"):
 		e.died.connect(_on_cultista_muerto)
 	_invocados.append(e)
-	_legion_vivos += 1
 
 
 func _on_cultista_muerto() -> void:
@@ -387,6 +465,7 @@ func _on_cultista_muerto() -> void:
 
 func _gate_cristales() -> void:
 	_gate = "cristales"
+	_ataque_t = 1.8   # margen para ubicarse antes del primer barrido
 	_shield_active = true
 	_pulso_aura(color_fase2)
 	_invocar_cristales()
@@ -421,6 +500,7 @@ func _on_cristal_roto() -> void:
 
 func _gate_zona() -> void:
 	_gate = "zona"
+	_ataque_t = 1.8
 	_shield_active = false
 	apuntar_zona(true)
 	_zona_toques = toques_base_zona + _vuelta
@@ -501,6 +581,7 @@ func _cambiar_fase(nueva: int) -> void:
 	if nueva < Fase.UNO or nueva > Fase.TRES or nueva == fase:
 		return
 	fase = nueva
+	_valle_largo = true   # el valle que sigue es la respiración mayor
 	fase_cambio.emit(fase)
 	_aplicar_color(_color_fase())
 	_rugido()
@@ -513,6 +594,8 @@ func _cambiar_fase(nueva: int) -> void:
 	if cam != null and cam.has_method("shake"):
 		cam.shake(8.0, 0.5)
 	if DisplayServer.get_name() != "headless":
+		if fase_grieta:
+			JefeCine.grieta(get_tree(), _color_fase())
 		if hitstop_fase > 0.0:
 			_freeze_hitstop(hitstop_fase)
 		if slowmo_fase > 0.0:
@@ -536,15 +619,20 @@ func _morir() -> void:
 	apuntar_zona(false)
 	_limpiar_cristales()
 	_limpiar_invocados()
+	_limpiar_ataques()
 	if _audio_mgr != null and _roar_audio != null:
 		_audio_mgr.play_sfx(_roar_audio, -6.0)
 	var cam := get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("shake"):
 		cam.shake(14.0, 0.7)
 	_freeze_hitstop(0.14)
-	_slowmo(0.7, 0.3)
 	if DisplayServer.get_name() != "headless":
+		_slowmo(muerte_slowmo, muerte_slowmo_escala)
+		_silencio_ambiente(muerte_slowmo * 0.6)
+		JefeCine.destello_final(get_tree(), muerte_slowmo * 0.55)
 		_burst_muerte()
+	else:
+		_slowmo(0.7, 0.3)
 	if visual != null:
 		visual.modulate = Color(4, 4, 4, 1)
 		var tw := create_tween()
@@ -570,6 +658,138 @@ func _limpiar_invocados() -> void:
 	_legion_vivos = 0
 
 
+# --- Ataques de escenario y orbes devueltos ---
+
+## Cadencia por barrera: cristales → barrido (Lobo/Murciélago pasan por debajo), zona → onda (se salta).
+## Legión no tiene: ahí la presión son los cultistas y los orbes parreables.
+func _ataque_tick(delta: float) -> void:
+	if _gate != "cristales" and _gate != "zona":
+		return
+	_ataque_t -= delta
+	if _ataque_t > 0.0:
+		return
+	var barrido := _gate == "cristales"
+	var base := intervalo_barrido if barrido else intervalo_onda
+	_ataque_t = maxf(base - fase * 0.4 - _vuelta * 0.2, 3.5)
+	if barrido:
+		_lanzar_barrido()
+	else:
+		_lanzar_onda()
+	if fase == Fase.TRES:
+		_combo_orbes()
+
+
+## Fase 3: el ataque de escenario va seguido de una descarga de orbes (dos amenazas distintas a la vez).
+func _combo_orbes() -> void:
+	var gen := _gen
+	await _esperar(combo_fase3_demora)
+	if gen != _gen or not _activo or _muerto or _orbe_aviso_t > 0.0:
+		return
+	if _gate == "cristales" or _gate == "zona":
+		_orbe_aviso_t = maxf(aviso_orbe, 0.01)
+		_tele_ateos(_orbe_aviso_t, Color(1.0, 0.45, 0.3))
+
+
+## Raycast al piso en el centro de la arena: las ondas y el barrido se ubican respecto del suelo real.
+func _medir_suelo() -> void:
+	_suelo_y = _piso_y
+	var espacio := get_world_2d().direct_space_state
+	if espacio == null:
+		return
+	var q := PhysicsRayQueryParameters2D.create(Vector2(_centro_arena, _piso_y - 150.0), Vector2(_centro_arena, _piso_y + 300.0), 1)
+	var hit := espacio.intersect_ray(q)
+	if not hit.is_empty():
+		_suelo_y = (hit["position"] as Vector2).y
+
+
+func _aviso_para(base: float) -> float:
+	return maxf(base - fase * 0.1 - _vuelta * 0.04, aviso_minimo)
+
+
+## Onda baja que recorre el piso hacia el jugador desde el borde de la arena. Se salta.
+func _lanzar_onda() -> void:
+	var p := _obtener_player()
+	var lado := -1 if p != null and p.global_position.x < _centro_arena else 1   # nace en el borde más lejano al jugador
+	if fase >= Fase.DOS and randf() < 0.4:
+		lado = -lado
+	var a := _crear_ataque(Vector2(120.0, 90.0), Color(0.78, 0.5, 0.25), dano_onda, velocidad_onda + fase * 40.0, _aviso_para(aviso_onda))
+	a.dir = -lado
+	a.global_position = Vector2(_centro_arena + lado * _medio_arena, _suelo_y - 45.0)
+	_agregar_ataque(a)
+	_tele_ateos(0.4, Color(0.78, 0.5, 0.25))
+	_tip_una_vez("onda", ["¡Onda por el piso! Saltala: el Humano y el Lobo llegan alto, el Oso no."])
+
+
+## Franja de energía a la altura de la cabeza: golpea a Humano y Oso, Lobo y Murciélago pasan por debajo.
+func _lanzar_barrido() -> void:
+	var p := _obtener_player()
+	var lado := -1 if p != null and p.global_position.x < _centro_arena else 1
+	if fase >= Fase.DOS and randf() < 0.4:
+		lado = -lado
+	var a := _crear_ataque(Vector2(150.0, barrido_alto), Color(0.65, 0.4, 0.95), dano_barrido, velocidad_barrido + fase * 50.0, _aviso_para(aviso_barrido))
+	a.dir = -lado
+	a.global_position = Vector2(_centro_arena + lado * _medio_arena, _suelo_y - barrido_base - barrido_alto * 0.5)
+	_agregar_ataque(a)
+	_tele_ateos(0.4, Color(0.65, 0.4, 0.95))
+	_tip_una_vez("barrido", ["¡Barrido a la altura de la cabeza! Transformate en Lobo o Murciélago y pasá por debajo."])
+
+
+func _crear_ataque(tam: Vector2, col: Color, dmg: int, vel: float, aviso: float) -> Area2D:
+	var a := ATAQUE_SCENE.instantiate() as Area2D
+	a.set("tamano", tam)
+	a.set("color", col)
+	a.set("dano", dmg)
+	a.set("velocidad", vel)
+	a.set("aviso", aviso)
+	a.set("recorrido_max", _medio_arena * 2.0 + 300.0)
+	return a
+
+
+func _agregar_ataque(a: Area2D) -> void:
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	var pos: Vector2 = a.global_position   # add_child resetea la posición a la local; se la reasigna después
+	destino.add_child(a)
+	a.global_position = pos
+
+
+func _limpiar_ataques() -> void:
+	for n in get_tree().get_nodes_in_group("ataque_jefe"):
+		n.queue_free()
+	_orbes.clear()
+
+
+## El jefe no tiene cuerpo golpeable: un orbe devuelto con parry (enemy_shot ya en false) le pega
+## al llegar cerca, aunque tenga escudo. Es el premio del Humano.
+func _revisar_orbes_devueltos() -> void:
+	var i := _orbes.size() - 1
+	while i >= 0:
+		var o: Variant = _orbes[i]   # Variant: un orbe ya liberado no rompe la asignación tipada
+		if not is_instance_valid(o) or o.is_queued_for_deletion():
+			_orbes.remove_at(i)
+		elif not o.enemy_shot and o.global_position.distance_to(global_position + Vector2(0, -120)) <= radio_reflejo:
+			_orbes.remove_at(i)
+			_golpe_reflejo(o)
+		i -= 1
+
+
+func _golpe_reflejo(orbe: Node2D) -> void:
+	var lado := 1 if orbe.direction.x >= 0.0 else -1
+	orbe.queue_free()
+	if _muerto or not _activo:
+		return
+	_aplicar_dano(dano_reflejo, lado, true)
+	var cam := get_viewport().get_camera_2d()
+	if cam != null and cam.has_method("shake"):
+		cam.shake(5.0, 0.2)
+
+
+func _tip_una_vez(clave: String, lineas: Array) -> void:
+	if _tips_dados.has(clave):
+		return
+	_tips_dados[clave] = true
+	_hablar(lineas)
+
+
 # --- Herramientas ---
 
 func _disparar_orb(to_player: Vector2, ang: float, dmg: int, speed: float) -> void:
@@ -588,6 +808,26 @@ func _disparar_orb(to_player: Vector2, ang: float, dmg: int, speed: float) -> vo
 	proj.set("enemy_shot", true)
 	destino.add_child(proj)
 	proj.global_position = global_position + Vector2(0, -120)
+	_orbes.append(proj)
+	_tip_una_vez("parry", ["¡Orbes! Bloqueá justo antes del impacto: el parry los devuelve y le hace daño al Arzobispo."])
+
+
+## Barras de cine con el nombre del jefe y un silencio del ambiente antes de que arranque la pelea.
+func _cine_entrada() -> void:
+	if not intro_cine or DisplayServer.get_name() == "headless":
+		return
+	JefeCine.entrada(get_tree(), nombre_jefe, color_fase1, intro_duracion)
+	_silencio_ambiente(minf(intro_duracion * 0.5, 1.4))
+
+
+func _silencio_ambiente(seg: float) -> void:
+	var amb := get_tree().get_first_node_in_group("ambiente_sonoro")
+	if amb == null:
+		return
+	amb.pedir_silencio(self, 1.0)
+	get_tree().create_timer(seg, true, false, true).timeout.connect(func() -> void:
+		if is_instance_valid(amb):
+			amb.pedir_silencio(self, 0.0))
 
 
 func _ritual_entrada() -> void:
@@ -693,7 +933,7 @@ func _aplicar_color(color: Color) -> void:
 
 
 func _burst_muerte() -> void:
-	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+	var p: CPUParticles2D = (preload("res://scenes/burst.tscn") as PackedScene).instantiate()
 	p.global_position = global_position + Vector2(0, -180)
 	p.self_modulate = _color_fase()
 	p.amount = 26

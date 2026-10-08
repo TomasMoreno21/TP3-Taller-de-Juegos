@@ -26,7 +26,7 @@ size = Vector2(980, 700)
 script = ExtResource("6_niveljefe")
 
 [node name="Player" parent="." unique_id=1861947130 instance=ExtResource("1_player")]
-position = Vector2(350, 860)
+position = Vector2(3549, 734)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=985519331]
 limit_left = 0
@@ -86,10 +86,10 @@ position = Vector2(0, 130)
 [node name="ArenaShape" parent="Encounter/Arena" index="0"]
 shape = SubResource("RectangleShape2D_arena_jefe")
 
-[node name="CheckpointInicio" parent="." instance=ExtResource("ck_1")]
+[node name="CheckpointInicio" parent="." unique_id=1234388143 instance=ExtResource("ck_1")]
 position = Vector2(1300, 970)
 
-[node name="CheckpointPreJefe" parent="." instance=ExtResource("ck_1")]
+[node name="CheckpointPreJefe" parent="." unique_id=576380468 instance=ExtResource("ck_1")]
 position = Vector2(4000, 970)
 
 [node name="Hud" parent="." unique_id=2014128999 instance=ExtResource("8_hud")]

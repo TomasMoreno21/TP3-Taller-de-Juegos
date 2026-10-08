@@ -43,7 +43,7 @@ func _flash() -> void:
 
 func _romper() -> void:
 	if DisplayServer.get_name() != "headless":
-		var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+		var p: CPUParticles2D = (preload("res://scenes/burst.tscn") as PackedScene).instantiate()
 		p.global_position = global_position + Vector2(0, -110)
 		get_tree().root.add_child(p)
 		p.restart()

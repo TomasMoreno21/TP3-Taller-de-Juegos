@@ -59,6 +59,8 @@ func _ready() -> void:
 	_actualizar_visual()
 
 var _t: float = 0.0
+var _visual_cache: Node2D
+var _player_cache: Node2D
 
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint() and is_inside_tree():
@@ -69,11 +71,15 @@ func _process(delta: float) -> void:
 				return
 		return
 	_t += delta
-	var visual := get_node_or_null("Visual") as Node2D
+	if not is_instance_valid(_visual_cache):
+		_visual_cache = get_node_or_null("Visual") as Node2D
+	var visual := _visual_cache
 	if visual == null:
 		return
 	var sway_base := sin(_t * 0.8 + global_position.y * 0.008) * 2.8
-	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if not is_instance_valid(_player_cache):
+		_player_cache = get_tree().get_first_node_in_group("player") as Node2D
+	var player := _player_cache
 	if player != null and player.get("_trepando") and player.get("_enredadera_actual") == self:
 		var vy: float = float(player.get("velocity").y) if "velocity" in player else 0.0
 		if absf(vy) > 80.0:

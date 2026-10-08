@@ -67,7 +67,7 @@ func _flash_fallo() -> void:
 func _burst() -> void:
 	if DisplayServer.get_name() == "headless":
 		return
-	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+	var p: CPUParticles2D = (preload("res://scenes/burst.tscn") as PackedScene).instantiate()
 	p.global_position = global_position
 	p.self_modulate = Color(0.52, 0.38, 0.22)
 	p.amount = 18

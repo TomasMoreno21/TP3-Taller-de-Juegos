@@ -158,7 +158,7 @@ func _abrir_animado() -> void:
 func _burst_barrera() -> void:
 	if DisplayServer.get_name() == "headless":
 		return
-	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+	var p: CPUParticles2D = (preload("res://scenes/burst.tscn") as PackedScene).instantiate()
 	p.global_position = barrera.global_position if barrera != null else global_position
 	p.self_modulate = Color(0.55, 0.35, 0.85)
 	p.amount = 32

@@ -108,6 +108,28 @@ const HITSTOP_COMBO := 0.11
 @export var slowmo_transformacion_escala := 0.4  # escala del tiempo mientras transforma
 @export var tint_dano := Color(1.0, 0.28, 0.28)  # tinte del sprite al recibir daño
 @export var tint_dano_duracion := 0.11  # s que tarda en volver al color normal
+@export_group("Juice (golpe, transformación, parry)")
+@export var tajo_luz := true                      ## tajo blanco diagonal sobre el enemigo al conectar
+@export var tajo_escala := 1.0                    ## tamaño del tajo
+@export var transformacion_cine := true           ## destello, congelado y estallido de color al transformarse
+@export var transformacion_congelado := 0.07      ## s con el mundo congelado al transformarse
+@export var transformacion_slowmo := 0.2          ## s de cámara lenta justo después
+@export var transformacion_slowmo_escala := 0.35
+@export var transformacion_tinte_duracion := 0.5  ## s que la pantalla queda teñida del color de la forma
+@export var transformacion_radio := 1500.0        ## alcance del estallido de rayos
+@export var parry_bn := true                      ## pantalla en blanco y negro (menos tú) en el parry perfecto
+@export var parry_congelado := 0.3                ## s con todo congelado al hacer un parry perfecto
+@export var parry_slowmo := 1.3                   ## s de cámara lenta para contraatacar
+@export var parry_slowmo_escala := 0.45
+@export_range(0.05, 0.6) var parry_radio_color := 0.2  ## círculo que conserva el color alrededor del jugador
+@export var dano_cine := true                     ## recibir daño: pantalla sin color y bordes rojos
+@export var dano_empuje_mult := 1.35              ## el golpe recibido te empuja más lejos
+@export var oso_grietas := true                   ## el Oso agrieta el piso al aterrizar y al pisotón
+@export var silencio_golpe_fuerte := true         ## el ambiente calla justo antes de un golpe pesado
+@export var tono_combo := 0.03                    ## cuánto sube de agudo el golpe por cada golpe de racha (máx. 8)
+@export_group("")
+var _oso_grieta_ms := 0
+var _tajo_alterno := false
 const VIDA_MAX := 100
 
 var forms: Array[Forma] = []
@@ -160,6 +182,7 @@ var _attack_anim_timer := 0.0
 var _attack_anim_actual := "attack1"
 var _attack_anim_cola: Array[String] = []
 var _attack_anim_speed_scale := 1.0
+var _attack_frame_dur := PackedFloat32Array()   # tiempo planificado de cada frame de la animación de ataque en curso
 static var _tips_vistos: Dictionary = {}
 @export var tips_ayuda := true             ## muestra avisos de ayuda la primera vez (parry, energía)
 @export_group("Defensa")
@@ -324,6 +347,9 @@ const FORMAS := [
 
 
 func _ready() -> void:
+	pisoton.connect(func(_pos: Vector2) -> void: _juice_oso_suelo(900.0))
+	if DisplayServer.get_name() != "headless":
+		JuiceFx.precalentar.call_deferred(get_tree())
 	add_to_group("player")
 	for forma in FORMAS:
 		forms.append(forma)
@@ -347,6 +373,19 @@ func _ready() -> void:
 	_liana_loop.stream = sonido_liana_deslizar
 	add_child(_liana_loop)
 
+
+## El jugador no puede salir de los límites de la cámara (izquierda, derecha y arriba; abajo queda libre para caídas al vacío).
+func _limitar_a_camara() -> void:
+	var cam := get_viewport().get_camera_2d()
+	if cam == null:
+		return
+	var x := clampf(global_position.x, cam.limit_left, cam.limit_right)
+	var y := maxf(global_position.y, cam.limit_top)
+	if x != global_position.x:
+		velocity.x = 0.0
+	if y != global_position.y:
+		velocity.y = maxf(velocity.y, 0.0)
+	global_position = Vector2(x, y)
 
 func _physics_process(delta: float) -> void:
 	var dialogo_bloquea := _dialogo_bloquea_input()
@@ -498,6 +537,7 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor() and not _trepando and absf(velocity.x) > 2.0:
 		_try_step_up()
 	move_and_slide()
+	_limitar_a_camara()
 	if _trepando:
 		pass
 	elif is_on_wall() and is_on_floor() and absf(velocity.x) > 2.0:
@@ -531,6 +571,7 @@ func _physics_process(delta: float) -> void:
 			_emitir_polvo(0.5)
 			if _fall_impact > 350.0:
 				aterrizaje_fuerte.emit(global_position, _fall_impact)
+				_juice_oso_suelo(_fall_impact)
 				var amb := get_node_or_null("/root/Ambiente")
 				if amb != null:
 					amb.empujar(global_position, clampf(_fall_impact / 1000.0, 0.15, 0.6))
@@ -742,6 +783,8 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 				_play_attack_fx("light", 1)
 				_punch_sprite(0.15)
 				attack_performed.emit("light", _light_step)
+				if current_form == Form.HUMAN:
+					_iniciar_anim_ataque("attack1")   # el golpe aéreo también se anima (antes seguía con las piernas de correr)
 			else:
 				_heavy_step = 0
 				var combo := _detectar_combo("light")
@@ -767,6 +810,8 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 				_play_attack_fx("heavy", 1)
 				_punch_sprite(0.3)
 				attack_performed.emit("heavy", _heavy_step)
+				if current_form == Form.HUMAN:
+					_iniciar_anim_ataque("attack2")
 			else:
 				_light_step = 0
 				_cancelar_anim_ataque()
@@ -848,7 +893,7 @@ func _ejecutar_finisher(data: Forma, combo: Dictionary) -> void:
 	if current_form == Form.HUMAN:
 		_iniciar_anim_ataque("attack_full")
 	if DisplayServer.get_name() != "headless":
-		var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+		var p: CPUParticles2D = (preload("res://scenes/burst.tscn") as PackedScene).instantiate()
 		p.global_position = global_position + Vector2(facing * 30, -20)
 		p.self_modulate = Color(1, 0.85, 0.3, 0.9)
 		p.amount = 8
@@ -871,6 +916,7 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	if _golpe_rapido_t > 0.0:
 		_hit_delay = 0.0   # primer ataque tras transformarte: conecta de inmediato
 		_golpe_rapido_t = 0.0
+	_silencio_previo_golpe()
 	var rec := _recovery_for(_current_attack_type) * data.mult_recuperacion_para(_current_attack_type, paso)
 	_attack_timer = rec
 	# El lobo usa la misma cola que el humano: _iniciar_anim_ataque estira la
@@ -1052,7 +1098,23 @@ func _check_attack_hits() -> void:
 			vol += volumen_golpe_pesado_db
 		elif _current_attack_type == "special":
 			vol += volumen_special_db
-		audio_mgr.play_sfx_sincronizado(sonido_golpe, vol, dur_hitstop > 0.0)
+		audio_mgr.play_sfx_sincronizado(sonido_golpe, vol, dur_hitstop > 0.0, 1.0 + minf(float(_racha), 8.0) * tono_combo)
+
+
+## Golpe pesado: el ambiente calla durante la preparación y vuelve con el impacto (Hollow Knight).
+func _silencio_previo_golpe() -> void:
+	if not silencio_golpe_fuerte or DisplayServer.get_name() == "headless":
+		return
+	if not (_current_attack_type in ["heavy", "special", "combo"]) or _hit_delay < 0.08:
+		return
+	var amb := get_tree().get_first_node_in_group("ambiente_sonoro")
+	if amb == null:
+		return
+	amb.pedir_silencio(self, 0.85)
+	get_tree().create_timer(_hit_delay + 0.04, true, false, true).timeout.connect(func() -> void:
+		var a := get_tree().get_first_node_in_group("ambiente_sonoro") if is_inside_tree() else null
+		if a != null:
+			a.pedir_silencio(self, 0.0))
 
 
 ## Tope + amortiguación en ráfaga: pegar seguido no acumula pausas que se sienten "trabadas".
@@ -1181,7 +1243,7 @@ func _aplicar_knockback(body: Node2D) -> void:
 func _spark_golpe(body: Node2D, idx: int) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
-	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+	var p: CPUParticles2D = (preload("res://scenes/burst.tscn") as PackedScene).instantiate()
 	p.global_position = _punto_impacto(body) + Vector2(0.0, randf_range(-10.0, 10.0))
 	var tinte := Color(1, 0.9, 0.4, 0.95)
 	if current_form >= 0 and current_form < forms.size():
@@ -1195,6 +1257,19 @@ func _spark_golpe(body: Node2D, idx: int) -> void:
 	# Chorro direccional en el sentido del golpe (más fuerte con golpes pesados).
 	var fuerte := 1.35 if _current_attack_type in ["heavy", "special", "combo"] else 1.0
 	Burst.chispas(self, p.global_position, facing, tinte.lightened(0.45), int(5 * racha_spark_escala()), fuerte)
+	_juice_golpe(p.global_position, tinte, idx)
+
+
+## Tajo rojo fino en el punto de impacto.
+func _juice_golpe(pos: Vector2, tinte: Color, idx: int) -> void:
+	var pesado := _current_attack_type in ["heavy", "special", "combo"]
+	var remate := _current_attack_type in ["special", "combo"]
+	var racha := racha_spark_escala()
+	if tajo_luz:
+		_tajo_alterno = not _tajo_alterno
+		var largo := (560.0 if remate else (430.0 if pesado else 320.0)) * tajo_escala * (0.75 + racha * 0.25)
+		var grosor := (15.0 if remate else (12.0 if pesado else 9.0)) * tajo_escala
+		TajoLuz.lanzar(JuiceCapa.obtener(get_tree()), pos, facing, _tajo_alterno, largo, grosor, Color(0.9, 0.08, 0.1))
 
 
 ## Punto donde el golpe "toca" al objetivo: el borde del cuerpo que mira al jugador
@@ -1321,7 +1396,7 @@ func _emitir_polvo(escala: float, direccion: Vector2 = Vector2.ZERO) -> void:
 func _emitir_burst_hojas() -> void:
 	if DisplayServer.get_name() == "headless":
 		return
-	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+	var p: CPUParticles2D = (preload("res://scenes/burst.tscn") as PackedScene).instantiate()
 	p.global_position = global_position + Vector2(randf_range(-10, 10), -10)
 	var amb := get_node_or_null("/root/Ambiente")
 	var hojas: bool = amb == null or bool(amb.hay_hojas)
@@ -1581,11 +1656,14 @@ func _transformar(nueva: int, forzar: bool = false) -> bool:
 	var data: Forma = forms[current_form]
 	data.reset_form_state()
 	_apply_form()
-	_zoom_transform(data)
+	var cine := transformacion_cine and DisplayServer.get_name() != "headless"
+	_zoom_transform(data, cine)
 	var cam := get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("punch"):
 		cam.punch(1.07)
-	if slowmo_transformacion > 0.0:
+	if cine:
+		_juice_transformacion(data, forzar)
+	elif slowmo_transformacion > 0.0:
 		_freeze_slowmo(slowmo_transformacion, slowmo_transformacion_escala)
 	_particulas_regreso(data.color)
 	if transformacion_pop > 0.0:
@@ -1615,7 +1693,7 @@ func _transformar(nueva: int, forzar: bool = false) -> bool:
 func _particulas_regreso(color: Color) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
-	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+	var p: CPUParticles2D = (preload("res://scenes/burst.tscn") as PackedScene).instantiate()
 	p.global_position = global_position + Vector2(0, 20)
 	p.self_modulate = _tinte_forma(color)
 	get_tree().root.add_child(p)
@@ -1623,11 +1701,44 @@ func _particulas_regreso(color: Color) -> void:
 	p.emitting = true
 
 
-func _zoom_transform(data: Forma) -> void:
+## Transformación cinematográfica: destello blanco que vira al color de la forma, mundo congelado y
+## luego en cámara lenta, estallido de aros y rayos, y temblor (más fuerte en el Oso).
+func _juice_transformacion(data: Forma, forzar: bool) -> void:
+	var k := 0.5 if forzar else 1.0   # volver a Humano por falta de energía: versión suave
+	var color := _tinte_forma(data.color)
+	var dur_tinte := transformacion_tinte_duracion * k
+	var layer := CanvasLayer.new()
+	layer.layer = 100
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	var velo := ColorRect.new()
+	velo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	velo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	velo.color = Color(1, 1, 1, 0.95)
+	layer.add_child(velo)
+	get_tree().root.add_child(layer)
+	var tw := velo.create_tween()
+	tw.set_ignore_time_scale(true)
+	tw.tween_property(velo, "color", Color(color.r, color.g, color.b, 0.42 * k), 0.14)
+	tw.tween_property(velo, "color:a", 0.0, dur_tinte)
+	tw.tween_callback(layer.queue_free)
+	var centro := global_position + Vector2(0, 90)
+	OndaTransformacion.lanzar(JuiceCapa.obtener(get_tree()), centro, color.lightened(0.25), transformacion_radio * k, 24 if current_form != Form.OSO else 12, 0.45)
+	var cam := get_viewport().get_camera_2d()
+	if cam != null and cam.has_method("shake"):
+		cam.shake((22.0 if current_form == Form.OSO else 12.0) * k, 0.3)
+	var pausa := transformacion_congelado * k
+	if pausa > 0.0:
+		_freeze_hitstop(pausa)
+	if transformacion_slowmo > 0.0:
+		_freeze_slowmo(pausa + transformacion_slowmo * k, transformacion_slowmo_escala)
+
+
+func _zoom_transform(data: Forma, cine: bool = false) -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam != null:
 		cam.fijar_zoom(data.camera_zoom)
-	_flash_transformacion(data.color)
+	if not cine:
+		_flash_transformacion(data.color)
 	if current_form != Form.HUMAN:
 		_tip_una_vez("energia", "Las formas gastan energía. Al llegar a cero volvés a Humano; matá enemigos para recuperarla.")
 
@@ -1781,6 +1892,58 @@ func _duracion_anim(anim: String) -> float:
 	return 0.5
 
 
+## Reparte el tiempo del ataque entre los frames para que el frame de impacto (`Forma.anim_impacto`)
+## se muestre justo cuando el golpe puede conectar (`_hit_delay`): la preparación se comprime, el
+## impacto se sostiene un instante y el resto de los frames se reparte por la recuperación.
+## Deja `_attack_frame_dur` vacío si la animación no tiene impacto definido.
+func _planificar_anim_ataque(anim: String, fi: int) -> void:
+	_attack_frame_dur.clear()
+	var sf: SpriteFrames = visual.sprite_frames
+	var data: Forma = forms[current_form]
+	if sf == null or not sf.has_animation(anim) or not data.anim_impacto.has(anim):
+		return
+	var n := sf.get_frame_count(anim)
+	var imp := clampi(int(data.anim_impacto[anim]), 0, n - 1)
+	if fi > imp:
+		return
+	var total := maxf(_attack_timer, 0.12)
+	var t_pre := maxf(_hit_delay, 0.03)
+	var n_pre := imp - fi
+	var n_post := n - imp - 1
+	var dur_imp := data.impacto_sostener
+	if n_pre == 0:
+		dur_imp += t_pre   # arranca ya en el impacto: se sostiene hasta que el daño pueda conectar
+	var gastado := (t_pre if n_pre > 0 else 0.0) + dur_imp
+	var resto := maxf(total - gastado, 0.03 * n_post)
+	var durs := PackedFloat32Array()
+	durs.resize(n)
+	for f in range(fi, imp):
+		durs[f] = t_pre / float(n_pre)
+	durs[imp] = dur_imp
+	for f in range(imp + 1, n):
+		durs[f] = resto / float(n_post)
+	var suma := 0.0
+	for f in n:
+		suma += durs[f]
+	if suma > total:
+		for f in n:
+			durs[f] *= total / suma
+	_attack_frame_dur = durs
+
+
+## Velocidad de reproducción para el frame actual de la animación de ataque (según el plan).
+func _velocidad_anim_ataque() -> float:
+	if _attack_frame_dur.is_empty() or visual.sprite_frames == null:
+		return _attack_anim_speed_scale
+	var f := clampi(visual.frame, 0, _attack_frame_dur.size() - 1)
+	var d := _attack_frame_dur[f]
+	var sf: SpriteFrames = visual.sprite_frames
+	if d <= 0.0 or not sf.has_animation(visual.animation):
+		return _attack_anim_speed_scale
+	var natural := sf.get_frame_duration(visual.animation, f) / maxf(sf.get_animation_speed(visual.animation), 0.01)
+	return natural / d
+
+
 func _iniciar_anim_ataque(anim: String, frame_ini: int = 0) -> void:
 	_attack_anim_cola.clear()
 	_attack_anim_cola.append(anim)
@@ -1791,10 +1954,11 @@ func _iniciar_anim_ataque(anim: String, frame_ini: int = 0) -> void:
 	var fi := clampi(frame_ini, 0, n - 1)
 	var fraccion := float(n - fi) / float(n)
 	_attack_anim_speed_scale = _duracion_anim(anim) * fraccion / maxf(_attack_timer, 0.01)
-	visual.speed_scale = _attack_anim_speed_scale
 	visual.play(anim)
 	if fi > 0:
 		visual.set_frame_and_progress(fi, 0.0)
+	_planificar_anim_ataque(anim, fi)
+	visual.speed_scale = _velocidad_anim_ataque()
 
 
 ## Pose extra al golpear: el sprite se inclina (cabeceo) y se estira un instante; vuelve solo.
@@ -1810,6 +1974,7 @@ func pose_ataque(rot_deg: float, alargar: float = 0.0, dur: float = 0.2) -> void
 
 func _cancelar_anim_ataque() -> void:
 	_attack_anim_cola.clear()
+	_attack_frame_dur.clear()
 	_attack_anim_timer = 0.0
 	_attack_anim_actual = "attack1"
 	_attack_anim_speed_scale = 1.0
@@ -1836,7 +2001,7 @@ func _update_animacion() -> void:
 			var anim := _attack_anim_cola[0]
 			if visual.animation != anim:
 				visual.play(anim)
-			visual.speed_scale = _attack_anim_speed_scale
+			visual.speed_scale = _velocidad_anim_ataque()
 		var dt_a := get_physics_process_delta_time()
 		visual.skew = lerpf(visual.skew, 0.0, minf(12.0 * dt_a, 1.0))
 		visual.rotation = lerpf(visual.rotation, _pose_rot, minf(12.0 * dt_a, 1.0))
@@ -2084,13 +2249,38 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_blo
 		_tip_una_vez("parry", "Bloqueá justo antes de que te golpeen para hacer un parry: no recibís daño y recuperás energía.")
 	_shake_dano_recibido(dir)
 	_flash_tint_dano()
+	_juice_dano(cantidad)
 	stretch_y(-0.12, 0.14)
 	_recoil_dano(dir)
 	if knockback > 0.0:
-		velocity.x = dir * knockback
+		velocity.x = dir * knockback * (dano_empuje_mult if dano_cine else 1.0)
 	_invuln_timer = invuln_dano
 	_invuln_sin_parpadeo = false
 	_handle_death()
+
+
+## Recibir daño: un instante sin color y con los bordes rojos (más fuerte cuanto más duele).
+func _juice_dano(cantidad: int) -> void:
+	if not dano_cine or DisplayServer.get_name() == "headless":
+		return
+	DanoPantalla.lanzar(get_tree(), 0.35 + cantidad / 40.0, 0.3 + minf(cantidad / 80.0, 0.2))
+
+
+## Oso: grietas en el piso, polvo y temblor extra al aterrizar fuerte o al pisotón.
+func _juice_oso_suelo(impacto: float) -> void:
+	if not oso_grietas or current_form != Form.OSO or DisplayServer.get_name() == "headless":
+		return
+	var ahora := Time.get_ticks_msec()
+	if ahora - _oso_grieta_ms < 350:
+		return
+	_oso_grieta_ms = ahora
+	var k := clampf(impacto / 900.0, 0.5, 1.4)
+	JuiceFx.grietas_suelo(get_tree(), global_position + Vector2(0, 142.0), 520.0 * k)
+	JuiceFx.escombros(get_tree(), global_position + Vector2(0, 130.0), Color(0.42, 0.36, 0.3), int(8 * k), 0.7 * k)
+	var cam := get_viewport().get_camera_2d()
+	if cam != null and cam.has_method("shake"):
+		cam.shake(16.0 * k, 0.28, Vector2(0, 1))
+	_emitir_polvo(1.0)
 
 
 func parry_activo() -> bool:
@@ -2104,14 +2294,24 @@ func _parry_perfecto(_dir: int) -> void:
 	energia = minf(energia + parry_energia, ENERGIA_MAX)
 	energia_changed.emit(energia)
 	_sfx(sonido_bloqueo, volumen_estado_db + 4.0, 0.05)
-	_freeze_hitstop(0.1)
-	_freeze_slowmo(0.18, 0.4)
+	var cine := parry_bn and DisplayServer.get_name() != "headless"
+	if cine:
+		# Parry cinematográfico: todo se congela, el mundo pasa a blanco y negro (menos vos) y queda
+		# una cámara lenta para contraatacar.
+		_freeze_hitstop(parry_congelado)
+		_freeze_slowmo(parry_congelado + parry_slowmo, parry_slowmo_escala)
+		ParryBN.lanzar(get_tree(), self, parry_congelado, parry_slowmo, parry_radio_color)
+		OndaTransformacion.lanzar(JuiceCapa.obtener(get_tree()), global_position + Vector2(0, 90), Color(0.95, 0.98, 1.0), 1100.0, 12, 0.5)
+	else:
+		_freeze_hitstop(0.1)
+		_freeze_slowmo(0.18, 0.4)
 	onda_area(parry_onda_radio, 6, 380.0, false)
 	stretch_y(0.16, 0.12)
 	var cam := get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("punch"):
-		cam.punch(1.06)
-	_flash_transformacion(Color(0.9, 0.95, 1.0))
+		cam.punch(1.09 if cine else 1.06)
+	if not cine:
+		_flash_transformacion(Color(0.9, 0.95, 1.0))
 	parry_exitoso.emit()
 
 

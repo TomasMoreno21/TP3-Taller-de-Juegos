@@ -50,6 +50,8 @@ func _ready() -> void:
 	collision_layer = 0
 	collision_mask = 4
 	z_index = z_index_detras
+	if not Engine.is_editor_hint():
+		set_process(false)   # el _process solo sirve en el editor (hay cientos de pinchos)
 	if Engine.is_editor_hint():
 		queue_redraw()
 		return

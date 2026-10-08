@@ -24,10 +24,11 @@ const MAX_FALL_SPEED := 950.0
 @export var flinch_adelanto_px := 12.0        # px que se adelanta el cuerpo en el impacto
 @export var flinch_pop_escala := 1.12         # escala del "pop" al recuperar la pose
 @export var flinch_congela_anim := false      # true = congela la animación durante todo el stun (se ve trabado si seguís pegando)
+@export var frames_impacto := {"attack1": 3, "attack2": 2}   # frame de cada animación de ataque en el que cae el tajo (se sincroniza con el daño)
 @export var stun_anim := "idle"               # animación que sigue viva durante el stun ("" = la que corresponda al movimiento)
 @export var max_atacantes_melee := 2          # cuántos cuerpo a cuerpo pueden estar atacando a la vez (los demás esperan)
 @export var flash_aviso := Color(1.7, 1.7, 1.7)  # destello al iniciar un ataque (aviso de lectura)
-@export var flash_impacto := 2.4               # brillo blanco quemado del impacto (1 = sin destello blanco)
+@export var flash_impacto := 6.0               # brillo blanco quemado del impacto (1 = sin destello blanco)
 @export var pausa_impacto := 0.05              # s que queda "colgado" tras el golpe antes de salir despedido (0 = sin)
 @export var polvo_aterrizaje := true           # nube de polvo al caer de una altura
 @export var pop_aparicion := true              # pequeño "pop" al aparecer sin ritual
@@ -56,6 +57,8 @@ var _ritual: Polygon2D
 var _pies_h0 := 0.0
 var _attack_anim :=""
 var _attack_anim_timer := 0.0
+var _ataque_frame_impacto := -1     # frame del tajo de la animación de ataque en curso (-1 = sin sincronizar)
+var _ataque_vel_previa := 1.0       # velocidad de reproducción hasta llegar a ese frame
 var _attack_timer := 0.0
 var _dir := -1
 var _player_cache: Node2D
@@ -461,7 +464,7 @@ func _physics_process(delta: float) -> void:
 				_windup_timer = enemy_data.windup_tiempo
 				_flash_aviso()
 				_melee_anim = "attack1" if randf() < 0.5 else "attack2"
-				_reproducir_animacion_ataque(_melee_anim)
+				_reproducir_animacion_ataque(_melee_anim, enemy_data.windup_tiempo)
 				_attack_anim_timer = enemy_data.windup_tiempo + enemy_data.lunge_tiempo + 0.12
 			else:
 				_ataque_melee(player)
@@ -541,20 +544,43 @@ func _update_animacion() -> void:
 	if nombre == "run" and enemy_data != null and enemy_data.speed > 0.0:
 		var obj := clampf(absf(velocity.x) / enemy_data.speed, 0.4, 1.5)
 		animated.speed_scale = lerpf(animated.speed_scale, obj, minf(12.0 * get_physics_process_delta_time(), 1.0))
+	elif nombre == _attack_anim and _attack_anim_timer > 0.0 and _ataque_frame_impacto >= 0 and animated.frame < _ataque_frame_impacto:
+		animated.speed_scale = _ataque_vel_previa   # la preparación se comprime para que el tajo caiga con el daño
 	else:
 		animated.speed_scale = 1.0
 
 
-func _reproducir_animacion_ataque(tipo: String) -> void:
+func _reproducir_animacion_ataque(tipo: String, t_impacto: float = 0.0) -> void:
 	_attack_anim = tipo
 	_attack_anim_timer = 0.35
+	_ataque_frame_impacto = -1
 	# Solo los tipos con sprites propios animan el ataque (el chamán es un polígono: no debe aparecer el sprite del cultista).
 	if DisplayServer.get_name() != "headless" and _usa_sprite:
 		animated.visible = true
 		var sf := animated.sprite_frames
 		if sf != null and sf.has_animation(tipo):
 			animated.play(tipo)
-			_attack_anim_timer = maxf(float(sf.get_frame_count(tipo)) / maxf(sf.get_animation_speed(tipo), 0.01), 0.2)
+			var fps := maxf(sf.get_animation_speed(tipo), 0.01)
+			_attack_anim_timer = maxf(float(sf.get_frame_count(tipo)) / fps, 0.2)
+			if t_impacto > 0.0 and frames_impacto.has(tipo):
+				_planificar_impacto(sf, tipo, t_impacto)
+
+
+## Sincroniza el tajo con el daño: los frames de preparación se comprimen (o estiran) para que el
+## frame de impacto aparezca en `t_impacto`; desde ahí la animación sigue a su ritmo natural.
+func _planificar_impacto(sf: SpriteFrames, tipo: String, t_impacto: float) -> void:
+	var imp := clampi(int(frames_impacto[tipo]), 0, sf.get_frame_count(tipo) - 1)
+	var fps := maxf(sf.get_animation_speed(tipo), 0.01)
+	var previo := 0.0
+	for i in imp:
+		previo += sf.get_frame_duration(tipo, i) / fps
+	var posterior := 0.0
+	for i in range(imp, sf.get_frame_count(tipo)):
+		posterior += sf.get_frame_duration(tipo, i) / fps
+	_ataque_frame_impacto = imp
+	_ataque_vel_previa = clampf(previo / maxf(t_impacto, 0.02), 0.2, 6.0) if imp > 0 else 1.0
+	_attack_anim_timer = t_impacto + posterior
+	animated.speed_scale = _ataque_vel_previa
 
 
 func _usar_proyectil() -> bool:
@@ -788,6 +814,9 @@ func _morir() -> void:
 	if player != null and player.has_method("on_enemy_killed"):
 		(player as Node2D).on_enemy_killed(enemy_data.energia_al_morir if enemy_data != null else 8.0)
 	died.emit()
+	if player != null and DisplayServer.get_name() != "headless":
+		var en: float = enemy_data.energia_al_morir if enemy_data != null else 8.0
+		AlmaEnergia.lanzar(get_tree(), global_position + Vector2(0, -60), player as Node2D, clampi(int(en * 0.3) + 1, 2, 6), Color(0.55, 0.95, 1.0))
 	var audio_m := get_node_or_null("/root/AudioManager")
 	if audio_m != null:
 		audio_m.play_sfx(sonido_muerte, volumen_sfx_db, 0.1)

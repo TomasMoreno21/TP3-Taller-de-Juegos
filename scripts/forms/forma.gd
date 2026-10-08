@@ -46,6 +46,8 @@ var _jumps_usados := 0
 @export var caida_estiramiento: float = 0.0      # estirado vertical al caer (0 = sin)
 @export var apex_compacto: float = 0.0           # cuerpo compacto en el ápice del salto (0 = sin)
 @export var congelar_en_aire: bool = true        # en el aire el ciclo de piernas se detiene (no corre en el vacío)
+@export var anim_impacto: Dictionary = {"attack1": 2, "attack2": 1, "attack_full": 2, "lobo_attack": 1}   # frame de cada animación de ataque en el que conecta el golpe (se sincroniza con el daño)
+@export var impacto_sostener: float = 0.07       # s que se sostiene el frame de impacto antes de recuperar
 @export var special_cooldown: float = 0.0        # espera entre especiales fuera de combate (0 = sin límite)
 @export var special_cooldown_combate: float = 0.0  # espera entre especiales en combate (0 = sin límite)
 

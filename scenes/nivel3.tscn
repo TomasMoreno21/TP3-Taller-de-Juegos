@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://scenes/fondo_cueva_profunda.tscn" id="fondo_cantera"]
 [ext_resource type="PackedScene" uid="uid://il1swgxuxxa0" path="res://scenes/plataforma_fragil.tscn" id="fragil"]
 [ext_resource type="PackedScene" uid="uid://dkyk8avpptlls" path="res://scenes/hud.tscn" id="hud"]
+[ext_resource type="Script" uid="uid://idd63jdwwtsy" path="res://scripts/intro_nivel.gd" id="intro_script"]
 [ext_resource type="Script" uid="uid://dotehvvuk7udf" path="res://scripts/latido_cueva.gd" id="latido"]
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="levelup"]
 [ext_resource type="PackedScene" path="res://scenes/losa_peso.tscn" id="losa_peso"]
@@ -22,6 +23,7 @@
 [ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="pick"]
 [ext_resource type="PackedScene" path="res://scenes/pickup_vida.tscn" id="pickup_vida"]
 [ext_resource type="PackedScene" uid="uid://bf8ohs7pjg025" path="res://scenes/pinchos.tscn" id="pinchos"]
+[ext_resource type="Script" uid="uid://d4d5q3u8vx8dm" path="res://scripts/plano_intro.gd" id="plano_script"]
 [ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="player"]
 [ext_resource type="PackedScene" uid="uid://cr2s0l8k2s5l4" path="res://scenes/rompible.tscn" id="romp"]
 [ext_resource type="PackedScene" path="res://scenes/salida_nivel.tscn" id="salida"]
@@ -68,11 +70,6 @@ layer_0/tile_data = PackedInt32Array(-2818217, 196608, 1, -2818216, 131072, 1, -
 
 [node name="Player" parent="." unique_id=1350486831 instance=ExtResource("player")]
 position = Vector2(900, 630)
-
-[node name="DialogoIntro" parent="." unique_id=1318874732 instance=ExtResource("dialog")]
-position = Vector2(900, 608)
-dialogo_id = "n3_intro"
-modo = "Automatico"
 
 [node name="CheckpointInicio" parent="." unique_id=1955775291 instance=ExtResource("check")]
 position = Vector2(900, 700)
@@ -138,8 +135,8 @@ position = Vector2(5900, 1490)
 
 [node name="Enredadera1" parent="." unique_id=2058337654 instance=ExtResource("vine")]
 modulate = Color(0.5, 0.9, 1, 1)
-position = Vector2(7200, 1346)
-alto = 700.0
+position = Vector2(7061, 686)
+alto = 1000.0
 
 [node name="EncounterA" parent="." unique_id=1858301388 instance=ExtResource("enc")]
 position = Vector2(7600, 1504)
@@ -1057,7 +1054,7 @@ tipo = 12
 escala = 3.2
 
 [node name="D42" parent="Decoracion" unique_id=1364871479 instance=ExtResource("deco")]
-position = Vector2(9900, 2832)
+position = Vector2(9918, 1896)
 tipo = 14
 escala = 3.0
 
@@ -1246,3 +1243,28 @@ alto = 1200.0
 [node name="Enredadera7" parent="." unique_id=610998085 instance=ExtResource("vine")]
 position = Vector2(13221, 2253)
 alto = 2700.0
+
+[node name="IntroNivel" type="Node2D" parent="." unique_id=1311068087]
+script = ExtResource("intro_script")
+id_visto = "intro_nivel3"
+velocidad_caminata = 0.15
+inicio_x = 380.0
+caminar_hasta_x = 1300.0
+
+[node name="Plano1" type="Marker2D" parent="IntroNivel" unique_id=1203958337]
+script = ExtResource("plano_script")
+duracion = 10.4
+zoom = 1.15
+seguir_jugador = true
+camina = true
+zoom_desde = 1.15
+globo = PackedStringArray("[humano] Ya sé a lo que voy. ¿Cuánto falta?", "[alerta]Poco. El sello cede: el latido lo delata.", "[humano] Mi hijo no se queda esperando. Sigamos.", "[susurro]La piedra es dura: hará falta fuerza bruta.")
+retraso_globo = 0.8
+pulso = true
+pulso_en = 7.8
+
+[node name="Plano2" type="Marker2D" parent="IntroNivel" unique_id=1657366455]
+script = ExtResource("plano_script")
+seguir_jugador = true
+globo = PackedStringArray()
+devolver_control = true

@@ -103,7 +103,7 @@ func _encender_luz() -> void:
 func _burst() -> void:
 	if DisplayServer.get_name() == "headless":
 		return
-	var p: CPUParticles2D = (load("res://scenes/burst.tscn") as PackedScene).instantiate()
+	var p: CPUParticles2D = (preload("res://scenes/burst.tscn") as PackedScene).instantiate()
 	p.global_position = global_position
 	p.self_modulate = color_encendido
 	get_tree().root.add_child(p)

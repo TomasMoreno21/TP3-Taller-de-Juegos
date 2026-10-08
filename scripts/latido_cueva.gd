@@ -14,6 +14,7 @@ var _frec := 0.4
 var _int := 0.02
 var _t := 0.0
 var _inicial := true
+var _jugador_cache: Node2D
 
 
 ## Intensidad del latido actual (la usan efectos que acompañan la tensión, como las motas violetas).
@@ -33,7 +34,9 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if _osc == null:
 		return
-	var jugador := get_tree().get_first_node_in_group("player") as Node2D
+	if not is_instance_valid(_jugador_cache):
+		_jugador_cache = get_tree().get_first_node_in_group("player") as Node2D
+	var jugador := _jugador_cache
 	if jugador != null:
 		for z in _zonas:
 			if z.contiene(jugador.global_position):

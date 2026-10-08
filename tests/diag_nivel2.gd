@@ -203,6 +203,26 @@ func _initialize() -> void:
 				var hit := espacio.intersect_ray(PhysicsRayQueryParameters2D.create(tope + Vector2(0, 20), tope + Vector2(0, -2), 1))
 				_chk(not hit.is_empty() and float(largos[i]) > 20.0, "%s: cadena %d toca el techo (%d px)" % [n.name, i, int(largos[i])])
 	_chk(con_cadena >= 10, "plataformas frágiles con cadenas: %d" % con_cadena)
+	# Decorados apoyados en una superficie: los de piso con el pie sobre el suelo, los colgantes pegados al techo.
+	var tipos_techo := {6: 0.0, 9: 0.0, 14: 22.0, 15: 0.0, 19: 30.0}
+	var deco_mal := 0
+	for g in ["Decoracion", "DecoracionFrente"]:
+		for d in nivel.get_node(g).get_children():
+			if d.get("tipo") == null:
+				continue
+			var tp: int = int(d.get("tipo"))
+			var pd: Vector2 = d.global_position
+			if tipos_techo.has(tp):
+				var rt := espacio.intersect_ray(PhysicsRayQueryParameters2D.create(pd + Vector2(0, 30), pd + Vector2(0, -160), 1))
+				if rt.is_empty() or absf((pd.y - float(tipos_techo[tp])) - float((rt.position as Vector2).y)) > 12.0:
+					deco_mal += 1
+					print("  decorado colgante sin techo: ", d.name, " ", pd)
+			else:
+				var rp := espacio.intersect_ray(PhysicsRayQueryParameters2D.create(pd + Vector2(0, -30), pd + Vector2(0, 120), 1))
+				if rp.is_empty() or absf(float((rp.position as Vector2).y) - pd.y) > 10.0:
+					deco_mal += 1
+					print("  decorado flotando/enterrado: ", d.name, " ", pd)
+	_chk(deco_mal == 0, "decorados sobre una superficie (fuera de lugar: %d)" % deco_mal)
 	# Tablas del puente de la galería B: cadena con saltos cortos (<= 340 px entre centros).
 	var xs: Array[float] = []
 	for n in nivel.get_children():

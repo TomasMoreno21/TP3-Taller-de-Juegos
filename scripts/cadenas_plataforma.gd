@@ -8,7 +8,11 @@ extends Node2D
 	set(v):
 		largo = maxf(v, 0.0)
 		queue_redraw()
-@export var ajustar_a_techo := true               ## en juego: usar la distancia real hasta el techo
+@export var ajustar_a_techo := true:              ## usar la distancia real hasta el techo (editor y juego); apagado = vale `largo`
+	set(v):
+		ajustar_a_techo = v
+		if is_inside_tree():
+			_calcular()
 @export var largo_max_techo := 4000.0
 @export var cantidad := 2:                        ## cadenas repartidas a lo ancho (1 = una al centro)
 	set(v):
@@ -40,26 +44,60 @@ var _largos: Array[float] = []   ## largo de cada cadena (cada una busca su prop
 
 
 func _ready() -> void:
+	_calcular()
+	set_process(Engine.is_editor_hint())
+
+
+## En el editor se recalcula si la plataforma se mueve (así las cadenas siempre llegan al techo mientras la acomodás).
+var _ultima_pos := Vector2.INF
+
+func _process(_delta: float) -> void:
+	if global_position != _ultima_pos:
+		_calcular()
+
+
+## Busca el techo de cada cadena leyendo el TileMap (funciona igual en el editor y en juego, sin física).
+func _calcular() -> void:
+	_ultima_pos = global_position
 	largo_efectivo = largo
-	if Engine.is_editor_hint() or not ajustar_a_techo:
+	_largos.clear()
+	var tm := _buscar_tilemap()
+	if not ajustar_a_techo or tm == null:
 		queue_redraw()
 		return
-	await get_tree().physics_frame
-	await get_tree().physics_frame
-	if not is_inside_tree():
-		return
-	_largos.clear()
 	var r := _rect()
-	var espacio := get_world_2d().direct_space_state
+	var esc_y := absf(global_scale.y)
 	for i in cantidad:
-		var x := _x_cadena(r, i)
-		var desde := to_global(Vector2(x, r.position.y - 4.0))
-		var q := PhysicsRayQueryParameters2D.create(desde, desde + Vector2(0, -largo_max_techo), 1)
-		var h := espacio.intersect_ray(q)
-		# Entra unos px en la roca para que el remate quede pegado al techo (el borde del tile es irregular).
-		_largos.append(maxf(desde.y - (h.position as Vector2).y + 10.0, 0.0) if not h.is_empty() else largo)
+		var g := to_global(Vector2(_x_cadena(r, i), r.position.y - 4.0))
+		var celda := tm.local_to_map(tm.to_local(g))
+		var tope := -1
+		var pasos := int(largo_max_techo / 16.0)
+		var en_aire := false   # si el arranque cae dentro de roca (plataforma pegada a una pared), primero sale al aire
+		for k in pasos:
+			var lleno := tm.get_cell_source_id(0, Vector2i(celda.x, celda.y - k)) != -1
+			if not lleno:
+				en_aire = true
+			elif en_aire:
+				tope = celda.y - k
+				break
+		if tope == -1:
+			_largos.append(largo)
+			continue
+		# Borde inferior del tile del techo; entra unos px en la roca para que el remate quede pegado.
+		var y_techo := tm.to_global(Vector2(0.0, float(tope + 1) * 16.0)).y
+		_largos.append(maxf((g.y - y_techo) / maxf(esc_y, 0.001) + 10.0, 0.0))
 	largo_efectivo = _largos.max() if not _largos.is_empty() else largo
 	queue_redraw()
+
+
+func _buscar_tilemap() -> TileMap:
+	var n: Node = get_parent()
+	while n != null:
+		var tm := n.get_node_or_null("TileMap") as TileMap
+		if tm != null:
+			return tm
+		n = n.get_parent()
+	return null
 
 
 ## Rectángulo local del Polygon2D padre (lo que se ve de la plataforma).
@@ -90,7 +128,7 @@ func _draw() -> void:
 	var paso := tam.y * esc
 	for i in cantidad:
 		var x := _x_cadena(r, i)
-		var l := _largos[i] if (not Engine.is_editor_hint() and ajustar_a_techo and i < _largos.size()) else largo
+		var l := _largos[i] if (ajustar_a_techo and i < _largos.size()) else largo
 		if l <= 1.0:
 			continue
 		var y_alto := y_base - l
