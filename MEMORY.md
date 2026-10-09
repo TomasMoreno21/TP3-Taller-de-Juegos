@@ -1,5 +1,19 @@
 # MEMORY.md — Spirit Keeper (ex proyecto Guardabosques / Espíritus del Bosque)
 
+## TIMELINE DEL EQUIPO (fuente de verdad, pasado el 08/10) — todas las sesiones deben apuntar a esto
+- **10/10:** Cinemáticas (intros in-game por nivel) · Nivel 2.
+- **13/10:** Batalla de jefe definida · Avance nivel 3 · Revisión nivel 1 · Diseños finales (personaje + transformaciones, enemigos) · Elementos del entorno nivel 2.
+- **16/10:** Avance jefe · Nivel 3 · Menús finales · Boss terminado · Menús · HUD · Cómic.
+- **19/10:** Jefe · Pulido general y revisión · Sala del boss · Revisión general.
+- Estado al 09/10 (síntesis de sesiones): N1 intro hecha+optimizado (pinchos); N2 cerrado casi (transición color N3, decoración apoyada, intro); N3 intro hecha, **5 fallos de compuertas/barreras en `diag_nivel3` pendientes** + 2 decoraciones sin apoyo (D18, D42); jefe: SOLO PROTOTIPO (decisión del usuario 09/10): falta el visual para definir el gameplay completo de la batalla; mucho trabajo pendiente, no pulir mecánicas hasta tener el visual; animaciones: sync de impacto A/B/C hechos, D/E pendientes; tótems rehechos; cámara limita al jugador. Pendiente de ejes sin sesión: cómic, menús finales, diseños finales enemigos, sala del boss.
+- **PLAN POR FECHA (aprobado 09/10):**
+  - **Hasta 10/10 (cinemáticas + N2):** revisar intros N1/N2/N3 (tiempos, diálogos, destello; definir si hace falta cierre/jefe); N2 gameplay cerrado, probado a mano, `diag_nivel2` en 0. Mío: diag + revisión de intros. Usuario: probar N2 jugando.
+  - **Hasta 13/10 (jefe definido, N3, N1, diseños):** N3 → arreglar 5 fallos de compuertas/barreras, `diag_nivel3_oso`, apoyar D18 y D42. N1 → revisión de diseño (ritmo, enemigos, checkpoints). Jefe → cerrar diseño en papel (fases, ataques, forma útil por fase, enemigos), sin pulir mecánicas. Animaciones → puntos D (salida de ataque/pies) y E (daño en pleno ataque). Arte final de enemigos/personaje: equipo.
+  - **Hasta 16/10 (jefe terminado, menús, HUD, cómic):** integrar visual del jefe y gameplay completo; menús finales (fin de nivel, game over, opciones, pausa); HUD revisado con formas/barras; **cómic = lo hace el artista, va al inicio del juego** (integrarlo como secuencia de imágenes al arrancar).
+  - **Hasta 19/10 (sala del boss, pulido, revisión):** sala del boss, pulido general, pasada completa punta a punta, commit y backup.
+  - **Riesgos:** el jefe depende del arte; cómic y menús finales dependen del artista/equipo; trabajo sin commit repartido entre sesiones.
+- Commit+push de todo el proyecto hecho el 09/10 (estado base del plan). Varias sesiones tocan `nivel2/3.tscn`: recargar en el editor antes de guardar.
+
 ## Sesión 08/10 (4ª) — Optimización extrema, pasos 0-1 de 5 (plan: terreno → pinchos → decorativos → fondos de cueva → remate) · SIN COMMIT
 - Medido en la notebook del usuario (Intel Iris Xe, juega desde el editor). Restricción: **lo visual idéntico**. Bench nuevo: `tests/bench_rendimiento.gd -- <escena> [s]` (con ventana).
 - **Causa nº 1: driver D3D12** en Iris Xe → `project.godot` pasa a `driver.windows="vulkan"` (mismo Forward+). nivel1: 1er frame 31 s → 2.4 s, 19 → 58 fps; además con D3D12 el shader `tinte_terreno` fallaba en nivel1 (se veía violeta; el diseño, y lo que se ve ahora, es marrón).
@@ -10,6 +24,9 @@
 - **Lección:** al probar algo moviendo el `Player` de un nivel, devolverlo a su lugar antes de commitear (o usar la consola dev).
 - Pendiente medido: nivel2 ~20 ms/frame (GPU 9 ms); nivel3 2.838 draw calls de `capa_cueva.gd`; nivel1 12.800 nodos (Polygon2D/Line2D de pinchos/decorativos).
 - **Lecciones:** (1) medir SIEMPRE con el mismo driver/renderer antes y después: una captura "antes" con otro driver me hizo creer que el tinte era un cambio mío; (2) en PCs con gráfica Intel, probar Vulkan vs D3D12 antes de optimizar contenido; (3) no sobrescribir escenas grandes in situ con scripts: generarlas en el scratchpad, validar con diff y copiar.
+
+## Sesión 08/10 (3ª) — Juice pasos 1, 3, 4, 6, 7, 8, 10 (NO hechos: 2 zoom de remate, 5 cámara por forma, 9 rango de estilo) · SIN COMMIT
+- **1 Daño:** `DanoPantalla` (capa 6, `resources/dano_pantalla.gdshader`): pantalla sin color + bordes rojos 0.3-0.5 s según el daño; empuje ×1.35 (`dano_empuje_mult`). Exports en el grupo "Juice" del jugador.
 
 ## Sesión 08/10 (3ª) — Juice pasos 1, 3, 4, 6, 7, 8, 10 (NO hechos: 2 zoom de remate, 5 cámara por forma, 9 rango de estilo) · SIN COMMIT
 - **1 Daño:** `DanoPantalla` (capa 6, `resources/dano_pantalla.gdshader`): pantalla sin color + bordes rojos 0.3-0.5 s según el daño; empuje ×1.35 (`dano_empuje_mult`). Exports en el grupo "Juice" del jugador.
@@ -95,6 +112,11 @@ ivel2_antes_E.tscn`). **Formato:** cada celda = 3 ints; `v0 = ((y & 0xFFFF) << 1
 - **Franja negra abajo (fix 02/10):** el ParallaxBackground escala con el zoom de la cámara respecto del ORIGEN (0,0), no del centro: con zoom 0.8 (Oso) un arte de 1080 px dejaba ~90 px negros abajo. Capas ahora de 3840×1600, scale 1, position 0 (cubren hasta zoom 0.7; test en `diag_nivel2`). Estalagmitas de fondo con base en y=1600 (suben desde el piso sea cual sea el zoom).
 - Pendiente fondo: probar a mano, VRAM Compressed si la carga es lenta, afinar valores de las capas.
 - Pendiente: probar a mano; aura/silueta de murciélagos (ajustar tamaño/color), título de nivel, ambiente sonoro, limpieza de niveles 4/5, que nivel 3 deje de dar el Murciélago como nuevo (`n3_pozo` sigue explicándolo).
+
+## Sesión 03/10 — Subidas de nivel ≈ 1⅓ por nivel de juego (autotest 0; `diag_nivel3` ya falla por geometría de nivel3.tscn en edición)
+- `Progresion.FRAGMENTOS_NIVEL = [8, 25, 50, 74]` (acumulados para niveles 2–5; nivel 5 = máximo, `es_nivel_maximo()`). Con 11/29/42 pickups por nivel: 1.ª al ~75 % del nivel 1, 2.ª a mitad del 2, 3.ª al ~25 % del 3, 4.ª casi al final → las 4 formas con su combo. Si cambian los pickups de un nivel, reajustar el array.
+- `levelup.gd`: las formas con todos sus combos ya no aparecen; la selección parte de la primera forma desbloqueada. Si ninguna forma desbloqueada tiene combo pendiente, la subida queda en `Progresion.mejoras_diferidas` y se abre al desbloquear otra forma (`forma_desbloqueada_evento`).
+- `SetupProgresion.nivel_minimo` (2/3 = 4) ya NO sube el nivel ni regala fragmentos: fija `Progresion.pasos_luz_base` (pasos del combo ligero). HUD: en nivel máximo muestra solo el total de fragmentos.
 
 ## Sesión 02/10 — Antesala de combate (aviso sutil; verificado `diag_antesala`, sin probar a mano)
 - `Encounter` crea un hijo `Antesala` (`scripts/encounters/antesala.gd`): mientras está INACTIVE y el jugador se acerca a la arena, `k` (0..1) sube suave → `AmbienteSonoro.pedir_silencio` baja las capas (`silencio_db` 14; `capas_silencio_mult`: viento ×0.4 en nivel1; los acentos búho/aullido se cortan con k>0.3) + viñeta fría (CanvasLayer 6). Al empezar la pelea vuelve a 0. Exports en el Encounter: `antesala_activa/distancia/silencio/vineta/suavizado`. Capa diegética (siluetas/props) pendiente, requiere arte.
@@ -446,3 +468,7 @@ Al cerrar una sesión: agregar el resumen ARRIBA de este archivo (máx. ~15 lín
 
 ## Cadenas de plataformas: techo también en el editor (08/10)
 - `cadenas_plataforma.gd` ahora mide el techo leyendo el TileMap (ya no con rayos de física): funciona igual en el editor y en juego, y en el editor se recalcula al mover la plataforma. Si el arranque cae dentro de roca (plataforma pegada a una pared) primero sale al aire. `ajustar_a_techo` apagado = vale `largo`. `diag_nivel2` sigue comprobando cadena por cadena con un rayo físico.
+
+## Nivel 2: final como umbral hacia el nivel 3 (08/10)
+- Tramo final del E (x≈3150-4750): el violeta del latido se va a verde azulado del nivel 3. Zonas nuevas `Latido/UmbralMedio` (0.66,0.72,0.92) y `Latido/Umbral` (0.66,0.84,0.96 = tinte del nivel 3), declaradas antes de `Santuario` (la primera que contiene al jugador manda). 7 cristales `UmbralCristal1..7` (tipo CRISTAL, halo teal, escala 2-3.4, `neutralizar=0`) como los del nivel 3, `MotasUmbral` (motas teal fijas), `LuzUmbral1/2` (PointLight2D teal) y `SalidaNivel.color` teal (el arco deja de ser dorado).
+- Backup previo: %TEMP%\nivel2_antes_umbral.tscn.

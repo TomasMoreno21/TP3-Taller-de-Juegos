@@ -157,6 +157,7 @@ position = Vector2(9900, 890)
 [node name="SalidaNivel" parent="." instance=ExtResource("14_salida")]
 position = Vector2(10100, 800)
 siguiente_escena = "res://scenes/nivel_jefe.tscn"
+modo_oscuridad = true
 
 [node name="Hud" parent="." instance=ExtResource("15_hud")]
 

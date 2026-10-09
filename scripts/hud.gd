@@ -593,6 +593,11 @@ func _prog_refresh() -> void:
 	var tramo: int = prog.fragmentos - base
 	var requeridos: int = siguiente - base
 	nivel_label.text = "NIVEL %d" % prog.nivel
+	if prog.es_nivel_maximo():
+		prog_bar.max_value = 1
+		prog_bar.value = 1
+		prog_label.text = "%d fragmentos" % prog.fragmentos
+		return
 	prog_bar.max_value = maxi(requeridos, 1)
 	prog_bar.value = tramo
 	prog_label.text = "%d/%d fragmentos" % [tramo, requeridos]

@@ -63,13 +63,17 @@ func _init() -> void:
 	await physics_frame
 	Input.action_release("transform")
 	_check(_player.current_form == 0, "Nivel 1: transformar no cambia (sigue Humano)")
-	_progresion().add_fragmentos(5)
-	_check(int(_progresion().nivel) == 2, "5 fragmentos suben a nivel 2")
+	_progresion().add_fragmentos(8)
+	_check(int(_progresion().nivel) == 2, "8 fragmentos suben a nivel 2")
 	_check(_progresion().forma_desbloqueada(1) == true, "Nivel 2: Lobo desbloqueado")
-	_progresion().add_fragmentos(7)
-	_check(int(_progresion().nivel) == 3, "12 fragmentos suben a nivel 3")
-	_progresion().add_fragmentos(9)
-	_check(int(_progresion().nivel) == 4, "21 fragmentos suben a nivel 4")
+	_progresion().add_fragmentos(17)
+	_check(int(_progresion().nivel) == 3, "25 fragmentos suben a nivel 3")
+	_progresion().add_fragmentos(25)
+	_check(int(_progresion().nivel) == 4, "50 fragmentos suben a nivel 4")
+	_progresion().add_fragmentos(24)
+	_check(int(_progresion().nivel) == 5 and _progresion().es_nivel_maximo(), "74 fragmentos suben a nivel 5 (máximo)")
+	_progresion().add_fragmentos(30)
+	_check(int(_progresion().nivel) == 5, "más fragmentos no pasan del nivel máximo")
 	_check(_progresion().forma_desbloqueada(3) == true, "Nivel 4: Murciélago desbloqueado")
 
 	# --- Melee: el humano daña al dummy ---
@@ -354,7 +358,7 @@ func _init() -> void:
 		desbloqueos.append(nombre)
 	)
 	_check(lvl.get("panel").visible == false, "LevelUp: menú cerrado al inicio")
-	_progresion().add_fragmentos(5)
+	_progresion().add_fragmentos(8)
 	await process_frame
 	_check(lvl.get("panel").visible == true, "LevelUp: subir nivel abre el menú")
 	var op_lvl2: Array = lvl.get("_opciones")
@@ -388,6 +392,30 @@ func _init() -> void:
 	_check(lvl.get("panel").visible == false, "LevelUp: Enter (menu_confirm) confirma y cierra el menú")
 	_check(desbloqueos.size() == 1 and desbloqueos[0] == "Remate", "LevelUp: elegir desbloquea el combo del humano (%s)" % (desbloqueos[0] if not desbloqueos.is_empty() else "-"))
 	_check(_progresion().combos_desbloqueados_forma(0) == 1, "LevelUp: combo del humano desbloqueado tras elegir")
+
+	# --- LevelUp: la forma que ya tiene su combo no vuelve a aparecer ---
+	_progresion().add_fragmentos(17)   # 25 en total: nivel 3 (Humano, Lobo y Oso desbloqueados)
+	await process_frame
+	_check(lvl.get("panel").visible == true, "LevelUp nivel 3: abre el menú")
+	var op_lvl3: Array = lvl.get("_opciones")
+	var humano_sigue := false
+	for op in op_lvl3:
+		if int(op["form_index"]) == 0:
+			humano_sigue = true
+	_check(not humano_sigue and op_lvl3.size() == 3, "LevelUp nivel 3: el Humano ya no aparece (%d opciones)" % op_lvl3.size())
+	await _simular_accion("menu_confirm")   # primera forma elegible: Lobo
+	_check(_progresion().combos_desbloqueados_forma(1) == 1, "LevelUp nivel 3: elegir desbloquea el combo del Lobo")
+
+	# --- LevelUp: sin forma con combo pendiente, la mejora espera a la próxima forma desbloqueada ---
+	_progresion().formas_forzadas = [0, 1]
+	_progresion().add_fragmentos(25)   # 50 en total: nivel 4, pero Humano y Lobo ya están completos
+	await process_frame
+	_check(lvl.get("panel").visible == false and int(_progresion().mejoras_diferidas) == 1, "LevelUp: sin formas con combo pendiente la mejora queda diferida")
+	_progresion().desbloquear_forma(2)
+	await process_frame
+	_check(lvl.get("panel").visible == true and int(_progresion().mejoras_diferidas) == 0, "LevelUp: al desbloquear el Oso se canjea la mejora diferida")
+	await _simular_accion("menu_confirm")
+	_check(_progresion().combos_desbloqueados_forma(2) == 1, "LevelUp: la mejora diferida desbloquea el combo del Oso")
 
 	print("AUTOTEST: FALLOS = " + str(_failures))
 	if _failures == 0:

@@ -38,7 +38,6 @@
 [ext_resource type="Script" uid="uid://2evt507mwee1" path="res://scripts/borde_musgo.gd" id="44_musgo"]
 [ext_resource type="Texture2D" uid="uid://bb22ddnrthtx3" path="res://Sprites/Elementos/cosito_frente2.png" id="45_cosito"]
 [ext_resource type="Shader" uid="uid://2gmi16mug215" path="res://resources/tinte_terreno.gdshader" id="45_tinte"]
-[ext_resource type="PackedScene" path="res://scenes/punta_cueva.tscn" id="63_punta"]
 [ext_resource type="PackedScene" path="res://scenes/tutorial_paso.tscn" id="64_tut"]
 [ext_resource type="Texture2D" uid="uid://dnwjj2u2vlg8h" path="res://Sprites/Fondos/Bosque/piso.png" id="65_piso"]
 [ext_resource type="Texture2D" uid="uid://c3jhi7ub5h7ar" path="res://Sprites/Elementos/arbusto1.png" id="66_arb1"]
@@ -47,6 +46,7 @@
 [ext_resource type="Script" uid="uid://gq2nr6gop4t4" path="res://scripts/viento_sprite.gd" id="69_vsp"]
 [ext_resource type="Script" uid="uid://idd63jdwwtsy" path="res://scripts/intro_nivel.gd" id="70_intro"]
 [ext_resource type="Script" uid="uid://d4d5q3u8vx8dm" path="res://scripts/plano_intro.gd" id="71_plano"]
+[ext_resource type="Script" uid="uid://b2knw64qxpag6" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte"]
 shader = ExtResource("45_tinte")
@@ -124,7 +124,7 @@ tile_set = ExtResource("4_tileset")
 position = Vector2(8000, 1092)
 
 [node name="PisoNuevo" type="Sprite2D" parent="Piso" unique_id=892836326]
-z_index = -2
+z_index = -1
 texture_repeat = 2
 position = Vector2(-9574, -101)
 scale = Vector2(1.0074236, 1.1586207)
@@ -145,7 +145,6 @@ position = Vector2(6931.5, 102)
 shape = SubResource("RectangleShape2D_piso")
 
 [node name="Tierra" type="Polygon2D" parent="Piso" unique_id=880000010]
-visible = false
 z_index = -1
 position = Vector2(42.777203, -77)
 scale = Vector2(1.0029721, 0.85294116)
@@ -154,9 +153,12 @@ polygon = PackedVector2Array(-9346, 0, 23290, 0, 23290, 60, 23290, 170, 3350.859
 vertex_colors = PackedColorArray(0.17, 0.13, 0.1, 1, 0.17, 0.13, 0.1, 1, 0.1, 0.08, 0.07, 0.75, 0.05, 0.05, 0.05, 0, 0.05, 0.05, 0.05, 0, 0.1, 0.08, 0.07, 0.75)
 
 [node name="Musgo" type="Node2D" parent="Piso" unique_id=609170245]
-visible = false
 script = ExtResource("44_musgo")
+color_pasto = Color(0.1, 0.24, 0.14, 1)
+color_veta = Color(0.2, 0.38, 0.22, 1)
+separacion = 18.0
 raices = false
+cuerpo = false
 
 [node name="PlatDoble1" type="StaticBody2D" parent="." unique_id=863292461]
 position = Vector2(4677, 575.00006)
@@ -205,8 +207,6 @@ semilla = 4
 position = Vector2(4519, 447)
 
 [node name="PlatDoble1Visual" type="Polygon2D" parent="PlatDoble6" unique_id=2104564492]
-position = Vector2(3, 264)
-scale = Vector2(1.0214286, 18.6)
 color = Color(0.32, 0.5, 0.26, 1)
 polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 
@@ -480,16 +480,1316 @@ ritual_duracion = 0.6
 [node name="PickupRecompensa1" parent="." unique_id=2100000136 instance=ExtResource("7_pick")]
 position = Vector2(29802, 608)
 
-[node name="PinchosTramo1" parent="." unique_id=2100000140 instance=ExtResource("17_pinchos")]
-z_index = -1
+[node name="Pinchos" type="Node2D" parent="." unique_id=1396345882]
+
+[node name="Bosque_1" type="Node2D" parent="Pinchos" unique_id=649582039]
+
+[node name="Pinchos_01" parent="Pinchos/Bosque_1" unique_id=1702804822 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(662, 990)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_02" parent="Pinchos/Bosque_1" unique_id=714492968 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(826.05, 989.597)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_03" parent="Pinchos/Bosque_1" unique_id=520838999 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(988, 990)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_04" parent="Pinchos/Bosque_1" unique_id=1478461676 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(1152.05, 989.597)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_05" parent="Pinchos/Bosque_1" unique_id=1146798433 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(1314, 990)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_06" parent="Pinchos/Bosque_1" unique_id=1033402695 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(1478.05, 989.597)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_07" parent="Pinchos/Bosque_1" unique_id=699032263 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(1640, 990)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_08" parent="Pinchos/Bosque_1" unique_id=2043039695 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(1804.05, 989.597)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_09" parent="Pinchos/Bosque_1" unique_id=885389263 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(1968, 990)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_10" parent="Pinchos/Bosque_1" unique_id=1194287549 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(2132.05, 989.597)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_11" parent="Pinchos/Bosque_1" unique_id=1417706512 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(2294, 990)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_12" parent="Pinchos/Bosque_1" unique_id=1267203192 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(2458.05, 989.597)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_13" parent="Pinchos/Bosque_1" unique_id=708516768 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(2619.7, 990.139)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_14" parent="Pinchos/Bosque_1" unique_id=488129792 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(2783.245, 990.697)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_15" parent="Pinchos/Bosque_1" unique_id=380641556 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(2950.05, 989.597)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_16" parent="Pinchos/Bosque_1" unique_id=646968052 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(3112, 990)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_17" parent="Pinchos/Bosque_1" unique_id=1769070942 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(3276.05, 989.597)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_18" parent="Pinchos/Bosque_1" unique_id=262946163 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(3437.7, 990.139)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_19" parent="Pinchos/Bosque_1" unique_id=470420452 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(3601.245, 990.697)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_20" parent="Pinchos/Bosque_1" unique_id=939954269 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(3775, 990)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_21" parent="Pinchos/Bosque_1" unique_id=1525324686 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(3939.05, 989.597)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_22" parent="Pinchos/Bosque_1" unique_id=2121718516 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(4100.7, 990.139)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_23" parent="Pinchos/Bosque_1" unique_id=1615476927 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(4264.245, 990.697)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_24" parent="Pinchos/Bosque_1" unique_id=1199800681 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(4519, 431)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+enterrado = 10.0
+
+[node name="Bosque_2" type="Node2D" parent="Pinchos" unique_id=23486311]
+
+[node name="Pinchos_01" parent="Pinchos/Bosque_2" unique_id=972711914 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(10092, 985.403)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_02" parent="Pinchos/Bosque_2" unique_id=765723330 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(10256.051, 985)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_03" parent="Pinchos/Bosque_2" unique_id=635845269 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(10418, 985.403)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_04" parent="Pinchos/Bosque_2" unique_id=1894565088 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(10582.051, 985)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_05" parent="Pinchos/Bosque_2" unique_id=704290553 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(10744, 985.403)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_06" parent="Pinchos/Bosque_2" unique_id=61163928 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(10908.051, 985)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_07" parent="Pinchos/Bosque_2" unique_id=2037856885 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(11070, 985.403)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_08" parent="Pinchos/Bosque_2" unique_id=956756851 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(11234.051, 985)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_09" parent="Pinchos/Bosque_2" unique_id=1810063341 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(11398, 985.403)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_10" parent="Pinchos/Bosque_2" unique_id=1725996177 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(11562.051, 985)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_11" parent="Pinchos/Bosque_2" unique_id=128211893 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(11724, 985.403)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_12" parent="Pinchos/Bosque_2" unique_id=1851781134 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(11888.051, 985)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_13" parent="Pinchos/Bosque_2" unique_id=235754205 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(12049.699, 985.542)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_14" parent="Pinchos/Bosque_2" unique_id=1590504421 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(12213.246, 986.1)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_15" parent="Pinchos/Bosque_2" unique_id=1262594771 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(12380.051, 985)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_16" parent="Pinchos/Bosque_2" unique_id=2109767548 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(12542, 985.403)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_17" parent="Pinchos/Bosque_2" unique_id=1818443292 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(12706.051, 985)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_18" parent="Pinchos/Bosque_2" unique_id=1561253656 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(12867.699, 985.542)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_19" parent="Pinchos/Bosque_2" unique_id=867489696 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(13031.246, 986.1)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_20" parent="Pinchos/Bosque_2" unique_id=434962333 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(13205, 985.403)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_21" parent="Pinchos/Bosque_2" unique_id=382375193 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(13369.051, 985)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_22" parent="Pinchos/Bosque_2" unique_id=1092383005 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(13530.699, 985.542)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_23" parent="Pinchos/Bosque_2" unique_id=1007387652 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(13694.246, 986.1)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_24" parent="Pinchos/Bosque_2" unique_id=1463403599 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(16500, 987)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_25" parent="Pinchos/Bosque_2" unique_id=1588734084 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(16662, 987)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_26" parent="Pinchos/Bosque_2" unique_id=1118020224 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(16824, 987)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_27" parent="Pinchos/Bosque_2" unique_id=1960187396 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(16986, 987)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_28" parent="Pinchos/Bosque_2" unique_id=1950880882 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(17148, 987)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_29" parent="Pinchos/Bosque_2" unique_id=1813007716 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(17310, 987)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_30" parent="Pinchos/Bosque_2" unique_id=175150340 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(17472, 987)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_31" parent="Pinchos/Bosque_2" unique_id=999843588 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(17634, 987)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_32" parent="Pinchos/Bosque_2" unique_id=2098574016 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(17796, 987)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_33" parent="Pinchos/Bosque_2" unique_id=1415940553 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(17958, 987)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Bosque_3" type="Node2D" parent="Pinchos" unique_id=1992615748]
+
+[node name="Pinchos_12" parent="Pinchos/Bosque_3" unique_id=2100000140 instance=ExtResource("17_pinchos")]
+z_index = -2
 position = Vector2(26177, 994)
 estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
-[node name="PinchosTramo4" parent="." unique_id=2100000146 instance=ExtResource("17_pinchos")]
-z_index = -1
+[node name="Pinchos_13" parent="Pinchos/Bosque_3" unique_id=2100000146 instance=ExtResource("17_pinchos")]
+z_index = -2
 position = Vector2(26956, 990)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_02" parent="Pinchos/Bosque_3" unique_id=398770625 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(20464, 966.1)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_15" parent="Pinchos/Bosque_3" unique_id=2064617729 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(27280, 986.1)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_16" parent="Pinchos/Bosque_3" unique_id=1191787870 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(27453.754, 985.403)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_17" parent="Pinchos/Bosque_3" unique_id=2138311994 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(27617.805, 985)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_18" parent="Pinchos/Bosque_3" unique_id=149225162 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(27779.453, 985.542)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_19" parent="Pinchos/Bosque_3" unique_id=789299972 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(27943, 986.1)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_14" parent="Pinchos/Bosque_3" unique_id=1126035217 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(27116, 988.1)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_20" parent="Pinchos/Bosque_3" unique_id=1694833402 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(28104, 987.1)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_21" parent="Pinchos/Bosque_3" unique_id=1280633570 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(28277.754, 986.403)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_22" parent="Pinchos/Bosque_3" unique_id=1399108326 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(28441.805, 986)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_23" parent="Pinchos/Bosque_3" unique_id=326020725 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(28603.453, 986.542)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_24" parent="Pinchos/Bosque_3" unique_id=1256143936 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(28767, 987.1)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_03" parent="Pinchos/Bosque_3" unique_id=922111160 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(20637.754, 965.403)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_04" parent="Pinchos/Bosque_3" unique_id=710135286 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(20801.805, 965)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_05" parent="Pinchos/Bosque_3" unique_id=1173763174 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(20963.455, 965.542)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_06" parent="Pinchos/Bosque_3" unique_id=1264123774 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(21127, 966.1)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_01" parent="Pinchos/Bosque_3" unique_id=995338953 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(20300, 968.1)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_07" parent="Pinchos/Bosque_3" unique_id=1256619270 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(21288, 967.1)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_08" parent="Pinchos/Bosque_3" unique_id=1905944299 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(21461.754, 966.403)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_09" parent="Pinchos/Bosque_3" unique_id=1771516405 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(21625.805, 966)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_10" parent="Pinchos/Bosque_3" unique_id=1036246762 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(21787.455, 966.542)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_11" parent="Pinchos/Bosque_3" unique_id=1905851373 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(21951, 967.1)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Salida" type="Node2D" parent="Pinchos" unique_id=229158102]
+
+[node name="Pinchos_03" parent="Pinchos/Salida" unique_id=2100000156 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(31448, 2666)
+rotation = 0.068
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_02" parent="Pinchos/Salida" unique_id=1559597765 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(31286, 2658)
+rotation = 0.012
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_04" parent="Pinchos/Salida" unique_id=2100000157 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(31607, 2672)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_12" parent="Pinchos/Salida" unique_id=2100000165 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(32659, 2099)
+rotation = -1.497
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_10" parent="Pinchos/Salida" unique_id=2100000166 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(32501.002, 2361)
+rotation = -0.752
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_11" parent="Pinchos/Salida" unique_id=2100000167 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(32608, 2251.001)
+rotation = -0.998
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_01" parent="Pinchos/Salida" unique_id=1943849259 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(31121, 2658)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_09" parent="Pinchos/Salida" unique_id=1841306019 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(32371.998, 2458.001)
+rotation = -0.653
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_08" parent="Pinchos/Salida" unique_id=1705465974 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(32235.998, 2541.999)
+rotation = -0.48
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_07" parent="Pinchos/Salida" unique_id=954513697 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(32083, 2603.001)
+rotation = -0.236
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_05" parent="Pinchos/Salida" unique_id=2003094861 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(31768.998, 2672)
+rotation = -0.162
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_06" parent="Pinchos/Salida" unique_id=1420583754 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(31927.002, 2638)
+rotation = -0.176
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Subsuelo_A" type="Node2D" parent="Pinchos" unique_id=1281653634]
+
+[node name="Pinchos_48" parent="Pinchos/Subsuelo_A" unique_id=1401026647 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(19892, 3563)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_47" parent="Pinchos/Subsuelo_A" unique_id=1430683137 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(19729, 3563)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_46" parent="Pinchos/Subsuelo_A" unique_id=1537940743 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(19562, 3550)
+rotation = 0.185
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_45" parent="Pinchos/Subsuelo_A" unique_id=1478086258 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(19407, 3512.001)
+rotation = 0.28
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_44" parent="Pinchos/Subsuelo_A" unique_id=1507108102 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(19251, 3470)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_43" parent="Pinchos/Subsuelo_A" unique_id=1705170391 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(19077, 3470)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_42" parent="Pinchos/Subsuelo_A" unique_id=413067293 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(18906, 3470)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_41" parent="Pinchos/Subsuelo_A" unique_id=1594122680 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(18742, 3468)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_40" parent="Pinchos/Subsuelo_A" unique_id=11981828 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(18586, 3491)
+rotation = -0.177
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_39" parent="Pinchos/Subsuelo_A" unique_id=537936223 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(18429.002, 3512)
+rotation = -0.164
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_38" parent="Pinchos/Subsuelo_A" unique_id=54656673 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(18267, 3494)
+rotation = 0.578
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_37" parent="Pinchos/Subsuelo_A" unique_id=425023275 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(18120, 3440)
+rotation = 0.163
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_13" parent="Pinchos/Subsuelo_A" unique_id=10654893 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(14142, 5834)
+rotation = 0.045
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_19" parent="Pinchos/Subsuelo_A" unique_id=1877389248 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(15560.001, 5963)
+rotation = 0.188
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_21" parent="Pinchos/Subsuelo_A" unique_id=1857866275 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(15800.001, 5983)
+rotation = -0.033
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_24" parent="Pinchos/Subsuelo_A" unique_id=833109580 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(16039, 5984)
+rotation = 0.013
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_18" parent="Pinchos/Subsuelo_A" unique_id=436341662 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(15326.001, 5925)
+rotation = 0.11
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_17" parent="Pinchos/Subsuelo_A" unique_id=1277643369 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(15085.001, 5899)
+rotation = 0.099
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_16" parent="Pinchos/Subsuelo_A" unique_id=1490420481 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(14848, 5868)
+rotation = 0.142
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_14" parent="Pinchos/Subsuelo_A" unique_id=1364998365 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(14382, 5831)
+rotation = -0.152
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_15" parent="Pinchos/Subsuelo_A" unique_id=533257514 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(14609, 5825)
+rotation = 0.163
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_12" parent="Pinchos/Subsuelo_A" unique_id=775254189 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(13902, 5829.001)
+rotation = 0.012
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_11" parent="Pinchos/Subsuelo_A" unique_id=1174605198 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(13665, 5862)
+rotation = -0.273
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_09" parent="Pinchos/Subsuelo_A" unique_id=2145810226 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(13196.001, 5981)
+rotation = 0.024
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_10" parent="Pinchos/Subsuelo_A" unique_id=559381477 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(13432.999, 5934)
+rotation = -0.326
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_08" parent="Pinchos/Subsuelo_A" unique_id=1360551223 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(12952, 5962)
+rotation = 0.163
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_07" parent="Pinchos/Subsuelo_A" unique_id=1463620113 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(12715, 5914)
+rotation = 0.229
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_06" parent="Pinchos/Subsuelo_A" unique_id=716580729 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(12481, 5866)
+rotation = 0.155
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_05" parent="Pinchos/Subsuelo_A" unique_id=60471906 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(12243, 5830)
+rotation = 0.163
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_04" parent="Pinchos/Subsuelo_A" unique_id=1536877281 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(12004, 5781)
+rotation = 0.288
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_03" parent="Pinchos/Subsuelo_A" unique_id=2084619883 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(11793.999, 5683.001)
+rotation = 0.521
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_02" parent="Pinchos/Subsuelo_A" unique_id=622692624 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(11603.001, 5544)
+rotation = 0.706
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_01" parent="Pinchos/Subsuelo_A" unique_id=222557106 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(11450, 5356)
+rotation = 1.041
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_36" parent="Pinchos/Subsuelo_A" unique_id=303296419 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(17959, 3423)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_35" parent="Pinchos/Subsuelo_A" unique_id=845237983 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(17797, 3422)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_34" parent="Pinchos/Subsuelo_A" unique_id=1139683940 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(17635, 3406)
+rotation = 0.32
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_33" parent="Pinchos/Subsuelo_A" unique_id=479864431 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(17477, 3365)
+rotation = 0.142
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_32" parent="Pinchos/Subsuelo_A" unique_id=56673592 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(17308, 3346)
+rotation = 0.192
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_31" parent="Pinchos/Subsuelo_A" unique_id=523369200 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(17147, 3328)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_30" parent="Pinchos/Subsuelo_A" unique_id=857578965 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(16985, 3327)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_29" parent="Pinchos/Subsuelo_A" unique_id=49319163 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(16832, 3349.999)
+rotation = -0.331
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_28" parent="Pinchos/Subsuelo_A" unique_id=1675425009 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(16678, 3405)
+rotation = -0.299
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_27" parent="Pinchos/Subsuelo_A" unique_id=537631708 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(16517, 3422)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_26" parent="Pinchos/Subsuelo_A" unique_id=1758472817 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(16355, 3421)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_25" parent="Pinchos/Subsuelo_A" unique_id=1619394605 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(16192, 3415)
+rotation = 0.121
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_23" parent="Pinchos/Subsuelo_A" unique_id=1785231755 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(16034.001, 3381)
+rotation = 0.26
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_22" parent="Pinchos/Subsuelo_A" unique_id=816766428 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(15877, 3334)
+rotation = 0.249
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_20" parent="Pinchos/Subsuelo_A" unique_id=257343022 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(15717, 3311)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Subsuelo_B" type="Node2D" parent="Pinchos" unique_id=11916720]
+
+[node name="Pinchos_16" parent="Pinchos/Subsuelo_B" unique_id=1751848005 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(22575, 6069)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_17" parent="Pinchos/Subsuelo_B" unique_id=1167464144 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(22811, 6053.001)
+rotation = -0.083
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_18" parent="Pinchos/Subsuelo_B" unique_id=968517223 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(23049, 6044)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_19" parent="Pinchos/Subsuelo_B" unique_id=2121062624 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(23288, 6043.001)
+rotation = 0.049
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_15" parent="Pinchos/Subsuelo_B" unique_id=1880386719 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(22336, 6027.001)
+rotation = 0.301
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_20" parent="Pinchos/Subsuelo_B" unique_id=1877393077 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(23529, 6048)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_21" parent="Pinchos/Subsuelo_B" unique_id=1454553242 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(23771, 6049)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_22" parent="Pinchos/Subsuelo_B" unique_id=160083127 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(24014, 6040)
+rotation = -0.105
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_23" parent="Pinchos/Subsuelo_B" unique_id=375583297 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(24256, 6012.001)
+rotation = -0.087
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_24" parent="Pinchos/Subsuelo_B" unique_id=1068852466 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(24496, 6000)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_26" parent="Pinchos/Subsuelo_B" unique_id=959898531 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(24980, 6005)
+rotation = 0.148
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_27" parent="Pinchos/Subsuelo_B" unique_id=1449758120 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(25220, 6033)
+rotation = 0.086
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_28" parent="Pinchos/Subsuelo_B" unique_id=684580356 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(25465, 6013)
+rotation = -0.226
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_29" parent="Pinchos/Subsuelo_B" unique_id=98426572 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(25694, 5948)
+rotation = -0.26
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_30" parent="Pinchos/Subsuelo_B" unique_id=1774580897 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(25920, 5905)
+rotation = -0.042
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_25" parent="Pinchos/Subsuelo_B" unique_id=239869342 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(24741, 5993)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_31" parent="Pinchos/Subsuelo_B" unique_id=1671564758 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(26158, 5906)
+rotation = 0.053
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_32" parent="Pinchos/Subsuelo_B" unique_id=354078040 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(26394, 5932)
+rotation = 0.124
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_33" parent="Pinchos/Subsuelo_B" unique_id=1946066822 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(26639, 5933)
+rotation = -0.079
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_34" parent="Pinchos/Subsuelo_B" unique_id=680991927 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(26878, 5921)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_35" parent="Pinchos/Subsuelo_B" unique_id=1245171655 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(27123, 5903)
+rotation = -0.085
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_14" parent="Pinchos/Subsuelo_B" unique_id=1045702486 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(22031.002, 3153.002)
+rotation = -0.887
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_13" parent="Pinchos/Subsuelo_B" unique_id=1139827284 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(21927, 3282.999)
+rotation = -0.834
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_12" parent="Pinchos/Subsuelo_B" unique_id=1636584473 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(21813, 3402.999)
+rotation = -0.77
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_11" parent="Pinchos/Subsuelo_B" unique_id=451563319 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(21674, 3495)
+rotation = -0.422
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_10" parent="Pinchos/Subsuelo_B" unique_id=1210534751 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(21514, 3547.001)
+rotation = -0.3
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_08" parent="Pinchos/Subsuelo_B" unique_id=317472230 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(21188, 3612)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_07" parent="Pinchos/Subsuelo_B" unique_id=472473174 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(21024, 3610)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_06" parent="Pinchos/Subsuelo_B" unique_id=263033557 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(20861, 3610)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_04" parent="Pinchos/Subsuelo_B" unique_id=72954652 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(20528, 3626)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_05" parent="Pinchos/Subsuelo_B" unique_id=8593048 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(20695, 3623)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_03" parent="Pinchos/Subsuelo_B" unique_id=1678362324 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(20363, 3629)
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_02" parent="Pinchos/Subsuelo_B" unique_id=663380200 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(20197, 3631)
+rotation = 0.008
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_09" parent="Pinchos/Subsuelo_B" unique_id=800351977 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(21352, 3584.999)
+rotation = -0.25
+estilo = 0
+color_estaca = Color(0.6, 0.58, 0.74, 1)
+color_madera = Color(0.56, 0.38, 0.21, 1)
+
+[node name="Pinchos_01" parent="Pinchos/Subsuelo_B" unique_id=134926311 instance=ExtResource("17_pinchos")]
+z_index = -2
+position = Vector2(20039.002, 3599.999)
+rotation = 0.496
 estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
@@ -497,14 +1797,12 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 [node name="Enredadera6" parent="." unique_id=2100000148 instance=ExtResource("16_enredadera")]
 position = Vector2(27190, -245)
 ancho = 60.0
-alto = 2000.0
+alto = 2200.0
 
 [node name="Plataforma15" type="StaticBody2D" parent="." unique_id=2100000149]
 position = Vector2(27646, 598)
 
 [node name="Plataforma15Visual" type="Polygon2D" parent="Plataforma15" unique_id=2100000150]
-position = Vector2(0, 188.49998)
-scale = Vector2(1, 13.566665)
 color = Color(0.32, 0.5, 0.26, 1)
 polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 
@@ -531,29 +1829,6 @@ shape = SubResource("RectangleShape2D_plat")
 [node name="Musgo" type="Node2D" parent="Plataforma16" unique_id=1859042980]
 script = ExtResource("44_musgo")
 semilla = 15
-
-[node name="PinchosTramo5" parent="." unique_id=2100000156 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(31448, 2666)
-rotation = 0.06843731
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosTramo5" parent="PinchosTramo5" unique_id=1559597765 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-162.16739, 3.09692)
-rotation = -0.05666709
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosTramo6" parent="." unique_id=2100000157 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(31607, 2672)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Enredadera7" parent="." unique_id=2100000158 instance=ExtResource("16_enredadera")]
 position = Vector2(31350, 1702)
@@ -587,30 +1862,6 @@ shape = SubResource("RectangleShape2D_plat")
 [node name="Musgo" type="Node2D" parent="Plataforma18" unique_id=1136605190]
 script = ExtResource("44_musgo")
 semilla = 17
-
-[node name="PinchosTramo7" parent="." unique_id=2100000165 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(32659, 2099)
-rotation = -1.496986
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosTramo8" parent="." unique_id=2100000166 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(32501.002, 2361)
-rotation = -0.7515756
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosTramo9" parent="." unique_id=2100000167 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(32608, 2251.001)
-rotation = -0.99759084
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="EncounterG" parent="." unique_id=2100000169 instance=ExtResource("9_enc")]
 position = Vector2(29106, 2375)
@@ -710,6 +1961,9 @@ semilla = 18
 [node name="SalidaNivel" parent="." unique_id=854403098 instance=ExtResource("29_salida")]
 position = Vector2(32148, 4994)
 siguiente_escena = "res://scenes/nivel2.tscn"
+modo_oscuridad = true
+color_oscuridad = Color(0.01, 0.03, 0.04, 1)
+zona_destino = "Las Cuevas"
 
 [node name="Hud" parent="." unique_id=643194512 instance=ExtResource("12_hud")]
 visible = false
@@ -722,661 +1976,6 @@ visible = false
 
 [node name="Consola" parent="." unique_id=565580708 instance=ExtResource("15_cons")]
 visible = false
-
-[node name="PinchosPrueba" parent="." unique_id=1702804822 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(662, 990)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba4" parent="." unique_id=714492968 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(826.05, 989.59717)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba5" parent="." unique_id=520838999 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(988, 990)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba6" parent="." unique_id=1478461676 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1152.05, 989.59717)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba7" parent="." unique_id=1146798433 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1314, 990)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba8" parent="." unique_id=1033402695 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1478.05, 989.59717)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba9" parent="." unique_id=699032263 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1640, 990)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba10" parent="." unique_id=2043039695 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1804.05, 989.59717)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba11" parent="." unique_id=885389263 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1968, 990)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba12" parent="." unique_id=1194287549 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(2132.0498, 989.59717)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba13" parent="." unique_id=1417706512 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(2294, 990)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba14" parent="." unique_id=1267203192 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(2458.0498, 989.59717)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba2" parent="." unique_id=708516768 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(2619.6997, 990.1393)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba3" parent="." unique_id=488129792 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(2783.245, 990.69727)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba15" parent="." unique_id=380641556 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(2950.0498, 989.59717)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba16" parent="." unique_id=646968052 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(3112, 990)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba17" parent="." unique_id=1769070942 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(3276.0498, 989.59717)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba18" parent="." unique_id=262946163 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(3437.6997, 990.1393)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba19" parent="." unique_id=470420452 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(3601.245, 990.69727)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba22" parent="." unique_id=939954269 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(3775, 990)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba23" parent="." unique_id=1525324686 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(3939.0498, 989.59717)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba24" parent="." unique_id=2121718516 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(4100.6997, 990.1393)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba25" parent="." unique_id=1615476927 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(4264.245, 990.69727)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba26" parent="." unique_id=398770625 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(20464, 966.1001)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba26" parent="PinchosPrueba26" unique_id=1751848005 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(2111, 5102.9)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba27" parent="PinchosPrueba26" unique_id=1167464144 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(2347, 5086.9004)
-rotation = -0.08278576
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba28" parent="PinchosPrueba26" unique_id=968517223 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(2585, 5077.9)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba30" parent="PinchosPrueba26" unique_id=2121062624 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(2824, 5076.9004)
-rotation = 0.048713546
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba35" parent="PinchosPrueba26" unique_id=1880386719 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1872, 5060.9004)
-rotation = 0.30102473
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba36" parent="PinchosPrueba26" unique_id=1877393077 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(3065, 5081.9)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba37" parent="PinchosPrueba26" unique_id=1454553242 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(3307, 5082.9)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba38" parent="PinchosPrueba26" unique_id=160083127 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(3550, 5073.9)
-rotation = -0.104769155
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba39" parent="PinchosPrueba26" unique_id=375583297 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(3792, 5045.9004)
-rotation = -0.08723872
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba40" parent="PinchosPrueba26" unique_id=1068852466 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(4032, 5033.9)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba26" parent="PinchosPrueba26/PinchosPrueba40" unique_id=959898531 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(484, 5)
-rotation = 0.14818971
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba27" parent="PinchosPrueba26/PinchosPrueba40" unique_id=1449758120 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(724, 33)
-rotation = 0.08555597
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba28" parent="PinchosPrueba26/PinchosPrueba40" unique_id=684580356 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(969, 13)
-rotation = -0.22637203
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba29" parent="PinchosPrueba26/PinchosPrueba40" unique_id=98426572 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1198, -52)
-rotation = -0.2597032
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba30" parent="PinchosPrueba26/PinchosPrueba40" unique_id=1774580897 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1424, -95)
-rotation = -0.041831367
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba35" parent="PinchosPrueba26/PinchosPrueba40" unique_id=239869342 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(245, -7)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba36" parent="PinchosPrueba26/PinchosPrueba40" unique_id=1671564758 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1662, -94)
-rotation = 0.05295515
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba37" parent="PinchosPrueba26/PinchosPrueba40" unique_id=354078040 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1898, -68)
-rotation = 0.12420185
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba38" parent="PinchosPrueba26/PinchosPrueba40" unique_id=1946066822 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(2143, -67)
-rotation = -0.07875531
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba39" parent="PinchosPrueba26/PinchosPrueba40" unique_id=680991927 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(2382, -79)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba40" parent="PinchosPrueba26/PinchosPrueba40" unique_id=1245171655 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(2627, -97)
-rotation = -0.08463937
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba31" parent="." unique_id=2064617729 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(27280, 986.1001)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba32" parent="." unique_id=1191787870 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(27453.754, 985.40283)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba33" parent="." unique_id=2138311994 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(27617.805, 985)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba34" parent="." unique_id=149225162 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(27779.453, 985.5421)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba71" parent="." unique_id=789299972 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(27943, 986.1001)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba72" parent="." unique_id=1126035217 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(27116, 988.1001)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba73" parent="." unique_id=1694833402 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(28104, 987.1001)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba78" parent="." unique_id=1943849259 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(31121, 2658)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba74" parent="." unique_id=1280633570 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(28277.754, 986.40283)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba75" parent="." unique_id=1399108326 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(28441.805, 986)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba76" parent="." unique_id=326020725 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(28603.453, 986.5421)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba77" parent="." unique_id=1256143936 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(28767, 987.1001)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba27" parent="." unique_id=922111160 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(20637.754, 965.40283)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba28" parent="." unique_id=710135286 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(20801.805, 965)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba29" parent="." unique_id=1173763174 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(20963.455, 965.5421)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba30" parent="." unique_id=1264123774 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(21127, 966.1001)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba35" parent="." unique_id=995338953 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(20300, 968.1001)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba36" parent="." unique_id=1256619270 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(21288, 967.1001)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba37" parent="." unique_id=1905944299 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(21461.754, 966.40283)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba38" parent="." unique_id=1771516405 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(21625.805, 966)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba39" parent="." unique_id=1036246762 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(21787.455, 966.5421)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba40" parent="." unique_id=1905851373 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(21951, 967.1001)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba21" parent="." unique_id=1199800681 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(4519, 431)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-enterrado = 10.0
-
-[node name="zonalobo" type="Marker2D" parent="." unique_id=1233082189]
-position = Vector2(14482, 823)
-
-[node name="PinchosPrueba48" parent="." unique_id=972711914 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(10092, 985.40283)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba49" parent="." unique_id=765723330 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(10256.051, 985)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba50" parent="." unique_id=635845269 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(10418, 985.40283)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba51" parent="." unique_id=1894565088 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(10582.051, 985)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba52" parent="." unique_id=704290553 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(10744, 985.40283)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba53" parent="." unique_id=61163928 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(10908.051, 985)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba54" parent="." unique_id=2037856885 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(11070, 985.40283)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba55" parent="." unique_id=956756851 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(11234.051, 985)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba56" parent="." unique_id=1810063341 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(11398, 985.40283)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba57" parent="." unique_id=1725996177 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(11562.051, 985)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba58" parent="." unique_id=128211893 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(11724, 985.40283)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba59" parent="." unique_id=1851781134 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(11888.051, 985)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba60" parent="." unique_id=235754205 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(12049.699, 985.5421)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba61" parent="." unique_id=1590504421 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(12213.246, 986.1001)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba62" parent="." unique_id=1262594771 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(12380.051, 985)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba63" parent="." unique_id=2109767548 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(12542, 985.40283)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba64" parent="." unique_id=1818443292 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(12706.051, 985)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba65" parent="." unique_id=1561253656 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(12867.699, 985.5421)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba66" parent="." unique_id=867489696 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(13031.246, 986.1001)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba67" parent="." unique_id=434962333 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(13205, 985.40283)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba68" parent="." unique_id=382375193 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(13369.051, 985)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba69" parent="." unique_id=1092383005 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(13530.699, 985.5421)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosPrueba70" parent="." unique_id=1007387652 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(13694.246, 986.1001)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="HerramientaNivel" parent="." unique_id=700655792 instance=ExtResource("25_dr8ev")]
 
@@ -1436,76 +2035,6 @@ position = Vector2(19903, 790)
 
 [node name="Checkpoint3" parent="." unique_id=1097156044 instance=ExtResource("27_46iir")]
 position = Vector2(25349, 814)
-
-[node name="PinchoLobo1" parent="." unique_id=1463403599 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(16500, 987)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchoLobo2" parent="." unique_id=1588734084 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(16662, 987)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchoLobo3" parent="." unique_id=1118020224 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(16824, 987)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchoLobo4" parent="." unique_id=1960187396 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(16986, 987)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchoLobo5" parent="." unique_id=1950880882 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(17148, 987)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchoLobo6" parent="." unique_id=1813007716 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(17310, 987)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchoLobo7" parent="." unique_id=175150340 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(17472, 987)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchoLobo8" parent="." unique_id=999843588 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(17634, 987)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchoLobo9" parent="." unique_id=2098574016 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(17796, 987)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchoLobo10" parent="." unique_id=1415940553 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(17958, 987)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="LoboPlatA" type="StaticBody2D" parent="." unique_id=582567224]
 position = Vector2(16545, 877)
@@ -1594,8 +2123,6 @@ rotation = 0.00089646876
 position = Vector2(28422, 752)
 
 [node name="Plataforma15Visual" type="Polygon2D" parent="Plataforma19" unique_id=136226899]
-position = Vector2(0, 112.999985)
-scale = Vector2(1, 8.533332)
 color = Color(0.32, 0.5, 0.26, 1)
 polygon = PackedVector2Array(-140, -15, 140, -15, 140, 15, -140, 15)
 
@@ -1605,54 +2132,6 @@ shape = SubResource("RectangleShape2D_plat")
 [node name="Musgo" type="Node2D" parent="Plataforma19" unique_id=1272603983]
 script = ExtResource("44_musgo")
 semilla = 31
-
-[node name="PinchosTramo10" parent="." unique_id=1841306019 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(32371.998, 2458.001)
-rotation = -0.65290815
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosTramo11" parent="." unique_id=1705465974 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(32235.998, 2541.999)
-rotation = -0.4798863
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosTramo8" parent="PinchosTramo11" unique_id=1137565794 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(32503.004, 2365)
-rotation = -0.7515756
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosTramo12" parent="." unique_id=954513697 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(32083, 2603.0005)
-rotation = -0.23564458
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosTramo13" parent="." unique_id=2003094861 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(31768.998, 2672)
-rotation = -0.16246834
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="PinchosTramo14" parent="." unique_id=1420583754 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(31927.002, 2638.0002)
-rotation = -0.17586349
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Checkpoint4" parent="." unique_id=520744038 instance=ExtResource("27_46iir")]
 position = Vector2(26711, 2407)
@@ -1664,480 +2143,6 @@ position = Vector2(-8066, 3384)
 position = Vector2(16230, 2149)
 ancho = 60.0
 alto = 1200.0
-
-[node name="Pinchos" parent="." unique_id=1045702486 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(22031.002, 3153.002)
-rotation = -0.8869502
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos2" parent="." unique_id=1139827284 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(21927, 3282.999)
-rotation = -0.8340985
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos3" parent="." unique_id=1636584473 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(21813, 3402.999)
-rotation = -0.7695793
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos4" parent="." unique_id=451563319 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(21674, 3495)
-rotation = -0.42245743
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos5" parent="." unique_id=1210534751 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(21514, 3547.0005)
-rotation = -0.29969728
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos6" parent="." unique_id=317472230 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(21188, 3612)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos7" parent="." unique_id=472473174 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(21024, 3610)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos8" parent="." unique_id=263033557 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(20861, 3610)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos9" parent="." unique_id=72954652 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(20528, 3626)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos10" parent="." unique_id=8593048 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(20695, 3623)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos11" parent="." unique_id=1678362324 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(20363, 3629)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos12" parent="." unique_id=663380200 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(20197, 3631.0002)
-rotation = 0.008321635
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos13" parent="." unique_id=800351977 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(21352, 3584.9995)
-rotation = -0.24975803
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos14" parent="." unique_id=134926311 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(20039.002, 3599.9995)
-rotation = 0.49598414
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos15" parent="." unique_id=1401026647 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(19892, 3563)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos16" parent="." unique_id=1430683137 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(19729, 3563)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos17" parent="." unique_id=1537940743 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(19562, 3550)
-rotation = 0.1846536
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos18" parent="." unique_id=1478086258 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(19407, 3512.0007)
-rotation = 0.28042588
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos19" parent="." unique_id=1507108102 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(19251, 3470)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos20" parent="." unique_id=1705170391 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(19077, 3470)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos21" parent="." unique_id=413067293 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(18906, 3470)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos22" parent="." unique_id=1594122680 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(18742, 3468)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos23" parent="." unique_id=11981828 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(18586, 3491)
-rotation = -0.1770895
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos24" parent="." unique_id=537936223 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(18429.002, 3512)
-rotation = -0.16353375
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos25" parent="." unique_id=54656673 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(18267, 3494)
-rotation = 0.57810843
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos26" parent="." unique_id=425023275 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(18120, 3439.9998)
-rotation = 0.16275963
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos26" parent="Pinchos26" unique_id=10654893 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-3537.4973, 3006.9636)
-rotation = -0.11813307
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos26" parent="Pinchos26/Pinchos26" unique_id=1877389248 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1422.3434, 65.61203)
-rotation = 0.14365846
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos27" parent="Pinchos26/Pinchos26" unique_id=1857866275 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1662.9966, 74.88541)
-rotation = -0.077766806
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos28" parent="Pinchos26/Pinchos26" unique_id=833109580 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1901.8027, 65.22241)
-rotation = -0.032005873
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos29" parent="Pinchos26/Pinchos26" unique_id=436341662 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(1186.8811, 38.088974)
-rotation = 0.065267876
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos30" parent="Pinchos26/Pinchos26" unique_id=1277643369 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(944.9611, 22.86628)
-rotation = 0.054730784
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos32" parent="Pinchos26/Pinchos26" unique_id=1490420481 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(706.8136, 2.4702759)
-rotation = 0.096892
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos27" parent="Pinchos26" unique_id=1364998365 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-3301.1555, 2965.1133)
-rotation = -0.31429702
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos28" parent="Pinchos26" unique_id=533257514 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-3078.1284, 2922.409)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos29" parent="Pinchos26" unique_id=775254189 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-3775.1355, 3040.9204)
-rotation = -0.15115231
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos30" parent="Pinchos26" unique_id=1174605198 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-4003.6563, 3111.8882)
-rotation = -0.43569282
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos31" parent="Pinchos26" unique_id=2145810226 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-4447.174, 3305.3123)
-rotation = -0.13873738
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos32" parent="Pinchos26" unique_id=559381477 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-4220.924, 3220.5298)
-rotation = -0.48848012
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos33" parent="Pinchos26" unique_id=1360551223 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-4691.029, 3326.102)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos34" parent="Pinchos26" unique_id=1463620113 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-4932.675, 3317.1401)
-rotation = 0.06666511
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos35" parent="Pinchos26" unique_id=716580729 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-5171.3604, 3307.6926)
-rotation = -0.007531844
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos36" parent="Pinchos26" unique_id=60471906 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-5412.0483, 3310.7344)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos37" parent="Pinchos26" unique_id=1536877281 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-5655.83, 3301.1096)
-rotation = 0.12507625
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos38" parent="Pinchos26" unique_id=2084619883 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-5878.935, 3238.4346)
-rotation = 0.3580224
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos39" parent="Pinchos26" unique_id=622692624 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-6089.933, 3132.2207)
-rotation = 0.54326564
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos40" parent="Pinchos26" unique_id=222557106 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(-6271.376, 2971.4983)
-rotation = 0.87825644
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos27" parent="." unique_id=303296419 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(17959, 3423)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos28" parent="." unique_id=845237983 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(17797, 3422)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos29" parent="." unique_id=1139683940 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(17635, 3406.0002)
-rotation = 0.32049587
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos30" parent="." unique_id=479864431 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(17477, 3364.9998)
-rotation = 0.142035
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos31" parent="." unique_id=56673592 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(17308, 3346.0002)
-rotation = 0.1923225
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos32" parent="." unique_id=523369200 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(17147, 3328)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos33" parent="." unique_id=857578965 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(16985, 3327)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos34" parent="." unique_id=49319163 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(16832, 3349.9995)
-rotation = -0.33098778
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos35" parent="." unique_id=1675425009 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(16678, 3405)
-rotation = -0.29856485
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos36" parent="." unique_id=537631708 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(16517, 3422)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos37" parent="." unique_id=1758472817 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(16355, 3421)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos38" parent="." unique_id=1619394605 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(16192, 3415.0002)
-rotation = 0.12109795
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos39" parent="." unique_id=1785231755 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(16034.001, 3381)
-rotation = 0.26035365
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos40" parent="." unique_id=816766428 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(15877, 3334)
-rotation = 0.24940097
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
-
-[node name="Pinchos41" parent="." unique_id=257343022 instance=ExtResource("17_pinchos")]
-z_index = -1
-position = Vector2(15717, 3311)
-estilo = 0
-color_estaca = Color(0.6, 0.58, 0.74, 1)
-color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="PlataformaFragil" parent="." unique_id=1367435737 instance=ExtResource("29_2n16c")]
 position = Vector2(19137, 2548)
@@ -2208,59 +2213,6 @@ alto = 1600.0
 
 [node name="PuntasCueva" type="Node2D" parent="." unique_id=1005431165]
 z_index = -6
-
-[node name="Punta1" parent="PuntasCueva" unique_id=966825922 instance=ExtResource("63_punta")]
-position = Vector2(23600, 6048)
-alto = 560.0
-
-[node name="Punta2" parent="PuntasCueva" unique_id=1213373482 instance=ExtResource("63_punta")]
-position = Vector2(23900, 6048)
-alto = 300.0
-ancho_base = 70.0
-
-[node name="Punta3" parent="PuntasCueva" unique_id=544306116 instance=ExtResource("63_punta")]
-position = Vector2(24300, 6000)
-alto = 740.0
-ancho_base = 120.0
-
-[node name="Punta4" parent="PuntasCueva" unique_id=678978845 instance=ExtResource("63_punta")]
-position = Vector2(25500, 6000)
-alto = 480.0
-flip_h = true
-
-[node name="Punta5" parent="PuntasCueva" unique_id=790280015 instance=ExtResource("63_punta")]
-position = Vector2(25800, 6000)
-alto = 260.0
-ancho_base = 65.0
-
-[node name="Punta6" parent="PuntasCueva" unique_id=1646342081 instance=ExtResource("63_punta")]
-position = Vector2(26600, 5936)
-alto = 620.0
-ancho_base = 100.0
-
-[node name="Punta7" parent="PuntasCueva" unique_id=4255996 instance=ExtResource("63_punta")]
-position = Vector2(27900, 5232)
-alto = 500.0
-
-[node name="Punta8" parent="PuntasCueva" unique_id=182654529 instance=ExtResource("63_punta")]
-position = Vector2(28300, 5232)
-alto = 340.0
-ancho_base = 75.0
-flip_h = true
-
-[node name="Punta9" parent="PuntasCueva" unique_id=1694108187 instance=ExtResource("63_punta")]
-position = Vector2(28900, 5232)
-alto = 700.0
-ancho_base = 115.0
-
-[node name="Punta10" parent="PuntasCueva" unique_id=1808896970 instance=ExtResource("63_punta")]
-position = Vector2(32100, 5232)
-alto = 460.0
-
-[node name="Punta11" parent="PuntasCueva" unique_id=1002683589 instance=ExtResource("63_punta")]
-position = Vector2(32450, 5232)
-alto = 300.0
-ancho_base = 70.0
 
 [node name="Decoracion" type="Node2D" parent="." unique_id=1630540947]
 z_index = -5
@@ -2363,12 +2315,6 @@ flip_h = true
 position = Vector2(14713, 994)
 tipo = 2
 escala = 5.36
-
-[node name="Pasto6" parent="Decoracion" unique_id=368991563 instance=ExtResource("40_deco")]
-position = Vector2(15370, 1002)
-tipo = 3
-variante = 9
-escala = 3.13
 
 [node name="Arbol6" parent="Decoracion" unique_id=434507907 instance=ExtResource("40_deco")]
 position = Vector2(15886, 1002)
@@ -2527,12 +2473,6 @@ position = Vector2(29974, 1002)
 variante = 2
 escala = 5.56
 
-[node name="Pasto32" parent="Decoracion" unique_id=920822680 instance=ExtResource("40_deco")]
-position = Vector2(30531, 1002)
-tipo = 3
-variante = 10
-escala = 3.27
-
 [node name="Pasto33" parent="Decoracion" unique_id=17003114 instance=ExtResource("40_deco")]
 position = Vector2(31113, 1002)
 tipo = 3
@@ -2624,25 +2564,12 @@ variante = 2
 escala = 4.05
 viento = false
 
-[node name="Piedra41" parent="Decoracion" unique_id=678915448 instance=ExtResource("40_deco")]
-position = Vector2(30487, 2630)
-tipo = 4
-escala = 4.44
-flip_h = true
-viento = false
-
 [node name="Piedra45" parent="Decoracion" unique_id=803971955 instance=ExtResource("40_deco")]
 position = Vector2(30480, 2822)
 tipo = 4
 variante = 5
 escala = 4.56
 flip_h = true
-viento = false
-
-[node name="Piedra46" parent="Decoracion" unique_id=1041788578 instance=ExtResource("40_deco")]
-position = Vector2(27933, 5238)
-tipo = 4
-escala = 4.68
 viento = false
 
 [node name="Pasto52" parent="Decoracion" unique_id=202606323 instance=ExtResource("40_deco")]
@@ -2664,12 +2591,6 @@ variante = 3
 escala = 4.39
 viento = false
 
-[node name="Piedra49" parent="Decoracion" unique_id=90853282 instance=ExtResource("40_deco")]
-position = Vector2(27506, 5382)
-tipo = 4
-escala = 4.26
-viento = false
-
 [node name="Pasto55" parent="Decoracion" unique_id=1876794314 instance=ExtResource("40_deco")]
 position = Vector2(27448, 5638)
 tipo = 3
@@ -2683,13 +2604,6 @@ variante = 5
 escala = 4.79
 flip_h = true
 viento = false
-
-[node name="Pasto60" parent="Decoracion" unique_id=694779418 instance=ExtResource("40_deco")]
-position = Vector2(32948, 2310)
-tipo = 3
-variante = 3
-escala = 3.52
-flip_h = true
 
 [node name="Atmosfera" type="Node2D" parent="." unique_id=265861613]
 z_index = -4
@@ -2987,6 +2901,10 @@ paso_siguiente = NodePath("../TutBloqueo")
 position = Vector2(7550, 801)
 paso_id = "tut_bloqueo"
 accion = 4
+
+[node name="TituloNivel" type="CanvasLayer" parent="." unique_id=1761322483]
+script = ExtResource("titulo_niv")
+subtitulo = "El Bosque"
 
 [node name="IntroNivel" type="Node2D" parent="." unique_id=1916121406]
 script = ExtResource("70_intro")

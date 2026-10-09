@@ -6,8 +6,18 @@ signal combo_desbloqueado(form_index: int, combo_nombre: String)
 signal nivel_subio(nuevo_nivel: int)
 signal forma_desbloqueada_evento(form_index: int)
 
+## Fragmentos acumulados para alcanzar los niveles 2, 3, 4 y 5 (4 subidas = 1 combo por forma).
+## Ajustados a ~1 y 1/3 de subida por nivel de juego (fragmentos: nivel 1 = 11, nivel 2 = 29, nivel 3 = 42):
+## 1.ª al ~75 % del nivel 1, 2.ª a la mitad del nivel 2, 3.ª al ~25 % del nivel 3 y 4.ª cerca del final.
+const FRAGMENTOS_NIVEL: Array[int] = [8, 25, 50, 74]
+const FRAGMENTOS_IMPOSIBLE := 999999
+
 var fragmentos := 0
 var nivel := 1
+## Pasos mínimos del combo ligero disponibles (los niveles avanzados los fijan con SetupProgresion).
+var pasos_luz_base := 1
+## Subidas de nivel que no tuvieron forma con combo pendiente: se canjean al desbloquear otra forma.
+var mejoras_diferidas := 0
 var combos_desbloqueados: Dictionary = {}
 var barreras_abiertas: Dictionary = {}
 ## Dialogos ya mostrados (persisten entre muertes; se limpian al resetear partida).
@@ -44,9 +54,17 @@ func subir_nivel() -> void:
 	nivel_subio.emit(nivel)
 
 
-## Fragmentos acumulados necesarios para alcanzar el nivel n (5, 12, 21, 32...).
+## Fragmentos acumulados necesarios para alcanzar el nivel n (ver FRAGMENTOS_NIVEL).
 func fragmentos_para_nivel(n: int) -> int:
-	return maxi(n - 1, 0) * (n + 3)
+	if n <= 1:
+		return 0
+	if n - 2 < FRAGMENTOS_NIVEL.size():
+		return FRAGMENTOS_NIVEL[n - 2]
+	return FRAGMENTOS_IMPOSIBLE
+
+
+func es_nivel_maximo() -> bool:
+	return nivel >= FRAGMENTOS_NIVEL.size() + 1
 
 
 func set_nivel(n: int) -> void:
@@ -58,6 +76,8 @@ func set_nivel(n: int) -> void:
 func reset() -> void:
 	fragmentos = 0
 	nivel = 1
+	pasos_luz_base = 1
+	mejoras_diferidas = 0
 	combos_desbloqueados = {}
 	barreras_abiertas = {}
 	dialogos_vistos = {}
@@ -116,7 +136,7 @@ func desbloquear_forma(form_index: int) -> void:
 
 
 func pasos_luz() -> int:
-	return maxi(nivel, 1)
+	return maxi(maxi(nivel, 1), pasos_luz_base)
 
 
 ## True si el diálogo con ese id ya se mostró en esta partida (persiste entre muertes).

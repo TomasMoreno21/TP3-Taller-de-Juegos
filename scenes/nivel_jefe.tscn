@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" uid="uid://cr2s0l8k2s5l4" path="res://scenes/rompible.tscn" id="13_romp"]
 [ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="14_pick"]
 [ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="ck_1"]
+[ext_resource type="Script" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
 size = Vector2(9200, 200)
@@ -105,3 +106,8 @@ visible = false
 visible = false
 
 [editable path="Encounter"]
+
+[node name="TituloNivel" type="CanvasLayer" parent="."]
+script = ExtResource("titulo_niv")
+titulo = "NIVEL 4"
+subtitulo = "El Santuario"
