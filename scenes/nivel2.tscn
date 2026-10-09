@@ -24,7 +24,7 @@
 [ext_resource type="PackedScene" path="res://scenes/fondo_cueva_natural.tscn" id="33_cueva"]
 [ext_resource type="PackedScene" path="res://scenes/noche_cueva.tscn" id="34_noche"]
 [ext_resource type="PackedScene" uid="uid://skni1dec001" path="res://scenes/decorativo.tscn" id="60_deco"]
-[ext_resource type="Shader" uid="uid://2gmi16mug215" path="res://resources/tinte_terreno.gdshader" id="61_tinte"]
+[ext_resource type="Shader" path="res://resources/terreno_cueva.gdshader" id="61_tinte"]
 [ext_resource type="PackedScene" uid="uid://bhxju6lap2tcq" path="res://scenes/unlock_forma.tscn" id="70_unlock"]
 [ext_resource type="PackedScene" path="res://scenes/murcielagos_pasan.tscn" id="71_bats"]
 [ext_resource type="Script" uid="uid://b2cqvgaiasjup" path="res://scripts/objetivo_lista.gd" id="72_obj"]
@@ -42,16 +42,11 @@
 [ext_resource type="Script" uid="uid://d3nihovco06v7" path="res://scripts/zona_latido.gd" id="99_zona"]
 [ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="ck_1"]
 [ext_resource type="Texture2D" path="res://resources/luz_radial.tres" id="97_luzumbral"]
+[ext_resource type="Script" path="res://scripts/terreno_mundo.gd" id="98_tmundo"]
 [ext_resource type="Script" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte2"]
 shader = ExtResource("61_tinte")
-shader_parameter/tierra_color = Color(0.34, 0.35, 0.39, 1)
-shader_parameter/matiz_min = 0.68
-shader_parameter/matiz_max = 1.0
-shader_parameter/matiz_rojo_max = 0.04
-shader_parameter/mezcla = 1.0
-shader_parameter/brillo = 0.9
 
 [sub_resource type="Resource" id="Resource_h4t55"]
 script = ExtResource("17_roi11")
@@ -131,7 +126,6 @@ position = Vector2(3965, 6948)
 position = Vector2(4135, 6860)
 siguiente_escena = "res://scenes/nivel3.tscn"
 modo_oscuridad = true
-zona_destino = "La Cantera"
 color_oscuridad = Color(0.05, 0.025, 0.015, 1)
 color = Color(0.3, 0.9, 0.85, 1)
 
@@ -1447,7 +1441,6 @@ position = Vector2(11304, 5492)
 
 [node name="CheckpointCampamento" parent="Expansion/D" unique_id=51050475 instance=ExtResource("ck_1")]
 position = Vector2(-2500, 5540)
-texto_aviso = "Campamento"
 
 [node name="PremioD1_1" parent="Expansion/D" unique_id=1104833294 instance=ExtResource("31_pick")]
 position = Vector2(-2470, 5350)
@@ -1771,8 +1764,7 @@ semilla = 7
 
 [node name="TituloNivel" type="CanvasLayer" parent="."]
 script = ExtResource("titulo_niv")
-titulo = "NIVEL 2"
-subtitulo = "Las Cuevas"
+titulo = "Las Cuevas"
 
 [node name="IntroNivel" type="Node2D" parent="." unique_id=1740701685]
 script = ExtResource("90_intro")
@@ -1985,3 +1977,6 @@ color = Color(0.25, 0.9, 0.85, 1)
 energy = 0.9
 texture = ExtResource("97_luzumbral")
 texture_scale = 3.0
+
+[node name="TerrenoMundo" type="Node" parent="."]
+script = ExtResource("98_tmundo")

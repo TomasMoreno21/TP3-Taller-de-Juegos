@@ -27,6 +27,11 @@ extends Node2D
 @export var vel_curiosidad := 24.0
 @export_range(0.0, 1.0) var tension_apagado := 0.6  ## cuánto se apagan con tensión máxima (peleas, poca vida)
 @export_range(0.0, 2.0) var tension_agitacion := 0.8  ## cuánto más rápido vuelan con tensión máxima
+@export_group("Cueva")
+@export var y_cueva := -1.0                 ## desde esta altura del mundo pasan al color de cueva (-1 = nunca)
+@export var tramo_cueva := 700.0            ## px que dura el cambio de color al bajar
+@export var color_cueva := Color(0.45, 0.88, 1.0)
+@export var color_nucleo_cueva := Color(0.85, 1.0, 1.0)
 @export_group("")
 
 const TEX := preload("res://resources/luz_radial.tres")
@@ -35,6 +40,7 @@ var _bichos: Array[Dictionary] = []
 var _t := 0.0
 var _amb: Node          # autoload Ambiente (cacheado: no se busca cada frame)
 var _jugador: Node2D
+var _k_cueva := 0.0
 
 
 func _ready() -> void:
@@ -112,6 +118,7 @@ func _process(delta: float) -> void:
 	var vel_j := 0.0
 	if jugador != null and "velocity" in jugador:
 		vel_j = clampf(absf(float(jugador.velocity.x)) / 320.0, 0.0, 1.0)
+	_actualizar_color_cueva(vista)
 	var agitacion := 1.0 + tension * tension_agitacion
 	var apagado := 1.0 - tension * tension_apagado
 	for b in _bichos:
@@ -143,6 +150,25 @@ func _process(delta: float) -> void:
 		(b.nucleo as Sprite2D).modulate.a = minf(a * 1.4, 1.0)
 		if b.luz != null:
 			(b.luz as PointLight2D).energy = luz_energia * pulso * b.aparicion * apagado
+
+
+## Bajo `y_cueva` las motas se enfrían (de amarillo-verdoso a celeste): el bosque y la cueva no se sienten iguales.
+func _actualizar_color_cueva(vista: Rect2) -> void:
+	if y_cueva < 0.0:
+		return
+	var k := clampf((vista.get_center().y - y_cueva) / maxf(tramo_cueva, 1.0), 0.0, 1.0)
+	if absf(k - _k_cueva) < 0.01:
+		return
+	_k_cueva = k
+	var c := color.lerp(color_cueva, k)
+	var cn := color_nucleo.lerp(color_nucleo_cueva, k)
+	for b in _bichos:
+		var h := b.halo as Sprite2D
+		h.modulate = Color(c.r, c.g, c.b, h.modulate.a)
+		var n := b.nucleo as Sprite2D
+		n.modulate = Color(cn.r, cn.g, cn.b, n.modulate.a)
+		if b.luz != null:
+			(b.luz as PointLight2D).color = c
 
 
 ## Rectángulo visible en coordenadas del mundo (sin cámara: el viewport en el origen).

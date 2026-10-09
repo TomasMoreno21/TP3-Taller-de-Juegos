@@ -57,8 +57,47 @@ extends Node2D
 		queue_redraw()
 
 
+## En runtime, los bordes muy anchos (el piso del nivel, ~32000 px) se parten en trozos: cada trozo es un
+## CanvasItem propio y Godot lo descarta cuando está fuera de pantalla (antes eran ~2000 llamadas de dibujo por frame).
+const ANCHO_TROZO := 1024.0
+const ANCHO_MIN_TROZEAR := 2048.0
+
+var _trozos: Array[Node2D] = []
+var _mallas: Dictionary = {}   # id del CanvasItem -> mallas vivas (si se libera la malla, el dibujo desaparece)
+
+
+## Trozo de un borde ancho: dibuja solo su tramo [x0, x1) con el mismo azar que el borde entero.
+class _Trozo extends Node2D:
+	var musgo: Node2D
+	var x0 := 0.0
+	var x1 := 0.0
+
+	func _draw() -> void:
+		musgo._dibujar_en(self, x0, x1)
+
+
 func _ready() -> void:
 	queue_redraw()
+	if not Engine.is_editor_hint():
+		_trocear()
+
+
+func _trocear() -> void:
+	if fragil:
+		return
+	var r := _rect()
+	if r.size.x <= ANCHO_MIN_TROZEAR:
+		return
+	var x := r.position.x
+	while x < r.end.x:
+		var t := _Trozo.new()
+		t.musgo = self
+		t.x0 = x
+		t.x1 = x + ANCHO_TROZO if x + ANCHO_TROZO < r.end.x else INF   # el último trozo llega hasta el final
+		t.use_parent_material = true
+		add_child(t)
+		_trozos.append(t)
+		x += ANCHO_TROZO
 
 
 func _rect() -> Rect2:
@@ -91,6 +130,39 @@ func _rect() -> Rect2:
 
 
 func _draw() -> void:
+	if not _trozos.is_empty():
+		return
+	_dibujar_en(self, -INF, INF)
+
+
+## Dibuja una lista de triángulos sueltos de un solo color como una malla (1 llamada de dibujo).
+func _malla(ci: CanvasItem, triangulos: PackedVector2Array, col: Color) -> void:
+	if triangulos.is_empty():
+		return
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = triangulos
+	var malla := ArrayMesh.new()
+	malla.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var id := ci.get_instance_id()
+	if not _mallas.has(id):
+		_mallas[id] = []
+	_mallas[id].append(malla)
+	ci.draw_mesh(malla, null, Transform2D.IDENTITY, col)
+
+
+## Rect relleno recortado al tramo [cx0, cx1) del trozo.
+func _rx(ci: CanvasItem, cx0: float, cx1: float, x: float, y: float, w: float, h: float, col: Color) -> void:
+	var a := maxf(x, cx0)
+	var b := minf(x + w, cx1)
+	if b > a:
+		ci.draw_rect(Rect2(a, y, b - a, h), col)
+
+
+## Dibuja el borde en `ci` (el propio nodo o un trozo). Todo el azar se consume igual en cada trozo
+## (mismo resultado que dibujarlo entero); solo se emite lo que cae en [cx0, cx1).
+func _dibujar_en(ci: CanvasItem, cx0: float, cx1: float) -> void:
+	_mallas.erase(ci.get_instance_id())
 	var r := _rect()
 	if r.size == Vector2.ZERO:
 		return
@@ -100,25 +172,29 @@ func _draw() -> void:
 	var x1 := r.end.x
 	var y := r.position.y
 	if cuerpo:
-		_dibujar_cuerpo(r, rng)
+		_dibujar_cuerpo(ci, r, rng, cx0, cx1)
 	if fragil:
 		_dibujar_fragil(r, rng)
 		return
 	# Franja de pasto pegada al borde superior.
-	draw_rect(Rect2(x0, y, r.size.x, 6.0), color_pasto)
-	# Briznas triangulares irregulares que sobresalen.
+	_rx(ci, cx0, cx1, x0, y, r.size.x, 6.0, color_pasto)
+	# Briznas triangulares irregulares que sobresalen (todas en UNA malla: una sola llamada de dibujo).
+	var briznas := PackedVector2Array()
 	var x := x0
 	while x < x1:
 		var w := rng.randf_range(separacion * 0.7, separacion * 1.3)
 		var h := alto_pasto * rng.randf_range(0.45, 1.0)
 		var xe := minf(x + w, x1)
 		var punta := x + (xe - x) * rng.randf_range(0.25, 0.75)
-		draw_colored_polygon(PackedVector2Array([Vector2(x, y + 1.0), Vector2(punta, y - h), Vector2(xe, y + 1.0)]), color_pasto)
+		if x >= cx0 and x < cx1:
+			briznas.append_array(PackedVector2Array([Vector2(x, y + 1.0), Vector2(punta, y - h), Vector2(xe, y + 1.0)]))
 		x += w * 0.8
+	_malla(ci, briznas, color_pasto)
 	# Veta de luz en el borde.
-	draw_rect(Rect2(x0, y - 1.0, r.size.x, 3.0), color_veta)
+	_rx(ci, cx0, cx1, x0, y - 1.0, r.size.x, 3.0, color_veta)
 	if not raices or r.size.y > 200.0 or absf(get_parent().rotation) > 0.01:  # bloques altos o rotados: sin raíces
 		return
+	var colgajos := PackedVector2Array()
 	# Raíces que cuelgan de la cara inferior.
 	var yb := r.end.y
 	var rx := x0 + rng.randf_range(8.0, 30.0)
@@ -126,34 +202,53 @@ func _draw() -> void:
 		var largo := largo_raices * rng.randf_range(0.35, 1.0)
 		var ancho := rng.randf_range(3.0, 6.0)
 		var desvio := rng.randf_range(-6.0, 6.0)
-		draw_colored_polygon(PackedVector2Array([
-			Vector2(rx - ancho, yb - 1.0), Vector2(rx + ancho, yb - 1.0),
-			Vector2(rx + desvio + 1.0, yb + largo),
-		]), color_raiz)
+		if rx >= cx0 and rx < cx1:
+			colgajos.append_array(PackedVector2Array([
+				Vector2(rx - ancho, yb - 1.0), Vector2(rx + ancho, yb - 1.0),
+				Vector2(rx + desvio + 1.0, yb + largo),
+			]))
 		rx += rng.randf_range(34.0, 90.0)
+	_malla(ci, colgajos, color_raiz)
 
 
 ## Volumen del cuerpo: sombra en la mitad inferior, contorno, grietas y motas.
-func _dibujar_cuerpo(r: Rect2, rng: RandomNumberGenerator) -> void:
+func _dibujar_cuerpo(ci: CanvasItem, r: Rect2, rng: RandomNumberGenerator, cx0: float, cx1: float) -> void:
 	var pasos := 6
 	for k in pasos:
 		var t := float(k) / float(pasos)
 		var y0 := r.position.y + r.size.y * (0.4 + 0.6 * t)
-		draw_rect(Rect2(r.position.x, y0, r.size.x, r.size.y * 0.6 / float(pasos) + 0.5), Color(0, 0, 0, 0.06 + 0.05 * t))
-	# Contorno oscuro.
-	draw_rect(r, Color(0.03, 0.06, 0.04, 0.55), false, 2.0)
+		_rx(ci, cx0, cx1, r.position.x, y0, r.size.x, r.size.y * 0.6 / float(pasos) + 0.5, Color(0, 0, 0, 0.06 + 0.05 * t))
+	# Contorno oscuro (en un trozo: arriba y abajo recortados; los costados solo en los extremos del borde).
+	var col_c := Color(0.03, 0.06, 0.04, 0.55)
+	if cx0 <= r.position.x and cx1 >= r.end.x:
+		ci.draw_rect(r, col_c, false, 2.0)
+	else:
+		var a := maxf(r.position.x, cx0)
+		var b := minf(r.end.x, cx1)
+		if b > a:
+			ci.draw_line(Vector2(a, r.position.y), Vector2(b, r.position.y), col_c, 2.0)
+			ci.draw_line(Vector2(a, r.end.y), Vector2(b, r.end.y), col_c, 2.0)
+		if r.position.x >= cx0 and r.position.x < cx1:
+			ci.draw_line(r.position, Vector2(r.position.x, r.end.y), col_c, 2.0)
+		if r.end.x >= cx0 and r.end.x <= cx1:
+			ci.draw_line(Vector2(r.end.x, r.position.y), r.end, col_c, 2.0)
 	# Grietas verticales (más en bloques anchos/altos) y motas de musgo.
 	var n_grietas := clampi(int(r.size.x / 90.0 * (0.6 + r.size.y / 120.0)), 1, 14)
 	for i in n_grietas:
 		var gx := rng.randf_range(r.position.x + 8.0, r.end.x - 8.0)
 		var gy := rng.randf_range(r.position.y + 6.0, r.position.y + r.size.y * 0.45)
 		var lg := minf(rng.randf_range(10.0, 34.0), r.size.y * 0.7)
-		draw_polyline(PackedVector2Array([Vector2(gx, gy), Vector2(gx + rng.randf_range(-5.0, 5.0), gy + lg * 0.5), Vector2(gx + rng.randf_range(-6.0, 6.0), gy + lg)]), color_grieta, 1.6)
+		var p1 := Vector2(gx + rng.randf_range(-5.0, 5.0), gy + lg * 0.5)
+		var p2 := Vector2(gx + rng.randf_range(-6.0, 6.0), gy + lg)
+		if gx >= cx0 and gx < cx1:
+			ci.draw_polyline(PackedVector2Array([Vector2(gx, gy), p1, p2]), color_grieta, 1.6)
 	var n_motas := clampi(int(r.size.x * r.size.y / 900.0), 2, 60)
 	for i in n_motas:
 		var mx := rng.randf_range(r.position.x + 6.0, r.end.x - 6.0)
 		var my := rng.randf_range(r.position.y + 8.0, r.end.y - 5.0)
-		draw_circle(Vector2(mx, my), rng.randf_range(1.5, 3.4), color_mota)
+		var rad := rng.randf_range(1.5, 3.4)
+		if mx >= cx0 and mx < cx1:
+			ci.draw_circle(Vector2(mx, my), rad, color_mota)
 
 
 ## Estilo frágil: tablones de madera vieja con herrajes, clavos, vetas, grietas y astillas colgando.

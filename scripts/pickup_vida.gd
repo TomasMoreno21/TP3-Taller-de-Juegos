@@ -78,5 +78,4 @@ func _on_body_entered(body: Node2D) -> void:
 	_recogido = true
 	body.curar(curacion)
 	Burst.emitir(self, global_position, color_burst, 14)
-	get_tree().call_group("hud", "mostrar_aviso", "Vida +%d" % curacion)
 	queue_free()

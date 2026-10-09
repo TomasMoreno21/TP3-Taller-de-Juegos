@@ -108,6 +108,12 @@ const HITSTOP_COMBO := 0.11
 @export var slowmo_transformacion_escala := 0.4  # escala del tiempo mientras transforma
 @export var tint_dano := Color(1.0, 0.28, 0.28)  # tinte del sprite al recibir daño
 @export var tint_dano_duracion := 0.11  # s que tarda en volver al color normal
+@export_group("Aviso de especial listo")
+@export var tint_especial_listo := Color(1.7, 1.55, 1.1)  ## destello del sprite al terminar el cooldown del especial
+@export var especial_listo_duracion := 0.18  ## s que tarda en volver al color normal
+@export var sonido_especial_listo: AudioStream = preload("res://assets/audio/sfx/gen/checkpoint.wav")
+@export var volumen_especial_listo_db := -20.0
+@export_group("")
 @export_group("Juice (golpe, transformación, parry)")
 @export var tajo_luz := true                      ## tajo blanco diagonal sobre el enemigo al conectar
 @export var tajo_escala := 1.0                    ## tamaño del tajo
@@ -408,6 +414,8 @@ func _physics_process(delta: float) -> void:
 		_step_up_cd = maxf(_step_up_cd - delta, 0.0)
 	if _special_cooldown > 0.0:
 		_special_cooldown = maxf(_special_cooldown - delta, 0.0)
+		if _special_cooldown <= 0.0:
+			_flash_especial_listo()
 	_handle_enredadera(delta)
 	if _attack_air_buffer > 0.0:
 		_attack_air_buffer -= delta
@@ -2396,6 +2404,18 @@ func _flash_tint_dano() -> void:
 	visual.modulate = tint_dano
 	_tint_tween = create_tween()
 	_tint_tween.tween_property(visual, "modulate", Color.WHITE, tint_dano_duracion)
+
+
+## Avisa (sutil) que el cooldown del especial terminó: destello del sprite + tick suave.
+func _flash_especial_listo() -> void:
+	if visual == null or (_tween_muerte != null and _tween_muerte.is_valid()):
+		return
+	if _tint_tween != null and _tint_tween.is_valid():
+		_tint_tween.kill()
+	visual.modulate = tint_especial_listo
+	_tint_tween = create_tween()
+	_tint_tween.tween_property(visual, "modulate", Color.WHITE, especial_listo_duracion)
+	_sfx(sonido_especial_listo, volumen_especial_listo_db, 0.05)
 
 
 func heal_full() -> void:

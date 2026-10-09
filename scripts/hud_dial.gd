@@ -7,17 +7,18 @@ extends Control
 
 const ICONO_ESCENA := preload("res://scenes/form_icon.tscn")
 
-@export var color_fondo := Color(0.06, 0.07, 0.09, 1.0)
-@export var color_borde := Color(0.30, 0.36, 0.44)
-@export var color_aro_fondo := Color(0.16, 0.18, 0.22, 0.95)
+@export var color_tinta := Color(0.04, 0.047, 0.063, 1.0)      ## contorno y silueta (estilo cómic de tinta)
+@export var color_borde := Color(0.93, 0.90, 0.84)             ## línea fina blanca del contorno
+@export var color_disco := Color(0.93, 0.90, 0.84)             ## disco claro donde va la silueta
+@export var color_aro_fondo := Color(0.16, 0.18, 0.22, 1.0)
 @export var color_humano := Color(0.72, 0.88, 0.80)   ## color del aro en forma humana
 @export var color_bajo := Color(0.95, 0.25, 0.25)     ## aro con energía baja
 @export var color_cooldown := Color(1.0, 0.7, 0.3)
-@export var ancho_aro := 9.0
+@export var ancho_aro := 8.0
 @export_range(0.0, 1.0) var umbral_bajo := 0.25
 @export var duracion_transicion := 0.22
 @export_range(0.2, 1.5) var recorrido := 0.95          ## cuánto se desliza el ícono (fracción del recorte)
-@export_range(0.3, 2.0) var tamano_icono := 1.5         ## lado del ícono respecto del recorte interior (>1 = dibujo más grande)
+@export_range(0.3, 2.5) var tamano_icono := 2.3         ## lado del ícono respecto del recorte interior (>1 = dibujo más grande)
 @export var giro_por_cambio := 0.5                      ## rad que gira el aro de marcas por cambio
 @export var cooldown_total := 3.0
 
@@ -71,8 +72,8 @@ func _reacomodar() -> void:
 	pivot_offset = size * 0.5
 	if _recorte == null:
 		return
-	var interior := (_radio() - ancho_aro - 6.0) * 2.0
-	var lado := interior * 0.92
+	var interior := (_radio() - ancho_aro - 9.0) * 2.0
+	var lado := interior * 0.7   # cuadrado inscrito en el disco claro
 	_recorte.size = Vector2(lado, lado)
 	_recorte.position = (size - _recorte.size) * 0.5
 	for n in _recorte.get_children():
@@ -90,7 +91,7 @@ func _ajustar_icono(ic: Control) -> void:
 func _crear_icono(idx: int) -> Control:
 	var ic: Control = ICONO_ESCENA.instantiate()
 	ic.forma = idx
-	ic.color_icono = _color_forma(idx).lightened(0.35)
+	ic.color_icono = color_tinta
 	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return ic
 
@@ -104,7 +105,7 @@ func set_formas(lista: Array) -> void:
 	for c in lista:
 		colores.append(c)
 	if _icono != null:
-		_icono.color_icono = _color_forma(forma_sel).lightened(0.35)
+		_icono.color_icono = color_tinta
 
 
 ## Cambia la forma seleccionada con transición: el ícono viejo sale y el nuevo entra.
@@ -214,8 +215,10 @@ func set_cooldown(segundos: float) -> void:
 func _draw() -> void:
 	var c := size * 0.5
 	var R := _radio()
-	var r_aro := R - ancho_aro * 0.5 - 1.0
-	draw_circle(c, R, color_fondo)
+	var r_aro := R - ancho_aro * 0.5 - 4.0
+	# Tinta + línea blanca fina (doble contorno de cómic).
+	draw_circle(c, R, color_tinta)
+	draw_arc(c, R - 2.5, 0.0, TAU, 72, color_borde, 1.6, true)
 	draw_arc(c, r_aro, 0.0, TAU, 72, color_aro_fondo, ancho_aro, true)
 	var frac := clampf(energia / maxf(energia_max, 0.01), 0.0, 1.0)
 	var frac_f := clampf(_fantasma / maxf(energia_max, 0.01), 0.0, 1.0)
@@ -225,27 +228,42 @@ func _draw() -> void:
 		var onda := 0.5 + 0.5 * sin(_t * 9.0)
 		col_aro = col_aro.lerp(color_bajo, 0.55 + 0.45 * onda)
 	if frac_f > frac:
-		draw_arc(c, r_aro, -PI * 0.5 + TAU * frac, -PI * 0.5 + TAU * frac_f, 48, Color(1, 1, 1, 0.35), ancho_aro, true)
+		draw_arc(c, r_aro, -PI * 0.5 + TAU * frac, -PI * 0.5 + TAU * frac_f, 48, Color(color_borde.r, color_borde.g, color_borde.b, 0.55), ancho_aro, true)
 	if frac > 0.001:
 		draw_arc(c, r_aro, -PI * 0.5, -PI * 0.5 + TAU * frac, 72, col_aro, ancho_aro, true)
-	# Marcas interiores que giran al cambiar de forma.
-	var r_in := r_aro - ancho_aro * 0.5 - 3.0
-	for i in 12:
-		var a := _giro + TAU * float(i) / 12.0
-		var u := Vector2.from_angle(a)
-		draw_line(c + u * r_in, c + u * (r_in - 6.0), Color(col_aro.r, col_aro.g, col_aro.b, 0.45), 1.6, true)
+	# Cuatro cortes de tinta que giran al cambiar de forma.
+	var r_marca := r_aro + ancho_aro * 0.5 + 1.0
+	for i in 4:
+		var u := Vector2.from_angle(_giro + TAU * float(i) / 4.0)
+		draw_line(c + u * (r_marca - 1.0), c + u * (r_marca + 3.0), color_borde, 2.0)
+	# Disco claro con la silueta de la forma en tinta (los íconos se dibujan encima como hijos).
+	var r_in := r_aro - ancho_aro * 0.5 - 2.0
+	var tinte := _color_forma(forma_sel)
+	draw_circle(c, r_in, color_tinta)
+	draw_circle(c, r_in - 3.0, color_disco.lerp(tinte, 0.16))
+	var r_pts := r_in - 6.0
+	var paso := 7.0
+	var y := paso
+	while y < r_pts:
+		var x := -r_pts
+		while x < r_pts:
+			var p := Vector2(x + (paso * 0.5 if int(y / paso) % 2 == 1 else 0.0), y)
+			if p.length() < r_pts - 2.0:
+				draw_circle(c + p, 0.7 + 1.3 * (y / r_pts), Color(color_tinta.r, color_tinta.g, color_tinta.b, 0.22))
+			x += paso
+		y += paso
 	if _flash > 0.0:
-		var cf := _color_forma(forma_sel)
-		draw_circle(c, r_in - 4.0, Color(cf.r, cf.g, cf.b, 0.32 * _flash))
-	draw_arc(c, R, 0.0, TAU, 72, color_borde, 2.0, true)
+		draw_circle(c, r_in - 3.0, Color(tinte.r, tinte.g, tinte.b, 0.45 * _flash))
 	# Cooldown de la forma seleccionada: arco naranja y segundos en el centro.
 	if cooldown > 0.0:
 		var f := clampf(cooldown / maxf(cooldown_total, 0.01), 0.0, 1.0)
 		draw_arc(c, r_in - 7.0, -PI * 0.5, -PI * 0.5 + TAU * f, 48, color_cooldown, 4.0, true)
 		var fuente := ThemeDB.fallback_font
 		var txt := "%d" % int(ceil(cooldown))
-		var ancho := fuente.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 26).x
-		draw_string(fuente, c + Vector2(-ancho * 0.5, 9.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color(1, 0.9, 0.7))
+		var ancho := fuente.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 30).x
+		draw_string(fuente, c + Vector2(-ancho * 0.5, 10.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 30, color_tinta)
 	# Punto de "forma activa distinta de la seleccionada".
 	if forma_actual != forma_sel:
-		draw_circle(c + Vector2(0, R - ancho_aro - 9.0), 4.5, _color_forma(forma_actual))
+		var pp := c + Vector2(0, R - ancho_aro - 11.0)
+		draw_circle(pp, 6.0, color_tinta)
+		draw_circle(pp, 4.0, _color_forma(forma_actual))

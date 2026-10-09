@@ -177,6 +177,8 @@ func _initialize() -> void:
 		player.velocity = Vector2.ZERO
 		var shake_visto := false
 		var max_esc := 0
+		var avisos := 0
+		var dano_vivo := 0
 		for f in 360:
 			player.global_position.y = minf(player.global_position.y, der.inicio.global_position.y)
 			camd.global_position = player.global_position
@@ -187,9 +189,14 @@ func _initialize() -> void:
 			for n in der.get_parent().get_children():
 				if "radio" in n and "giro" in n:
 					c += 1
+					if int(n.get("dano")) > 0:
+						dano_vivo += 1
+				if "duracion" in n and "ancho" in n:
+					avisos += 1
 			max_esc = maxi(max_esc, c)
 		_chk(shake_visto, "Derrumbe: shake fuerte durante la zona")
 		_chk(max_esc >= 1, "Derrumbe: caen escombros (%d a la vez)" % max_esc)
+		_chk(avisos >= 1 and dano_vivo >= 1, "Derrumbe: rocas dirigidas con aviso (%d) y daño (%d)" % [avisos, dano_vivo])
 
 	# Cadenas de las plataformas frágiles: llegan hasta el techo.
 	var con_cadena := 0

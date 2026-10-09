@@ -23,6 +23,7 @@ var _combo_base_pos: Vector2
 @onready var hp_bar: ProgressBar = $Izquierda/Vida/HpBar
 @onready var hp_bar_delayed: ProgressBar = $Izquierda/Vida/HpBarDelayed
 @onready var hp_label: Label = $Izquierda/Vida/HpLabel
+@onready var fragmentos_barra: Control = $Izquierda/Fragmentos   ## barra de tinta que lee a prog_bar
 @onready var nivel_label: Label = $Derecha/Nivel
 @onready var prog_bar: ProgressBar = $Derecha/ProgBar
 @onready var prog_label: Label = $Derecha/ProgLabel
@@ -268,16 +269,10 @@ func _on_fragmentos(_total: int) -> void:
 	_t_reposo = 0.0
 
 
-## "Pop" del contador al sumar un fragmento: crece, destella en azul y vuelve.
+## "Pop" de la barra de fragmentos al sumar uno: crece, destella y vuelve.
 func _pop_fragmentos() -> void:
-	if _prog_tween != null and _prog_tween.is_valid():
-		_prog_tween.kill()
-	prog_label.pivot_offset = Vector2(prog_label.size.x, prog_label.size.y * 0.5)
-	prog_label.scale = Vector2.ONE * pop_fragmentos_escala
-	prog_label.self_modulate = pop_fragmentos_color
-	_prog_tween = create_tween().set_parallel(true)
-	_prog_tween.tween_property(prog_label, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_prog_tween.tween_property(prog_label, "self_modulate", Color.WHITE, 0.5)
+	if fragmentos_barra != null:
+		fragmentos_barra.pop(pop_fragmentos_escala)
 
 
 ## Aviso arriba al centro para otros sistemas (checkpoint, arenas...).

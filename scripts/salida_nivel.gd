@@ -12,8 +12,6 @@ extends Area2D
 @export var velocidad_entrada := 0.4                   ## 0.35 = paso tranquilo
 @export var espera_maxima := 5.0                       ## seguro por si el jugador se traba
 @export var color_oscuridad := Color(0, 0, 0)          ## tinte de la oscuridad (distinto por zona)
-@export var zona_destino := ""                         ## nombre de la zona a la que se entra (se muestra al apagarse la pantalla)
-@export var tamano_texto_zona := 44
 @export_group("Aspecto de umbral")
 @export var color_marco := Color(0.13, 0.11, 0.1)      ## piedra del arco
 @export var color_interior := Color(0.02, 0.02, 0.03)  ## oscuridad al otro lado
@@ -72,36 +70,15 @@ func _on_body_entered(_body: Node2D) -> void:
 func _entrar_oscuridad(jugador: Node) -> void:
 	jugador.set("cinematica_activa", true)
 	jugador.set("cinematica_dir", velocidad_entrada)
-	var etiqueta := _crear_texto_zona()
 	var x_fin := global_position.x + largo_oscuridad * 0.8
 	var t := 0.0
 	while t < espera_maxima and (jugador as Node2D).global_position.x < x_fin:
 		await get_tree().process_frame
 		t += get_process_delta_time()
-		if etiqueta != null:
-			var avance := clampf(((jugador as Node2D).global_position.x - global_position.x) / maxf(largo_oscuridad, 1.0), 0.0, 1.0)
-			etiqueta.modulate.a = clampf((avance - 0.3) / 0.5, 0.0, 1.0)
 	var audio := get_node_or_null("/root/AudioManager")
 	if audio != null:
 		audio.play_sfx(sonido_salida, volumen_salida_db)
 	TransicionPantalla.de(get_tree()).cambiar_escena(siguiente_escena)
-
-
-func _crear_texto_zona() -> Label:
-	if zona_destino.is_empty():
-		return null
-	var capa := CanvasLayer.new()
-	capa.layer = 90
-	add_child(capa)
-	var l := Label.new()
-	l.text = zona_destino
-	l.modulate.a = 0.0
-	l.add_theme_font_size_override("font_size", tamano_texto_zona)
-	l.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	capa.add_child(l)
-	return l
 
 
 func _process(delta: float) -> void:

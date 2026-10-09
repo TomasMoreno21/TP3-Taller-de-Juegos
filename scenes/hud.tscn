@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://c1q7pellu6xgj" path="res://scripts/hud.gd" id="1_hud"]
 [ext_resource type="Script" path="res://scripts/hud_dial.gd" id="2_dial"]
 [ext_resource type="Script" path="res://scripts/hud_segmentos.gd" id="3_seg"]
+[ext_resource type="Script" path="res://scripts/hud_barra_tinta.gd" id="4_tinta"]
 
 [sub_resource type="StyleBoxFlat" id="bg_bar"]
 bg_color = Color(0.09, 0.09, 0.12, 0.85)
@@ -136,13 +137,26 @@ mouse_filter = 2
 [node name="Vida" type="Control" parent="Izquierda"]
 layout_mode = 3
 anchors_preset = 0
-offset_left = 96.0
-offset_top = 50.0
-offset_right = 396.0
+offset_left = 100.0
+offset_top = 42.0
+offset_right = 420.0
 offset_bottom = 80.0
 mouse_filter = 2
 
+[node name="Tinta" type="Control" parent="Izquierda/Vida"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("4_tinta")
+fuente = NodePath("../HpBar")
+eco = NodePath("../HpBarDelayed")
+
 [node name="HpBarDelayed" type="ProgressBar" parent="Izquierda/Vida"]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -155,6 +169,7 @@ value = 100.0
 show_percentage = false
 
 [node name="HpBar" type="ProgressBar" parent="Izquierda/Vida"]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -167,6 +182,7 @@ value = 100.0
 show_percentage = false
 
 [node name="Segmentos" type="Control" parent="Izquierda/Vida"]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -177,6 +193,7 @@ mouse_filter = 2
 script = ExtResource("3_seg")
 
 [node name="HpLabel" type="Label" parent="Izquierda/Vida"]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -192,6 +209,23 @@ theme_override_font_sizes/font_size = 14
 text = "100/100"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Fragmentos" type="Control" parent="Izquierda"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 112.0
+offset_top = 88.0
+offset_right = 310.0
+offset_bottom = 107.0
+mouse_filter = 2
+script = ExtResource("4_tinta")
+fuente = NodePath("../../Derecha/ProgBar")
+color_relleno = Color(0.56, 0.82, 0.96, 1)
+color_fondo = Color(0.105, 0.12, 0.15, 1)
+inclinacion = 8.0
+grosor_tinta = 3.0
+rayado = false
+chispa = true
 
 [node name="Dial" type="Control" parent="Izquierda"]
 layout_mode = 3
@@ -214,6 +248,7 @@ mouse_filter = 2
 theme_override_constants/separation = 4
 
 [node name="Nivel" type="Label" parent="Derecha"]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.85, 0.4, 1)
 theme_override_colors/font_outline_color = Color(0.05, 0.05, 0.08, 1)
@@ -223,6 +258,7 @@ text = "NIVEL 1"
 horizontal_alignment = 2
 
 [node name="ProgBar" type="ProgressBar" parent="Derecha"]
+visible = false
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 theme_override_styles/background = SubResource("bg_prog")
@@ -230,6 +266,7 @@ theme_override_styles/fill = SubResource("fill_prog")
 show_percentage = false
 
 [node name="ProgLabel" type="Label" parent="Derecha"]
+visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.8, 0.55, 1)
 theme_override_colors/font_outline_color = Color(0.05, 0.05, 0.08, 1)
@@ -245,17 +282,19 @@ theme_override_constants/separation = 0
 
 [node name="Titulo" type="Label" parent="Derecha/Racha"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.85, 0.27, 0.27, 1)
+theme_override_colors/font_outline_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 14
 text = "COMBO"
 horizontal_alignment = 2
 
 [node name="Valor" type="Label" parent="Derecha/Racha"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.05, 0.0, 1)
-theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 40
+theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
+theme_override_colors/font_outline_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/font_size = 44
 text = "0"
 horizontal_alignment = 2
 
@@ -286,8 +325,10 @@ offset_left = -260.0
 offset_top = 150.0
 offset_right = 260.0
 offset_bottom = 190.0
-theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
+theme_override_colors/font_outline_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 26
 horizontal_alignment = 1
 
 [node name="FlashDano" type="ColorRect" parent="."]
@@ -325,11 +366,11 @@ grow_horizontal = 2
 
 [node name="Panel" type="PanelContainer" parent="BossBar"]
 layout_mode = 2
-theme_override_styles/panel = SubResource("panel_boss")
+theme_override_styles/panel = SubResource("bg_boss_vacio")
 
 [node name="Col" type="VBoxContainer" parent="BossBar/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 3
+theme_override_constants/separation = 4
 
 [node name="Fila" type="HBoxContainer" parent="BossBar/Panel/Col"]
 layout_mode = 2
@@ -337,11 +378,16 @@ theme_override_constants/separation = 14
 
 [node name="Nombre" type="Label" parent="BossBar/Panel/Col/Fila"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.9, 0.55, 1)
-theme_override_font_sizes/font_size = 19
+theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
+theme_override_colors/font_outline_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 20
 text = "ARZOBISPO"
+horizontal_alignment = 1
+size_flags_horizontal = 3
 
 [node name="Valor" type="Label" parent="BossBar/Panel/Col/Fila"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
@@ -351,11 +397,29 @@ horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="Envoltura" type="Control" parent="BossBar/Panel/Col"]
-custom_minimum_size = Vector2(640, 26)
+custom_minimum_size = Vector2(640, 34)
 layout_mode = 2
 mouse_filter = 2
 
+[node name="Tinta" type="Control" parent="BossBar/Panel/Col/Envoltura"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("4_tinta")
+fuente = NodePath("../Fill")
+eco = NodePath("../FillEco")
+color_relleno = Color(0.56, 0.34, 0.86, 1)
+usar_color_de_fuente = true
+inclinacion = 18.0
+grosor_tinta = 5.0
+marcas = PackedFloat32Array(0.3333, 0.6667)
+
 [node name="FillEco" type="ProgressBar" parent="BossBar/Panel/Col/Envoltura"]
+visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -368,6 +432,7 @@ value = 1.0
 show_percentage = false
 
 [node name="Fill" type="ProgressBar" parent="BossBar/Panel/Col/Envoltura"]
+visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -380,6 +445,7 @@ value = 1.0
 show_percentage = false
 
 [node name="Pips" type="HBoxContainer" parent="BossBar/Panel/Col"]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 6
 alignment = 1

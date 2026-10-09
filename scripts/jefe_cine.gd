@@ -105,6 +105,30 @@ static func destello_final(arbol: SceneTree, retraso: float) -> void:
 	tw.tween_callback(capa.queue_free)
 
 
+## Muerte épica (estilo Hollow Knight): grietas de luz cada vez más seguidas con temblor creciente
+## y, justo cuando el destello blanco cubre la pantalla, estalla una lluvia de partículas.
+static func estallido(arbol: SceneTree, pos: Vector2, color: Color, retraso: float) -> void:
+	if DisplayServer.get_name() == "headless" or arbol == null:
+		return
+	var grietas := 5
+	for i in grietas:
+		var t := retraso * pow(float(i) / grietas, 0.8)
+		var intensidad := 6.0 + float(i) * 5.0
+		arbol.create_timer(t, true, false, true).timeout.connect(func() -> void:
+			grieta(arbol, color)
+			var cam := arbol.root.get_viewport().get_camera_2d()
+			if cam != null and cam.has_method("shake"):
+				cam.shake(intensidad, 0.4))
+	arbol.create_timer(retraso + 0.3, true, false, true).timeout.connect(func() -> void:
+		var p: CPUParticles2D = (preload("res://scenes/burst.tscn") as PackedScene).instantiate()
+		p.global_position = pos
+		p.self_modulate = color
+		p.amount = 90
+		arbol.root.add_child(p)
+		p.restart()
+		p.emitting = true)
+
+
 class Grieta extends Control:
 	var color := Color.WHITE
 	var tam := Vector2(1920, 1080)

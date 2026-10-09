@@ -26,6 +26,27 @@ static func emitir(ref: Node, pos: Vector2, color: Color, cantidad: int = 16, es
 	p.emitting = true
 
 
+## Onda de luz que se expande y se desvanece (aviso visual y momentáneo: zona despejada, checkpoint...).
+static func onda(ref: Node, pos: Vector2, color: Color, radio: float = 220.0, dur: float = 0.8, grosor: float = 7.0) -> void:
+	if DisplayServer.get_name() == "headless" or ref == null or not ref.is_inside_tree():
+		return
+	var n := Node2D.new()
+	n.z_index = 50
+	n.set_meta("k", 0.0)
+	n.draw.connect(func() -> void:
+		var k: float = n.get_meta("k")
+		var a := 1.0 - k
+		n.draw_arc(Vector2.ZERO, radio * k, 0.0, TAU, 56, Color(color, 0.85 * a), 1.0 + grosor * a, true)
+		n.draw_arc(Vector2.ZERO, radio * k * 0.7, 0.0, TAU, 48, Color(color, 0.35 * a), 1.0 + grosor * 0.5 * a, true))
+	ref.get_tree().root.add_child(n)
+	n.global_position = pos
+	var tw := n.create_tween().set_ignore_time_scale(true)
+	tw.tween_method(func(v: float) -> void:
+		n.set_meta("k", v)
+		n.queue_redraw(), 0.0, 1.0, dur).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(n.queue_free)
+
+
 ## Chorro direccional de chispas (golpes): salen hacia `dir` (±1) con un abanico angosto.
 static func chispas(ref: Node, pos: Vector2, dir: int, color: Color, cantidad: int = 6, fuerza: float = 1.0) -> void:
 	if DisplayServer.get_name() == "headless" or ref == null or not ref.is_inside_tree():

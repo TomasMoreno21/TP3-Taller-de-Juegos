@@ -14,7 +14,7 @@ const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 # Diálogo opcional al completar la arena (post-combate). Vacío = no habla.
 @export var lineas_post_combate: PackedStringArray = []
 @export var hablante_post_combate := "Amuleto"
-@export var texto_despejada := "Zona despejada"   ## aviso del HUD al vencer la última ola (vacío = sin aviso)
+@export var color_despejada := Color(0.75, 0.95, 1.0)   ## destello de la onda de luz al vencer la última ola
 @export var sonido_despejada: AudioStream = preload("res://assets/audio/sfx/gen/zona_despejada.wav")
 @export var sonido_inicio: AudioStream = preload("res://assets/audio/sfx/gen/arena_inicio.wav")   ## al cerrarse la arena
 @export var volumen_despejada_db := -6.0
@@ -303,9 +303,10 @@ func _completar() -> void:
 	var audio := get_node_or_null("/root/AudioManager")
 	if audio != null:
 		audio.play_sfx(sonido_despejada, volumen_despejada_db)
-	var hud := get_tree().get_first_node_in_group("hud")
-	if hud != null and not texto_despejada.is_empty():
-		hud.mostrar_aviso(texto_despejada)
+	var jugador := get_tree().get_first_node_in_group("player") as Node2D
+	if jugador != null:   # aviso visual y breve: la luz del espíritu se expande desde el jugador
+		Burst.onda(self, jugador.global_position + Vector2(0, -50), color_despejada, 520.0, 1.0, 9.0)
+		Burst.emitir(self, jugador.global_position + Vector2(0, -50), color_despejada, 24, 1.6)
 	if not lineas_post_combate.is_empty():
 		get_node("/root/Dialogo").mostrar(Array(lineas_post_combate), hablante_post_combate)
 	completado.emit()

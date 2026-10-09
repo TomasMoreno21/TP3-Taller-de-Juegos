@@ -753,7 +753,6 @@ position = Vector2(10360, 2640)
 siguiente_escena = "res://scenes/nivel_jefe.tscn"
 largo_oscuridad = 300.0
 modo_oscuridad = true
-zona_destino = "El Santuario"
 color_oscuridad = Color(0.04, 0.0, 0.0, 1)
 
 [node name="Decoracion" type="Node2D" parent="." unique_id=1057198916]
@@ -1251,8 +1250,7 @@ alto = 2700.0
 
 [node name="TituloNivel" type="CanvasLayer" parent="."]
 script = ExtResource("titulo_niv")
-titulo = "NIVEL 3"
-subtitulo = "La Cantera"
+titulo = "La Cantera"
 
 [node name="IntroNivel" type="Node2D" parent="." unique_id=1311068087]
 script = ExtResource("intro_script")

@@ -47,10 +47,20 @@
 [ext_resource type="Script" uid="uid://idd63jdwwtsy" path="res://scripts/intro_nivel.gd" id="70_intro"]
 [ext_resource type="Script" uid="uid://d4d5q3u8vx8dm" path="res://scripts/plano_intro.gd" id="71_plano"]
 [ext_resource type="Script" uid="uid://b2knw64qxpag6" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
+[ext_resource type="Texture2D" path="res://resources/luz_radial.tres" id="luz_cueva"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte"]
 shader = ExtResource("45_tinte")
-shader_parameter/tierra_color = Color(0.26, 0.19, 0.13, 1)
+shader_parameter/tierra_color = Color(0.2, 0.16, 0.14, 1)
+shader_parameter/tierra_color_b = Color(0.17, 0.17, 0.15, 1)
+shader_parameter/tierra_humeda = Color(0.1, 0.17, 0.15, 1)
+shader_parameter/humedad = 0.55
+shader_parameter/y_cueva = 2000.0
+shader_parameter/tierra_cueva = Color(0.14, 0.15, 0.17, 1)
+shader_parameter/tierra_cueva_b = Color(0.11, 0.16, 0.18, 1)
+shader_parameter/tierra_cueva_humeda = Color(0.06, 0.18, 0.19, 1)
+shader_parameter/base = 0.95
+shader_parameter/contraste = 2.0
 shader_parameter/matiz_min = 0.68
 shader_parameter/matiz_max = 1.0
 shader_parameter/matiz_rojo_max = 0.04
@@ -1963,7 +1973,6 @@ position = Vector2(32148, 4994)
 siguiente_escena = "res://scenes/nivel2.tscn"
 modo_oscuridad = true
 color_oscuridad = Color(0.01, 0.03, 0.04, 1)
-zona_destino = "Las Cuevas"
 
 [node name="Hud" parent="." unique_id=643194512 instance=ExtResource("12_hud")]
 visible = false
@@ -2026,6 +2035,9 @@ position = Vector2(13179, 480)
 dialogo_id = "n1-joystick"
 
 [node name="Noche" parent="." unique_id=814453849 instance=ExtResource("26_dr8ev")]
+
+[node name="LuciernagasAmbiente" parent="Noche" index="1"]
+y_cueva = 2000.0
 
 [node name="Checkpoint" parent="." unique_id=1335162961 instance=ExtResource("27_46iir")]
 position = Vector2(9517, 802)
@@ -2678,10 +2690,56 @@ position = Vector2(19903, 620)
 position = Vector2(25349, 644)
 
 [node name="Luciernagas4" parent="Atmosfera" unique_id=357775517 instance=ExtResource("41_luci")]
+color = Color(0.55, 0.9, 1, 1)
 position = Vector2(26711, 2237)
 
 [node name="Luciernagas5" parent="Atmosfera" unique_id=865767891 instance=ExtResource("41_luci")]
+color = Color(0.55, 0.9, 1, 1)
 position = Vector2(18645, 5621)
+
+[node name="LucesCueva" type="Node2D" parent="."]
+
+[node name="Luz1" type="PointLight2D" parent="LucesCueva"]
+position = Vector2(13400, 5750)
+color = Color(0.4, 0.82, 0.9, 1)
+energy = 0.55
+texture = ExtResource("luz_cueva")
+texture_scale = 5.0
+
+[node name="Luz2" type="PointLight2D" parent="LucesCueva"]
+position = Vector2(17000, 5750)
+color = Color(0.4, 0.82, 0.9, 1)
+energy = 0.55
+texture = ExtResource("luz_cueva")
+texture_scale = 5.0
+
+[node name="Luz3" type="PointLight2D" parent="LucesCueva"]
+position = Vector2(20136, 5600)
+color = Color(0.4, 0.82, 0.9, 1)
+energy = 0.55
+texture = ExtResource("luz_cueva")
+texture_scale = 5.0
+
+[node name="Luz4" type="PointLight2D" parent="LucesCueva"]
+position = Vector2(24500, 5750)
+color = Color(0.4, 0.82, 0.9, 1)
+energy = 0.55
+texture = ExtResource("luz_cueva")
+texture_scale = 5.0
+
+[node name="Luz5" type="PointLight2D" parent="LucesCueva"]
+position = Vector2(28000, 5080)
+color = Color(0.4, 0.82, 0.9, 1)
+energy = 0.55
+texture = ExtResource("luz_cueva")
+texture_scale = 5.0
+
+[node name="Luz6" type="PointLight2D" parent="LucesCueva"]
+position = Vector2(26711, 2280)
+color = Color(0.4, 0.82, 0.9, 1)
+energy = 0.55
+texture = ExtResource("luz_cueva")
+texture_scale = 5.0
 
 [node name="PrimerPlano" type="Node2D" parent="." unique_id=2010964529]
 z_index = 20
@@ -2904,7 +2962,7 @@ accion = 4
 
 [node name="TituloNivel" type="CanvasLayer" parent="." unique_id=1761322483]
 script = ExtResource("titulo_niv")
-subtitulo = "El Bosque"
+titulo = "El Bosque"
 
 [node name="IntroNivel" type="Node2D" parent="." unique_id=1916121406]
 script = ExtResource("70_intro")

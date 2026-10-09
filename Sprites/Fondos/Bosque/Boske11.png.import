@@ -3,20 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://byhji0617vexm"
-path="res://.godot/imported/Boske11.png-8fe09a308fa39817a27f2cc798385a58.ctex"
+path.bptc="res://.godot/imported/Boske11.png-8fe09a308fa39817a27f2cc798385a58.bptc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://Sprites/Fondos/Bosque/Boske11.png"
-dest_files=["res://.godot/imported/Boske11.png-8fe09a308fa39817a27f2cc798385a58.ctex"]
+dest_files=["res://.godot/imported/Boske11.png-8fe09a308fa39817a27f2cc798385a58.bptc.ctex"]
 
 [params]
 
-compress/mode=0
-compress/high_quality=false
+compress/mode=2
+compress/high_quality=true
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
