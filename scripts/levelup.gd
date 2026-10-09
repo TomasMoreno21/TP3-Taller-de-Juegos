@@ -31,6 +31,7 @@ func _ready() -> void:
 	panel.visible = false
 	var prog: Node = get_node("/root/Progresion")
 	prog.nivel_subio.connect(func(_n: int) -> void: abrir())
+	prog.forma_desbloqueada_evento.connect(func(_f: int) -> void: _canjear_diferida())
 
 
 func esta_abierto() -> bool:
@@ -42,7 +43,12 @@ func abrir() -> void:
 		_pendientes += 1
 		return
 	_build_opciones()
-	_indice = 0
+	if _primera_elegible() < 0:
+		# Ninguna forma desbloqueada tiene un combo pendiente: la mejora espera a la próxima forma.
+		get_node("/root/Progresion").mejoras_diferidas += 1
+		_reconstruir_slots_vacio()
+		return
+	_indice = _primera_elegible()
 	_open = true
 	panel.visible = true
 	if pausar_al_abrir:
@@ -110,6 +116,34 @@ func _mover_indice(dir: int) -> void:
 		candidata += dir
 
 
+## Si hay una mejora esperando y ya hay una forma con combo pendiente, abre el menú.
+func _canjear_diferida() -> void:
+	var prog: Node = get_node("/root/Progresion")
+	if int(prog.mejoras_diferidas) <= 0:
+		return
+	prog.mejoras_diferidas -= 1
+	abrir()
+
+
+func _primera_elegible() -> int:
+	for i in range(_opciones.size()):
+		if not _opciones[i]["bloqueada"]:
+			return i
+	return -1
+
+
+func _reconstruir_slots_vacio() -> void:
+	_opciones = []
+	_reconstruir_slots()
+
+
+## ¿La forma ya tiene todos sus combos? Entonces no aparece más entre las opciones.
+func _forma_completa(player: Node, prog: Node, i: int) -> bool:
+	if player == null or player.forms.size() <= i or player.forms[i] == null:
+		return false
+	return prog.combos_desbloqueados_forma(i) >= player.forms[i].combos.size()
+
+
 func _build_opciones() -> void:
 	_opciones = []
 	var prog: Node = get_node("/root/Progresion")
@@ -118,6 +152,8 @@ func _build_opciones() -> void:
 	if player != null:
 		max_formas = player.forms.size()
 	for i in range(max_formas):
+		if _forma_completa(player, prog, i):
+			continue
 		var nombre := "Humano"
 		var color := Color(0.9, 0.9, 0.9)
 		if player != null and player.forms[i] != null:

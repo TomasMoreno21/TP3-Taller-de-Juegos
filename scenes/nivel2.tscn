@@ -41,6 +41,8 @@
 [ext_resource type="Script" uid="uid://dotehvvuk7udf" path="res://scripts/latido_cueva.gd" id="98_latido"]
 [ext_resource type="Script" uid="uid://d3nihovco06v7" path="res://scripts/zona_latido.gd" id="99_zona"]
 [ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="ck_1"]
+[ext_resource type="Texture2D" path="res://resources/luz_radial.tres" id="97_luzumbral"]
+[ext_resource type="Script" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte2"]
 shader = ExtResource("61_tinte")
@@ -89,6 +91,10 @@ fill_to = Vector2(1, 0.5)
 offsets = PackedFloat32Array(0, 0.25, 0.75, 1)
 colors = PackedColorArray(0.72, 0.46, 1, 0, 0.72, 0.46, 1, 0.9, 0.72, 0.46, 1, 0.9, 0.72, 0.46, 1, 0)
 
+[sub_resource type="Gradient" id="Gradient_motas_umbral"]
+offsets = PackedFloat32Array(0, 0.25, 0.75, 1)
+colors = PackedColorArray(0.25, 0.9, 0.85, 0, 0.25, 0.9, 0.85, 0.9, 0.55, 1, 0.95, 0.9, 0.55, 1, 0.95, 0)
+
 [node name="Node2D" type="Node2D" unique_id=157205862]
 position = Vector2(13, 0)
 
@@ -124,6 +130,10 @@ position = Vector2(3965, 6948)
 [node name="SalidaNivel" parent="." unique_id=1567461188 instance=ExtResource("30_salida")]
 position = Vector2(4135, 6860)
 siguiente_escena = "res://scenes/nivel3.tscn"
+modo_oscuridad = true
+zona_destino = "La Cantera"
+color_oscuridad = Color(0.05, 0.025, 0.015, 1)
+color = Color(0.3, 0.9, 0.85, 1)
 
 [node name="Hud" parent="." unique_id=643194512 instance=ExtResource("5_hud")]
 visible = false
@@ -1759,6 +1769,11 @@ raices = false
 cuerpo = false
 semilla = 7
 
+[node name="TituloNivel" type="CanvasLayer" parent="."]
+script = ExtResource("titulo_niv")
+titulo = "NIVEL 2"
+subtitulo = "Las Cuevas"
+
 [node name="IntroNivel" type="Node2D" parent="." unique_id=1740701685]
 script = ExtResource("90_intro")
 id_visto = "intro_nivel2"
@@ -1818,6 +1833,22 @@ latido = NodePath("../../Latido")
 script = ExtResource("98_latido")
 oscuridad = NodePath("../Noche/Oscuridad")
 
+[node name="Umbral" type="Node2D" parent="Latido"]
+position = Vector2(4300, 6850)
+script = ExtResource("99_zona")
+tamano = Vector2(900, 1400)
+color_ambiente = Color(0.66, 0.84, 0.96, 1)
+frecuencia = 0.5
+intensidad = 0.03
+
+[node name="UmbralMedio" type="Node2D" parent="Latido"]
+position = Vector2(3500, 6850)
+script = ExtResource("99_zona")
+tamano = Vector2(700, 1400)
+color_ambiente = Color(0.66, 0.72, 0.92, 1)
+frecuencia = 0.9
+intensidad = 0.05
+
 [node name="Santuario" type="Node2D" parent="Latido" unique_id=1730663562]
 position = Vector2(3200, 6850)
 script = ExtResource("99_zona")
@@ -1864,3 +1895,93 @@ tamano = Vector2(24000, 6000)
 color_ambiente = Color(0.58, 0.62, 0.78, 1)
 frecuencia = 0.3
 intensidad = 0.0
+
+[node name="UmbralCristal1" parent="Decoracion" instance=ExtResource("60_deco")]
+position = Vector2(3260, 7040)
+tipo = 10
+variante = 3
+escala = 2.0
+neutralizar = 0.0
+halo_color = Color(0.2, 0.9, 0.85, 1)
+
+[node name="UmbralCristal2" parent="Decoracion" instance=ExtResource("60_deco")]
+position = Vector2(3440, 7040)
+tipo = 10
+variante = 5
+escala = 2.4
+neutralizar = 0.0
+halo_color = Color(0.2, 0.9, 0.85, 1)
+
+[node name="UmbralCristal3" parent="Decoracion" instance=ExtResource("60_deco")]
+position = Vector2(3650, 7040)
+tipo = 10
+variante = 2
+escala = 2.7
+neutralizar = 0.0
+halo_color = Color(0.2, 0.9, 0.85, 1)
+
+[node name="UmbralCristal4" parent="Decoracion" instance=ExtResource("60_deco")]
+position = Vector2(3860, 7040)
+tipo = 10
+variante = 6
+escala = 3.0
+neutralizar = 0.0
+halo_color = Color(0.2, 0.9, 0.85, 1)
+
+[node name="UmbralCristal5" parent="Decoracion" instance=ExtResource("60_deco")]
+position = Vector2(4330, 7040)
+tipo = 10
+variante = 1
+escala = 2.9
+neutralizar = 0.0
+halo_color = Color(0.2, 0.9, 0.85, 1)
+
+[node name="UmbralCristal6" parent="Decoracion" instance=ExtResource("60_deco")]
+position = Vector2(4460, 7040)
+tipo = 10
+variante = 5
+escala = 3.4
+neutralizar = 0.0
+halo_color = Color(0.2, 0.9, 0.85, 1)
+
+[node name="UmbralCristal7" parent="Decoracion" instance=ExtResource("60_deco")]
+position = Vector2(4570, 7040)
+tipo = 10
+variante = 3
+escala = 2.6
+neutralizar = 0.0
+halo_color = Color(0.2, 0.9, 0.85, 1)
+
+[node name="MotasUmbral" type="CPUParticles2D" parent="."]
+z_index = 3
+texture_filter = 2
+position = Vector2(4000, 6650)
+amount = 44
+texture = SubResource("GradTexture2D_motas")
+lifetime = 7.0
+preprocess = 4.0
+randomness = 0.6
+emission_shape = 3
+emission_rect_extents = Vector2(900, 450)
+direction = Vector2(0, -1)
+spread = 70.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 5.0
+initial_velocity_max = 16.0
+scale_amount_min = 0.1
+scale_amount_max = 0.28
+color_ramp = SubResource("Gradient_motas_umbral")
+
+[node name="LuzUmbral1" type="PointLight2D" parent="."]
+position = Vector2(3880, 6900)
+color = Color(0.25, 0.9, 0.85, 1)
+energy = 0.9
+texture = ExtResource("97_luzumbral")
+texture_scale = 3.0
+
+[node name="LuzUmbral2" type="PointLight2D" parent="."]
+position = Vector2(4460, 6900)
+color = Color(0.25, 0.9, 0.85, 1)
+energy = 0.9
+texture = ExtResource("97_luzumbral")
+texture_scale = 3.0

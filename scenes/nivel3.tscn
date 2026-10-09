@@ -34,6 +34,7 @@
 [ext_resource type="PackedScene" uid="uid://bhxju6lap2tcq" path="res://scenes/unlock_forma.tscn" id="unlock"]
 [ext_resource type="PackedScene" uid="uid://dih4mbupyhdag" path="res://scenes/enredadera.tscn" id="vine"]
 [ext_resource type="Script" uid="uid://d3nihovco06v7" path="res://scripts/zona_latido.gd" id="zona_latido"]
+[ext_resource type="Script" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte3"]
 shader = ExtResource("tinte")
@@ -748,8 +749,12 @@ position = Vector2(10150, 2770)
 position = Vector2(10250, 2728)
 
 [node name="SalidaNivel" parent="." unique_id=1526391479 instance=ExtResource("salida")]
-position = Vector2(10600, 2640)
+position = Vector2(10360, 2640)
 siguiente_escena = "res://scenes/nivel_jefe.tscn"
+largo_oscuridad = 300.0
+modo_oscuridad = true
+zona_destino = "El Santuario"
+color_oscuridad = Color(0.04, 0.0, 0.0, 1)
 
 [node name="Decoracion" type="Node2D" parent="." unique_id=1057198916]
 
@@ -1243,6 +1248,11 @@ alto = 1200.0
 [node name="Enredadera7" parent="." unique_id=610998085 instance=ExtResource("vine")]
 position = Vector2(13221, 2253)
 alto = 2700.0
+
+[node name="TituloNivel" type="CanvasLayer" parent="."]
+script = ExtResource("titulo_niv")
+titulo = "NIVEL 3"
+subtitulo = "La Cantera"
 
 [node name="IntroNivel" type="Node2D" parent="." unique_id=1311068087]
 script = ExtResource("intro_script")

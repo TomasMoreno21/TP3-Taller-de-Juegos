@@ -45,15 +45,3 @@ centro_x = 8300.0
 y_techo = 1100.0
 y_fondo = 6500.0
 
-[node name="Estalagmitas" type="ParallaxLayer" parent="."]
-motion_scale = Vector2(0.8, 1)
-script = ExtResource("1_capa")
-tipo = "estalagmitas"
-color_a = Color(0.067, 0.114, 0.123, 1)
-color_b = Color(0.085, 0.133, 0.142, 1)
-y_base = 6000.0
-semilla = 17
-ancho_total = 22000.0
-centro_x = 17400.0
-y_techo = 1100.0
-y_fondo = 6500.0

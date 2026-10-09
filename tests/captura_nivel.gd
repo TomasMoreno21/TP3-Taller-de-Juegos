@@ -10,9 +10,16 @@ func _initialize() -> void:
 		if n.get_script() != null and str(n.get_script().resource_path).ends_with("dialog_trigger.gd"):
 			n.queue_free()
 	await physics_frame
+	await physics_frame
+	for t in get_nodes_in_group("titulo_nivel"):
+		t.queue_free()
+	for n in nivel.get_children():
+		if n is IntroNivel:
+			n.queue_free()
 	var player := get_first_node_in_group("player") as CharacterBody2D
 	var cam := nivel.get_node("Camara") as Camera2D
 	player.set("god_mode", true)
+	player.set("cinematica_activa", false)
 	var space := player.get_world_2d().direct_space_state
 	DirAccess.make_dir_recursive_absolute(a[1])
 	# a[2] = "x,y;x,y,1;..." (sin 3er valor: y = altura desde donde cae un rayo hacia abajo; con ",1": posición directa)

@@ -12,11 +12,13 @@ extends CanvasGroup
 @export var profundidad := 1.35              ## >1 = más cerca de la cámara (se mueve más rápido)
 @export var profundidad_vertical := 1.0      ## 1 = sigue la altura del mundo
 @export_range(0.0, 1.0) var alfa_tapando := 0.3
+@export_range(0.0, 1.0) var alfa_base := 0.88   ## opacidad normal (un poco translúcido: no "tapa" el fondo del todo)
+@export var margen_jugador := Vector2(520, 340)  ## zona alrededor del jugador que se mantiene despejada (aclara antes de tapar)
 @export var velocidad_fundido := 4.0         ## qué tan rápido se aclara / vuelve
 @export var distancia_activa := 3200.0       ## px: más lejos de la cámara no se procesa
 
 var _ancla := Vector2.ZERO
-var _alfa := 1.0
+var _alfa := 0.88
 var _rect_local := Rect2()
 
 
@@ -37,7 +39,7 @@ func _process(delta: float) -> void:
 		return
 	global_position = Vector2(c.x + (_ancla.x - c.x) * profundidad, c.y + (_ancla.y - c.y) * profundidad_vertical)
 	var tapa := _tapa_algo()
-	_alfa = move_toward(_alfa, alfa_tapando if tapa else 1.0, delta * velocidad_fundido)
+	_alfa = move_toward(_alfa, alfa_tapando if tapa else alfa_base, delta * velocidad_fundido)
 	self_modulate.a = _alfa
 
 
@@ -67,6 +69,8 @@ func _tapa_algo() -> bool:
 	for grupo in ["player", "enemy"]:
 		for n in get_tree().get_nodes_in_group(grupo):
 			var cuerpo := _rect_cuerpo(n)
+			if cuerpo.size != Vector2.ZERO and grupo == "player":
+				cuerpo = cuerpo.grow_individual(margen_jugador.x, margen_jugador.y, margen_jugador.x, margen_jugador.y * 0.4)
 			if cuerpo.size != Vector2.ZERO and mio.intersects(cuerpo):
 				return true
 	return false

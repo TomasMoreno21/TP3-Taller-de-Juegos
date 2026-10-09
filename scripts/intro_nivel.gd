@@ -115,6 +115,9 @@ func _process(delta: float) -> void:
 
 
 func _correr() -> void:
+	var ti := get_tree().get_first_node_in_group("titulo_nivel")
+	if ti != null and ti.get("activo"):
+		await ti.listo   # el cartel de nivel va primero
 	var tw_negro := create_tween()
 	tw_negro.tween_property(_negro, "color:a", 0.0, fundido_inicial)
 	_barras(true)

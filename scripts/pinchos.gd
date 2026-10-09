@@ -34,9 +34,28 @@ enum Estilo { ROCA, MADERA, TRIBAL }
 @export_range(0.0, 1.0) var prob_musgo := 0.8          # fracción de pinchos con musgo (0 = ninguno)
 @export_range(0.0, 1.0) var luz_punta := 0.35          # cuánto aclara la punta (madera/piedra "descubierta")
 @export var enterrado := 36.0  # tramo que queda DENTRO del tile (tapado por el tilemap)
-@export var z_index_detras := -1 # el nodo se dibuja detrás del tilemap (asoman las puntas)
+@export var z_index_detras := -2 # el nodo se dibuja detrás del suelo (asoman las puntas, la base enterrada queda tapada)
 @export var fraccion_zona_dano := 0.4  # qué porción del alto VISIBLE mata (el resto es decorativo)
 
+## Todo el dibujo de un grupo de pinchos va en UN solo item de dibujo (antes eran ~60 nodos Polygon2D/Line2D por pincho).
+class _Rec:
+	var ops: Array
+	var pos: Vector2
+
+	func _init(o: Array, p: Vector2) -> void:
+		ops = o
+		pos = p
+
+	func add_child(op: Dictionary) -> void:
+		var pts: PackedVector2Array = op["p"]
+		var out := PackedVector2Array()
+		for v in pts:
+			out.append(v + pos)
+		op["p"] = out
+		ops.append(op)
+
+
+var _ops: Array = []
 var _kill_zone_size := Vector2.ZERO
 var _jugador: Node2D
 var _empalados := {}                       # id de enemigo -> ms del último empalado
@@ -95,6 +114,13 @@ func _factor_estilo() -> float:
 # tapar, zona de daño resaltada y guía de hundimiento (hasta dónde queda enterrado).
 func _draw() -> void:
 	if not Engine.is_editor_hint():
+		for op in _ops:
+			var pts: PackedVector2Array = op["p"]
+			if int(op["t"]) == 0:
+				if pts.size() >= 3:
+					draw_colored_polygon(pts, op["c"])
+			else:
+				draw_polyline(pts, op["c"], float(op["w"]))
 		return
 	var ancho_total := maxf(cantidad * ancho_pincho, 10.0)
 	var alto_vis := maxf(alto * altura_mult * _factor_estilo(), 10.0)
@@ -217,8 +243,8 @@ func _dibujar() -> void:
 	var visual: Node2D = get_node_or_null("Visual")
 	if visual == null:
 		return
-	for child in visual.get_children():
-		child.queue_free()
+	_ops.clear()
+	var base := _Rec.new(_ops, Vector2.ZERO)
 	var ancho_total := _kill_zone_size.x
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(absf(global_position.x) * 7.0 + absf(global_position.y) * 3.0) + int(cantidad) * 131
@@ -228,7 +254,7 @@ func _dibujar() -> void:
 		clara = color_tribal if estilo == Estilo.TRIBAL else color_madera
 		oscura = clara.darkened(0.38)
 	# Base enterrada continua (une los pinchos; asoma un poco como tierra oscura).
-	visual.add_child(_poli([Vector2(-ancho_total * 0.5 - 4, enterrado + 8), Vector2(-ancho_total * 0.5 - 4, -3),
+	base.add_child(_poli([Vector2(-ancho_total * 0.5 - 4, enterrado + 8), Vector2(-ancho_total * 0.5 - 4, -3),
 		Vector2(ancho_total * 0.5 + 4, -3), Vector2(ancho_total * 0.5 + 4, enterrado + 8)], color_base))
 	for i in range(int(cantidad)):
 		var cx := -ancho_total * 0.5 + (float(i) + 0.5) * ancho_pincho
@@ -240,9 +266,7 @@ func _dibujar() -> void:
 		var j := w * rng.randf_range(-0.18, 0.18)          # la punta se corre un poco
 		var k := rng.randf_range(0.22, 0.34)                # altura del "hombro"
 		var e := enterrado
-		var pinch := Node2D.new()
-		pinch.position = Vector2(cx, 0)
-		visual.add_child(pinch)
+		var pinch := _Rec.new(_ops, Vector2(cx, 0))
 		if estilo != Estilo.ROCA:
 			var ab := _estaca(pinch, rng, w, h, j, e, clara, oscura, rng.randf() < prob_sangre)
 			if estilo == Estilo.TRIBAL:
@@ -253,11 +277,7 @@ func _dibujar() -> void:
 		pinch.add_child(_poli([Vector2(-w * 0.5, e), Vector2(-w * 0.47, -h * k), Vector2(-w * 0.2, -h * (k + 0.3)), Vector2(j, -h), Vector2(j, e)], clara))
 		pinch.add_child(_poli([Vector2(j, e), Vector2(j, -h), Vector2(w * 0.24, -h * (k + 0.22)), Vector2(w * 0.5, -h * k * 0.8), Vector2(w * 0.5, e)], oscura))
 		# Filo brillante a lo largo del borde iluminado + punta clara.
-		var filo := Line2D.new()
-		filo.points = PackedVector2Array([Vector2(-w * 0.47, -h * k), Vector2(-w * 0.2, -h * (k + 0.3)), Vector2(j, -h)])
-		filo.width = 2.2
-		filo.default_color = clara.lightened(0.5)
-		pinch.add_child(filo)
+		pinch.add_child(_linea(PackedVector2Array([Vector2(-w * 0.47, -h * k), Vector2(-w * 0.2, -h * (k + 0.3)), Vector2(j, -h)]), 2.2, clara.lightened(0.5)))
 		pinch.add_child(_poli([Vector2(j - w * 0.11, -h * 0.8), Vector2(j, -h), Vector2(j + w * 0.1, -h * 0.8)], Color(0.86, 0.3, 0.36)))
 		# Punta descubierta: la cara iluminada se aclara hacia la cima.
 		pinch.add_child(_poli([Vector2(-w * 0.2 * 0.85, -h * (k + 0.3) * 0.9), Vector2(j, -h), Vector2(j, -h * 0.72)], clara.lightened(luz_punta)))
@@ -271,12 +291,13 @@ func _dibujar() -> void:
 		for a in 7:
 			var ang := PI + PI * float(a) / 6.0
 			pts.append(c + Vector2(cos(ang) * r * 1.3, sin(ang) * r))
-		visual.add_child(_poli(pts, color_base.lightened(0.12)))
+		base.add_child(_poli(pts, color_base.lightened(0.12)))
 		x += rng.randf_range(20.0, 44.0)
+	queue_redraw()
 
 
 ## Estaca de madera tallada: tronco con punta en bisel, betas, muesca y (a veces) sangre en la punta.
-func _estaca(nodo: Node2D, rng: RandomNumberGenerator, w: float, h: float, j: float, e: float,
+func _estaca(nodo: _Rec, rng: RandomNumberGenerator, w: float, h: float, j: float, e: float,
 		clara: Color, oscura: Color, con_sangre: bool) -> float:
 	var lean := rng.randf_range(-0.1, 0.1) * w
 	var ab := w * rng.randf_range(0.9, 1.0)
@@ -291,19 +312,11 @@ func _estaca(nodo: Node2D, rng: RandomNumberGenerator, w: float, h: float, j: fl
 	# Betas de la madera.
 	for b in 3:
 		var bx := lerpf(-ab * 0.32, ab * 0.32, float(b) / 2.0) + rng.randf_range(-2.0, 2.0)
-		var beta := Line2D.new()
-		beta.points = PackedVector2Array([Vector2(bx, e), Vector2(bx + rng.randf_range(-1.5, 1.5), -hombro * rng.randf_range(0.55, 0.95))])
-		beta.width = 1.6
-		beta.default_color = oscura.darkened(0.15)
-		nodo.add_child(beta)
+		nodo.add_child(_linea(PackedVector2Array([Vector2(bx, e), Vector2(bx + rng.randf_range(-1.5, 1.5), -hombro * rng.randf_range(0.55, 0.95))]), 1.6, oscura.darkened(0.15)))
 	# Muesca de hachazo y borde de luz.
 	var my := -h * rng.randf_range(0.12, 0.3)
 	nodo.add_child(_poli([Vector2(-ab * 0.5, my), Vector2(-ab * 0.5 + w * 0.3, my - 2.0), Vector2(-ab * 0.5 + w * 0.3, my + 3.0)], oscura.darkened(0.2)))
-	var filo := Line2D.new()
-	filo.points = PackedVector2Array([Vector2(-ab * 0.5, e), l0, tip])
-	filo.width = 1.8
-	filo.default_color = clara.lightened(0.35)
-	nodo.add_child(filo)
+	nodo.add_child(_linea(PackedVector2Array([Vector2(-ab * 0.5, e), l0, tip]), 1.8, clara.lightened(0.35)))
 	if not con_sangre:
 		return ab
 	# Sangre en la punta: manto irregular + brillo + chorro.
@@ -314,21 +327,13 @@ func _estaca(nodo: Node2D, rng: RandomNumberGenerator, w: float, h: float, j: fl
 	var gx := lerpf(a.x, d.x, 0.45)
 	nodo.add_child(_poli([a, tip, d, d + Vector2(-1.0, largo * 0.5), Vector2(lerpf(a.x, d.x, 0.7), a.y + largo * 0.25),
 		Vector2(gx, a.y + largo), Vector2(lerpf(a.x, d.x, 0.25), a.y + largo * 0.35)], color_sangre))
-	var brillo := Line2D.new()
-	brillo.points = PackedVector2Array([a.lerp(tip, 0.25) + Vector2(1.5, 1.0), a.lerp(tip, 0.7) + Vector2(1.5, 0.0)])
-	brillo.width = 1.4
-	brillo.default_color = color_sangre.lightened(0.45)
-	nodo.add_child(brillo)
-	var chorro := Line2D.new()
-	chorro.points = PackedVector2Array([Vector2(gx, a.y + largo), Vector2(gx, a.y + largo + h * rng.randf_range(0.1, 0.22))])
-	chorro.width = 2.0
-	chorro.default_color = color_sangre.darkened(0.1)
-	nodo.add_child(chorro)
+	nodo.add_child(_linea(PackedVector2Array([a.lerp(tip, 0.25) + Vector2(1.5, 1.0), a.lerp(tip, 0.7) + Vector2(1.5, 0.0)]), 1.4, color_sangre.lightened(0.45)))
+	nodo.add_child(_linea(PackedVector2Array([Vector2(gx, a.y + largo), Vector2(gx, a.y + largo + h * rng.randf_range(0.1, 0.22))]), 2.0, color_sangre.darkened(0.1)))
 	return ab
 
 
 ## Adornos de tribu sobre la estaca: banda de pintura, atado de cuerda con cabos sueltos y puntos de hueso.
-func _adornos_tribales(nodo: Node2D, rng: RandomNumberGenerator, ab: float, h: float, oscura: Color) -> void:
+func _adornos_tribales(nodo: _Rec, rng: RandomNumberGenerator, ab: float, h: float, oscura: Color) -> void:
 	var m := ab * 0.5
 	# Banda de pintura ocre (con una cuña central) justo antes del afilado.
 	var y1 := -h * 0.5
@@ -343,18 +348,10 @@ func _adornos_tribales(nodo: Node2D, rng: RandomNumberGenerator, ab: float, h: f
 	for i in pasos:
 		var x0 := lerpf(-m - 1.0, m + 1.0, float(i) / float(pasos))
 		var x1 := lerpf(-m - 1.0, m + 1.0, float(i + 1) / float(pasos))
-		var l := Line2D.new()
-		l.points = PackedVector2Array([Vector2(x0, c0), Vector2(x1, c1)])
-		l.width = 1.3
-		l.default_color = oscura.darkened(0.3)
-		nodo.add_child(l)
+		nodo.add_child(_linea(PackedVector2Array([Vector2(x0, c0), Vector2(x1, c1)]), 1.3, oscura.darkened(0.3)))
 	for lado in [-1.0, 1.0]:
-		var cabo := Line2D.new()
 		var bx: float = lado * m * rng.randf_range(0.2, 0.7)
-		cabo.points = PackedVector2Array([Vector2(bx, c0), Vector2(bx + lado * 2.0, c0 + h * rng.randf_range(0.08, 0.14))])
-		cabo.width = 1.6
-		cabo.default_color = color_cuerda.darkened(0.2)
-		nodo.add_child(cabo)
+		nodo.add_child(_linea(PackedVector2Array([Vector2(bx, c0), Vector2(bx + lado * 2.0, c0 + h * rng.randf_range(0.08, 0.14))]), 1.6, color_cuerda.darkened(0.2)))
 	# Un punto de hueso en el tronco, más abajo.
 	var pts := PackedVector2Array()
 	var cx := rng.randf_range(-m * 0.3, m * 0.3)
@@ -365,7 +362,7 @@ func _adornos_tribales(nodo: Node2D, rng: RandomNumberGenerator, ab: float, h: f
 
 
 ## Mechón de musgo al pie del pincho (borde festoneado, con una hebra más clara).
-func _musgo_pie(nodo: Node2D, rng: RandomNumberGenerator, w: float, h: float) -> void:
+func _musgo_pie(nodo: _Rec, rng: RandomNumberGenerator, w: float, h: float) -> void:
 	if rng.randf() >= prob_musgo:
 		return
 	var ancho := w * rng.randf_range(0.9, 1.25)
@@ -382,8 +379,9 @@ func _musgo_pie(nodo: Node2D, rng: RandomNumberGenerator, w: float, h: float) ->
 	nodo.add_child(_poli(PackedVector2Array([Vector2(-ancho * 0.3, 1.0), Vector2(-ancho * 0.1, -alto_m * 0.85), Vector2(ancho * 0.05, 1.0)]), color_musgo.lightened(0.25)))
 
 
-func _poli(pts: PackedVector2Array, color: Color) -> Polygon2D:
-	var p := Polygon2D.new()
-	p.polygon = pts
-	p.color = color
-	return p
+func _poli(pts: PackedVector2Array, color: Color) -> Dictionary:
+	return {"t": 0, "p": pts, "c": color}
+
+
+func _linea(pts: PackedVector2Array, ancho: float, color: Color) -> Dictionary:
+	return {"t": 1, "p": pts, "c": color, "w": ancho}
