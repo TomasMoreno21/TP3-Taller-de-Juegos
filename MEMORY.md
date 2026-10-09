@@ -1,5 +1,16 @@
 # MEMORY.md — Spirit Keeper (ex proyecto Guardabosques / Espíritus del Bosque)
 
+## Sesión 08/10 (4ª) — Optimización extrema, pasos 0-1 de 5 (plan: terreno → pinchos → decorativos → fondos de cueva → remate) · SIN COMMIT
+- Medido en la notebook del usuario (Intel Iris Xe, juega desde el editor). Restricción: **lo visual idéntico**. Bench nuevo: `tests/bench_rendimiento.gd -- <escena> [s]` (con ventana).
+- **Causa nº 1: driver D3D12** en Iris Xe → `project.godot` pasa a `driver.windows="vulkan"` (mismo Forward+). nivel1: 1er frame 31 s → 2.4 s, 19 → 58 fps; además con D3D12 el shader `tinte_terreno` fallaba en nivel1 (se veía violeta; el diseño, y lo que se ve ahora, es marrón).
+- **Terreno**: `TileMap` → `TileMapLayer` (`tile_map.tscn` con `scripts/terreno.gd`), datos en `tile_map_data` (escenas `format=4`). Cada tile sólido (atlas 1..4×1..4) tiene alternativo 1 sin colisión; "hornear" deja colisión solo a ≤2 celdas de un hueco (nivel1: 326 k → 21 k formas). En el editor se re-hornea solo al pintar (`_update_cells`); botón "Hornear colisión" en el Inspector.
+- Adaptados `cadenas_plataforma.gd`, `diag_nivel2/3` (miran la celda del tilemap: el interior ya no tiene colisión). `verificar.ps1`: ruta de Godot autodetectada/`-Godot`, y `-Diag a,b` ahora sí se separa.
+- Preexistentes (no tocados): `diag_nivel3` da 5 fallos también en el commit original; `nivel1oficial.tscn` no parsea (línea 798) y no se usa; autotest a veces avisa "current_scene null"/"resources still in use".
+- Arreglo aparte: el commit `91ee36f` dejó el `Player` de nivel1 en (28696, 5126) (zona final, prueba del arte del Lobo) → el juego "empezaba en el nivel 2" y salteaba la intro. Vuelto a (-717, 802).
+- **Lección:** al probar algo moviendo el `Player` de un nivel, devolverlo a su lugar antes de commitear (o usar la consola dev).
+- Pendiente medido: nivel2 ~20 ms/frame (GPU 9 ms); nivel3 2.838 draw calls de `capa_cueva.gd`; nivel1 12.800 nodos (Polygon2D/Line2D de pinchos/decorativos).
+- **Lecciones:** (1) medir SIEMPRE con el mismo driver/renderer antes y después: una captura "antes" con otro driver me hizo creer que el tinte era un cambio mío; (2) en PCs con gráfica Intel, probar Vulkan vs D3D12 antes de optimizar contenido; (3) no sobrescribir escenas grandes in situ con scripts: generarlas en el scratchpad, validar con diff y copiar.
+
 ## Sesión 08/10 (3ª) — Juice pasos 1, 3, 4, 6, 7, 8, 10 (NO hechos: 2 zoom de remate, 5 cámara por forma, 9 rango de estilo) · SIN COMMIT
 - **1 Daño:** `DanoPantalla` (capa 6, `resources/dano_pantalla.gdshader`): pantalla sin color + bordes rojos 0.3-0.5 s según el daño; empuje ×1.35 (`dano_empuje_mult`). Exports en el grupo "Juice" del jugador.
 - **3 Almas:** `AlmaEnergia` (en `enemy.gd::_morir`): chispas cian salen del enemigo, frenan y son succionadas al jugador (pop al llegar). La energía se sigue dando al instante (solo es visual).

@@ -135,7 +135,10 @@ func _initialize() -> void:
 				var p := PhysicsPointQueryParameters2D.new()
 				p.position = n.global_position
 				p.collision_mask = 1
-				_chk(espacio.intersect_point(p, 1).is_empty(), "%s no está dentro de la roca" % nm)
+				# el interior de la roca no tiene colisión (terreno.gd): se mira también la celda del tilemap
+				var tm := nivel.get_node_or_null("TileMap") as TileMapLayer
+				var en_celda := tm != null and tm.get_cell_source_id(tm.local_to_map(tm.to_local(n.global_position))) != -1
+				_chk(espacio.intersect_point(p, 1).is_empty() and not en_celda, "%s no está dentro de la roca" % nm)
 			elif nm.begins_with("Encuentro"):
 				var d3: float = piso_de.call(n.global_position, 0.0, 600.0)
 				_chk(absf(d3 - 250.0) <= 40.0, "%s: el piso está a ~250 px bajo el centro (%d)" % [nm, int(d3)])

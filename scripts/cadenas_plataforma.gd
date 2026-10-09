@@ -74,7 +74,7 @@ func _calcular() -> void:
 		var pasos := int(largo_max_techo / 16.0)
 		var en_aire := false   # si el arranque cae dentro de roca (plataforma pegada a una pared), primero sale al aire
 		for k in pasos:
-			var lleno := tm.get_cell_source_id(0, Vector2i(celda.x, celda.y - k)) != -1
+			var lleno := tm.get_cell_source_id(Vector2i(celda.x, celda.y - k)) != -1
 			if not lleno:
 				en_aire = true
 			elif en_aire:
@@ -90,10 +90,10 @@ func _calcular() -> void:
 	queue_redraw()
 
 
-func _buscar_tilemap() -> TileMap:
+func _buscar_tilemap() -> TileMapLayer:
 	var n: Node = get_parent()
 	while n != null:
-		var tm := n.get_node_or_null("TileMap") as TileMap
+		var tm := n.get_node_or_null("TileMap") as TileMapLayer
 		if tm != null:
 			return tm
 		n = n.get_parent()

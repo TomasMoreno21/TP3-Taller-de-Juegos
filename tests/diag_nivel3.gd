@@ -22,7 +22,11 @@ func _check(cond: bool, msg: String) -> void:
 		print("[FAIL] " + msg)
 
 
+## Terreno = celda del tilemap (el interior enterrado no tiene colisión, ver terreno.gd) o cualquier colisión.
 func _solido(x: float, y: float) -> bool:
+	var tm := _nivel.get_node_or_null("TileMap") as TileMapLayer
+	if tm != null and tm.get_cell_source_id(tm.local_to_map(tm.to_local(Vector2(x, y)))) != -1:
+		return true
 	var params := PhysicsPointQueryParameters2D.new()
 	params.position = Vector2(x, y)
 	params.collision_mask = 1
@@ -47,9 +51,9 @@ func _init() -> void:
 	var player: Node2D = nivel.get_node_or_null("Player")
 	_check(player != null, "Nivel3: player presente")
 	var camara: Camera2D = nivel.get_node_or_null("Camara")
-	var tilemap: TileMap = nivel.get_node_or_null("TileMap")
+	var tilemap: TileMapLayer = nivel.get_node_or_null("TileMap")
 	_check(camara != null and camara.has_method("punch"), "Nivel3: cámara con script")
-	_check(tilemap != null and tilemap.get_used_cells(0).size() > 100000, "Nivel3: TileMap con terreno pintado")
+	_check(tilemap != null and tilemap.get_used_cells().size() > 100000, "Nivel3: TileMap con terreno pintado")
 	_check(nivel.get_node_or_null("FondoProfundo") != null and nivel.get_node_or_null("NocheProfunda") != null, "Nivel3: fondo y noche de cueva profunda")
 
 	# Cámara: límites dentro del terreno; el fondo cubre toda la altura que ve.
