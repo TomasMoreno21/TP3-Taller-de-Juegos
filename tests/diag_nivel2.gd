@@ -110,8 +110,10 @@ func _initialize() -> void:
 			_chk(c.motion_mirroring.x > 0.0 and c.get_child_count() > 0 and (c.get_child(0) as Sprite2D).texture != null, "capa %s repite y tiene textura" % c.name)
 			# El fondo se escala con el zoom de la cámara (mín. ~0.7): debe cubrir 1080/0.7 px de alto, sin franja negra.
 			var sp := c.get_child(0) as Sprite2D
-			var alto: float = (sp.position.y + sp.texture.get_height() * sp.scale.y)
-			_chk(sp.position.y <= 0.0 and alto >= 1080.0 / 0.7, "capa %s cubre el alto con zoom 0.7 (%d px)" % [c.name, int(alto)])
+			# Con region_rect (recorte de filas transparentes, optimización) el resto de la textura es transparente: se mide la textura completa.
+			var y0: float = sp.position.y - (sp.region_rect.position.y * sp.scale.y if sp.region_enabled else 0.0)
+			var alto: float = (y0 + sp.texture.get_height() * sp.scale.y)
+			_chk(y0 <= 0.0 and alto >= 1080.0 / 0.7, "capa %s cubre el alto con zoom 0.7 (%d px)" % [c.name, int(alto)])
 	_chk(capas >= 7, "fondo con %d capas" % capas)
 	_chk(nivel.get_node_or_null("PrimerPlano") == null, "nivel2 sin elementos de primer plano")
 
@@ -167,20 +169,22 @@ func _initialize() -> void:
 			_chk(str(l).length() <= 48, "%s: línea corta (%d)" % [id, str(l).length()])
 	# Evento de derrumbe: cableado y simulación (shake + escombros dentro de la zona, nada fuera).
 	var der: Node = exp.get_node_or_null("C/Derrumbe")
-	_chk(der != null and der.inicio != null and der.fin != null, "Derrumbe tiene inicio y fin")
-	if der != null and der.inicio != null and der.fin != null:
-		_chk(der.inicio.global_position.x < der.fin.global_position.x, "Derrumbe: inicio antes que fin")
+	var disp: Node2D = exp.get_node_or_null("C/DisparadorDerrumbe")
+	_chk(der != null and disp != null and der.fin != null and disp.derrumbe == der, "Derrumbe tiene disparador y fin")
+	if der != null and disp != null and der.fin != null:
+		_chk(disp.global_position.x < der.fin.global_position.x, "Derrumbe: disparador antes que fin")
 		_chk(exp.get_node("C/DialogoDerrumbe").dialogo_id == "n2_derrumbe_fin", "Derrumbe: diálogo final")
 		_chk((datos as Dictionary).has("n2_derrumbe_fin"), "dialogos.json tiene n2_derrumbe_fin")
 		var camd: Camera2D = nivel.get_node("Camara")
-		player.global_position = Vector2(der.inicio.global_position.x + 600.0, der.inicio.global_position.y - 100.0)
+		player.global_position = Vector2(disp.global_position.x + 600.0, disp.global_position.y - 100.0)
 		player.velocity = Vector2.ZERO
+		der.iniciar()
 		var shake_visto := false
 		var max_esc := 0
 		var avisos := 0
 		var dano_vivo := 0
 		for f in 360:
-			player.global_position.y = minf(player.global_position.y, der.inicio.global_position.y)
+			player.global_position.y = minf(player.global_position.y, disp.global_position.y)
 			camd.global_position = player.global_position
 			await physics_frame
 			if float(camd.get("_shake_timer")) > 0.0 and float(camd.get("_shake_strength")) >= 6.0:

@@ -28,6 +28,7 @@ enum Ruptura { DESTRUIR, CAER }
 enum Fase { ESPERA, TEMBLOR, CAYENDO, ROTA }
 
 var _fase: int = Fase.ESPERA
+var _jugador_cache: Node2D
 var _t := 0.0
 var _vel_caida := 0.0
 var _visual: Polygon2D
@@ -65,7 +66,11 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	match _fase:
 		Fase.ESPERA:
-			var player: Node2D = get_tree().get_first_node_in_group("player")
+			if not is_instance_valid(_jugador_cache):
+				_jugador_cache = get_tree().get_first_node_in_group("player") as Node2D
+			var player: Node2D = _jugador_cache
+			if player != null and global_position.distance_squared_to(player.global_position) > 4000000.0:
+				return   # lejos: nadie la pisa
 			if player is CharacterBody2D and player.is_on_floor():
 				if _pisa_plataforma(player) and (forma_requerida < 0 or int(player.get("current_form")) == forma_requerida):
 					_fase = Fase.TEMBLOR

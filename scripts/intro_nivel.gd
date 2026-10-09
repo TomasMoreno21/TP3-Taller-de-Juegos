@@ -22,6 +22,7 @@ signal terminada
 @export var caminar_hasta_x := 0.0          ## el jugador se detiene al llegar a esta x (tope de seguridad)
 @export var color_pulso := Color(0.6, 0.85, 1.0, 0.55)
 @export var sonido_pulso: AudioStream         ## opcional: sonido grave del Amuleto al despertar
+@export var lanzar_en_pulso: Node             ## opcional: nodo con `lanzar()` que se dispara con el pulso (p. ej. un murciélago que cruza)
 @export var probar_en_headless := false       ## en headless la intro se omite (los tests esperan control inmediato)
 
 var _planos: Array[PlanoIntro] = []
@@ -74,6 +75,9 @@ func _ready() -> void:
 	if _hud != null:
 		_hud_visible = _hud.visible
 		_hud.visible = false
+	var dlg := get_node_or_null("/root/Dialogo")
+	if dlg != null:
+		dlg.lista_ocultar(true)
 	_construir_capa()
 	_cam.call("modo_cine")
 	set_process(true)
@@ -181,6 +185,8 @@ func _pulso() -> void:
 	create_tween().tween_property(_flash, "color:a", 0.0, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	if _cam.has_method("shake"):
 		_cam.call("shake", 6.0, 0.35)
+	if lanzar_en_pulso != null and lanzar_en_pulso.has_method("lanzar"):
+		lanzar_en_pulso.call("lanzar")
 	if sonido_pulso != null:
 		var ap := AudioStreamPlayer.new()
 		ap.stream = sonido_pulso
@@ -232,6 +238,9 @@ func _entregar_control() -> void:
 	_jugador.set("cinematica_activa", false)
 	if _hud != null:
 		_hud.visible = _hud_visible
+	var dlg := get_node_or_null("/root/Dialogo")
+	if dlg != null:
+		dlg.lista_ocultar(false, 0.8)
 	_cartela.modulate.a = 0.0
 	_barra_skip.visible = false
 	_barras(false)

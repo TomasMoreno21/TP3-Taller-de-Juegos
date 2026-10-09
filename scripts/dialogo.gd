@@ -29,6 +29,17 @@ const LIMITE_TROZO := 44   ## un texto más largo se parte en globos cortos
 @export var seg_tras_dano := 1.5         ## tras recibir daño el globo sigue chico este tiempo
 @export var seg_calma_tras_dano := 2.0   ## el Amuleto espera este tiempo sin daño para hablar
 @export var seg_tip_vence := 25.0        ## un consejo que esperó la calma más que esto ya no tiene sentido y se descarta
+@export_group("Game feel del globo")
+@export var flotacion_px := 3.0          ## cuánto sube y baja el globo mientras está en pantalla
+@export var inercia_globo := 9.0         ## qué tan rápido alcanza al jugador (menor = más retraso y cola más estirada)
+@export var inclinacion_max := 0.05      ## rad: el globo se inclina hacia donde lo arrastra el movimiento
+@export var pausa_coma := 0.10           ## s de pausa al escribir "," ";" ":"
+@export var pausa_frase := 0.22          ## s de pausa al escribir "." "!" "?" "…"
+@export var sacudida_alerta := 3.0       ## temblor de cámara al aparecer un globo de ALERTA (0 = sin)
+@export var sacudida_grito := 5.0        ## ídem para GRITO
+@export var tono_voz_amuleto := 1.0      ## pitch base del blip al escribir (cada tipo de globo lo modifica)
+@export var tono_voz_humano := 0.85
+@export_group("")
 
 var _cola: Array[Dictionary] = []
 var _en_espera: Array[Dictionary] = []   # charlas y consejos que esperan un lugar sin acción
@@ -38,7 +49,11 @@ var _item: Dictionary = {}
 var _espera := 0.0
 var _ratio := 0.0
 var _texto_actual := ""
-var _ultimo_blip := 0
+var _idx_c := 0            ## letras ya escritas del globo actual
+var _acum := 0.0           ## tiempo acumulado hacia la próxima letra
+var _pausa := 0.0          ## pausa de puntuación en curso
+var _globo_pos := Vector2.ZERO   ## posición con inercia del globo (la real sigue al jugador con retraso)
+var _globo_nuevo := true
 var _letras_sin_sonar := 0
 var _chico := 0.0          ## 0 = normal … 1 = compacto (peligro)
 var _chico_objetivo := 0.0
@@ -224,9 +239,13 @@ func _siguiente() -> void:
 		tono_i = 2 if String(_item["texto"]).contains("!") else 1
 	globo.configurar(_texto_actual, str(_item.get("hablante", "Amuleto")), tono_i, tam, ancho)
 	_ratio = 0.0
-	_ultimo_blip = 0
+	_idx_c = 0
+	_acum = 0.0
+	_pausa = 0.0
 	_letras_sin_sonar = 0
 	_fase = Fase.ESCRIBIENDO
+	_globo_nuevo = true
+	globo.rotation = 0.0
 	_colocar()
 	globo.visible = true
 	globo.modulate.a = 0.0
@@ -235,15 +254,30 @@ func _siguiente() -> void:
 	if DisplayServer.get_name() == "headless":
 		globo.modulate.a = 1.0
 	else:
-		globo.scale = Vector2(0.6, 0.6)
-		_tw_globo = create_tween().set_parallel(true)
-		_tw_globo.tween_property(globo, "modulate:a", 1.0, 0.12)
-		_tw_globo.tween_property(globo, "scale", Vector2.ONE, 0.32).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_entrada_globo(tono_i, marcado)
+	_pulso_gema = 0.5
 	_mostrar_gema()
 	if marcado:
 		var hs := get_node_or_null("/root/Hitstop")
 		if hs != null and DisplayServer.get_name() != "headless":
 			hs.slowmo(0.5, 0.4)
+
+
+## El globo nace en la punta de la cola (su pivote): crece, se pasa un poco (estirado a lo alto) y asienta con resorte.
+## ALERTA y GRITO llegan con más golpe y un temblor de cámara corto.
+func _entrada_globo(tono_i: int, marcado: bool) -> void:
+	var fuerte := tono_i >= 1 or marcado
+	var pico := Vector2(1.08, 1.2) if fuerte else Vector2(0.96, 1.1)
+	var final := Vector2.ONE * lerpf(1.0, 0.78, _chico)
+	globo.scale = Vector2(0.3, 0.3)
+	_tw_globo = create_tween().set_parallel(true)
+	_tw_globo.tween_property(globo, "modulate:a", 1.0, 0.09)
+	_tw_globo.tween_property(globo, "scale", pico, 0.1).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_tw_globo.chain().tween_property(globo, "scale", final, 0.38).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	var fuerza := sacudida_grito if tono_i == 2 else (sacudida_alerta if tono_i == 1 else 0.0)
+	var cam := get_viewport().get_camera_2d()
+	if fuerza > 0.0 and cam != null and cam.has_method("shake"):
+		cam.call("shake", fuerza, 0.2)
 
 
 ## Corta el globo actual al instante (cuando entra una narrativa encima de un tip).
@@ -260,8 +294,9 @@ func _salir() -> void:
 	if _tw_globo != null and _tw_globo.is_valid():
 		_tw_globo.kill()
 	_tw_globo = create_tween().set_parallel(true)
-	_tw_globo.tween_property(globo, "modulate:a", 0.0, 0.25)
-	_tw_globo.tween_property(globo, "position:y", globo.position.y - 18.0, 0.25)
+	# se repliega hacia la gema (el pivote es la punta de la cola) y se desvanece
+	_tw_globo.tween_property(globo, "modulate:a", 0.0, 0.2).set_delay(0.04)
+	_tw_globo.tween_property(globo, "scale", Vector2(0.45, 0.45), 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 	_tw_globo.chain().tween_callback(func() -> void:
 		globo.visible = false
 		_siguiente())
@@ -310,25 +345,50 @@ func _process(delta: float) -> void:
 
 func _escribir(delta: float) -> void:
 	var total: int = maxi(_texto_actual.length(), 1)
-	_ratio = minf(_ratio + delta / (total * SEG_POR_CARACTER), 1.0)
-	globo.set_ratio(_ratio)
-	var visibles := int(_ratio * total)
+	if _pausa > 0.0:
+		_pausa -= delta
+		return
+	var tono_i := int(_item.get("tono", 0))
+	var seg := SEG_POR_CARACTER * (1.3 if tono_i == 3 else (0.8 if tono_i == 2 else 1.0))   # susurro lento, grito rápido
+	_acum += delta
 	var sonar := false
-	while _ultimo_blip < visibles:
-		var c := _texto_actual[_ultimo_blip]
-		_ultimo_blip += 1
+	while _acum >= seg and _idx_c < total:
+		_acum -= seg
+		var c := _texto_actual[_idx_c]
+		_idx_c += 1
 		if c.to_lower() != c.to_upper() or c.is_valid_int():
+			globo.golpe_letra()
 			_letras_sin_sonar += 1
 			if _letras_sin_sonar >= maxi(letras_por_sonido, 1):
 				_letras_sin_sonar = 0
 				sonar = true
+		if _idx_c < total and _texto_actual[_idx_c] == " ":   # respira al final de cada cláusula
+			if c in [",", ";", ":"]:
+				_pausa = pausa_coma
+			elif c in [".", "!", "?", "…"]:
+				_pausa = pausa_frase
+			if _pausa > 0.0:
+				_acum = 0.0
+				break
+	_ratio = float(_idx_c) / float(total)
+	globo.set_ratio(_ratio)
 	if sonar:
-		var audio := get_node_or_null("/root/AudioManager")
-		if audio != null:
-			audio.play_ui("dialogo_tecla", volumen_tipeo_db)
-	if _ratio >= 1.0:
+		_blip(tono_i)
+	if _idx_c >= total:
 		_fase = Fase.LEYENDO
 		_espera = maxf(1.2 if not bool(_item.get("tip", false)) else 1.6, total * 0.04)
+
+
+## Sonido de cada letra: la voz del Humano es más grave y el tono del globo la sube o la baja
+## (susurro grave y suave, alerta y grito agudos); un poco de variación para que no suene a máquina.
+func _blip(tono_i: int) -> void:
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio == null or not ResourceLoader.exists("res://assets/audio/sfx/gen/dialogo_tecla.wav"):
+		return
+	var base := tono_voz_humano if str(_item.get("hablante", "")) == "Humano" else tono_voz_amuleto
+	var por_tono: float = [1.0, 1.12, 1.28, 0.82][clampi(tono_i, 0, 3)]
+	var vol := volumen_tipeo_db + (-4.0 if tono_i == 3 else (2.0 if tono_i == 2 else 0.0))
+	audio.play_sfx(load("res://assets/audio/sfx/gen/dialogo_tecla.wav"), vol, 0.05, base * por_tono)
 
 
 ## Sigue al jugador: la gema flota detrás de su hombro y el globo va encima, dentro de la pantalla.
@@ -370,10 +430,22 @@ func _colocar() -> void:
 		pos.y = clampf(pos.y, 24.0, maxf(vp.y - tam.y - 24.0, 24.0))
 		punta = cabeza
 	if _fase != Fase.SALIENDO:
-		globo.position = pos
+		var dt := get_process_delta_time()
+		pos += Vector2(0.0, sin(_t * 1.8) * flotacion_px)
+		if _globo_nuevo:
+			_globo_pos = pos
+			_globo_nuevo = false
+		else:
+			_globo_pos = _globo_pos.lerp(pos, clampf(dt * inercia_globo, 0.0, 1.0))
+		globo.position = _globo_pos.round()
+		# se inclina hacia donde lo arrastra el movimiento y vuelve a la vertical al frenar
+		var arrastre := clampf((pos.x - _globo_pos.x) * 0.0012, -inclinacion_max, inclinacion_max)
+		globo.rotation = lerpf(globo.rotation, arrastre, clampf(dt * 10.0, 0.0, 1.0))
 	if _tw_globo == null or not _tw_globo.is_running():
 		globo.scale = Vector2.ONE * esc
-	globo.cola_a = punta - globo.position
+	# la cola apunta a la gema (o a la cabeza) y se estira por el retraso; con el giro se pasa a coordenadas locales
+	var pivote := globo.position + globo.pivot_offset
+	globo.cola_a = globo.pivot_offset + (punta - pivote).rotated(-globo.rotation)
 
 
 ## Lugar sin acción: ningún enemigo cerca y sin daño reciente. El Amuleto habla (casi siempre) solo ahí,
@@ -458,6 +530,12 @@ func lista_existe(id: String) -> bool:
 func lista_pista(id: String) -> void:
 	if lista != null:
 		lista.pista(id)
+
+
+## Atenúa o devuelve la lista de tareas (cinemáticas: no debe tapar el encuadre).
+func lista_ocultar(oculta: bool, seg := 0.4) -> void:
+	if lista != null:
+		create_tween().tween_property(lista, "modulate:a", 0.0 if oculta else 1.0, seg)
 
 
 # --------------------------------------------------------------- acciones del jugador y ayuda
@@ -553,7 +631,8 @@ func _input(event: InputEvent) -> void:
 		if _fase == Fase.ESCRIBIENDO:
 			_ratio = 1.0
 			globo.set_ratio(1.0)
-			_ultimo_blip = _texto_actual.length()
+			_idx_c = _texto_actual.length()
+			_pausa = 0.0
 			_fase = Fase.LEYENDO
 			_espera = 0.9
 		elif _fase == Fase.LEYENDO:

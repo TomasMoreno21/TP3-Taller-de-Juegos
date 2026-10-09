@@ -31,9 +31,6 @@ motion_mirroring = Vector2(3840, 0)
 texture_filter = 2
 texture_repeat = 2
 centered = false
-position = Vector2(0, 0)
-region_enabled = true
-region_rect = Rect2(0, 0, 3840, 592)
 texture = ExtResource("t1")
 
 [node name="LomasA" type="ParallaxLayer" parent="."]
@@ -44,9 +41,6 @@ motion_mirroring = Vector2(3840, 0)
 texture_filter = 2
 texture_repeat = 2
 centered = false
-position = Vector2(0, 590)
-region_enabled = true
-region_rect = Rect2(0, 590, 3840, 595)
 texture = ExtResource("t2")
 
 [node name="LejanasPiso" type="ParallaxLayer" parent="."]
@@ -57,9 +51,6 @@ motion_mirroring = Vector2(3840, 0)
 texture_filter = 2
 texture_repeat = 2
 centered = false
-position = Vector2(0, 734)
-region_enabled = true
-region_rect = Rect2(0, 734, 3840, 868)
 texture = ExtResource("t3")
 
 [node name="ColumnasA" type="ParallaxLayer" parent="."]
@@ -80,9 +71,6 @@ motion_mirroring = Vector2(3840, 0)
 texture_filter = 2
 texture_repeat = 2
 centered = false
-position = Vector2(0, 706)
-region_enabled = true
-region_rect = Rect2(0, 706, 3840, 519)
 texture = ExtResource("t5")
 
 [node name="Medias" type="ParallaxLayer" parent="."]
@@ -93,9 +81,6 @@ motion_mirroring = Vector2(3840, 0)
 texture_filter = 2
 texture_repeat = 2
 centered = false
-position = Vector2(0, 0)
-region_enabled = true
-region_rect = Rect2(0, 0, 3840, 719)
 texture = ExtResource("t6")
 
 [node name="ColumnasB" type="ParallaxLayer" parent="."]

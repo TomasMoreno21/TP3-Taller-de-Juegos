@@ -12,6 +12,9 @@ extends Area2D
 @export var velocidad_entrada := 0.4                   ## 0.35 = paso tranquilo
 @export var espera_maxima := 5.0                       ## seguro por si el jugador se traba
 @export var color_oscuridad := Color(0, 0, 0)          ## tinte de la oscuridad (distinto por zona)
+@export var alto_oscuridad_arriba := 1400.0           ## cuánto sube la oscuridad desde la puerta (px)
+@export var alto_oscuridad_abajo := 700.0             ## cuánto baja (px)
+@export var ancho_oscuridad_solida := 3000.0          ## ancho del negro sólido tras el degradé (px)
 @export_group("Aspecto de umbral")
 @export var color_marco := Color(0.13, 0.11, 0.1)      ## piedra del arco
 @export var color_interior := Color(0.02, 0.02, 0.03)  ## oscuridad al otro lado
@@ -150,9 +153,9 @@ func _crear_particulas() -> void:
 
 ## Degradé de transparente a negro hacia la derecha, y negro sólido después: el jugador se "apaga" al entrar.
 func _dibujar_oscuridad() -> void:
-	var arriba := 1400.0
-	var abajo := 700.0
+	var arriba := alto_oscuridad_arriba
+	var abajo := alto_oscuridad_abajo
 	var c0 := Color(color_oscuridad, 0.0)
 	var c1 := Color(color_oscuridad, 1.0)
 	draw_polygon(PackedVector2Array([Vector2(0, -arriba), Vector2(largo_oscuridad, -arriba), Vector2(largo_oscuridad, abajo), Vector2(0, abajo)]), PackedColorArray([c0, c1, c1, c0]))
-	draw_rect(Rect2(largo_oscuridad - 1.0, -arriba, 3000.0, arriba + abajo), c1)
+	draw_rect(Rect2(largo_oscuridad - 1.0, -arriba, ancho_oscuridad_solida, arriba + abajo), c1)

@@ -37,7 +37,7 @@ const MAX_FALL_SPEED := 950.0
 @export_group("Flotante")
 @export var flotante: bool = false             # flota sobre el suelo sostenido por un aura mística (sin gravedad)
 @export var alcance_flotante_mult := 1.2       # multiplica shoot_range del flotante (ve y dispara desde más lejos)
-@export var altura_flote := 360.0             # px que se eleva sobre el piso donde lo pusiste en el editor
+@export var altura_flote := 560.0             # px que se eleva sobre el piso donde lo pusiste en el editor
 @export var flote_amplitud := 14.0             # vaivén vertical (px)
 @export var flote_velocidad := 1.8             # velocidad del vaivén (rad/s)
 @export var solo_proyectil := true             # flotante: el cuerpo a cuerpo rebota; solo daña el proyectil
@@ -337,6 +337,11 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 	_ultima_pos_valida = global_position
+	# Optimización: un enemigo en espera (encuentro sin disparar), apoyado y lejos de la cámara no hace nada visible.
+	if not _activo and _telegraph_timer <= 0.0 and is_on_floor():
+		var p := _obtener_player()
+		if p != null and global_position.distance_squared_to(p.global_position) > 9000000.0:
+			return
 	if global_position.y > limite_caida:
 		matar_por_caida()
 		return

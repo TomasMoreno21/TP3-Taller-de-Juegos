@@ -35,6 +35,7 @@
 [ext_resource type="PackedScene" uid="uid://dih4mbupyhdag" path="res://scenes/enredadera.tscn" id="vine"]
 [ext_resource type="Script" uid="uid://d3nihovco06v7" path="res://scripts/zona_latido.gd" id="zona_latido"]
 [ext_resource type="Script" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
+[ext_resource type="Script" path="res://scripts/streaming_zonas.gd" id="streaming_zonas"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte3"]
 shader = ExtResource("tinte")
@@ -159,7 +160,7 @@ ola_asignada = 1
 spawn_telegrafiado = true
 ritual_duracion = 1.2
 flotante = true
-altura_flote = 330.0
+altura_flote = 560.0
 
 [node name="Pickup7" parent="." unique_id=967501556 instance=ExtResource("pick")]
 position = Vector2(6600, 1602)
@@ -354,7 +355,7 @@ ola_asignada = 2
 spawn_telegrafiado = true
 ritual_duracion = 1.2
 flotante = true
-altura_flote = 330.0
+altura_flote = 560.0
 
 [node name="Pickup18" parent="." unique_id=774472466 instance=ExtResource("pick")]
 position = Vector2(7300, 4338)
@@ -606,7 +607,7 @@ ola_asignada = 1
 spawn_telegrafiado = true
 ritual_duracion = 1.2
 flotante = true
-altura_flote = 330.0
+altura_flote = 560.0
 
 [node name="PickupVidaZ7" parent="." unique_id=683973534 instance=ExtResource("pickup_vida")]
 position = Vector2(4950, 2690)
@@ -694,7 +695,7 @@ ola_asignada = 1
 spawn_telegrafiado = true
 ritual_duracion = 1.2
 flotante = true
-altura_flote = 330.0
+altura_flote = 560.0
 
 [node name="Enemy8" parent="EncounterFinal" unique_id=1939193296 instance=ExtResource("enemy")]
 position = Vector2(-550, 275)
@@ -716,7 +717,7 @@ ola_asignada = 2
 spawn_telegrafiado = true
 ritual_duracion = 1.2
 flotante = true
-altura_flote = 330.0
+altura_flote = 560.0
 
 [node name="CheckpointZ7e" parent="." unique_id=1463877708 instance=ExtResource("check")]
 position = Vector2(9150, 2732)
@@ -1250,7 +1251,7 @@ alto = 2700.0
 
 [node name="TituloNivel" type="CanvasLayer" parent="."]
 script = ExtResource("titulo_niv")
-titulo = "La Cantera"
+titulo = "El Latido"
 
 [node name="IntroNivel" type="Node2D" parent="." unique_id=1311068087]
 script = ExtResource("intro_script")
@@ -1276,3 +1277,6 @@ script = ExtResource("plano_script")
 seguir_jugador = true
 globo = PackedStringArray()
 devolver_control = true
+
+[node name="StreamingZonas" type="Node" parent="."]
+script = ExtResource("streaming_zonas")

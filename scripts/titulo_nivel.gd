@@ -22,8 +22,8 @@ static var _ultimo := ""    ## título ya mostrado: recargar el mismo nivel (mor
 @export var color_texto := Color(0.96, 0.93, 0.85)
 @export var color_filete := Color(0.85, 0.72, 0.40)
 @export var color_fondo := Color(0, 0, 0)
-@export var largo_filete := 640.0
-@export var zoom_lento := 0.05          ## cuánto crece el cartel mientras se lee
+@export var largo_filete := 0.0           ## 0 = automático (ancho del título + margen)
+@export var margen_filete := 90.0       ## cuánto sobresalen los filetes a cada lado del texto (solo con largo automático)
 @export var siempre := false           ## mostrarlo aunque sea el mismo nivel que el anterior
 
 var activo := false
@@ -63,16 +63,19 @@ func _construir() -> void:
 	if subtitulo != "":
 		_caja.add_child(_etiqueta(subtitulo, tam_subtitulo, 0.8))
 	_caja.add_child(_crear_filete())
-	# Rombo central sobre el filete de abajo.
+	# Rombo hijo del filete de abajo, anclado a su centro: se mueve y se desvanece con él.
 	_adorno = ColorRect.new()
 	_adorno.color = color_filete
-	_adorno.custom_minimum_size = Vector2(14, 14)
-	_adorno.size = Vector2(14, 14)
+	_adorno.set_anchors_preset(Control.PRESET_CENTER)
+	_adorno.offset_left = -7.0
+	_adorno.offset_right = 7.0
+	_adorno.offset_top = -7.0
+	_adorno.offset_bottom = 7.0
 	_adorno.pivot_offset = Vector2(7, 7)
 	_adorno.rotation = PI * 0.25
 	_adorno.modulate.a = 0.0
 	_adorno.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_adorno)
+	_filetes[_filetes.size() - 1].add_child(_adorno)
 
 
 func _crear_filete() -> Control:
@@ -102,37 +105,27 @@ func _etiqueta(texto: String, tam: int, alfa := 1.0) -> Label:
 
 func _correr() -> void:
 	await get_tree().create_timer(espera_inicial).timeout
-	_caja.pivot_offset = _caja.size * 0.5
-	_caja.scale = Vector2.ONE * 1.06
+	# Solo desvanecimientos y filetes que se abren: escalar el texto lo re-rasteriza cada frame y se ve vibrar.
+	var largo := largo_filete
+	if largo <= 0.0:
+		largo = (_caja.get_child(1) as Control).get_combined_minimum_size().x + margen_filete * 2.0
 	var ap := create_tween().set_parallel(true).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	ap.tween_property(_caja, "modulate:a", 1.0, aparicion)
-	ap.tween_property(_caja, "scale", Vector2.ONE, aparicion)
 	for f in _filetes:
-		ap.tween_property(f, "custom_minimum_size:x", largo_filete, aparicion * 1.2)
+		ap.tween_property(f, "custom_minimum_size:x", largo, aparicion * 1.2)
 	await ap.finished
-	_posicionar_adorno()
-	var lectura := create_tween().set_parallel(true)
-	lectura.tween_property(_adorno, "modulate:a", 1.0, 0.4)
-	lectura.tween_property(_caja, "scale", Vector2.ONE * (1.0 + zoom_lento), duracion + desvanecer).set_trans(Tween.TRANS_SINE)
+	create_tween().tween_property(_adorno, "modulate:a", 1.0, 0.4)
 	await get_tree().create_timer(duracion).timeout
 	listo.emit()
 	var sal := create_tween().set_parallel(true)
 	sal.tween_property(_fondo, "color:a", 0.0, desvanecer)
 	sal.tween_property(_caja, "modulate:a", 0.0, desvanecer)
-	sal.tween_property(_adorno, "modulate:a", 0.0, desvanecer * 0.6)
 	await sal.finished
 	if not _hay_intro_activa():
 		_jugador_congelar(false)
 	activo = false
 	terminado.emit()
 	queue_free()
-
-
-## El rombo va centrado sobre el filete inferior.
-func _posicionar_adorno() -> void:
-	var f := _filetes[_filetes.size() - 1]
-	var centro := f.get_global_rect().get_center()
-	_adorno.position = centro - _adorno.size * 0.5
 
 
 func _hay_intro_activa() -> bool:

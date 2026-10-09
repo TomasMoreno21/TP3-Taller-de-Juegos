@@ -79,9 +79,12 @@ void fragment() {
 	float calido = smoothstep(0.5, 0.72, fbm(q * 1.3 + vec2(40.0, 7.0)));
 	roca = mix(roca, color_calido, calido * fuerza_calido);
 	// vetas húmedas: líneas finas donde el ruido cruza 0.5
-	float vv = abs(fbm(wpos / (escala_manchas * 0.45) + vec2(3.0, 11.0)) - 0.5);
 	float zona_vetas = smoothstep(0.45, 0.65, fbm(q * 0.8 + vec2(80.0, 3.0)));   // solo en algunas zonas
-	float veta = (1.0 - smoothstep(0.0, 0.012, vv)) * fuerza_vetas * zona_vetas;
+	float veta = 0.0;   // el ruido de la veta solo se calcula donde la zona la deja asomar (idéntico)
+	if (zona_vetas > 0.0) {
+		float vv = abs(fbm(wpos / (escala_manchas * 0.45) + vec2(3.0, 11.0)) - 0.5);
+		veta = (1.0 - smoothstep(0.0, 0.012, vv)) * fuerza_vetas * zona_vetas;
+	}
 	// mica: destellos pequeños y escasos
 	vec2 cel = floor(wpos / 5.0);
 	float mica = step(0.985, hash(cel)) * fuerza_mica * (0.5 + 0.5 * vnoise(wpos / 40.0));

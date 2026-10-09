@@ -192,7 +192,18 @@ var _attack_frame_dur := PackedFloat32Array()   # tiempo planificado de cada fra
 static var _tips_vistos: Dictionary = {}
 @export var tips_ayuda := true             ## muestra avisos de ayuda la primera vez (parry, energía)
 @export_group("Defensa")
-@export var bloqueo_costo_energia := 3.0  ## energía que gasta cada golpe bloqueado (0 = gratis)
+@export var bloqueo_costo_energia := 3.0  ## energía base que gasta cada golpe bloqueado (0 = gratis)
+@export var bloqueo_costo_por_dano := 0.25  ## energía extra por punto de daño bloqueado (golpes fuertes cuestan más)
+@export var bloqueo_cooldown := 0.6       ## s sin poder volver a bloquear tras soltar (el parry exitoso lo evita)
+@export var bloqueo_max := 0.0            ## s máximos de guardia continua (0 = sin límite; al pasarse hay que soltar el botón)
+@export var bloqueo_empuje := 220.0       ## px/s que te empuja hacia atrás cada golpe bloqueado
+@export var bloqueo_drenaje := 4.0        ## energía/s que gasta mantener la guardia (el parry no cuesta)
+@export var bloqueo_energia_min := 10.0   ## sin energía no se puede bloquear hasta recuperar este mínimo
+var _bloqueo_sin_energia := false
+var _bloqueo_cd := 0.0
+var _bloqueo_t := 0.0
+var _bloqueo_agotado := false
+var _bloqueo_sin_cd := false
 @export_group("Alineación")
 @export var anclar_pies := true         ## apoya la base de cada frame en el piso (evita flotar/hundirse)
 @export var pies_hundidos := 4.0         ## px que los pies se meten en el suelo (sensación de peso)
@@ -396,7 +407,20 @@ func _limitar_a_camara() -> void:
 
 func _physics_process(delta: float) -> void:
 	var dialogo_bloquea := _dialogo_bloquea_input()
-	blocking = false if dialogo_bloquea else Input.is_action_pressed("block")
+	var quiere_bloquear := not dialogo_bloquea and Input.is_action_pressed("block")
+	if not quiere_bloquear:
+		_bloqueo_agotado = false
+	_bloqueo_cd = maxf(_bloqueo_cd - delta, 0.0)
+	if _was_blocking:
+		_bloqueo_t += delta
+		if bloqueo_max > 0.0 and _bloqueo_t >= bloqueo_max:
+			_bloqueo_agotado = true
+	else:
+		_bloqueo_t = 0.0
+	blocking = quiere_bloquear and not _bloqueo_agotado and _bloqueo_cd <= 0.0 and not _bloqueo_sin_energia
+	if _was_blocking and not blocking:
+		_bloqueo_cd = 0.0 if _bloqueo_sin_cd else bloqueo_cooldown
+		_bloqueo_sin_cd = false
 	if blocking != _was_blocking:
 		if blocking:
 			_cancelar_recuperacion()
@@ -435,7 +459,11 @@ func _physics_process(delta: float) -> void:
 	if _attacking and cmd_axis != 0.0:
 		facing = 1 if cmd_axis > 0 else -1
 		attack_area.position.x = absf(attack_area.position.x) * facing   # la hitbox acompaña el giro
-	var dir := 0.0 if (_attacking and not _early_liberado) else cmd_axis
+	# Bloqueando el personaje se planta: solo puede girar hacia el enemigo.
+	if blocking and cmd_axis != 0.0:
+		facing = 1 if cmd_axis > 0 else -1
+		attack_area.position.x = absf(attack_area.position.x) * facing
+	var dir := 0.0 if ((_attacking and not _early_liberado) or blocking) else cmd_axis
 	if dialogo_bloquea and not cine_camina:
 		dir = 0.0
 	if _trepando:
@@ -1522,8 +1550,15 @@ func _handle_energia(delta: float) -> void:
 		_cooldown_formas[k] -= delta
 		if _cooldown_formas[k] <= 0.0:
 			_cooldown_formas.erase(k)
+	if blocking:
+		energia = maxf(energia - bloqueo_drenaje * delta, 0.0)
+	if energia <= 0.0:
+		_bloqueo_sin_energia = true
+	elif energia >= bloqueo_energia_min:
+		_bloqueo_sin_energia = false
 	if current_form == Form.HUMAN:
-		energia = minf(energia + ENERGIA_REGEN * delta, ENERGIA_MAX)
+		if not blocking:   # guardia activa: no regenera (si no, el drenaje se compensaría solo)
+			energia = minf(energia + ENERGIA_REGEN * delta, ENERGIA_MAX)
 	else:
 		var drain := ENERGIA_DRAIN * forms[current_form].drenaje_mult * (0.45 if not _en_combate() else 1.0)
 		energia -= drain * delta
@@ -2240,9 +2275,11 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_blo
 		return
 	if blocking and not god_mode and _invuln_timer <= 0.0 and not _dialogo_bloquea_input():
 		_sfx(sonido_bloqueo, volumen_estado_db, 0.08)
-		if bloqueo_costo_energia > 0.0 and energia > 0.0:
-			energia = maxf(energia - bloqueo_costo_energia, 0.0)
+		var costo := bloqueo_costo_energia + cantidad * bloqueo_costo_por_dano
+		if costo > 0.0 and energia > 0.0:
+			energia = maxf(energia - costo, 0.0)
 			energia_changed.emit(energia)
+		velocity.x = -dir * bloqueo_empuje
 	if god_mode or blocking or _invuln_timer > 0.0 or _dialogo_bloquea_input():
 		return
 	cantidad = maxi(roundi(cantidad * forms[current_form].dano_recibido_mult), 1)
@@ -2300,6 +2337,8 @@ func parry_activo() -> bool:
 ## Bloqueo justo a tiempo: no recibe daño, recupera energía, aturde a los cercanos y hace un mini slow-mo.
 func _parry_perfecto(_dir: int) -> void:
 	_parry_t = 0.0
+	_bloqueo_t = 0.0
+	_bloqueo_sin_cd = true
 	_invuln_timer = maxf(_invuln_timer, 0.3)
 	energia = minf(energia + parry_energia, ENERGIA_MAX)
 	energia_changed.emit(energia)

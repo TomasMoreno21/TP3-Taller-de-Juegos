@@ -22,8 +22,8 @@ func _init() -> void:
 	special_cost = 5.0
 	flap_impulso = 330.0
 	flap_costo = 4.0
-	special_cooldown = 0.4
-	special_cooldown_combate = 1.0
+	special_cooldown = 0.3
+	special_cooldown_combate = 0.6
 	color = Color(0.52, 0.4, 0.62)
 	collider_size = Vector2(135, 133)
 	flight_lift = 52.0

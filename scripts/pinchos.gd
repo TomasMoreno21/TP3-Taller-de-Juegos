@@ -71,6 +71,8 @@ func _ready() -> void:
 	z_index = z_index_detras
 	if not Engine.is_editor_hint():
 		set_process(false)   # el _process solo sirve en el editor (hay cientos de pinchos)
+		monitoring = false   # el daño se mide a mano (_cuerpo_en_zona): el Area2D no necesita detectar nada
+		monitorable = false
 	if Engine.is_editor_hint():
 		queue_redraw()
 		return

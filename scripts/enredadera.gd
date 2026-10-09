@@ -71,6 +71,8 @@ func _process(delta: float) -> void:
 				return
 		return
 	_t += delta
+	if is_instance_valid(_player_cache) and global_position.distance_squared_to(_player_cache.global_position) > 6250000.0:
+		return   # lejos de la cámara no se ve el vaivén
 	if not is_instance_valid(_visual_cache):
 		_visual_cache = get_node_or_null("Visual") as Node2D
 	var visual := _visual_cache

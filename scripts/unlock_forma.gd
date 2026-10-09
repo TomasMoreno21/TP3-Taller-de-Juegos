@@ -59,13 +59,17 @@ func _color_de_forma() -> Color:
 ## Baja un rayo hasta el piso y apoya ahí el tótem; el sello flota `altura_sello` sobre él.
 func _apoyar_en_suelo() -> void:
 	var suelo := 120.0
-	await get_tree().physics_frame
-	if not is_inside_tree():
-		return
-	var q := PhysicsRayQueryParameters2D.create(global_position + Vector2(0, -150), global_position + Vector2(0, 800), 1)
-	var hit := get_world_2d().direct_space_state.intersect_ray(q)
-	if not hit.is_empty():
-		suelo = (hit["position"] as Vector2).y - global_position.y
+	# La colisión del terreno (TileMapLayer) se registra en la física unos frames después de entrar al árbol:
+	# si el rayo sale demasiado pronto no encuentra el piso y el tótem queda flotando. Se reintenta.
+	for i in 30:
+		await get_tree().physics_frame
+		if not is_inside_tree():
+			return
+		var q := PhysicsRayQueryParameters2D.create(global_position + Vector2(0, -150), global_position + Vector2(0, 800), 1)
+		var hit := get_world_2d().direct_space_state.intersect_ray(q)
+		if not hit.is_empty():
+			suelo = (hit["position"] as Vector2).y - global_position.y
+			break
 	totem.position = Vector2(0, suelo)
 	orbe_offset = Vector2(0, suelo - altura_sello)
 

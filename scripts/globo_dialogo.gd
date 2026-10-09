@@ -18,6 +18,8 @@ var _label: Label
 var _nombre: Label
 var _t := 0.0
 var _margen := Vector2(22, 16)
+var _extra_nombre := 0.0
+var _bump := 0.0   ## golpecito del texto al aparecer cada letra (0..1, decae solo)
 
 
 func _ready() -> void:
@@ -55,6 +57,7 @@ func configurar(texto: String, hablante: String, tono_nuevo: Tono, tam_fuente: i
 	var alto_txt := medida.y + 4.0
 	_margen = Vector2(22, 16)
 	var extra_nombre := 20.0 if mostrar_nombre else 0.0
+	_extra_nombre = extra_nombre
 	var contenido := Vector2(ancho_txt, alto_txt + extra_nombre)
 	if tono == Tono.GRITO:   # el texto debe caber dentro de la elipse con puntas
 		_margen = (contenido / 0.66 + Vector2(24, 16) - contenido) * 0.5
@@ -70,12 +73,20 @@ func set_ratio(r: float) -> void:
 	_label.visible_ratio = r
 
 
+## Cada letra nueva da un empujoncito al texto (como un tipeo con rebote); el grito pega más fuerte.
+func golpe_letra() -> void:
+	_bump = 1.0
+
+
 func _process(delta: float) -> void:
 	if not visible:
 		return
 	_t += delta
+	_bump = maxf(_bump - delta * 10.0, 0.0)
+	var pos := _margen + Vector2(0, _extra_nombre) + Vector2(0, -_bump * (3.0 if tono == Tono.GRITO else 1.6))
 	if tono == Tono.GRITO:
-		_label.position = _margen + Vector2(sin(_t * 40.0), cos(_t * 37.0)) * 1.6 + Vector2(0, 20.0 if _nombre.visible else 0.0)
+		pos += Vector2(sin(_t * 40.0), cos(_t * 37.0)) * 1.6
+	_label.position = pos.round() if tono != Tono.GRITO else pos
 	queue_redraw()
 
 

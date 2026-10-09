@@ -2,10 +2,12 @@ extends Node2D
 ## Derrumbes del nivel. Fuera de la zona la cueva solo se queja de vez en cuando (vibración leve + alguna piedra);
 ## entre `inicio` y `fin` (en x) el techo se viene abajo de verdad: shake constante y fuerte, lluvia de escombros y
 ## rocas con aviso (una sombra en el piso) que caen sobre la posición del jugador y hacen daño: quedarse quieto
-## no es opción, hay que avanzar. Se coloca en el editor: arrastrar nodos a `inicio` y `fin`.
+## no es opción, hay que avanzar. `fin` es el nodo donde se corta; el arranque lo da un `derrumbe_disparador`
+## (Area2D que llama a `iniciar()`). Si se asigna `inicio`, arranca al pasar por su x. Antes del disparo la cueva no tiembla.
 
-@export var inicio: Node2D                          ## el derrumbe fuerte arranca al pasar por la x de este nodo
-@export var fin: Node2D                             ## y se corta al llegar a la x de este nodo
+@export var inicio: Node2D                          ## (opcional) arranca al pasar por la x de este nodo; vacío = lo dispara `iniciar()`
+@export var fin: Node2D                             ## y se corta al llegar a la x de este nodo (o a su y si `fin_por_altura`)
+@export var fin_por_altura := false                 ## cortar por altura: el derrumbe dura mientras el jugador esté POR ENCIMA de la y de `fin` (bajadas por lianas)
 
 @export_group("Zona de derrumbe")
 @export var pausa_min := 1.0                        ## s entre oleadas de escombros
@@ -36,6 +38,7 @@ extends Node2D
 @export var ambiente_piedras := Vector2i(1, 3)      ## piedritas que caen con cada vibración
 
 var _activo := false
+var _disparado := false
 var _espera := 0.0
 var _t_shake := 0.0
 var _t_roca := 0.0
@@ -47,15 +50,21 @@ func _ready() -> void:
 	set_physics_process(true)
 
 
+## Lo llama el `derrumbe_disparador`: el derrumbe fuerte arranca ya y dura hasta la x de `fin`.
+func iniciar() -> void:
+	_disparado = true
+
+
 func _physics_process(delta: float) -> void:
-	if inicio == null or fin == null:
+	if fin == null:
 		return
 	if not is_instance_valid(_jugador):
 		_jugador = get_tree().get_first_node_in_group("player") as Node2D
 		if _jugador == null:
 			return
 	var x := _jugador.global_position.x
-	var dentro := x >= inicio.global_position.x and x < fin.global_position.x
+	var antes_del_fin := _jugador.global_position.y < fin.global_position.y if fin_por_altura else x < fin.global_position.x
+	var dentro := antes_del_fin and (x >= inicio.global_position.x if inicio != null else _disparado)
 	if dentro and not _activo:
 		_activo = true
 		_espera = primera_espera
@@ -65,7 +74,8 @@ func _physics_process(delta: float) -> void:
 		_activo = false
 		_t_amb = randf_range(ambiente_pausa_min, ambiente_pausa_max)
 	if not _activo:
-		_ambiente(delta)
+		if inicio != null or _disparado:
+			_ambiente(delta)
 		return
 	_t_shake -= delta
 	if _t_shake <= 0.0:

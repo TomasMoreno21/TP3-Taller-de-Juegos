@@ -12,6 +12,7 @@ extends Area2D
 @export var iman_radio := 150.0         ## px: dentro de este radio el alma vuela hacia el jugador (0 = sin imán)
 @export var iman_velocidad := 700.0      ## velocidad máxima del imán (px/s)
 @export var iman_aceleracion := 1800.0
+@export var recoger_radio := 50.0        ## px: si el imán la acerca tanto, se recoge aunque no toque el collider (planeo, formas chicas)
 
 var _t := randf() * TAU
 var _recogido := false
@@ -43,6 +44,8 @@ func _process(delta: float) -> void:
 	if _recogido:
 		return
 	_t += delta
+	if _jugador != null and is_instance_valid(_jugador) and global_position.distance_squared_to(_jugador.global_position) > 6250000.0:
+		return   # lejos de la cámara: ni flote ni imán
 	_atraer(delta)
 	var dy := sin(_t * flote_velocidad) * flote_amplitud
 	visual.position = _base_visual + Vector2(0, dy)
@@ -68,11 +71,17 @@ func _atraer(delta: float) -> void:
 	if dist < iman_radio and dist > 1.0:
 		_iman_vel = minf(_iman_vel + iman_aceleracion * delta, iman_velocidad)
 		global_position += d / dist * minf(_iman_vel * delta, dist)
+		if dist <= recoger_radio and p.has_method("recoger_energia"):
+			_recoger(p)
 	else:
 		_iman_vel = 0.0
 
 
 func _on_body_entered(body: Node2D) -> void:
+	_recoger(body)
+
+
+func _recoger(body: Node2D) -> void:
 	if _recogido or not body.has_method("recoger_energia"):
 		return
 	_recogido = true
