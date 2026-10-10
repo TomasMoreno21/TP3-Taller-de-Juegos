@@ -20,6 +20,9 @@ func _initialize() -> void:
 	await create_timer(1.0, true, false, true).timeout
 	hud.visible = true
 	root.get_viewport().get_texture().get_image().save_png("user://hud_juego.png")
+	var im2 := root.get_viewport().get_texture().get_image()
+	im2.resize(1280, 720, Image.INTERPOLATE_LANCZOS)
+	im2.save_png("user://hud_juego_1280.png")
 	var b = hud.get_node("BossBar")
 	hud.visible = true
 	b.visible = true

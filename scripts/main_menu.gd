@@ -2,6 +2,8 @@ extends Control
 
 const SCENE_JUEGO := "res://scenes/comic_intro.tscn"   # intro en viñetas; al terminar carga nivel1
 const SCENE_CONTROLES := "res://scenes/controls.tscn"
+const SCENE_OPCIONES := "res://scenes/opciones.tscn"
+const SCENE_CREDITOS := "res://scenes/creditos.tscn"
 
 var _indice := 0
 var _controls: CanvasLayer
@@ -9,6 +11,8 @@ var _controls: CanvasLayer
 @onready var botones: Array[Button] = [
 	$Center/VBox/Options/Jugar,
 	$Center/VBox/Options/Controles,
+	$Center/VBox/Options/Opciones,
+	$Center/VBox/Options/Creditos,
 	$Center/VBox/Options/Salir,
 ]
 
@@ -79,6 +83,10 @@ func _on_boton_pressed(i: int) -> void:
 		1:
 			_abrir_controles()
 		2:
+			_abrir_panel(SCENE_OPCIONES)
+		3:
+			_abrir_panel(SCENE_CREDITOS)
+		4:
 			get_tree().quit()
 
 
@@ -88,7 +96,11 @@ func _jugar() -> void:
 
 
 func _abrir_controles() -> void:
-	var c: CanvasLayer = (load(SCENE_CONTROLES) as PackedScene).instantiate()
+	_abrir_panel(SCENE_CONTROLES)
+
+
+func _abrir_panel(ruta: String) -> void:
+	var c: CanvasLayer = (load(ruta) as PackedScene).instantiate()
 	_controls = c
 	add_child(c)
 

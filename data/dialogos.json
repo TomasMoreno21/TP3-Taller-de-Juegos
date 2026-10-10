@@ -278,16 +278,6 @@
 			"Trepá por las lianas: hay premios arriba."
 		]
 	},
-	"n2_chaman": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"[alerta]Un chamán: su escudo es duro.",
-			"Solo los golpes pesados lo frenan."
-		]
-	},
 	"n2_abismo": {
 		"hablante": "Amuleto",
 		"modo": "Zona",
@@ -490,15 +480,6 @@
 		"pista": "Cubrite cuando te ataquen: {block}.",
 		"cierre": "Bien. Así lucha un guardián."
 	},
-	"n3_muro": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"[susurro]Esa piedra no cede... aún."
-		]
-	},
 	"n3_descenso": {
 		"tipo": "tip",
 		"hablante": "Amuleto",
@@ -643,8 +624,8 @@
 		"retraso": 0.5,
 		"una_vez": true,
 		"lineas": [
-			"Tres sellos, tres formas.",
-			"Cristales, un muro alto y una losa."
+			"Dos sellos, dos formas.",
+			"Cristales y un muro alto."
 		]
 	},
 	"n3_sala_lobo": {
@@ -655,16 +636,6 @@
 		"una_vez": true,
 		"lineas": [
 			"Muro alto: el Lobo escala más."
-		]
-	},
-	"n3_sala_losa": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.5,
-		"una_vez": true,
-		"lineas": [
-			"Una losa. Ahora, el Oso."
 		]
 	},
 	"n3_madriguera": {

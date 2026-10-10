@@ -8,7 +8,7 @@ class_name TituloNivel
 signal listo       ## empieza el desvanecimiento: lo que sigue (intro) ya puede arrancar
 signal terminado
 
-static var _ultimo := ""    ## título ya mostrado: recargar el mismo nivel (morir) no repite el cartel
+static var _ultimo := ""    ## respaldo si no hay Progresion: título ya mostrado (recargar el mismo nivel no repite el cartel)
 
 @export var titulo := "El Bosque"        ## nombre de la zona (sin "Nivel X")
 @export var subtitulo := ""              ## opcional: línea chica debajo
@@ -24,7 +24,8 @@ static var _ultimo := ""    ## título ya mostrado: recargar el mismo nivel (mor
 @export var color_fondo := Color(0, 0, 0)
 @export var largo_filete := 0.0           ## 0 = automático (ancho del título + margen)
 @export var margen_filete := 90.0       ## cuánto sobresalen los filetes a cada lado del texto (solo con largo automático)
-@export var siempre := false           ## mostrarlo aunque sea el mismo nivel que el anterior
+@export var siempre := false           ## mostrarlo aunque ya se haya visto en esta partida
+@export var probar_en_headless := false   ## en headless el cartel se omite (los tests esperan control inmediato)
 
 var activo := false
 var _fondo: ColorRect
@@ -36,13 +37,31 @@ var _adorno: Control
 func _ready() -> void:
 	layer = 110
 	add_to_group("titulo_nivel")
-	if DisplayServer.get_name() == "headless" or (not siempre and _ultimo == titulo):
+	if DisplayServer.get_name() == "headless" and not probar_en_headless:
 		return
-	_ultimo = titulo
+	if not siempre and _ya_visto():
+		return
+	_marcar_visto()
 	activo = true
 	_construir()
 	_jugador_congelar.call_deferred(true)
 	_correr()
+
+
+## Se muestra una vez por partida: morir y recargar el nivel no lo repite, pero "Jugar" de nuevo
+## (Progresion.reset) sí, igual que la intro. Sin Progresion cae en el título guardado en memoria.
+func _ya_visto() -> bool:
+	var prog := get_node_or_null("/root/Progresion")
+	if prog != null:
+		return prog.dialogo_visto("titulo_" + titulo)
+	return _ultimo == titulo
+
+
+func _marcar_visto() -> void:
+	_ultimo = titulo
+	var prog := get_node_or_null("/root/Progresion")
+	if prog != null:
+		prog.marcar_dialogo_visto("titulo_" + titulo)
 
 
 func _construir() -> void:

@@ -7,76 +7,56 @@ content_margin_left = 36.0
 content_margin_top = 28.0
 content_margin_right = 36.0
 content_margin_bottom = 24.0
-bg_color = Color(0.06, 0.08, 0.1, 0.97)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.95, 0.85, 0.4, 1)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
+bg_color = Color(0.04, 0.047, 0.063, 0.97)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.93, 0.9, 0.84, 1)
 
 [sub_resource type="StyleBoxFlat" id="btn_normal"]
 content_margin_left = 24.0
 content_margin_top = 12.0
 content_margin_right = 24.0
 content_margin_bottom = 12.0
-bg_color = Color(0.09, 0.12, 0.1, 0.9)
+bg_color = Color(0.075, 0.09, 0.115, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.2, 0.28, 0.22, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
+border_color = Color(0.45, 0.45, 0.45, 1)
 
 [sub_resource type="StyleBoxFlat" id="btn_hover"]
 content_margin_left = 24.0
 content_margin_top = 12.0
 content_margin_right = 24.0
 content_margin_bottom = 12.0
-bg_color = Color(0.14, 0.18, 0.14, 0.95)
+bg_color = Color(0.12, 0.14, 0.17, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.55, 0.62, 0.45, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
+border_color = Color(0.93, 0.9, 0.84, 1)
 
 [sub_resource type="StyleBoxFlat" id="btn_pressed"]
 content_margin_left = 24.0
 content_margin_top = 12.0
 content_margin_right = 24.0
 content_margin_bottom = 12.0
-bg_color = Color(0.06, 0.08, 0.07, 1)
+bg_color = Color(0.78, 0.22, 0.23, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.3, 0.35, 0.25, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
+border_color = Color(0.93, 0.9, 0.84, 1)
 
 [sub_resource type="StyleBoxFlat" id="btn_focus"]
 bg_color = Color(0, 0, 0, 0)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.95, 0.85, 0.4, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.78, 0.22, 0.23, 1)
 
 [node name="Controls" type="CanvasLayer"]
 layer = 100
@@ -93,10 +73,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -440.0
-offset_top = -330.0
-offset_right = 440.0
-offset_bottom = 330.0
+offset_left = -620.0
+offset_top = -350.0
+offset_right = 620.0
+offset_bottom = 350.0
 theme_override_styles/panel = SubResource("panel")
 
 [node name="Margin" type="MarginContainer" parent="Panel"]
@@ -108,65 +88,73 @@ theme_override_constants/separation = 18
 
 [node name="Title" type="Label" parent="Panel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.85, 0.4, 1)
-theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
+theme_override_font_sizes/font_size = 36
 text = "CONTROLES"
 horizontal_alignment = 1
+
+[node name="Raya" type="ColorRect" parent="Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+color = Color(0.78, 0.22, 0.23, 1)
 
 [node name="Columns" type="HBoxContainer" parent="Panel/Margin/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 70
 
 [node name="Teclado" type="RichTextLabel" parent="Panel/Margin/VBox/Columns"]
-custom_minimum_size = Vector2(360, 0)
+custom_minimum_size = Vector2(520, 0)
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 18
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 24
+theme_override_font_sizes/bold_font_size = 26
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
-text = "[color=#f2d95c][b]TECLADO[/b][/color]
-[color=#cfd6c6]Mover:[/color]  A / D · ← →
-[color=#cfd6c6]Saltar:[/color]  Espacio
-[color=#cfd6c6]Golpe:[/color]  J
-[color=#cfd6c6]Fuerte:[/color]  K
-[color=#cfd6c6]Especial / Interactuar:[/color]  L
-[color=#cfd6c6]Bloquear:[/color]  Shift
-[color=#cfd6c6]Parry (Humano):[/color]  Shift justo al recibir el golpe
-[color=#cfd6c6]Aleteo (Murciélago):[/color]  Espacio en el aire
-[color=#cfd6c6]Picada (Murciélago):[/color]  S / ↓ en el aire
-[color=#cfd6c6]Preseleccionar forma:[/color]  Q
-[color=#cfd6c6]Transformar:[/color]  T
-[color=#cfd6c6]Consola dev:[/color]  `
-[color=#cfd6c6]Pausa:[/color]  Esc"
+text = "[color=#e6554f][b]TECLADO[/b][/color]
+[color=#b8b4a6]Mover:[/color]  A / D · ← →
+[color=#b8b4a6]Saltar:[/color]  Espacio
+[color=#b8b4a6]Golpe:[/color]  J
+[color=#b8b4a6]Fuerte:[/color]  K
+[color=#b8b4a6]Especial / Interactuar:[/color]  L
+[color=#b8b4a6]Bloquear:[/color]  Shift
+[color=#b8b4a6]Parry (Humano):[/color]  Shift justo al recibir el golpe
+[color=#b8b4a6]Aleteo (Murciélago):[/color]  Espacio en el aire
+[color=#b8b4a6]Picada (Murciélago):[/color]  S / ↓ en el aire
+[color=#b8b4a6]Preseleccionar forma:[/color]  Q
+[color=#b8b4a6]Transformar:[/color]  T
+[color=#b8b4a6]Pausa:[/color]  Esc"
 
 [node name="Mando" type="RichTextLabel" parent="Panel/Margin/VBox/Columns"]
-custom_minimum_size = Vector2(360, 0)
+custom_minimum_size = Vector2(520, 0)
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 18
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 24
+theme_override_font_sizes/bold_font_size = 26
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
-text = "[color=#f2d95c][b]MANDO[/b][/color]
-[color=#cfd6c6]Mover:[/color]  Stick / Cruz
-[color=#cfd6c6]Saltar:[/color]  A
-[color=#cfd6c6]Golpe:[/color]  X
-[color=#cfd6c6]Fuerte:[/color]  Y
-[color=#cfd6c6]Especial / Interactuar:[/color]  B
-[color=#cfd6c6]Bloquear:[/color]  LB
-[color=#cfd6c6]Parry (Humano):[/color]  LB justo al recibir el golpe
-[color=#cfd6c6]Aleteo (Murciélago):[/color]  A en el aire
-[color=#cfd6c6]Picada (Murciélago):[/color]  Stick / Cruz abajo en el aire
-[color=#cfd6c6]Preseleccionar forma:[/color]  Select
-[color=#cfd6c6]Transformar:[/color]  RB
-[color=#cfd6c6]Pausa:[/color]  Start"
+text = "[color=#e6554f][b]MANDO[/b][/color]
+[color=#b8b4a6]Mover:[/color]  Stick / Cruz
+[color=#b8b4a6]Saltar:[/color]  A
+[color=#b8b4a6]Golpe:[/color]  X
+[color=#b8b4a6]Fuerte:[/color]  Y
+[color=#b8b4a6]Especial / Interactuar:[/color]  B
+[color=#b8b4a6]Bloquear:[/color]  LB
+[color=#b8b4a6]Parry (Humano):[/color]  LB justo al recibir el golpe
+[color=#b8b4a6]Aleteo (Murciélago):[/color]  A en el aire
+[color=#b8b4a6]Picada (Murciélago):[/color]  Stick / Cruz abajo en el aire
+[color=#b8b4a6]Preseleccionar forma:[/color]  Select
+[color=#b8b4a6]Transformar:[/color]  RB
+[color=#b8b4a6]Pausa:[/color]  Start"
 
 [node name="Volver" type="Button" parent="Panel/Margin/VBox"]
 custom_minimum_size = Vector2(240, 52)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.92, 0.85, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 0.9, 1)
-theme_override_colors/font_pressed_color = Color(0.95, 0.85, 0.4, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_font_sizes/font_size = 24
 theme_override_styles/focus = SubResource("btn_focus")
 theme_override_styles/hover = SubResource("btn_hover")
 theme_override_styles/pressed = SubResource("btn_pressed")
@@ -176,7 +164,7 @@ size_flags_horizontal = 4
 
 [node name="Hint" type="Label" parent="Panel/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.55, 0.6, 0.52, 1)
-theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.7, 0.68, 0.62, 1)
+theme_override_font_sizes/font_size = 24
 text = "Esc / Volver para cerrar"
 horizontal_alignment = 1

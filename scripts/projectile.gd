@@ -10,6 +10,7 @@ var enemy_shot := false
 var homing := false
 var homing_strength := 24.0
 var homing_range := 3000.0
+var homing_offset := Vector2.ZERO   # punto de mira respecto del objetivo (p. ej. más abajo que el pecho)
 var _life := 2.5
 var _consumido := false
 var _cam: Camera2D
@@ -68,7 +69,7 @@ func _physics_process(delta: float) -> void:
 		_homing_timer = HOMING_TICK
 		var target: Node2D = _buscar_enemigo_cercano()
 		if target != null:
-			var to_target: Vector2 = target.global_position - global_position
+			var to_target: Vector2 = target.global_position + homing_offset - global_position
 			if to_target.length_squared() > 0.01:
 				var dir_deseada: Vector2 = to_target.normalized()
 				var blended: Vector2 = direction.lerp(dir_deseada, clampf(homing_strength * HOMING_TICK, 0.0, 1.0))

@@ -88,6 +88,40 @@ func _aereo(accion: String, anim_esperada: String) -> void:
 	await physics_frame
 
 
+
+## Recibir daño en pleno avance del golpe: el retroceso no debe ser pisado por el avance.
+func _dano_en_golpe() -> void:
+	var raiz := _mundo()
+	var p: CharacterBody2D = load("res://scenes/player.tscn").instantiate()
+	p.position = Vector2(0, 400)
+	raiz.add_child(p)
+	p.set("current_form", 1)   # Lobo: tiene avance al golpear
+	p.call("_apply_form")
+	for i in 40:
+		await physics_frame
+	Input.action_press("attack")
+	await physics_frame
+	await physics_frame
+	Input.action_release("attack")
+	await physics_frame
+	var avance: float = p.get("_lunge_t")
+	p.call("take_damage", 5, 420.0, -1)
+	var vmin := 0.0
+	var vmax := -1e9
+	for i in 4:
+		await physics_frame
+		vmin = minf(vmin, p.velocity.x)
+		vmax = maxf(vmax, p.velocity.x)
+	var ok := avance > 0.0 and vmax < 0.0
+	var msg := "daño en pleno avance (avance %.2fs): velocidad.x entre %.0f y %.0f (debe quedar siempre negativa)" % [avance, vmin, vmax]
+	if ok:
+		print("ok   ", msg)
+	else:
+		fallos += 1
+		print("FAIL ", msg)
+	raiz.queue_free()
+	await physics_frame
+
 func _initialize() -> void:
 	await _caso(0, "attack", "attack1", 2)
 	await _caso(0, "heavy", "attack2", 1)
@@ -96,5 +130,6 @@ func _initialize() -> void:
 	await _caso(1, "heavy", "lobo_attack", 1)
 	await _aereo("attack", "attack1")
 	await _aereo("heavy", "attack2")
+	await _dano_en_golpe()
 	print("DIAG SYNC GOLPES FALLOS = ", fallos)
 	quit()

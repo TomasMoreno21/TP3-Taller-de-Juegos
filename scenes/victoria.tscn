@@ -1,20 +1,62 @@
-[gd_scene format=3 load_steps=8]
+[gd_scene format=3 load_steps=10]
 
 [ext_resource type="Script" path="res://scripts/victoria.gd" id="1_vict"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_panel"]
-bg_color = Color(0.09, 0.16, 0.12, 0.95)
+content_margin_left = 36.0
+content_margin_top = 28.0
+content_margin_right = 36.0
+content_margin_bottom = 28.0
+bg_color = Color(0.04, 0.047, 0.063, 0.97)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.56, 0.82, 0.96, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_btn"]
+content_margin_left = 24.0
+content_margin_top = 10.0
+content_margin_right = 24.0
+content_margin_bottom = 10.0
+bg_color = Color(0.075, 0.09, 0.115, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.35, 0.8, 0.65, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBox_btn"]
-bg_color = Color(0.2, 0.35, 0.3, 1)
+border_color = Color(0.45, 0.45, 0.45, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_btn_hover"]
-bg_color = Color(0.3, 0.5, 0.42, 1)
+content_margin_left = 24.0
+content_margin_top = 10.0
+content_margin_right = 24.0
+content_margin_bottom = 10.0
+bg_color = Color(0.12, 0.14, 0.17, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.93, 0.9, 0.84, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_btn_pressed"]
+content_margin_left = 24.0
+content_margin_top = 10.0
+content_margin_right = 24.0
+content_margin_bottom = 10.0
+bg_color = Color(0.56, 0.82, 0.96, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.93, 0.9, 0.84, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_btn_focus"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.56, 0.82, 0.96, 1)
 
 [node name="Victoria" type="CanvasLayer"]
 layer = 90
@@ -47,12 +89,16 @@ custom_minimum_size = Vector2(420, 0)
 theme_override_constants/separation = 18
 
 [node name="Titulo" type="Label" parent="UIRoot/Center/VBox"]
-theme_override_font_sizes/font_size = 44
+theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
+theme_override_colors/font_outline_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/font_size = 48
 text = "¡ZONA COMPLETADA!"
 horizontal_alignment = 1
 
 [node name="Subtitulo" type="Label" parent="UIRoot/Center/VBox"]
-theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.78, 0.76, 0.7, 1)
+theme_override_font_sizes/font_size = 24
 text = "Has liberado el Santuario."
 horizontal_alignment = 1
 
@@ -60,17 +106,29 @@ horizontal_alignment = 1
 theme_override_styles/panel = SubResource("StyleBox_panel")
 
 [node name="Opciones" type="VBoxContainer" parent="UIRoot/Center/VBox/Panel"]
-custom_minimum_size = Vector2(400, 0)
-theme_override_constants/separation = 10
+custom_minimum_size = Vector2(380, 0)
+theme_override_constants/separation = 16
 
 [node name="BotonReintentar" type="Button" parent="UIRoot/Center/VBox/Panel/Opciones"]
+custom_minimum_size = Vector2(380, 56)
+theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/focus = SubResource("StyleBox_btn_focus")
 theme_override_styles/normal = SubResource("StyleBox_btn")
 theme_override_styles/hover = SubResource("StyleBox_btn_hover")
-theme_override_styles/pressed = SubResource("StyleBox_btn_hover")
-text = "Reintentar"
+theme_override_styles/pressed = SubResource("StyleBox_btn_pressed")
+text = "REINTENTAR"
 
 [node name="BotonMenu" type="Button" parent="UIRoot/Center/VBox/Panel/Opciones"]
+custom_minimum_size = Vector2(380, 56)
+theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/focus = SubResource("StyleBox_btn_focus")
 theme_override_styles/normal = SubResource("StyleBox_btn")
 theme_override_styles/hover = SubResource("StyleBox_btn_hover")
-theme_override_styles/pressed = SubResource("StyleBox_btn_hover")
-text = "Volver al menú"
+theme_override_styles/pressed = SubResource("StyleBox_btn_pressed")
+text = "VOLVER AL MENÚ"

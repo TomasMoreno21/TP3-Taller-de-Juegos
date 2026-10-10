@@ -37,6 +37,7 @@ func _ready() -> void:
 		var player := AudioStreamPlayer.new()
 		player.stream = stream
 		var vol: float = capas_loop_volumen_db[i] if i < capas_loop_volumen_db.size() else 0.0
+		player.bus = &"Musica"
 		player.volume_db = vol + volumen_master_db
 		add_child(player)
 		player.play()
@@ -93,6 +94,7 @@ func _reproducir_acento() -> void:
 	var stream: AudioStream = acentos[randi() % acentos.size()]
 	var player := AudioStreamPlayer.new()
 	player.stream = stream
+	player.bus = &"Musica"
 	player.volume_db = acento_volumen_db + volumen_master_db
 	add_child(player)
 	player.finished.connect(player.queue_free)

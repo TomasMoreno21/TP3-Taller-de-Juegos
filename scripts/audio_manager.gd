@@ -23,6 +23,7 @@ func play_sfx(stream: AudioStream, volume_db: float = 0.0, variacion_tono: float
 		return
 	var player := AudioStreamPlayer.new()
 	player.stream = stream
+	player.bus = &"SFX"
 	player.volume_db = volume_db
 	player.pitch_scale = tono_base
 	if variacion_tono > 0.0:

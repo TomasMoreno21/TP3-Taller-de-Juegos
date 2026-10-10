@@ -51,6 +51,12 @@ extends Node2D
 	set(v):
 		fragil = v
 		queue_redraw()
+## Estilo "piedra" (plataformas de cueva): lascas bajas y chatas en vez de briznas, dientes de roca en vez de raíces.
+## Pensado con colores fríos (color_pasto = roca, color_veta = filo claro, color_raiz = roca oscura).
+@export var piedra := false:
+	set(v):
+		piedra = v
+		queue_redraw()
 @export var semilla := 1:
 	set(v):
 		semilla = v
@@ -182,7 +188,7 @@ func _dibujar_en(ci: CanvasItem, cx0: float, cx1: float) -> void:
 	var briznas := PackedVector2Array()
 	var x := x0
 	while x < x1:
-		var w := rng.randf_range(separacion * 0.7, separacion * 1.3)
+		var w := rng.randf_range(separacion * 0.7, separacion * 1.3) * (1.8 if piedra else 1.0)
 		var h := alto_pasto * rng.randf_range(0.45, 1.0)
 		var xe := minf(x + w, x1)
 		var punta := x + (xe - x) * rng.randf_range(0.25, 0.75)
@@ -200,14 +206,14 @@ func _dibujar_en(ci: CanvasItem, cx0: float, cx1: float) -> void:
 	var rx := x0 + rng.randf_range(8.0, 30.0)
 	while rx < x1 - 6.0:
 		var largo := largo_raices * rng.randf_range(0.35, 1.0)
-		var ancho := rng.randf_range(3.0, 6.0)
-		var desvio := rng.randf_range(-6.0, 6.0)
+		var ancho := rng.randf_range(3.0, 6.0) * (1.9 if piedra else 1.0)
+		var desvio := rng.randf_range(-6.0, 6.0) * (0.4 if piedra else 1.0)
 		if rx >= cx0 and rx < cx1:
 			colgajos.append_array(PackedVector2Array([
 				Vector2(rx - ancho, yb - 1.0), Vector2(rx + ancho, yb - 1.0),
 				Vector2(rx + desvio + 1.0, yb + largo),
 			]))
-		rx += rng.randf_range(34.0, 90.0)
+		rx += rng.randf_range(34.0, 90.0) * (1.4 if piedra else 1.0)
 	_malla(ci, colgajos, color_raiz)
 
 

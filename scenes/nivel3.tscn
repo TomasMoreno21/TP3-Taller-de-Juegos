@@ -210,10 +210,6 @@ color_luz = Color(0.45, 0.95, 0.9, 1)
 [node name="Pickup9" parent="." unique_id=1221467712 instance=ExtResource("pick")]
 position = Vector2(10050, 1394)
 
-[node name="DialogoMuro" parent="." unique_id=70407519 instance=ExtResource("dialog")]
-position = Vector2(11050, 1264)
-dialogo_id = "n3_muro"
-
 [node name="Pickup10" parent="." unique_id=1250496049 instance=ExtResource("pick")]
 position = Vector2(11700, 1490)
 
@@ -327,10 +323,6 @@ dialogo_id = "n3_guardian"
 [node name="EncounterGuardian" parent="." unique_id=1581133193 instance=ExtResource("enc")]
 position = Vector2(6500, 4208)
 
-[node name="Enemy1" parent="EncounterGuardian" unique_id=1762134284 instance=ExtResource("enemy")]
-position = Vector2(0, 126.6)
-tipo = "chaman"
-
 [node name="Enemy2" parent="EncounterGuardian" unique_id=1528510800 instance=ExtResource("enemy")]
 position = Vector2(-550, 163)
 ola_asignada = 1
@@ -426,7 +418,7 @@ golpes_para_romper = 4
 position = Vector2(18111, 3764)
 
 [node name="MuroAla2" parent="." unique_id=1158345429 instance=ExtResource("muro_piedra")]
-position = Vector2(13602, 2007)
+position = Vector2(13602, 2016)
 tam = Vector2(100, 1104)
 color_piedra = Color(0.28, 0.36, 0.42, 1)
 color_junta = Color(0.08, 0.13, 0.17, 1)
@@ -436,19 +428,14 @@ golpes_para_romper = 4
 position = Vector2(16143, 3651)
 
 [node name="Enemy1" parent="EncounterGuardia" unique_id=1713174452 instance=ExtResource("enemy")]
-position = Vector2(-500, 163)
+position = Vector2(-500, 224)
 
 [node name="Enemy2" parent="EncounterGuardia" unique_id=421092451 instance=ExtResource("enemy")]
-position = Vector2(500, 163)
+position = Vector2(500, 224)
 
 [node name="Enemy3" parent="EncounterGuardia" unique_id=245292044 instance=ExtResource("enemy")]
-position = Vector2(-250, 163)
+position = Vector2(-250, 224)
 tipo = "arquero"
-ola_asignada = 1
-
-[node name="Enemy4" parent="EncounterGuardia" unique_id=950566929 instance=ExtResource("enemy")]
-position = Vector2(250, 126.6)
-tipo = "chaman"
 ola_asignada = 1
 
 [node name="CheckpointAlaOso2" parent="." unique_id=242235303 instance=ExtResource("check")]
@@ -568,16 +555,6 @@ color_luz = Color(0.45, 0.95, 0.9, 1)
 [node name="Pickup31" parent="." unique_id=2031030716 instance=ExtResource("pick")]
 position = Vector2(2680, 2770)
 
-[node name="DialogoSalaLosa" parent="." unique_id=1663665096 instance=ExtResource("dialog")]
-position = Vector2(2650, 2640)
-dialogo_id = "n3_sala_losa"
-
-[node name="LosaSala" parent="." unique_id=1789685696 instance=ExtResource("losa_peso")]
-position = Vector2(2800, 2832)
-color_losa = Color(0.3, 0.4, 0.48, 1)
-color_runa = Color(0.3, 1, 0.9, 1)
-objetivos = Array[NodePath]([NodePath("")])
-
 [node name="Pickup32" parent="." unique_id=1141159455 instance=ExtResource("pick")]
 position = Vector2(3450, 2738)
 
@@ -589,11 +566,6 @@ position = Vector2(-450, 163)
 
 [node name="Enemy2" parent="EncounterB" unique_id=1493404551 instance=ExtResource("enemy")]
 position = Vector2(450, 163)
-
-[node name="Enemy3" parent="EncounterB" unique_id=2126448729 instance=ExtResource("enemy")]
-position = Vector2(0, 126.6)
-tipo = "chaman"
-ola_asignada = 1
 
 [node name="Enemy4" parent="EncounterB" unique_id=1109330607 instance=ExtResource("enemy")]
 position = Vector2(250, 163)
@@ -683,11 +655,6 @@ position = Vector2(300, 259)
 tipo = "arquero"
 ola_asignada = 1
 
-[node name="Enemy6" parent="EncounterFinal" unique_id=2025141055 instance=ExtResource("enemy")]
-position = Vector2(0, 126.6)
-tipo = "chaman"
-ola_asignada = 1
-
 [node name="Volador1" parent="EncounterFinal" unique_id=438111635 instance=ExtResource("enemy")]
 position = Vector2(-450, 275)
 tipo = "arquero"
@@ -703,11 +670,6 @@ ola_asignada = 2
 
 [node name="Enemy9" parent="EncounterFinal" unique_id=1641714730 instance=ExtResource("enemy")]
 position = Vector2(550, 275)
-ola_asignada = 2
-
-[node name="Enemy10" parent="EncounterFinal" unique_id=1128783150 instance=ExtResource("enemy")]
-position = Vector2(-100, 158.6)
-tipo = "chaman"
 ola_asignada = 2
 
 [node name="Volador2" parent="EncounterFinal" unique_id=999574351 instance=ExtResource("enemy")]
@@ -870,7 +832,7 @@ variante = 7
 sombra = false
 
 [node name="D18" parent="Decoracion" unique_id=2036260187 instance=ExtResource("deco")]
-position = Vector2(15736, 3843)
+position = Vector2(15736, 3904)
 tipo = 10
 variante = 7
 escala = 2.51
@@ -1059,7 +1021,7 @@ tipo = 12
 escala = 3.2
 
 [node name="D42" parent="Decoracion" unique_id=1364871479 instance=ExtResource("deco")]
-position = Vector2(9918, 1896)
+position = Vector2(9918, 1840)
 tipo = 14
 escala = 3.0
 
@@ -1079,18 +1041,6 @@ visible = false
 
 [node name="Consola" parent="." unique_id=1843107857 instance=ExtResource("cons")]
 visible = false
-
-[node name="ObjetivoPractica" type="Node" parent="." unique_id=317940567]
-script = ExtResource("obj_lista")
-texto = "Aplastá la losa con un pisotón"
-senal = &"activada"
-activador = NodePath("../DialogoOso")
-
-[node name="ObjetivoMuro" type="Node" parent="." unique_id=2027162611]
-script = ExtResource("obj_lista")
-texto = "Rompé la piedra con el Oso"
-senal = &"roto"
-activador = NodePath("../DialogoOso")
 
 [node name="ObjetivoGuardian" type="Node" parent="." unique_id=682123687]
 script = ExtResource("obj_lista")
@@ -1112,13 +1062,6 @@ texto = "Rompé los cristales con el Murciélago"
 origen = NodePath("../BarreraEntrada")
 senal = &"abierta"
 activador = NodePath("../DialogoCristal")
-
-[node name="ObjetivoSala" type="Node" parent="." unique_id=697582070]
-script = ExtResource("obj_lista")
-texto = "Aplastá la losa de la sala de los tres sellos"
-origen = NodePath("../LosaSala")
-senal = &"activada"
-activador = NodePath("../DialogoSala")
 
 [node name="ObjetivoSello" type="Node" parent="." unique_id=1721744780]
 script = ExtResource("obj_lista")
@@ -1256,21 +1199,27 @@ titulo = "El Latido"
 [node name="IntroNivel" type="Node2D" parent="." unique_id=1311068087]
 script = ExtResource("intro_script")
 id_visto = "intro_nivel3"
-velocidad_caminata = 0.15
+velocidad_caminata = 0.125
 inicio_x = 380.0
 caminar_hasta_x = 1300.0
 
-[node name="Plano1" type="Marker2D" parent="IntroNivel" unique_id=1203958337]
+[node name="PlanoCaminata" type="Marker2D" parent="IntroNivel"]
 script = ExtResource("plano_script")
-duracion = 10.4
+duracion = 2.1
 zoom = 1.15
 seguir_jugador = true
 camina = true
 zoom_desde = 1.15
+
+[node name="Plano1" type="Marker2D" parent="IntroNivel" unique_id=1203958337]
+script = ExtResource("plano_script")
+duracion = 9.5
+zoom = 1.15
+seguir_jugador = true
 globo = PackedStringArray("[humano] Ya sé a lo que voy. ¿Cuánto falta?", "[alerta]Poco. El sello cede: el latido lo delata.", "[humano] Mi hijo no se queda esperando. Sigamos.", "[susurro]La piedra es dura: hará falta fuerza bruta.")
-retraso_globo = 0.8
+retraso_globo = 0.3
 pulso = true
-pulso_en = 7.8
+pulso_en = 8.45
 
 [node name="Plano2" type="Marker2D" parent="IntroNivel" unique_id=1657366455]
 script = ExtResource("plano_script")

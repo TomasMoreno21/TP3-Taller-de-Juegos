@@ -22,6 +22,7 @@ func _initialize() -> void:
 	# 2) Con la bandera: corre completa.
 	var prog := root.get_node_or_null("Progresion")
 	var nivel: Node = load("res://scenes/nivel1.tscn").instantiate()
+	nivel.get_node("Player").position = Vector2(-717, 802)   # arranque del nivel (la escena puede traer otra x de prueba)
 	var intro: Node = nivel.get_node("IntroNivel")
 	intro.set("probar_en_headless", true)
 	var id_test := "diag_intro_%d" % Time.get_ticks_msec()
@@ -59,6 +60,7 @@ func _initialize() -> void:
 	# 3) No se repite.
 	if prog != null:
 		var n2: Node = load("res://scenes/nivel1.tscn").instantiate()
+		n2.get_node("Player").position = Vector2(-717, 802)
 		var i2: Node = n2.get_node("IntroNivel")
 		i2.set("probar_en_headless", true)
 		i2.set("id_visto", id_test)

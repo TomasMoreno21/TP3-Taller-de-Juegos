@@ -20,6 +20,10 @@ enum Estilo { ROCA, MADERA, TRIBAL }
 @export var estilo := Estilo.MADERA
 @export var color_base := Color(0.13, 0.12, 0.17)     # escombros / base enterrada
 @export var color_estaca := Color(0.74, 0.72, 0.86)  # cara iluminada de cada pincho (la sombra se deriva)
+## Solo ROCA: contorno oscuro que los despega del fondo y punta de peligro (rojiza) que los hace leer como trampa.
+@export var color_contorno := Color(0.04, 0.03, 0.08)
+@export var color_punta := Color(0.95, 0.32, 0.38)
+@export_range(0.0, 1.0) var largo_punta := 0.3         # fracción del alto que se tiñe de color_punta
 ## Solo MADERA: cara iluminada de la estaca, sangre en la punta y qué fracción de estacas la lleva.
 @export var color_madera := Color(0.68, 0.49, 0.29)
 @export var color_sangre := Color(0.62, 0.06, 0.08)
@@ -56,6 +60,12 @@ class _Rec:
 
 
 var _ops: Array = []
+## En juego el dibujo se compila a pasos: las tandas de polígonos seguidos pasan a UNA malla con colores por
+## vértice (1 llamada de dibujo en vez de una por polígono); las líneas siguen como están, en el mismo orden.
+## Reduce ~50 % las llamadas de dibujo de los pinchos (en el nivel 1 completo, 19-28 % del total). Contra el dibujo original difiere en unos pocos píxeles de
+## borde (~2 % de los de las puntas) y en ±1/255 de color; apagalo si querés el dibujo original exacto.
+@export var dibujo_por_lotes := true
+var _pasos: Array = []
 var _kill_zone_size := Vector2.ZERO
 var _jugador: Node2D
 var _empalados := {}                       # id de enemigo -> ms del último empalado
@@ -116,13 +126,20 @@ func _factor_estilo() -> float:
 # tapar, zona de daño resaltada y guía de hundimiento (hasta dónde queda enterrado).
 func _draw() -> void:
 	if not Engine.is_editor_hint():
-		for op in _ops:
-			var pts: PackedVector2Array = op["p"]
-			if int(op["t"]) == 0:
-				if pts.size() >= 3:
-					draw_colored_polygon(pts, op["c"])
+		if _pasos.is_empty():
+			for op in _ops:   # dibujo original (dibujo_por_lotes = false)
+				var pts: PackedVector2Array = op["p"]
+				if int(op["t"]) == 0:
+					if pts.size() >= 3:
+						draw_colored_polygon(pts, op["c"])
+				else:
+					draw_polyline(pts, op["c"], float(op["w"]))
+			return
+		for paso in _pasos:
+			if paso is ArrayMesh:
+				draw_mesh(paso, null)
 			else:
-				draw_polyline(pts, op["c"], float(op["w"]))
+				draw_polyline(paso["p"], paso["c"], float(paso["w"]))
 		return
 	var ancho_total := maxf(cantidad * ancho_pincho, 10.0)
 	var alto_vis := maxf(alto * altura_mult * _factor_estilo(), 10.0)
@@ -280,7 +297,10 @@ func _dibujar() -> void:
 		pinch.add_child(_poli([Vector2(j, e), Vector2(j, -h), Vector2(w * 0.24, -h * (k + 0.22)), Vector2(w * 0.5, -h * k * 0.8), Vector2(w * 0.5, e)], oscura))
 		# Filo brillante a lo largo del borde iluminado + punta clara.
 		pinch.add_child(_linea(PackedVector2Array([Vector2(-w * 0.47, -h * k), Vector2(-w * 0.2, -h * (k + 0.3)), Vector2(j, -h)]), 2.2, clara.lightened(0.5)))
-		pinch.add_child(_poli([Vector2(j - w * 0.11, -h * 0.8), Vector2(j, -h), Vector2(j + w * 0.1, -h * 0.8)], Color(0.86, 0.3, 0.36)))
+		var pb := 1.0 - largo_punta
+		pinch.add_child(_poli([Vector2(j - w * 0.11 * (1.0 + largo_punta * 2.0), -h * pb), Vector2(j, -h), Vector2(j + w * 0.1 * (1.0 + largo_punta * 2.0), -h * pb)], color_punta))
+		pinch.add_child(_linea(PackedVector2Array([Vector2(-w * 0.5, 0.0), Vector2(-w * 0.47, -h * k), Vector2(-w * 0.2, -h * (k + 0.3)), Vector2(j, -h),
+			Vector2(w * 0.24, -h * (k + 0.22)), Vector2(w * 0.5, -h * k * 0.8), Vector2(w * 0.5, 0.0)]), 2.6, color_contorno))
 		# Punta descubierta: la cara iluminada se aclara hacia la cima.
 		pinch.add_child(_poli([Vector2(-w * 0.2 * 0.85, -h * (k + 0.3) * 0.9), Vector2(j, -h), Vector2(j, -h * 0.72)], clara.lightened(luz_punta)))
 		_musgo_pie(pinch, rng, w, h)
@@ -295,7 +315,49 @@ func _dibujar() -> void:
 			pts.append(c + Vector2(cos(ang) * r * 1.3, sin(ang) * r))
 		base.add_child(_poli(pts, color_base.lightened(0.12)))
 		x += rng.randf_range(20.0, 44.0)
+	if not Engine.is_editor_hint() and dibujo_por_lotes:
+		_compilar_pasos()
 	queue_redraw()
+
+
+## Convierte `_ops` en `_pasos` (mallas de polígonos + líneas sueltas) conservando el orden de dibujo.
+func _compilar_pasos() -> void:
+	_pasos.clear()
+	var origen := global_position
+	var puntos := PackedVector2Array()
+	var colores := PackedColorArray()
+	for op in _ops:
+		var pts: PackedVector2Array = op["p"]
+		if int(op["t"]) == 0:
+			if pts.size() < 3:
+				continue
+			var tri := Geometry2D.triangulate_polygon(pts)   # la misma triangulación que usa draw_colored_polygon
+			var col: Color = op["c"]
+			# La malla guarda el color en 8 bits y lo trunca (Polygon/draw_colored_polygon lo redondea): +0.5/255 lo iguala.
+			col = Color(col.r + 0.5 / 255.0, col.g + 0.5 / 255.0, col.b + 0.5 / 255.0, col.a + 0.5 / 255.0)
+			for idx in tri:
+				var w := pts[idx] + origen
+				puntos.append(Vector2(floorf(w.x + 0.5), floorf(w.y + 0.5)) - origen)   # snap_2d_vertices_to_pixel: draw_mesh no ajusta a la grilla solo
+				colores.append(col)
+		else:
+			_volcar_malla(puntos, colores)
+			puntos = PackedVector2Array()
+			colores = PackedColorArray()
+			_pasos.append(op)
+	_volcar_malla(puntos, colores)
+	_ops = []
+
+
+func _volcar_malla(puntos: PackedVector2Array, colores: PackedColorArray) -> void:
+	if puntos.is_empty():
+		return
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = puntos
+	arrays[Mesh.ARRAY_COLOR] = colores
+	var malla := ArrayMesh.new()
+	malla.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	_pasos.append(malla)
 
 
 ## Estaca de madera tallada: tronco con punta en bisel, betas, muesca y (a veces) sangre en la punta.

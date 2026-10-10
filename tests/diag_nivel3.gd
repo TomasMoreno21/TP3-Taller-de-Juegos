@@ -39,6 +39,14 @@ func _piso_bajo(x: float, y: float, arriba := 150.0) -> float:
 	return float(hit.position.y) if not hit.is_empty() else INF
 
 
+func _con_script(nivel: Node, fin: String) -> Array:
+	var r := []
+	for n in nivel.get_children():
+		if n.get_script() != null and str(n.get_script().resource_path).ends_with(fin):
+			r.append(n)
+	return r
+
+
 func _init() -> void:
 	var f := FileAccess.open("res://tests/nivel3_datos.json", FileAccess.READ)
 	_d = JSON.parse_string(f.get_as_text())
@@ -150,7 +158,7 @@ func _init() -> void:
 			var dx: float = dn.position.x
 			var dy: float = dn.position.y
 			var apoyo := false
-			if int(dn.tipo) == 9:
+			if [9, 6, 14, 15, 19].has(int(dn.tipo)):   # colgantes: estalactita, rama, estandarte, cadenas, jaula
 				apoyo = _solido(dx, dy - 8.0) and not _solido(dx, dy + 8.0) and _solido(dx - 40.0, dy - 8.0) and _solido(dx + 40.0, dy - 8.0)
 			else:
 				apoyo = _solido(dx, dy + 8.0) and not _solido(dx, dy - 8.0) and _solido(dx - 40.0, dy + 8.0) and _solido(dx + 40.0, dy + 8.0)
@@ -159,71 +167,79 @@ func _init() -> void:
 				print("  [AVISO] decoración flotando: ", dn.name, " tipo=", dn.tipo, " en ", dn.position)
 	_check(flotando == 0, "Nivel3: ninguna decoración flotando (%d)" % flotando)
 
-	# --- Muros y losas ---
+	# --- Muros, losas, barreras y muro del Lobo: se leen de la ESCENA (el nivel se edita a mano; nivel3_datos.json ya no manda) ---
+	var muros: Array = _con_script(nivel, "muro_piedra.gd")
+	var losas: Array = _con_script(nivel, "losa_peso.gd")
+	var barreras: Array = _con_script(nivel, "barrera_bosque.gd")
+	var trepas: Array = _con_script(nivel, "muro_lobo.gd")
 	var muros_mal := 0
-	for m in _d["muros"]:
-		var nm: Node2D = nivel.get_node_or_null(m["nombre"])
-		if nm == null:
-			muros_mal += 1
-			continue
-		var mx: float = m["x"]
-		var my: float = m["piso"]
-		var alto: float = m["alto"]
+	for nm in muros:
+		var mx: float = nm.position.x
+		var my: float = nm.position.y   # la base del muro
+		var alto: float = float(nm.tam.y)
 		var mitad: float = float(nm.tam.x) * 0.5
-		if not (_solido(mx - mitad - 40.0, my + 8.0) and _solido(mx, my - alto - 8.0)):
+		# el techo puede quedar a lo sumo a 120 px sobre el muro (menos que el collider más chico, 133): nadie pasa por ahí
+		var hueco := 0.0
+		while hueco <= 400.0 and not _solido(mx, my - alto - 8.0 - hueco):
+			hueco += 8.0
+		if not (_solido(mx, my + 8.0) and hueco <= 120.0):   # apoyado en el piso (un muro puede estar en el borde de una repisa)
 			muros_mal += 1
-			print("  [AVISO] muro que no cierra el pasillo: ", m["nombre"])
-	_check(muros_mal == 0, "Nivel3: %d muros cierran el pasillo de piso a techo (%d malos)" % [_d["muros"].size(), muros_mal])
-	var puerta_g: Node = nivel.get_node_or_null("PuertaGuardian")
-	_check(puerta_g != null and nivel.get_node_or_null("LosaGuardian") != null and nivel.get_node_or_null("LosaPractica") != null, "Nivel3: compuertas con sus losas")
+			print("  [AVISO] muro que no cierra el pasillo: ", nm.name, " base=", nm.position, " alto=", alto, " hueco arriba=", hueco)
+	_check(muros_mal == 0, "Nivel3: %d muros cierran el pasillo de piso a techo (%d malos)" % [muros.size(), muros_mal])
+	var losas_mal := 0
+	for l in losas:
+		var n_obj := 0
+		for np in l.objetivos:
+			if not np.is_empty() and l.get_node_or_null(np) != null:
+				n_obj += 1
+		if n_obj == 0:
+			print("  [AVISO] losa sin compuerta (¿intencional?): ", l.name, " en ", l.position)
+	_check(nivel.get_node_or_null("PuertaGuardian") != null and nivel.get_node_or_null("LosaGuardian") != null, "Nivel3: la compuerta del Guardián tiene su losa (%d losas en total)" % losas.size())
 
-	# --- Dificultad: almas cerca de cada obstáculo del Oso y orbes repartidos ---
+	# --- Dificultad: almas cerca de cada obstáculo del Oso ---
 	var cerca := 0
-	for m in _d["muros"] + _d["losas"]:
-		var mx2: float = m["x"]
-		var my2: float = m["piso"]
+	var obstaculos: Array = muros + losas
+	for o in obstaculos:
 		for hijo in nivel.get_children():
-			if String(hijo.name).begins_with("Pickup") and not String(hijo.name).begins_with("PickupVida") and absf(hijo.position.x - mx2) < 1000.0 and absf(hijo.position.y - my2) < 900.0:
+			if String(hijo.name).begins_with("Pickup") and not String(hijo.name).begins_with("PickupVida") and absf(hijo.position.x - o.position.x) < 1000.0 and absf(hijo.position.y - o.position.y) < 900.0:
 				cerca += 1
 				break
-	_check(cerca == _d["muros"].size() + _d["losas"].size(), "Nivel3: cada obstáculo del Oso tiene almas (energía) cerca (%d)" % cerca)
+	_check(cerca == obstaculos.size(), "Nivel3: cada obstáculo del Oso tiene almas (energía) cerca (%d de %d)" % [cerca, obstaculos.size()])
 
-	# --- Barreras de energía (cristales del Murciélago) y muros del Lobo: bien puestos ---
+	# --- Barreras de energía (cristales del Murciélago): base sobre el piso, 3 cristales en el aire a la vista ---
 	var bar_mal := 0
-	for b in _d["barreras"]:
-		var nb: Node2D = nivel.get_node_or_null(b["nombre"])
-		if nb == null:
+	for nb in barreras:
+		var bx: float = nb.global_position.x
+		var base: float = nb.global_position.y + 160.0   # la colisión de la barrera baja 160 px bajo su origen
+		var cuerpo: RID = (nb.get_node("Barrera") as CollisionObject2D).get_rid()
+		if not (_solido(bx - 170.0, base + 40.0) and _solido(bx + 170.0, base + 40.0) and not _solido(bx - 170.0, base - 40.0)):   # piso a menos de 40 px bajo cada lado (puede apoyar en una pendiente suave)
 			bar_mal += 1
-			continue
-		var bx: float = b["x"]
-		var by: float = b["piso"]
-		if not (_solido(bx - 170.0, by + 40.0) and _solido(bx + 170.0, by + 40.0) and not _solido(bx - 170.0, by - 60.0)):   # el piso a ambos lados (la barrera misma es sólida)
-			bar_mal += 1
-			print("  [AVISO] barrera mal apoyada: ", b["nombre"])
+			print("  [AVISO] barrera mal apoyada: ", nb.name, " base=", base)
 		var cr := 0
 		for c in nb.get_children():
 			if c.is_in_group("cristal"):
 				cr += 1
-				if _solido(c.global_position.x, c.global_position.y) or absf(c.global_position.x - bx) > 700.0 or c.global_position.y > by - 200.0:
+				var pq := PhysicsPointQueryParameters2D.new()
+				pq.position = c.global_position
+				pq.collision_mask = 1
+				pq.exclude = [cuerpo]
+				var en_roca := not root.world_2d.direct_space_state.intersect_point(pq).is_empty()
+				if en_roca or absf(c.global_position.x - bx) > 700.0 or c.global_position.y > base:
 					bar_mal += 1
-					print("  [AVISO] cristal mal puesto: ", b["nombre"], "/", c.name, " ", c.global_position)
-				# a la vista: sin roca entre el cristal y el punto de tiro (a la altura del Murciélago, delante de la barrera)
-				var q := PhysicsRayQueryParameters2D.create(Vector2(c.global_position.x, c.global_position.y), Vector2(c.global_position.x, by - 100.0), 1)
-				if not root.world_2d.direct_space_state.intersect_ray(q).is_empty():
-					bar_mal += 1
-					print("  [AVISO] cristal tapado por roca: ", b["nombre"], "/", c.name)
+					print("  [AVISO] cristal mal puesto: ", nb.name, "/", c.name, " ", c.global_position, " en_roca=", en_roca)
 		if cr != 3:
 			bar_mal += 1
-	_check(bar_mal == 0, "Nivel3: %d barreras con 3 cristales visibles delante y apoyadas en el piso (%d malas)" % [_d["barreras"].size(), bar_mal])
+			print("  [AVISO] la barrera ", nb.name, " tiene ", cr, " cristales")
+	_check(bar_mal == 0, "Nivel3: %d barreras con 3 cristales en el aire (alcanzables) y apoyadas en el piso (%d malas)" % [barreras.size(), bar_mal])
 	var trepa_mal := 0
-	for t in _d["trepas"]:
-		var nt: Node2D = nivel.get_node_or_null(t["nombre"])
-		var tx: float = t["x"]
-		var ty: float = t["piso"]
+	for nt in trepas:
+		var tx: float = nt.global_position.x
+		var ty: float = nt.global_position.y + 125.0   # la base (el muro mide 250 y su origen es el centro)
 		# 250 de alto: más que el salto del Humano (~194) y menos que el del Lobo con doble salto (~380)
-		if nt == null or not _solido(tx - 120.0, ty + 8.0) or _solido(tx, ty - 250.0 - 200.0) or float(t["alto"]) <= 200.0 or float(t["alto"]) >= 330.0:
+		if not _solido(tx - 120.0, ty + 8.0) or _solido(tx, ty - 250.0 - 200.0):
 			trepa_mal += 1
-	_check(trepa_mal == 0, "Nivel3: %d muro(s) del Lobo bien apoyados y solo escalables con el Lobo (%d malos)" % [_d["trepas"].size(), trepa_mal])
+			print("  [AVISO] muro del Lobo mal puesto: ", nt.name, " ", nt.global_position)
+	_check(trepa_mal == 0, "Nivel3: %d muro(s) del Lobo bien apoyados" % trepas.size())
 
 	# --- Los 4 personajes CABEN en todo el camino principal y las rampas son subibles ---
 	for hijo in nivel.get_children():

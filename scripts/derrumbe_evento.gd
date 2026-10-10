@@ -39,6 +39,7 @@ extends Node2D
 
 var _activo := false
 var _disparado := false
+var _terminado := false                             # al llegar a `fin` el evento se apaga para siempre (no vuelve a vibrar al saltar)
 var _espera := 0.0
 var _t_shake := 0.0
 var _t_roca := 0.0
@@ -55,8 +56,19 @@ func iniciar() -> void:
 	_disparado = true
 
 
+## Pulso suelto (lo usa la cinemática del disparador): una sacudida y `piedras` escombros alrededor del jugador.
+func pulso(fuerza: float, duracion: float, piedras: int, r_min := 4.0, r_max := 10.0) -> void:
+	if _terminado:
+		return
+	if not is_instance_valid(_jugador):
+		_jugador = get_tree().get_first_node_in_group("player") as Node2D
+	_sacudir(fuerza, duracion)
+	for i in piedras:
+		get_tree().create_timer(randf_range(0.05, duracion), false).timeout.connect(_soltar_escombro.bind(r_min, r_max, true))
+
+
 func _physics_process(delta: float) -> void:
-	if fin == null:
+	if fin == null or _terminado:
 		return
 	if not is_instance_valid(_jugador):
 		_jugador = get_tree().get_first_node_in_group("player") as Node2D
@@ -72,7 +84,8 @@ func _physics_process(delta: float) -> void:
 		_t_roca = pausa_roca_max
 	elif not dentro and _activo:
 		_activo = false
-		_t_amb = randf_range(ambiente_pausa_min, ambiente_pausa_max)
+		_terminado = true   # llegó a las lianas: se acabó, ni zona ni ambiente
+		return
 	if not _activo:
 		if inicio != null or _disparado:
 			_ambiente(delta)

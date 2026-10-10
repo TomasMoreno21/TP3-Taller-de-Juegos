@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+Opciones="*res://scripts/opciones.gd"
 Progresion="*res://scripts/progresion.gd"
 Dialogo="*res://scenes/dialog_box.tscn"
 Hitstop="*res://scripts/hitstop.gd"

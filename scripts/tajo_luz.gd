@@ -42,7 +42,7 @@ static func lanzar(padre: Node, pos: Vector2, facing: int, alterno: bool, largo_
 func _draw() -> void:
 	if cola >= avance:
 		return
-	_hoja(grosor * 2.2, Color(color_halo.r, color_halo.g, color_halo.b, 0.8))
+	_hoja(grosor * 2.2, Color(color_halo.r, color_halo.g, color_halo.b, color_halo.a * 0.6))
 	_hoja(grosor, color_halo.lightened(0.55))
 
 

@@ -1,1 +1,3 @@
 ﻿Tests que ya no corresponden al proyecto actual (nivel1 rediseñado sin Santuario/3 arenas, nivel1prueba.tscn inexistente, screenshot.gd requiere el nodo World de otra escena). Se dejan acá como referencia; no forman parte de la batería de regresión.
+
+- diag_nivel3_recorrido.gd / diag_nivel3_partida.gd (08/10): bots del nivel 3 de la versión generada (espiral con altar en x≈10000, mirador en x≈13800, etc.). El usuario rehízo el nivel a mano (UnlockOso en x≈14428, MuroAla1/2 y las barreras en otras posiciones, sin LosaPractica/MuroTutorial/PuertaSala): sus coordenadas ya no valen. Sirven de plantilla (helpers de salto, losa, muro, barrera con sónico real, arena) para rehacerlos contra la escena actual.

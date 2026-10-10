@@ -87,11 +87,6 @@ position = Vector2(-60, 190)
 position = Vector2(200, 190)
 tipo = "arquero"
 
-[node name="Enemy4" parent="EncounterGrande1" instance=ExtResource("8_enemy")]
-position = Vector2(420, 190)
-tipo = "chaman"
-ola_asignada = 1
-
 [node name="CheckpointCombate1" parent="." instance=ExtResource("6_check")]
 position = Vector2(2900, 900)
 
@@ -131,11 +126,6 @@ position = Vector2(130, 190)
 [node name="Enemy4" parent="EncounterGrande2" instance=ExtResource("8_enemy")]
 position = Vector2(-350, 190)
 tipo = "arquero"
-ola_asignada = 1
-
-[node name="Enemy5" parent="EncounterGrande2" instance=ExtResource("8_enemy")]
-position = Vector2(0, 190)
-tipo = "chaman"
 ola_asignada = 1
 
 [node name="CheckpointCombate2" parent="." instance=ExtResource("6_check")]

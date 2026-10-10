@@ -1,0 +1,154 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/creditos_panel.gd" id="1_cr"]
+
+[sub_resource type="StyleBoxFlat" id="panel"]
+content_margin_left = 40.0
+content_margin_top = 32.0
+content_margin_right = 40.0
+content_margin_bottom = 28.0
+bg_color = Color(0.04, 0.047, 0.063, 0.97)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.93, 0.9, 0.84, 1)
+
+[sub_resource type="StyleBoxFlat" id="btn_normal"]
+content_margin_left = 24.0
+content_margin_top = 10.0
+content_margin_right = 24.0
+content_margin_bottom = 10.0
+bg_color = Color(0.075, 0.09, 0.115, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.45, 0.45, 0.45, 1)
+
+[sub_resource type="StyleBoxFlat" id="btn_hover"]
+content_margin_left = 24.0
+content_margin_top = 10.0
+content_margin_right = 24.0
+content_margin_bottom = 10.0
+bg_color = Color(0.12, 0.14, 0.17, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.93, 0.9, 0.84, 1)
+
+[sub_resource type="StyleBoxFlat" id="btn_pressed"]
+content_margin_left = 24.0
+content_margin_top = 10.0
+content_margin_right = 24.0
+content_margin_bottom = 10.0
+bg_color = Color(0.78, 0.22, 0.23, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.93, 0.9, 0.84, 1)
+
+[sub_resource type="StyleBoxFlat" id="btn_focus"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.78, 0.22, 0.23, 1)
+
+[sub_resource type="StyleBoxFlat" id="sl_track"]
+bg_color = Color(0.04, 0.047, 0.063, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.45, 0.45, 0.45, 1)
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="sl_fill"]
+bg_color = Color(0.78, 0.22, 0.23, 1)
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+
+[sub_resource type="Gradient" id="g_bone"]
+colors = PackedColorArray(0.93, 0.9, 0.84, 1, 0.93, 0.9, 0.84, 1)
+
+[sub_resource type="GradientTexture2D" id="t_grab"]
+gradient = SubResource("g_bone")
+width = 14
+height = 30
+
+[node name="Creditos" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_cr")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+color = Color(0, 0, 0, 0.68)
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -450.0
+offset_top = -280.0
+offset_right = 450.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("panel")
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
+theme_override_font_sizes/font_size = 36
+text = "CRÉDITOS"
+horizontal_alignment = 1
+
+[node name="Raya" type="ColorRect" parent="Panel/VBox"]
+custom_minimum_size = Vector2(0, 4)
+layout_mode = 2
+color = Color(0.78, 0.22, 0.23, 1)
+
+[node name="Texto" type="RichTextLabel" parent="Panel/VBox"]
+custom_minimum_size = Vector2(0, 280)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/default_color = Color(0.93, 0.9, 0.84, 1)
+theme_override_font_sizes/normal_font_size = 24
+theme_override_font_sizes/bold_font_size = 24
+bbcode_enabled = true
+text = "[center][b]SPIRIT KEEPER[/b]\nGuardián del bosque\n\n[b]Diseño, arte y programación[/b]\nEquipo Spirit Keeper\n\n[b]Motor[/b]\nGodot Engine 4[/center]"
+scroll_active = false
+
+[node name="Volver" type="Button" parent="Panel/VBox"]
+custom_minimum_size = Vector2(280, 56)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/focus = SubResource("btn_focus")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/normal = SubResource("btn_normal")
+text = "VOLVER"
+
+[node name="Hint" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.68, 0.62, 1)
+theme_override_font_sizes/font_size = 20
+text = "Esc volver"
+horizontal_alignment = 1
+

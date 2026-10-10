@@ -19,9 +19,9 @@ func _init() -> void:
 	heavy_combo_steps = 2
 	special_damage = 15
 	dano_recibido_mult = 1.1
-	special_cost = 5.0
+	special_cost = 8.0
 	flap_impulso = 330.0
-	flap_costo = 4.0
+	flap_costo = 7.0
 	special_cooldown = 0.3
 	special_cooldown_combate = 0.6
 	color = Color(0.52, 0.4, 0.62)

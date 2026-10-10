@@ -54,6 +54,7 @@ const HITSTOP_COMBO := 0.11
 @export var hitstop_dano_umbral := 20       # daño mínimo para considerarlo golpe fuerte
 @export var recoil_sprite := 8.0            # px que empuja el sprite hacia atrás al recibir daño
 @export var temblor_dano := 0.13            # s que dura el micro-temblor del sprite (sin rotar)
+@export var proyectil_mira_bajo := 45.0     # px por debajo del centro del enemigo a los que apunta el proyectil teledirigido del Murciélago
 @export var zoom_heavy_mult := 1.025        # zoom punch extra en golpes pesados
 @export var zoom_special_mult := 1.04       # zoom punch extra en el golpe especial
 @export var zoom_combo_mult := 1.05         # zoom punch extra en el golpe que cierra combo
@@ -92,16 +93,19 @@ const HITSTOP_COMBO := 0.11
 @export var rampa_distancia := 80.0         # px de recorrido sobre los que se ajusta la recta (una escalera de peldaños se vuelve rampa recta)
 @export var suavizado_escalon := 6.0       # rapidez con que el sprite se asienta cuando estás quieto o en el aire (0 = sin suavizar)
 @export var suavizado_escalon_max := 24.0   # px: desniveles mayores no se suavizan (teletransportes, caídas)
+@export var transicion_salida_ataque := 0.12  # s que se disuelve la última pose del golpe al volver a idle/correr (0 = corte seco)
+@export var piernas_vel_min := 0.15         # piso de la velocidad de las piernas al arrancar/frenar (antes 0.35: patinaban)
+@export var reaccion_dano_en_ataque := true # recibir daño en pleno golpe corta el avance del ataque y el retroceso solo mueve el sprite en X
 @export_group("")
 @export var hitstop_rafaga_ventana := 0.4   # segundos entre golpes para considerarlo ráfaga
 @export var racha_spark_3 := 1.35           # escala del spark al llegar a racha 3
 @export var racha_spark_5 := 1.7            # escala del spark al llegar a racha 5
 @export var spark_hundir_px := 14.0         # cuánto entra el spark en el cuerpo del enemigo desde su borde
 @export var swing_visible := true           ## estela (medialuna) de cada ataque cuerpo a cuerpo
-@export var swing_alpha := 0.7
+@export var swing_alpha := 0.55
 @export var swing_alcance := 1.05          ## radio de la medialuna respecto del alcance del golpe
 @export var swing_duracion := 0.13
-@export_range(0.05, 0.6) var swing_grosor := 0.3   ## grosor de la medialuna (fracción del radio)
+@export_range(0.05, 0.6) var swing_grosor := 0.16  ## grosor máximo de la estela (fracción del radio)
 @export_range(0.0, 1.0) var spark_altura := 0.42  # altura del impacto dentro del hitbox (0 = arriba, 1 = pies); 0.42 ≈ puño
 @export var lobo_landing_squash_extra := 1.4  # multiplicador squash al aterrizar como Lobo (item 18)
 @export var slowmo_transformacion := 0.07 # s de cámara lenta al transformarse (0 = off)
@@ -116,7 +120,8 @@ const HITSTOP_COMBO := 0.11
 @export_group("")
 @export_group("Juice (golpe, transformación, parry)")
 @export var tajo_luz := true                      ## tajo blanco diagonal sobre el enemigo al conectar
-@export var tajo_escala := 1.0                    ## tamaño del tajo
+@export var tajo_escala := 0.6                    ## tamaño del tajo (sutil)
+@export_range(0.0, 1.0) var tajo_alpha := 0.65    ## opacidad del tajo; su color sale de la forma activa
 @export var transformacion_cine := true           ## destello, congelado y estallido de color al transformarse
 @export var transformacion_congelado := 0.07      ## s con el mundo congelado al transformarse
 @export var transformacion_slowmo := 0.2          ## s de cámara lenta justo después
@@ -124,9 +129,12 @@ const HITSTOP_COMBO := 0.11
 @export var transformacion_tinte_duracion := 0.5  ## s que la pantalla queda teñida del color de la forma
 @export var transformacion_radio := 1500.0        ## alcance del estallido de rayos
 @export var parry_bn := true                      ## pantalla en blanco y negro (menos tú) en el parry perfecto
-@export var parry_congelado := 0.3                ## s con todo congelado al hacer un parry perfecto
-@export var parry_slowmo := 1.3                   ## s de cámara lenta para contraatacar
-@export var parry_slowmo_escala := 0.45
+@export var parry_congelado := 0.08               ## s con todo congelado al hacer un parry perfecto (corto: impacto sin cortar el ritmo)
+## Cámara lenta del parry como curva: cada tramo es (duración en s, escala de tiempo). Entra lento y vuelve suave a 1.
+@export var parry_slowmo_tramos: Array[Vector2] = [Vector2(0.16, 0.25), Vector2(0.2, 0.5), Vector2(0.3, 0.8)]
+@export var contragolpe_tiempo := 1.3             ## s tras un parry en que el próximo golpe sale potenciado
+@export var contragolpe_mult := 1.5               ## multiplicador de daño del contragolpe
+@export var contragolpe_dano_min := 24            ## daño mínimo del contragolpe (rompe la resistencia/poise del enemigo)
 @export_range(0.05, 0.6) var parry_radio_color := 0.2  ## círculo que conserva el color alrededor del jugador
 @export var dano_cine := true                     ## recibir daño: pantalla sin color y bordes rojos
 @export var dano_empuje_mult := 1.35              ## el golpe recibido te empuja más lejos
@@ -152,11 +160,13 @@ var _attack_timer := 0.0
 var _ultimo_hitstop_s: float = -10.0
 var _parry_t: float = 0.0
 var _tag_t: float = 0.0
+var _contra_t: float = 0.0
 var _flap_cd: float = 0.0
 var _picada: bool = false
 var _pose_rot: float = 0.0        # rotación extra del sprite al golpear (rad), vuelve sola a 0
 var _pose_tween: Tween
 var _lunge_t: float = 0.0
+var _dano_reciente_t := 0.0   # tras recibir daño: el avance/imán del ataque no pisan el retroceso
 var _lunge_vel: float = 0.0
 const LUNGE_DUR := 0.09           # el avance del golpe dura esto (la distancia la define la forma)
 var _hit_applied := false
@@ -389,6 +399,7 @@ func _ready() -> void:
 	visual.animation_changed.connect(_anclar_pies)
 	_liana_loop = AudioStreamPlayer.new()
 	_liana_loop.stream = sonido_liana_deslizar
+	_liana_loop.bus = &"SFX"
 	add_child(_liana_loop)
 
 
@@ -434,6 +445,8 @@ func _physics_process(delta: float) -> void:
 	_derrape_cd = maxf(_derrape_cd - delta, 0.0)
 	_t_sin_suelo = 0.0 if is_on_floor() else _t_sin_suelo + delta
 	_denegar_cd = maxf(_denegar_cd - delta, 0.0)
+	if _dano_reciente_t > 0.0:
+		_dano_reciente_t = maxf(_dano_reciente_t - delta, 0.0)
 	if _step_up_cd > 0.0:
 		_step_up_cd = maxf(_step_up_cd - delta, 0.0)
 	if _special_cooldown > 0.0:
@@ -709,6 +722,8 @@ func _handle_racha(delta: float) -> void:
 		_parry_t = maxf(_parry_t - delta, 0.0)
 	if _tag_t > 0.0:
 		_tag_t = maxf(_tag_t - delta, 0.0)
+	if _contra_t > 0.0:
+		_contra_t = maxf(_contra_t - delta, 0.0)
 	if _flap_cd > 0.0:
 		_flap_cd = maxf(_flap_cd - delta, 0.0)
 	if _racha_timer <= 0.0:
@@ -791,7 +806,7 @@ func _lanzar_buffered(data: Forma, airborne: bool) -> void:
 
 
 func _melee_sticky(data: Forma, delta: float) -> void:
-	if not _attacking or _hit_applied or data.melee_sticky <= 0.0:
+	if not _attacking or _hit_applied or data.melee_sticky <= 0.0 or _dano_reciente_t > 0.0:
 		return
 	var objetivo := _buscar_enemigo_homing(MELEE_STICKY_REACH)
 	if objetivo == null:
@@ -1088,6 +1103,10 @@ func _check_attack_hits() -> void:
 	elif _current_attack_type == "heavy" and _heavy_step == forms[current_form].heavy_combo_steps:
 		mult_tercer = 1.5
 	var critico := mult_tercer > 1.0 or _current_attack_type == "combo"
+	var contra := _contra_t > 0.0
+	if contra:
+		_contra_t = 0.0
+		critico = true
 	var bono_tag := _tag_t > 0.0
 	if bono_tag:
 		_tag_t = 0.0
@@ -1097,6 +1116,8 @@ func _check_attack_hits() -> void:
 		var dmg := _current_attack_damage
 		if bono_tag:
 			dmg = int(dmg * tag_bonus_mult)
+		if contra and idx == 0:
+			dmg = maxi(int(dmg * contragolpe_mult), contragolpe_dano_min)
 		var kb := _current_attack_knockback * mult_tercer
 		if idx == 1:
 			dmg = int(dmg * 0.6)
@@ -1306,7 +1327,8 @@ func _juice_golpe(pos: Vector2, tinte: Color, idx: int) -> void:
 		_tajo_alterno = not _tajo_alterno
 		var largo := (560.0 if remate else (430.0 if pesado else 320.0)) * tajo_escala * (0.75 + racha * 0.25)
 		var grosor := (15.0 if remate else (12.0 if pesado else 9.0)) * tajo_escala
-		TajoLuz.lanzar(JuiceCapa.obtener(get_tree()), pos, facing, _tajo_alterno, largo, grosor, Color(0.9, 0.08, 0.1))
+		var base: Color = forms[current_form].color if current_form < forms.size() else Color.WHITE
+		TajoLuz.lanzar(JuiceCapa.obtener(get_tree()), pos, facing, _tajo_alterno, largo, grosor, Color(base.lerp(Color.WHITE, 0.45), tajo_alpha))
 
 
 ## Punto donde el golpe "toca" al objetivo: el borde del cuerpo que mira al jugador
@@ -1354,20 +1376,23 @@ func _play_attack_fx(tipo: String, step: int) -> void:
 		desde = hasta
 		hasta = tmp
 	var puntos := PackedVector2Array()
+	var colores := PackedColorArray()
 	const N := 14
+	var color: Color = forms[current_form].color.lerp(Color.WHITE, 0.35) if current_form < forms.size() else Color.WHITE
+	# Estela: la cabeza (t=1) es nítida y la cola (t=0) se desvanece; el grosor es máximo cerca de la cabeza.
 	for i in N + 1:
 		var a := lerpf(desde, hasta, float(i) / N)
 		puntos.append(Vector2(cos(a) * facing, sin(a)) * radio)
+		colores.append(Color(color, swing_alpha * pow(float(i) / N, 1.4)))
 	for i in range(N, -1, -1):
 		var t := float(i) / N
-		# Borde interno: más grueso en el medio, afinado en las puntas.
-		var r := radio * (1.0 - grosor * sin(t * PI))
+		var r := radio * (1.0 - grosor * sin(PI * pow(t, 1.9)))
 		var a := lerpf(desde, hasta, t)
 		puntos.append(Vector2(cos(a) * facing, sin(a)) * r)
+		colores.append(Color(color, swing_alpha * pow(t, 1.4)))
 	var arco := Polygon2D.new()
 	arco.polygon = puntos
-	var color: Color = forms[current_form].color.lerp(Color.WHITE, 0.35) if current_form < forms.size() else Color.WHITE
-	arco.color = Color(color, swing_alpha)
+	arco.vertex_colors = colores
 	# Sin sombrear: la noche (CanvasModulate) no lo apaga.
 	var mat := CanvasItemMaterial.new()
 	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
@@ -1496,6 +1521,32 @@ func apply_zip(impulso: float) -> void:
 
 
 ## Eco espectral: silueta del momento actual que se desvanece (lunge del Lobo, picada, pisotón).
+## Copia la pose actual del sprite encima y la funde en `dur` s: el cambio de animación (p. ej. del
+## final de un golpe a idle/correr, que arranca en otro frame) deja de verse como un corte seco.
+func _disolver_pose(dur: float, alpha: float = 0.85) -> void:
+	if dur <= 0.0 or DisplayServer.get_name() == "headless" or visual == null or not is_inside_tree():
+		return
+	var g := AnimatedSprite2D.new()
+	g.sprite_frames = visual.sprite_frames
+	g.animation = visual.animation
+	g.frame = visual.frame
+	g.speed_scale = 0.0
+	g.texture_filter = visual.texture_filter
+	g.flip_h = visual.flip_h
+	g.offset = visual.offset
+	g.position = visual.position
+	g.scale = visual.scale
+	g.rotation = visual.rotation
+	g.skew = visual.skew
+	g.self_modulate = visual.self_modulate
+	g.modulate = Color(1, 1, 1, alpha)
+	g.z_index = visual.z_index + 1
+	add_child(g)
+	var tw := g.create_tween()
+	tw.tween_property(g, "modulate:a", 0.0, dur)   # lineal: el cambio se reparte parejo entre los frames
+	tw.tween_callback(g.queue_free)
+
+
 func emitir_eco() -> void:
 	if eco_alpha <= 0.0 or DisplayServer.get_name() == "headless" or visual == null:
 		return
@@ -1506,7 +1557,7 @@ func emitir_eco() -> void:
 	eco.frame = visual.frame
 	eco.speed_scale = 0.0
 	eco.global_position = visual.global_position
-	eco.global_rotation = visual.global_rotation
+	eco.rotation = visual.rotation   # global_rotation con escala X negativa (mirando a la izquierda) daba +180° y el eco salía cabeza abajo
 	eco.skew = visual.skew
 	eco.scale = visual.scale
 	eco.modulate = Color(color.r, color.g, color.b, eco_alpha)
@@ -2039,6 +2090,7 @@ func _update_animacion() -> void:
 				_attack_anim_timer = _duracion_anim(_attack_anim_actual) / maxf(_attack_anim_speed_scale, 0.05)
 				visual.play(_attack_anim_actual)
 			else:
+				_disolver_pose(transicion_salida_ataque)   # la pose final del golpe se funde con la de reposo/correr
 				_attack_anim_cola.clear()
 				_attack_anim_timer = 0.0
 		if _attack_anim_cola.size() > 0:
@@ -2111,7 +2163,7 @@ func _update_animacion() -> void:
 		# El Murciélago sigue aleteando aunque esté quieto o no avance (0 = alas quietas).
 		escala_obj = aleteo if current_form == Form.MURCIELAGO else 0.0
 	else:
-		var speed_min := 0.35 if current_form != Form.MURCIELAGO else 0.7
+		var speed_min := piernas_vel_min if current_form != Form.MURCIELAGO else 0.7
 		escala_obj = clampf(absf(velocity.x) / maxf(data.speed, 1.0), speed_min, 1.6)
 		if current_form == Form.LOBO:
 			escala_obj = pow(escala_obj, 0.82)
@@ -2299,6 +2351,9 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_blo
 	_juice_dano(cantidad)
 	stretch_y(-0.12, 0.14)
 	_recoil_dano(dir)
+	if reaccion_dano_en_ataque and _attacking:
+		_lunge_t = 0.0          # el avance del golpe no empuja contra el retroceso
+		_dano_reciente_t = 0.25 # ni el imán del golpe tira hacia el enemigo
 	if knockback > 0.0:
 		velocity.x = dir * knockback * (dano_empuje_mult if dano_cine else 1.0)
 	_invuln_timer = invuln_dano
@@ -2348,8 +2403,8 @@ func _parry_perfecto(_dir: int) -> void:
 		# Parry cinematográfico: todo se congela, el mundo pasa a blanco y negro (menos vos) y queda
 		# una cámara lenta para contraatacar.
 		_freeze_hitstop(parry_congelado)
-		_freeze_slowmo(parry_congelado + parry_slowmo, parry_slowmo_escala)
-		ParryBN.lanzar(get_tree(), self, parry_congelado, parry_slowmo, parry_radio_color)
+		var total_slow := _parry_slowmo_curva()
+		ParryBN.lanzar(get_tree(), self, parry_congelado, total_slow * 0.7, parry_radio_color)
 		OndaTransformacion.lanzar(JuiceCapa.obtener(get_tree()), global_position + Vector2(0, 90), Color(0.95, 0.98, 1.0), 1100.0, 12, 0.5)
 	else:
 		_freeze_hitstop(0.1)
@@ -2361,7 +2416,25 @@ func _parry_perfecto(_dir: int) -> void:
 		cam.punch(1.09 if cine else 1.06)
 	if not cine:
 		_flash_transformacion(Color(0.9, 0.95, 1.0))
+	_contra_t = contragolpe_tiempo
 	parry_exitoso.emit()
+
+
+## Cámara lenta del parry en tramos (entra lento, sale suave). Usa temporizadores en tiempo real.
+## Devuelve la duración total de la curva.
+func _parry_slowmo_curva() -> float:
+	var total := 0.0
+	var inicio := parry_congelado
+	for tramo in parry_slowmo_tramos:
+		var dur: float = tramo.x
+		var esc: float = tramo.y
+		if total <= 0.0:
+			_freeze_slowmo(inicio + dur, esc)
+		else:
+			get_tree().create_timer(inicio + total, true, false, true).timeout.connect(
+				func() -> void: _freeze_slowmo(dur, esc))
+		total += dur
+	return total
 
 
 ## Onda alrededor del jugador: daña y empuja a los enemigos cercanos. `solo_atras` excluye a los
@@ -2421,8 +2494,17 @@ func _recoil_dano(dir: int) -> void:
 	# Base fija (no la posición actual): dos golpes seguidos o un cambio de forma a mitad de tween
 	# ya no dejan el sprite desplazado para siempre.
 	var base := Vector2(_visual_base_x, _visual_base_y())
-	visual.position = base + Vector2(-dir * recoil_sprite, 0)
 	_recoil_tween = create_tween()
+	if reaccion_dano_en_ataque:
+		# Solo se mueve el sprite en X: la Y la maneja el suavizado de desniveles (si no, el tween la pisa).
+		visual.position.x = base.x - dir * recoil_sprite
+		if temblor_dano > 0.0:
+			var mitad_x: float = temblor_dano * 0.5
+			_recoil_tween.tween_property(visual, "position:x", base.x - dir * recoil_sprite * 0.25, mitad_x)
+			_recoil_tween.tween_property(visual, "position:x", base.x, temblor_dano)
+		_recoil_tween.tween_property(visual, "position:x", base.x, 0.06).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		return
+	visual.position = base + Vector2(-dir * recoil_sprite, 0)
 	if temblor_dano > 0.0:
 		var mitad: float = temblor_dano * 0.5
 		_recoil_tween.tween_property(visual, "position", base + Vector2(-dir * recoil_sprite * 0.25, 0), mitad)
@@ -2507,6 +2589,7 @@ func reaparecer_en_checkpoint() -> void:
 	_seq.clear()
 	_combo_timer = 0.0
 	_tag_t = 0.0
+	_contra_t = 0.0
 	_murci_glide_t = 0.0
 	_esc_off = Vector2.ZERO
 	_esc_vel = Vector2.ZERO
@@ -2570,11 +2653,12 @@ func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 70
 	if current_form == Form.MURCIELAGO:
 		var objetivo := _buscar_enemigo_homing(3000.0)
 		if objetivo != null:
-			var to_obj: Vector2 = objetivo.global_position - proj.global_position
+			var to_obj: Vector2 = objetivo.global_position + Vector2(0.0, proyectil_mira_bajo) - proj.global_position
 			if to_obj.length_squared() > 0.01:
 				dir_inicial = to_obj.normalized()
 		proj.set("homing", true)
 		proj.set("homing_range", 3000.0)
+		proj.set("homing_offset", Vector2(0.0, proyectil_mira_bajo))
 		# Teledirigido agresivo: giro fuerte constantemente hacia el objetivo.
 		proj.set("homing_strength", 30.0)
 	proj.set("direction", dir_inicial)

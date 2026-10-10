@@ -15,6 +15,7 @@ signal terminada
 @export var bajar_camara := 150.0           ## px que la cámara se corre hacia abajo mientras sigue al jugador, para que la barra inferior no lo tape
 @export var tam_cartela := 34
 @export var seg_mantener_saltar := 1.0
+@export var seg_maximos := 40.0              ## red de seguridad: pasado este tiempo (desde que carga el nivel) la intro se corta y el jugador recupera el control
 @export var resplandor: CanvasItem            ## luz lejana: aparece con la intro y se apaga al entregar el control
 @export var velocidad_caminata := 0.35     ## fracción de la velocidad del jugador al caminar solo
 @export var inicio_x := -1400.0             ## el jugador arranca la intro en esta x (para que el paseo dure toda la charla)
@@ -46,6 +47,7 @@ var _t := 0.0
 var _seguir := false
 var _camina := false
 var _escala_resplandor := 1.0
+var _titulo_listo := false
 
 
 func _ready() -> void:
@@ -100,6 +102,8 @@ func _process(delta: float) -> void:
 	if not _activa:
 		return
 	_t += delta
+	if _t >= seg_maximos:
+		_saltar = true   # nada puede dejar al jugador bloqueado para siempre
 	if _seguir:
 		var meta := _jugador.global_position + (_cam.get("desplazamiento") as Vector2) + Vector2(0, bajar_camara)
 		_cam.global_position = _cam.global_position.lerp(meta, 1.0 - exp(-3.5 * delta))
@@ -119,9 +123,7 @@ func _process(delta: float) -> void:
 
 
 func _correr() -> void:
-	var ti := get_tree().get_first_node_in_group("titulo_nivel")
-	if ti != null and ti.get("activo"):
-		await ti.listo   # el cartel de nivel va primero
+	await _esperar_titulo()   # el cartel de nivel va primero
 	var tw_negro := create_tween()
 	tw_negro.tween_property(_negro, "color:a", 0.0, fundido_inicial)
 	_barras(true)
@@ -145,6 +147,17 @@ func _correr() -> void:
 			break
 
 
+## Espera a que el cartel de nivel termine de mostrarse (`listo`) sin dar control al jugador detrás del
+## negro. Nunca queda colgada: si el cartel desaparece sin avisar, o pasa `seg_maximos`, la intro sigue igual.
+func _esperar_titulo() -> void:
+	var ti := get_tree().get_first_node_in_group("titulo_nivel")
+	if ti == null or not ti.get("activo"):
+		return
+	ti.listo.connect(func() -> void: _titulo_listo = true)
+	while not _titulo_listo and _t < seg_maximos and is_instance_valid(ti) and ti.get("activo"):   # saltear no corta el cartel: la intro espera y termina al toque
+		await get_tree().process_frame
+
+
 func _arrancar_plano(p: PlanoIntro) -> void:
 	var destino := p.global_position
 	if p.seguir_jugador:
@@ -165,11 +178,11 @@ func _arrancar_plano(p: PlanoIntro) -> void:
 		_jugador.set("cinematica_dir", velocidad_caminata)
 	if not p.globo.is_empty():
 		if p.retraso_globo > 0.0:
-			get_tree().create_timer(p.retraso_globo).timeout.connect(_decir.bind(p))
+			get_tree().create_timer(p.retraso_globo, false).timeout.connect(_decir.bind(p))
 		else:
 			_decir(p)
 	if p.pulso:
-		get_tree().create_timer(p.pulso_en).timeout.connect(_pulso)
+		get_tree().create_timer(p.pulso_en, false).timeout.connect(_pulso)
 
 
 func _decir(p: PlanoIntro) -> void:
@@ -216,7 +229,8 @@ func _esperar(seg: float) -> void:
 	var t := 0.0
 	while t < seg and not _saltar:
 		await get_tree().process_frame
-		t += get_process_delta_time()
+		if not get_tree().paused:   # en pausa el tiempo del plano no corre (los tweens tampoco)
+			t += get_process_delta_time()
 
 
 ## Devuelve el control, retira las barras y apaga la luz lejana. La cámara sale de modo
@@ -250,6 +264,15 @@ func _entregar_control() -> void:
 	terminada.emit()
 	await get_tree().create_timer(0.9).timeout
 	_capa.queue_free()
+
+
+## Si la escena se descarga a mitad de la intro (menú, cambio de nivel), no deja nada bloqueado.
+func _exit_tree() -> void:
+	if _activa and is_instance_valid(_jugador):
+		_jugador.set("cinematica_activa", false)
+		_jugador.set("cinematica_dir", 0.0)
+	if _activa and is_instance_valid(_hud):
+		_hud.visible = _hud_visible
 
 
 func _barras(entrar: bool) -> void:

@@ -16,6 +16,10 @@ extends Area2D
 ])
 @export var alto_barra := 110.0
 @export var fuerza_temblor := 7.0                       ## temblor suave mientras el Amuleto "ve" el derrumbe
+@export var fuerza_inicio := 3.0                        ## primer temblor leve al abrirse el diálogo (con alguna piedrita)
+@export var piedras_inicio := 2
+@export var fuerza_corre := 16.0                        ## temblor fuerte en el "¡Corré!"
+@export var piedras_corre := 14
 @export var pausa_antes := 0.5                          ## s entre que se frena el jugador y habla
 @export var pausa_despues := 0.35                       ## s tras el aviso antes de devolver el control
 
@@ -58,13 +62,14 @@ func _cinematica(jugador: Node2D) -> void:
 	_mover_barras(true)
 	await get_tree().create_timer(pausa_antes).timeout
 	if dlg != null:
+		_pulso(fuerza_inicio, 1.0, piedras_inicio, 4.0, 9.0)
 		dlg.mostrar(Array(lineas_previas), "Amuleto", true)
 		await dlg.dialogo_terminado
-	_temblar(fuerza_temblor, 1.2)
+	_pulso(fuerza_temblor, 1.2, 5, 5.0, 12.0)
 	await get_tree().create_timer(0.6).timeout
 	if dlg != null:
 		dlg.mostrar(Array(lineas_alerta), "Amuleto", true)
-		_temblar(fuerza_temblor * 2.0, 1.0)
+		_pulso(fuerza_corre, 1.6, piedras_corre, 9.0, 24.0)
 		await dlg.dialogo_terminado
 	await get_tree().create_timer(pausa_despues).timeout
 	_mover_barras(false)
@@ -73,6 +78,13 @@ func _cinematica(jugador: Node2D) -> void:
 	await get_tree().create_timer(0.8).timeout
 	if is_instance_valid(_capa):
 		_capa.queue_free()
+
+
+func _pulso(fuerza: float, duracion: float, piedras: int, r_min: float, r_max: float) -> void:
+	if derrumbe != null and derrumbe.has_method("pulso"):
+		derrumbe.pulso(fuerza, duracion, piedras, r_min, r_max)
+	else:
+		_temblar(fuerza, duracion)
 
 
 func _temblar(fuerza: float, duracion: float) -> void:
