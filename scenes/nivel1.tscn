@@ -1,4 +1,4 @@
-[gd_scene format=4 uid="uid://bge4s3nawq0qh"]
+﻿[gd_scene format=4 uid="uid://bge4s3nawq0qh"]
 
 [ext_resource type="PackedScene" uid="uid://b2gmbyl1h0jwq" path="res://scenes/tile_map.tscn" id="1_2n16c"]
 [ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="1_player"]
@@ -3117,7 +3117,7 @@ zoom = 1.15
 seguir_jugador = true
 camina = true
 zoom_desde = 1.15
-globo = PackedStringArray("[humano] ¿Salvarlo? ¿Qué le pasó a mi hijo?", "Una secta lo atrajo con sus voces.", "[humano] ¿Y adónde lo llevaron?", "Su guarida. ¡Juntos lo traeremos de vuelta!")
+globo = PackedStringArray("[humano] Â¿Salvarlo? Â¿QuÃ© le pasÃ³ a mi hijo?", "Una secta lo atrajo con sus voces.", "[humano] Â¿Y adÃ³nde lo llevaron?", "Su guarida. Â¡Juntos lo traeremos de vuelta!")
 retraso_globo = 0.8
 pulso = true
 pulso_en = 3.0
