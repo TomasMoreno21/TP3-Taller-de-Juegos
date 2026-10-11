@@ -1,7 +1,7 @@
 @tool
 extends Area2D
 
-@export var climb_speed: float = 260.0
+@export var climb_speed: float = 400.0
 @export var ancho: float = 32.0:
 	set(v):
 		ancho = v

@@ -9,15 +9,15 @@ func _init() -> void:
 	gravity_scale = 1.5
 	max_health = 100
 	melee_hit_delay = 0.06
-	attack_damage = 10
+	attack_damage = 8
 	attack_range = 40.0
 	attack_size = Vector2(110, 80)
 	light_combo_steps = 3
-	heavy_damage = 18
+	heavy_damage = 14
 	heavy_range = 45.0
 	heavy_size = Vector2(140, 100)
 	heavy_combo_steps = 2
-	special_damage = 22
+	special_damage = 17
 	special_size = Vector2(198, 126)
 	special_range = 50.0
 	special_knockback = 260.0
@@ -34,9 +34,10 @@ func _init() -> void:
 	jump_buffer_time = 0.18
 	coyote_time = 0.14
 	jump_cut_multiplier = 0.42
+	salto_rot_grados = 5.0   # inclinación leve al subir/caer
 	melee_sticky = 0.0
 	combos = [
-		{"nombre": "Remate", "secuencia": ["light", "heavy"], "dano": 52, "knockback": 260.0, "tamano": Vector2(162, 114), "rango": 126.0},
+		{"nombre": "Remate", "secuencia": ["light", "heavy"], "dano": 40, "knockback": 260.0, "tamano": Vector2(162, 114), "rango": 126.0},
 	]
 
 

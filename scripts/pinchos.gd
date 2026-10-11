@@ -40,6 +40,10 @@ enum Estilo { ROCA, MADERA, TRIBAL }
 @export var enterrado := 36.0  # tramo que queda DENTRO del tile (tapado por el tilemap)
 @export var z_index_detras := -2 # el nodo se dibuja detrás del suelo (asoman las puntas, la base enterrada queda tapada)
 @export var fraccion_zona_dano := 0.4  # qué porción del alto VISIBLE mata (el resto es decorativo)
+## El collider del jugador es mucho más ancho que su cuerpo visible (190 px el Humano, 470 el Oso): para los
+## pinchos solo cuenta una "hurtbox" chica, centrada y sobre los pies, así no matan desde lejos.
+@export_range(0.1, 1.0, 0.05) var hurtbox_ancho_jugador := 0.35   ## fracción del ancho del collider que cuenta
+@export_range(0.1, 1.0, 0.05) var hurtbox_alto_jugador := 0.4     ## fracción del alto del collider (desde los pies) que cuenta
 
 ## Todo el dibujo de un grupo de pinchos va en UN solo item de dibujo (antes eran ~60 nodos Polygon2D/Line2D por pincho).
 class _Rec:
@@ -220,6 +224,10 @@ func _cuerpo_en_zona(body: Node2D) -> bool:
 	else:
 		return false
 	var rect_body := Rect2(body.global_position + csc.position - s * 0.5, s)
+	if body.is_in_group("player"):
+		var ancho_h := s.x * hurtbox_ancho_jugador
+		var alto_h := s.y * hurtbox_alto_jugador
+		rect_body = Rect2(rect_body.get_center().x - ancho_h * 0.5, rect_body.end.y - alto_h, ancho_h, alto_h)
 	# La zona de daño es SOLO la porción superior del alto visible (fair: tocar
 	# el tallo/palo no mata). Está anclada a la PUNTA (cima del alto visible) y
 	# baja hacia la base, no al revés: el rect anterior cubría la base/tallo.

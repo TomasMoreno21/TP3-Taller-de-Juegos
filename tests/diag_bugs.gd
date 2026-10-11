@@ -36,6 +36,7 @@ func _arena() -> void:
 	world.add_child(enc)
 	await process_frame
 	await process_frame
+	enc.espera_inicial = 0.0
 	enc.empezar()
 	for i in 40:
 		await physics_frame
@@ -54,6 +55,7 @@ func _arena() -> void:
 	_check(quedan == 0, "reiniciar descarta a los auto-spawneados (quedan %d)" % quedan)
 	_check(enc._manuales.is_empty() or enc._manuales[0].is_empty(), "no se readoptan como manuales de la ola 0")
 	# Pausa entre olas: si se reinicia durante el delay no se lanza la ola -1.
+	enc.espera_inicial = 0.0
 	enc.empezar()
 	for i in 40:
 		await physics_frame

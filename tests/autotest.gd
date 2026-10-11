@@ -93,7 +93,7 @@ func _init() -> void:
 	_check(dummy.health < hp_dummy, "Melee humano daña al dummy (%d -> %d)" % [hp_dummy, dummy.health])
 	_limpiar_dummies()
 
-	# --- Combo por secuencia J→K = Remate (42) ---
+	# --- Combo por secuencia J→K = Remate (40) ---
 	_progresion().elegir_mejora(0)
 	_check(_progresion().combos_desbloqueados_forma(0) == 1, "elegir_mejora(0) desbloquea el combo del humano")
 	var e_combo := _spawn_dummy(Vector2(40, 0))
@@ -117,7 +117,7 @@ func _init() -> void:
 		if e_combo.health < hp_tras_j:
 			break
 	var remate_dmg: int = hp_tras_j - e_combo.health
-	_check(remate_dmg == 52, "J→K ejecuta el Remate (52 dmg, fue %d)" % remate_dmg)
+	_check(remate_dmg == 40, "J→K ejecuta el Remate (40 dmg, fue %d)" % remate_dmg)
 	await _esperar_recuperacion("combo")
 	_limpiar_dummies()
 
@@ -125,9 +125,15 @@ func _init() -> void:
 	var hp_block: int = _player.health
 	Input.action_press("block")
 	await physics_frame
-	_player.take_damage(20)
+	_player.take_damage(20, 0.0, -_player.facing)   # golpe de frente
 	await physics_frame
-	_check(_player.health == hp_block, "Block: bloquea el daño")
+	_check(_player.health == hp_block, "Block: bloquea el daño de frente")
+	_player.set("_invuln_timer", 0.0)
+	_player.take_damage(20, 0.0, _player.facing)    # golpe por la espalda: la guardia no cubre
+	await physics_frame
+	_check(_player.health < hp_block, "Block: no cubre golpes por la espalda")
+	_player.health = hp_block
+	_player.set("_invuln_timer", 0.0)
 	Input.action_release("block")
 	await physics_frame
 

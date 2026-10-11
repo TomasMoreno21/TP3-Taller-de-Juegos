@@ -4,16 +4,20 @@
 
 [resource]
 script = ExtResource("1_forma")
-attack_range = 40.0
+attack_range = 87.0
 attack_size = Vector2(110, 80)
-heavy_range = 45.0
+heavy_range = 96.0
 heavy_size = Vector2(140, 100)
-special_range = 50.0
+special_range = 98.0
 combos = Array[Dictionary]([{
-"dano": 52,
+"dano": 40,
 "knockback": 260.0,
 "nombre": "Remate",
 "rango": 126.0,
 "secuencia": ["light", "heavy"],
 "tamano": Vector2(162, 114)
 }])
+mult_recuperacion = 0.9
+lunge_light = 40.0
+lunge_heavy = 60.0
+lunge_combo = 100.0

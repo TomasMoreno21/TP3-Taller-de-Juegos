@@ -12,6 +12,7 @@ var homing_strength := 24.0
 var homing_range := 3000.0
 var homing_offset := Vector2.ZERO   # punto de mira respecto del objetivo (p. ej. más abajo que el pecho)
 var _life := 2.5
+var margen_camara := 80.0   # px fuera de pantalla hasta los que el disparo del jugador sigue vivo (más margen = más alcance visible)
 var _consumido := false
 var _cam: Camera2D
 var _homing_timer := 0.0
@@ -69,7 +70,10 @@ func _physics_process(delta: float) -> void:
 		_homing_timer = HOMING_TICK
 		var target: Node2D = _buscar_enemigo_cercano()
 		if target != null:
-			var to_target: Vector2 = target.global_position + homing_offset - global_position
+			# El punto de mira bajo es para el torso de los enemigos; al cristal se le apunta al centro
+			# (si no, el proyectil pasaba por debajo y nunca lo tocaba).
+			var mira := homing_offset if target.is_in_group("enemy") else Vector2.ZERO
+			var to_target: Vector2 = target.global_position + mira - global_position
 			if to_target.length_squared() > 0.01:
 				var dir_deseada: Vector2 = to_target.normalized()
 				var blended: Vector2 = direction.lerp(dir_deseada, clampf(homing_strength * HOMING_TICK, 0.0, 1.0))
@@ -155,7 +159,7 @@ func _fuera_de_camara() -> bool:
 	var view_size: Vector2 = get_viewport_rect().size / _cam.zoom
 	var cam_pos: Vector2 = _cam.global_position
 	# Los disparos enemigos nacen a veces fuera de pantalla (arquero lejano): margen amplio para que no se borren al aparecer.
-	var half: Vector2 = view_size * 0.5 + (Vector2(400, 400) if enemy_shot else Vector2(80, 80))
+	var half: Vector2 = view_size * 0.5 + (Vector2(400, 400) if enemy_shot else Vector2(margen_camara, margen_camara))
 	return global_position.x < cam_pos.x - half.x or global_position.x > cam_pos.x + half.x or global_position.y < cam_pos.y - half.y or global_position.y > cam_pos.y + half.y
 
 

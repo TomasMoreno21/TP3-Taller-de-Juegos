@@ -25,6 +25,7 @@ func _init() -> void:
 	await process_frame
 	_check(enc.estado == INACTIVE, "Encounter inicia INACTIVE")
 
+	enc.espera_inicial = 0.0
 	enc.empezar()
 	await process_frame
 	await process_frame

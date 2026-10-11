@@ -1,5 +1,10 @@
 # MEMORY.md — Spirit Keeper (ex proyecto Guardabosques / Espíritus del Bosque)
 
+## Sesión 10/10 (b) — Trepar la liana: manos sobre la liana + giro trepando · SIN COMMIT
+- **Causa:** el cuerpo se centraba en la liana (`global_position.x = liana.x`) pero el frame `climb` (173×302) tiene las manos ~61 px a la derecha del eje del sprite (el sprite se espeja alrededor de su propio origen, `visual.position.x` = -24 en ambos lados) → las manos flotaban al lado de la liana. Y mientras `_trepando` la entrada izquierda/derecha no cambiaba `facing`.
+- **Cambio (`player.gd`):** `trepar_desplazamiento_x` 60 px (editable; 0 = cuerpo centrado) corre el sprite hacia atrás según `facing` (`_trepar_off_x`, suavizado con `trepar_giro_vel`; `_visual_base_x + _trepar_off_x` en `_apply_form` y `_recoil_dano`); girar trepando (`dir_x` ≠ `facing`) cambia `facing` sin soltar la liana (con `giro_squash`) y el sprite cruza al otro lado; al soltarse vuelve a su sitio. Salir de la liana en el piso sigue siendo mantener la dirección `TREPAR_EXIT_HOLD` (0.1 s).
+- **Evidencia:** `docs/capturas/liana_antes.png` / `liana_despues.png` (izq.: mirando a la derecha, der.: tras girar a la izquierda). Test: `tests/diag_trepar.gd`.
+
 ## Sesión 10/10 — Animación D y E (tag anim-de) · SIN COMMIT
 - **D:** `transicion_salida_ataque` 0.12 s: `_disolver_pose()` deja un fantasma de la última pose del golpe (alpha 0.85, lineal) al terminar la cola de ataque → el corte a idle/run se reparte en ~7 frames (pico de cambio de imagen 0.0718 → 0.0354). `piernas_vel_min` 0.15 (era 0.35 fijo); el efecto es chico porque el arranque tarda solo 2 frames bajo 35 % (desajuste 0.599 → 0.546).
 - **E:** `reaccion_dano_en_ataque` (true): al recibir daño en pleno golpe se corta el avance (`_lunge_t = 0`), el imán `_melee_sticky` se apaga 0.25 s (`_dano_reciente_t`) y `_recoil_dano` anima solo `position:x` (antes un tween de `position` pisaba la Y del suavizado de desniveles). Medido con Lobo: antes la velocidad seguía en +370 (avance +47 px pese al golpe), ahora -480 → 0 (-20 px).
@@ -90,6 +95,15 @@
 - **Ajuste (08/10, pedido del usuario):** se ELIMINÓ el escudo/acorazado (tipo `acorazado`, `escudo_umbral/mult`, `_ceder_escudos`). El Oso ahora rinde en la **zona marcada**: un golpe ≥ `umbral_garra` 60 (Garra) hace `dano_zona × mult_garra` (2.0) y cuenta como 2 toques. Más espacio: legión `legion_max` 5, cultistas a `legion_espaciado` 150 px y en oleadas de 2 cada `legion_intervalo_spawn` 1.3 s; orbes cada 2.8 s, onda 5.5 s, barrido 6.0 s (mín. 3.5 s).
 - **Lección de test:** `_transformar(f, true)` puede devolver false (test_move del collider) y dejar la forma anterior → resultados intermitentes; en tests usar `_restaurar_forma(f)` y chequear `current_form`.
 
+## Sesión 10/10 (3ª) — Telegrafiado de enemigos (sin commit)
+- Aviso de ataque SUTIL, sin marcas ni líneas en el piso (pedido del usuario tras probar "!" + zonas rojas, que no gustaron): pose de anticipación (`enemy.gd::_anticipacion_*`: se echa atrás, se inclina y se achata; exports `ant_*`) + brillito en el arma (`scripts/telegrafia_enemigo.gd::_destello_arma`). Aparición con círculo ritual (`spawn_telegrafiado`) mejorado y sin cambios después. Referencia: Hollow Knight/Dead Cells (pose > efectos).
+- Destello del arma = resplandor suave (no estrella). Flinch: golpeado a mitad de un ataque ya NO queda `_attack_anim_timer`/`speed_scale` del ataque (causa de la animación "trabada" tras tandas de golpes); la inclinación del stun se lleva por frame (`_pose_stun_actualizar`) en vez de reiniciar un tween por golpe. Test: `diag_flinch`.
+
+## Sesión 10/10 (2ª) — Auditoría de diálogos hasta el nivel 2 (sin commit)
+- `Dialogo`: respiro entre charlas de historia (`seg_entre_charlas` 7 s) y descarte de las viejas (`seg_charla_vence` 30 s): no se pisan ni se encadenan; las `marcado` (jefe) saltean la regla. Probado en `diag_globos`.
+- Borrados 16 diálogos sin uso o redundantes (`p1_*` repetidos, `n1_arquero/lobo_uso/fragil`, `n2_vacio/guardia`, `n2_calma_inicio/b1/c1/d1/e1/e2`) y sus disparadores en nivel2. `p1_combate` pasó a x=4700 (antes de la arena). Intro: si se adelantan los globos, al terminar la charla se devuelve el control.
+- Nivel 3: NO tocado (otra persona). Niveles 4/5 tienen disparadores con `lineas` vacías (placeholders).
+
 ## Sesión 10/10 — Cierre del juego, guion A "Lo contuve" (verificado `diag_final`; sin commit)
 - `scenes/victoria_jefe.tscn` + `scripts/victoria_jefe.gd` reemplazan la pantalla de botones: destello → hijo (PLACEHOLDER, silueta a contraluz; `textura_hijo` para el arte) → 4 globos Humano/Amuleto → negro → frase final → `escena_siguiente` (menú; apuntar a créditos cuando existan). Todo exportado. Capa 80 (bajo el diálogo 85); `nivel_jefe.gd` la agrega y pausa el árbol, no se tocó. Guion y pendientes en `docs/sesiones/final.md`.
 
@@ -143,6 +157,9 @@ ivel2_antes_E.tscn`). **Formato:** cada celda = 3 ints; `v0 = ((y & 0xFFFF) << 1
 - **Franja negra abajo (fix 02/10):** el ParallaxBackground escala con el zoom de la cámara respecto del ORIGEN (0,0), no del centro: con zoom 0.8 (Oso) un arte de 1080 px dejaba ~90 px negros abajo. Capas ahora de 3840×1600, scale 1, position 0 (cubren hasta zoom 0.7; test en `diag_nivel2`). Estalagmitas de fondo con base en y=1600 (suben desde el piso sea cual sea el zoom).
 - Pendiente fondo: probar a mano, VRAM Compressed si la carga es lenta, afinar valores de las capas.
 - Pendiente: probar a mano; aura/silueta de murciélagos (ajustar tamaño/color), título de nivel, ambiente sonoro, limpieza de niveles 4/5, que nivel 3 deje de dar el Murciélago como nuevo (`n3_pozo` sigue explicándolo).
+
+## Sesión 10/10 — Murciélago flotando con hitbox pegada al sprite
+- Forma: `patas_alto` (90 en el Murciélago) + `patas_ancho`: el collider del cuerpo (115×105, coincide con el sprite) flota `patas_alto` px sobre el piso y lo sostiene un collider angosto `Patas` (player.tscn, deshabilitado en las otras formas). `Player._aplicar_colision(data)` lo configura (también en la prueba de espacio al transformarse). `flight_lift` del Murciélago = 0 (el sprite sigue al collider). El proyectil nace del centro del cuerpo (`fire_projectile`). `diag_pies` resta `patas_alto`. `diag_reaparicion` ya falla antes de este cambio (nodo nulo en línea 24).
 
 ## Sesión 03/10 — Subidas de nivel ≈ 1⅓ por nivel de juego (autotest 0; `diag_nivel3` ya falla por geometría de nivel3.tscn en edición)
 - `Progresion.FRAGMENTOS_NIVEL = [8, 25, 50, 74]` (acumulados para niveles 2–5; nivel 5 = máximo, `es_nivel_maximo()`). Con 11/29/42 pickups por nivel: 1.ª al ~75 % del nivel 1, 2.ª a mitad del 2, 3.ª al ~25 % del 3, 4.ª casi al final → las 4 formas con su combo. Si cambian los pickups de un nivel, reajustar el array.

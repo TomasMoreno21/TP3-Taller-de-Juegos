@@ -1,6 +1,11 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/pickup_vida.gd" id="1_pickv"]
+[ext_resource type="Texture2D" path="res://resources/luz_radial.tres" id="2_luz"]
+
+[sub_resource type="CanvasItemMaterial" id="Mat_halo_v"]
+blend_mode = 1
+light_mode = 1
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_pickv"]
 radius = 26.0
@@ -12,6 +17,19 @@ script = ExtResource("1_pickv")
 [node name="Collision" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_pickv")
 
+[node name="Halo" type="Sprite2D" parent="."]
+modulate = Color(1, 0.3, 0.3, 0.6)
+material = SubResource("Mat_halo_v")
+scale = Vector2(0.55, 0.55)
+texture = ExtResource("2_luz")
+texture_filter = 2
+
 [node name="Visual" type="Polygon2D" parent="."]
 color = Color(1, 0.32, 0.28, 1)
 polygon = PackedVector2Array(0, -20, 16, 0, 0, 20, -16, 0)
+
+[node name="Luz" type="PointLight2D" parent="."]
+color = Color(1, 0.36, 0.32, 1)
+energy = 0.9
+texture = ExtResource("2_luz")
+texture_scale = 0.9

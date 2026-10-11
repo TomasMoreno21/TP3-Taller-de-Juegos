@@ -121,8 +121,8 @@ text = "[color=#e6554f][b]TECLADO[/b][/color]
 [color=#b8b4a6]Parry (Humano):[/color]  Shift justo al recibir el golpe
 [color=#b8b4a6]Aleteo (Murciélago):[/color]  Espacio en el aire
 [color=#b8b4a6]Picada (Murciélago):[/color]  S / ↓ en el aire
-[color=#b8b4a6]Preseleccionar forma:[/color]  Q
-[color=#b8b4a6]Transformar:[/color]  T
+[color=#b8b4a6]Elegir forma (anterior / siguiente):[/color]  Q / E
+[color=#b8b4a6]Transformar / volver a Humano:[/color]  T
 [color=#b8b4a6]Pausa:[/color]  Esc"
 
 [node name="Mando" type="RichTextLabel" parent="Panel/Margin/VBox/Columns"]
@@ -144,7 +144,7 @@ text = "[color=#e6554f][b]MANDO[/b][/color]
 [color=#b8b4a6]Parry (Humano):[/color]  LB justo al recibir el golpe
 [color=#b8b4a6]Aleteo (Murciélago):[/color]  A en el aire
 [color=#b8b4a6]Picada (Murciélago):[/color]  Stick / Cruz abajo en el aire
-[color=#b8b4a6]Preseleccionar forma:[/color]  Select
+[color=#b8b4a6]Elegir forma (anterior):[/color]  Select
 [color=#b8b4a6]Transformar:[/color]  RB
 [color=#b8b4a6]Pausa:[/color]  Start"
 

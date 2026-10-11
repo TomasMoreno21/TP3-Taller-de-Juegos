@@ -28,6 +28,8 @@ const LIMITE_TROZO := 44   ## un texto más largo se parte en globos cortos
 @export var radio_peligro := 480.0       ## enemigos más cerca que esto → el globo se hace chico y translúcido
 @export var seg_tras_dano := 1.5         ## tras recibir daño el globo sigue chico este tiempo
 @export var seg_calma_tras_dano := 2.0   ## el Amuleto espera este tiempo sin daño para hablar
+@export var seg_entre_charlas := 7.0     ## respiro mínimo entre una charla y la siguiente (no se pisan ni se encadenan)
+@export var seg_charla_vence := 30.0     ## una charla que esperó más que esto ya no viene al caso (el jugador siguió de largo) y se descarta
 @export var seg_tip_vence := 25.0        ## un consejo que esperó la calma más que esto ya no tiene sentido y se descarta
 @export_group("Game feel del globo")
 @export var flotacion_px := 3.0          ## cuánto sube y baja el globo mientras está en pantalla
@@ -71,6 +73,7 @@ var _tw_gema: Tween
 var _usa_joypad := false
 ## Cuánta ayuda quiere el jugador: 0 = Ninguna, 1 = Ligera (lista sin pistas ni comentarios), 2 = Completa.
 var nivel_ayuda := 2
+var _t_fin_charla := -99.0   ## reloj interno en que terminó la última charla de historia
 var t_ultimo_globo := -99.0   ## reloj interno del último globo (lo usan las reacciones para no hablar de más)
 var _t_ultima_accion := 0.0
 var _pulso_gema := 0.0
@@ -146,7 +149,7 @@ func texto_actual() -> String:
 
 
 func mostrar(lineas: Array, hablante: String = "Amuleto", marcado: bool = false) -> void:
-	if not marcado and not _es_calma():
+	if not marcado and (not _es_calma() or _charla_reciente()):
 		_en_espera.append({"narr": true, "lineas": lineas, "hablante": hablante, "t": _t})
 		return
 	_quitar_tips()
@@ -225,6 +228,7 @@ func _siguiente() -> void:
 		_texto_actual = ""
 		_ocultar_gema_luego()
 		if era_narrativa:
+			_t_fin_charla = _t
 			dialogo_terminado.emit()
 		return
 	_item = _cola.pop_front()
@@ -450,6 +454,16 @@ func _colocar() -> void:
 
 ## Lugar sin acción: ningún enemigo cerca y sin daño reciente. El Amuleto habla (casi siempre) solo ahí,
 ## para que el jugador pueda leerlo sin que le moleste una pelea.
+## True si hay una charla de historia en curso o terminó hace poco: la siguiente espera su turno.
+func _charla_reciente() -> bool:
+	if _fase != Fase.LIBRE and not bool(_item.get("tip", false)):
+		return true
+	for it in _cola:
+		if not bool(it.get("tip", false)):
+			return true
+	return _t - _t_fin_charla < seg_entre_charlas
+
+
 func _es_calma() -> bool:
 	if not is_instance_valid(_jugador):
 		_jugador = get_tree().get_first_node_in_group("player") as Node2D
@@ -476,7 +490,10 @@ func _revisar_espera(delta: float) -> void:
 	_en_espera = []
 	for w in pendientes:
 		if bool(w["narr"]):
-			mostrar(w["lineas"], w["hablante"])
+			if _t - float(w["t"]) < seg_charla_vence:
+				mostrar(w["lineas"], w["hablante"])
+				if _charla_reciente() and not _en_espera.is_empty():
+					_en_espera.back()["t"] = w["t"]   # si volvió a esperar, conserva su antigüedad
 		elif _t - float(w["t"]) < seg_tip_vence:
 			mostrar_tip(w["lineas"], w["hablante"], bool(w["guardar"]))
 

@@ -43,8 +43,9 @@ func _initialize() -> void:
 	await create_timer(0.8).timeout
 	p.set("facing", 1)
 	p.velocity = Vector2.ZERO
-	e.global_position = p.global_position + Vector2(335, 0)
+	e.global_position = p.global_position + Vector2(520, 0)
 	await physics_frame
+	p.set("magnetismo_alcance", 600.0)   # el alcance del Lobo ya supera los 340 px de búsqueda por defecto
 	p.set("magnetismo_mult", 1.0)
 	p._procesar_ataque("heavy", p.forms[1], false)
 	var v_base: float = absf(float(p.get("_lunge_vel")))

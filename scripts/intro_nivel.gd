@@ -42,6 +42,7 @@ var _tw_cam: Tween
 var _tw_cartela: Tween
 var _activa := false
 var _saltar := false
+var _adelanto := false     ## el jugador adelantó los globos: al terminar la charla se le devuelve el control
 var _mantenido := 0.0
 var _t := 0.0
 var _seguir := false
@@ -98,6 +99,12 @@ func _hay_lugar(x: float) -> bool:
 	return true
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if _activa and (event.is_action_pressed("dialog_next") or event.is_action_pressed("dialog_skip")
+			or (event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).keycode == KEY_ENTER)):
+		_adelanto = true
+
+
 func _process(delta: float) -> void:
 	if not _activa:
 		return
@@ -134,8 +141,9 @@ func _correr() -> void:
 	for p in _planos:
 		if p.devolver_control:
 			break
+		_adelanto = false
 		_arrancar_plano(p)
-		await _esperar(p.duracion)
+		await _esperar(p.duracion, not p.globo.is_empty())
 		if _saltar:
 			break
 	if _saltar:
@@ -225,12 +233,21 @@ func _mostrar_cartela(texto: String, duracion: float) -> void:
 	_tw_cartela.tween_property(_cartela, "modulate:a", 0.0, 0.4)
 
 
-func _esperar(seg: float) -> void:
+## Espera `seg`; si el plano tiene globos y el jugador los adelantó, termina en cuanto acaba la charla
+## (así no queda esperando con la cámara de cine cuando ya no hay nada que leer).
+func _esperar(seg: float, con_globos := false) -> void:
+	var dlg := get_node_or_null("/root/Dialogo")
+	var hablando := false
 	var t := 0.0
 	while t < seg and not _saltar:
 		await get_tree().process_frame
 		if not get_tree().paused:   # en pausa el tiempo del plano no corre (los tweens tampoco)
 			t += get_process_delta_time()
+		if con_globos and dlg != null:
+			if dlg.hay_narrativa():
+				hablando = true
+			elif hablando and _adelanto:
+				return
 
 
 ## Devuelve el control, retira las barras y apaga la luz lejana. La cámara sale de modo

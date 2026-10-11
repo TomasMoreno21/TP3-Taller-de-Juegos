@@ -26,6 +26,9 @@ fill_to = Vector2(1, 0.5)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(190, 318)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_patas"]
+size = Vector2(30, 90)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
 size = Vector2(43.363636, 150.32259)
 
@@ -93,6 +96,10 @@ centered = false
 [node name="Collision" type="CollisionShape2D" parent="." unique_id=1655450779]
 position = Vector2(-2, -4.5)
 shape = SubResource("RectangleShape2D_body")
+
+[node name="Patas" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_patas")
+disabled = true
 
 [node name="AttackArea" type="Area2D" parent="." unique_id=1368461241]
 collision_mask = 3

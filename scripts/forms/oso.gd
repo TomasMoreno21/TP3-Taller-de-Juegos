@@ -40,6 +40,7 @@ func _init() -> void:
 	collider_size = Vector2(470, 324)
 	camera_lookahead_mult = 0.65
 	lean_angulo = 2.0
+	salto_rot_grados = 3.0   # inclinación leve al subir/caer
 	hit_zoom = 1.05
 	accel = 1600.0
 	friction = 2100.0

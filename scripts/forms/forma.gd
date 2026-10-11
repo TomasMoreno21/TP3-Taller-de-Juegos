@@ -57,7 +57,12 @@ var _jumps_usados := 0
 
 @export var color: Color = Color(1, 1, 1)
 @export var collider_size: Vector2 = Vector2(16, 40)
+@export var patas_alto: float = 0.0          # px que el cuerpo (collider) flota sobre el piso; lo sostiene un collider angosto ("Patas") debajo
+@export var patas_ancho: float = 30.0         # ancho de ese collider de apoyo
 @export var flight_lift: float = 0.0         # px que flota el sprite sobre su base (volar/planeo)
+@export var flotar_amplitud: float = 0.0       # px que sube y baja el sprite en reposo (formas que vuelan; 0 = sin vaivén)
+@export var flotar_amplitud_mov: float = 0.0   # idem al moverse (más amplio)
+@export var flotar_frecuencia: float = 0.0     # Hz del vaivén (0 = desactivado)
 @export var hit_zoom: float = 1.02
 @export var shake_golpe_ligero: float = 7.5
 @export var shake_golpe_pesado: float = 12.0

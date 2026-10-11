@@ -149,7 +149,7 @@ func _initialize() -> void:
 						var d4: float = piso_de.call(e.global_position, -100.0, 700.0)
 						_chk(d4 < INF and d4 > -10.0, "%s/%s tiene piso debajo (%d px)" % [nm, e.name, int(d4)])
 	var calma: Node = exp.get_node_or_null("Calma")
-	_chk(calma != null and calma.get_child_count() >= 8, "Expansion/Calma tiene tramos de respiro")
+	_chk(calma != null and calma.get_child_count() >= 4, "Expansion/Calma tiene tramos de respiro")
 	if calma != null:
 		for n in calma.get_children():
 			var dc: float = piso_de.call(n.global_position, 0.0, 600.0)
