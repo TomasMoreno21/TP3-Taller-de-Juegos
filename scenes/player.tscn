@@ -6,6 +6,22 @@
 [ext_resource type="AudioStream" uid="uid://qvwrf3f12jv4" path="res://assets/audio/sfx/golpe_pesado_jugador.mp3" id="4_sfx_pesado"]
 [ext_resource type="AudioStream" uid="uid://x8c2mirck2wp" path="res://assets/audio/sfx/transformacion.mp3" id="5_sfx_transform"]
 [ext_resource type="Script" uid="uid://cpye586pkcvia" path="res://scripts/aura.gd" id="6_aura"]
+[ext_resource type="SpriteFrames" path="res://resources/oso_ojos.tres" id="7_ojos"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_aura"]
+blend_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_aura"]
+offsets = PackedFloat32Array(0, 0.45, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.5, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradTexture2D_aura"]
+gradient = SubResource("Gradient_aura")
+width = 512
+height = 512
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(190, 318)
@@ -33,21 +49,6 @@ point_count = 3
 offsets = PackedFloat32Array(0, 0.6, 1)
 colors = PackedColorArray(0.78, 0.72, 0.6, 0.7, 0.78, 0.72, 0.6, 0.45, 0.78, 0.72, 0.6, 0)
 
-[sub_resource type="Gradient" id="Gradient_aura"]
-offsets = PackedFloat32Array(0, 0.45, 1)
-colors = PackedColorArray(1, 1, 1, 1, 1, 1, 1, 0.5, 1, 1, 1, 0)
-
-[sub_resource type="GradientTexture2D" id="GradTexture2D_aura"]
-gradient = SubResource("Gradient_aura")
-width = 512
-height = 512
-fill = 1
-fill_from = Vector2(0.5, 0.5)
-fill_to = Vector2(1, 0.5)
-
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_aura"]
-blend_mode = 1
-
 [node name="Player" type="CharacterBody2D" unique_id=780925585]
 collision_layer = 4
 collision_mask = 3
@@ -55,7 +56,7 @@ script = ExtResource("1_player")
 ajuste_frames = {
 "lobo_idle:0": Vector2(0, 0),
 "lobo_idle:1": Vector2(0, 0),
-"lobo_idle:2": Vector2(-1, 0),
+"lobo_idle:2": Vector2(0, 0),
 "lobo_idle:3": Vector2(0, 0)
 }
 sonido_golpe_liviano = ExtResource("3_sfx_liviano")
@@ -70,16 +71,24 @@ volumen_special_db = -10.0
 z_index = -2
 material = SubResource("CanvasItemMaterial_aura")
 texture = SubResource("GradTexture2D_aura")
-opacidad = 0.55
 script = ExtResource("6_aura")
 
 [node name="Sprite2D" type="AnimatedSprite2D" parent="." unique_id=1857419060]
 texture_filter = 1
+position = Vector2(-24, 1)
 sprite_frames = ExtResource("2_frames")
-animation = &"lobo_idle"
+animation = &"lobo_attack"
 autoplay = "run"
 frame = 3
-frame_progress = 0.7619751
+frame_progress = 1.0
+offset = Vector2(40, -15)
+
+[node name="Ojos" type="AnimatedSprite2D" parent="Sprite2D" unique_id=1824895579]
+visible = false
+texture_filter = 1
+sprite_frames = ExtResource("7_ojos")
+animation = &"parpadeo"
+centered = false
 
 [node name="Collision" type="CollisionShape2D" parent="." unique_id=1655450779]
 position = Vector2(-2, -4.5)

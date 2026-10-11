@@ -218,6 +218,43 @@ var _bloqueo_sin_cd := false
 @export var anclar_pies := true         ## apoya la base de cada frame en el piso (evita flotar/hundirse)
 @export var pies_hundidos := 4.0         ## px que los pies se meten en el suelo (sensación de peso)
 @export var ajuste_frames: Dictionary = {}  ## offset por frame encima del anclaje; clave "anim:frame" o "anim" -> Vector2 (px). Ej: "lobo_idle:2" -> Vector2(0, -6)
+@export var parpadeo_min := 2.0             ## segundos mínimos entre parpadeos del Oso
+@export var parpadeo_max := 5.5             ## segundos máximos entre parpadeos del Oso
+## Posición local (px) del ojo del Oso por frame del cuerpo: esquina superior izq. de la imagen del ojo
+## respecto al centro del sprite. La capa "Ojos" (hijo del Sprite2D) la usa para pegar el ojo en cada frame.
+@export var ojos_oso: Dictionary = {
+	"oso_idle:0": Vector2(159.5, -33.0),
+	"oso_idle:1": Vector2(161.5, -21.0),
+	"oso_idle:2": Vector2(164.0, -31.5),
+	"oso_idle:3": Vector2(161.0, -36.5),
+	"oso_caminar:0": Vector2(163.0, -26.5),
+	"oso_caminar:1": Vector2(168.0, -24.5),
+	"oso_caminar:2": Vector2(162.5, -26.5),
+	"oso_caminar:3": Vector2(170.5, -28.0),
+	"oso_caminar:4": Vector2(177.5, -25.0),
+	"oso_caminar:5": Vector2(162.0, -27.5),
+}
+@export var ojos_ajuste := Vector2.ZERO     ## desplazamiento global (px) de la capa Ojos, para afinar de una todos los frames
+## Animaciones del Oso cuyo arte ya NO trae el ojo dibujado: en estas la capa "Ojos" queda
+## visible (ojo abierto) y parpadea.
+@export var ojos_animaciones: PackedStringArray = ["oso_caminar", "oso_idle"]
+## Posición local (px) del ojo del Lobo por frame del cuerpo (esquina superior izq. de la imagen del ojo
+## respecto al centro del sprite). El Lobo solo la usa en las animaciones sin el ojo dibujado.
+@export var ojos_lobo: Dictionary = {
+	"lobo_idle:0": Vector2(86.1, -68.5),
+	"lobo_idle:1": Vector2(84.6, -61.7),
+	"lobo_idle:2": Vector2(83.7, -56.3),
+	"lobo_idle:3": Vector2(84.6, -61.7),
+	"lobo_run:0": Vector2(111.5, -27.4),
+	"lobo_run:1": Vector2(106.4, -25.6),
+	"lobo_run:2": Vector2(86.7, -44.4),
+	"lobo_run:3": Vector2(91.5, -42.8),
+}
+@export var ojos_ajuste_lobo := Vector2.ZERO   ## desplazamiento global (px) de la capa Ojos para el Lobo
+## Animaciones del Lobo cuyo arte ya NO trae el ojo dibujado (el resto sí lo trae):
+## en estas la capa "Ojos" queda visible (ojo abierto) y parpadea.
+@export var ojos_animaciones_lobo: PackedStringArray = ["lobo_idle", "lobo_run"]
+@export var ojos_frames_lobo: SpriteFrames = preload("res://resources/lobo_ojos.tres")   ## parpadeo del Lobo
 @export_group("")
 var _was_blocking := false
 var _was_on_floor := false
@@ -256,6 +293,7 @@ var cinematica_activa := false   ## intro de nivel en curso: sin control ni dañ
 var _velo_muerte: CanvasLayer
 var _invuln_timer := 0.0
 var _invuln_sin_parpadeo := false
+var _parpadeo_cd := 0.0
 var _cooldown_formas: Dictionary = {}
 const COOLDOWN_AGOTADA := 2.0
 const COOLDOWN_TRANSFORM := 0.35   # anti-spam: el freno real son la energía mínima y el drenaje
@@ -359,6 +397,9 @@ var _golpe_rapido_t := 0.0
 @onready var attack_hitbox: CollisionShape2D = $AttackArea/AttackHitbox
 @onready var polvo: CPUParticles2D = $Polvo
 @onready var sombra: Polygon2D = $Sombra
+@onready var ojos: AnimatedSprite2D = $Sprite2D/Ojos
+
+var _ojos_frames_oso: SpriteFrames   # SpriteFrames del parpadeo del Oso (tomado del nodo al iniciar)
 
 var _derrape_cd := 0.0
 var _t_sin_suelo := 0.0
@@ -394,9 +435,15 @@ func _ready() -> void:
 	floor_stop_on_slope = false
 	floor_max_angle = deg_to_rad(45.0)
 	wall_min_slide_angle = deg_to_rad(15.0)
+	if ojos != null:
+		_ojos_frames_oso = ojos.sprite_frames
 	_apply_form()
 	visual.frame_changed.connect(_on_frame_animacion)
 	visual.animation_changed.connect(_anclar_pies)
+	visual.animation_changed.connect(_actualizar_ojos_pos)
+	if ojos != null:
+		ojos.visible = false
+		_parpadeo_cd = randf_range(parpadeo_min, parpadeo_max)
 	_liana_loop = AudioStreamPlayer.new()
 	_liana_loop.stream = sonido_liana_deslizar
 	_liana_loop.bus = &"SFX"
@@ -442,6 +489,7 @@ func _physics_process(delta: float) -> void:
 
 	var data: Forma = forms[current_form]
 	data.tick(self, delta)
+	_tick_parpadeo(delta)
 	_derrape_cd = maxf(_derrape_cd - delta, 0.0)
 	_t_sin_suelo = 0.0 if is_on_floor() else _t_sin_suelo + delta
 	_denegar_cd = maxf(_denegar_cd - delta, 0.0)
@@ -1953,6 +2001,9 @@ func _apply_form() -> void:
 	_anclar_pies()
 	_gravity_override = -1.0
 	blocking = false
+	if ojos != null and _ojos_cfg()["pos"] == null and ojos.visible:
+		ojos.stop()
+		ojos.visible = false
 
 
 func _tinte_forma(color: Color, alpha: float = 1.0) -> Color:
@@ -2962,8 +3013,66 @@ func _ajuste_frame() -> Vector2:
 	return Vector2.ZERO
 
 
+## Config de la capa "Ojos" según la forma actual: posiciones por frame, animaciones cuyo arte va sin
+## el ojo dibujado, SpriteFrames del parpadeo y ajuste global. `pos` = null si la forma no usa la capa.
+func _ojos_cfg() -> Dictionary:
+	match current_form:
+		Form.OSO:
+			return {"pos": ojos_oso, "anim": ojos_animaciones, "frames": _ojos_frames_oso, "ajuste": ojos_ajuste}
+		Form.LOBO:
+			return {"pos": ojos_lobo, "anim": ojos_animaciones_lobo, "frames": ojos_frames_lobo, "ajuste": ojos_ajuste_lobo}
+	return {"pos": null, "anim": PackedStringArray(), "frames": null, "ajuste": Vector2.ZERO}
+
+
+## Ojos de Oso/Lobo: capa "Ojos" (hijo del Sprite2D) pegada al frame de la cabeza. En las animaciones
+## de `ojos_animaciones`/`ojos_animaciones_lobo` (arte sin el ojo dibujado) queda visible con el ojo
+## abierto y, cada tanto, reproduce "parpadeo" (~0,2 s) que la deja otra vez abierta. En el resto se oculta.
+func _tick_parpadeo(delta: float) -> void:
+	if ojos == null:
+		return
+	var cfg := _ojos_cfg()
+	var pos = cfg["pos"]
+	var mostrar := pos != null and not _derrota_activa and not _attacking \
+		and (cfg["anim"] as PackedStringArray).has(String(visual.animation))
+	if not mostrar:
+		if ojos.visible:
+			ojos.stop()
+			ojos.visible = false
+		_parpadeo_cd = randf_range(parpadeo_min, parpadeo_max)
+		return
+	if ojos.sprite_frames != cfg["frames"]:
+		ojos.sprite_frames = cfg["frames"]
+	if ojos.animation == &"parpadeo" and ojos.is_playing():
+		return
+	if not ojos.visible:
+		_actualizar_ojos_pos()
+		ojos.frame = 0
+		ojos.visible = true
+	_parpadeo_cd -= delta
+	if _parpadeo_cd <= 0.0:
+		_parpadeo_cd = randf_range(parpadeo_min, parpadeo_max)
+		ojos.frame = 0
+		ojos.play(&"parpadeo")
+
+
+## Coloca la capa "Ojos" sobre el ojo del frame actual del cuerpo (solo cambia la posición).
+func _actualizar_ojos_pos() -> void:
+	if ojos == null:
+		return
+	var cfg := _ojos_cfg()
+	var pos = cfg["pos"]
+	if pos == null:
+		return
+	var clave := "%s:%d" % [visual.animation, visual.frame]
+	if not pos.has(clave):
+		return
+	ojos.self_modulate = visual.self_modulate
+	ojos.position = (pos[clave] as Vector2) + visual.offset + (cfg["ajuste"] as Vector2)
+
+
 func _on_frame_animacion() -> void:
 	_anclar_pies()
+	_actualizar_ojos_pos()
 	if _trepando:
 		return
 	var anim := visual.animation

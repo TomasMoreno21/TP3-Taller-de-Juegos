@@ -38,6 +38,8 @@
 [ext_resource type="Texture2D" uid="uid://bgsvn4wn51or" path="res://Sprites/Jugador y Transformaciones/Atq LOBO2.png" id="34_atql2"]
 [ext_resource type="Texture2D" uid="uid://bgkq6t6pn56xv" path="res://Sprites/Jugador y Transformaciones/Atq LOBO3.png" id="35_atql3"]
 [ext_resource type="Texture2D" uid="uid://bkahqgv255ay8" path="res://Sprites/Jugador y Transformaciones/Atq LOBO4.png" id="36_atql4"]
+[ext_resource type="Texture2D" uid="uid://kbkokx3mww3t" path="res://Sprites/Jugador y Transformaciones/ctrepar1.png" id="37_trepa1"]
+[ext_resource type="Texture2D" uid="uid://d3e33jsai14wd" path="res://Sprites/Jugador y Transformaciones/ctrepar2.png" id="38_trepa2"]
 
 [resource]
 animations = [{
@@ -94,7 +96,10 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_ybjtb")
+"texture": ExtResource("37_trepa1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("38_trepa2")
 }],
 "loop": 1,
 "name": &"climb",
@@ -127,16 +132,16 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("20_lidle2")
-}, {
-"duration": 1.0,
-"texture": ExtResource("22_lidle4")
-}, {
-"duration": 1.0,
 "texture": ExtResource("19_lidle1")
 }, {
 "duration": 1.0,
+"texture": ExtResource("20_lidle2")
+}, {
+"duration": 1.0,
 "texture": ExtResource("21_lidle3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_lidle4")
 }],
 "loop": 1,
 "name": &"lobo_idle",
