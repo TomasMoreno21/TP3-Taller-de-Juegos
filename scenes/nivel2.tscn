@@ -396,18 +396,24 @@ estilo = 0
 color_estaca = Color(0.8, 0.78, 0.93, 1)
 
 [node name="Pinchos2" parent="Pinchos" unique_id=355839291 instance=ExtResource("9_4hvoh")]
+estilo = 0
+color_estaca = Color(0.8, 0.78, 0.93, 1)
 z_index = -2
 position = Vector2(-961.0001, 2206)
 rotation = -0.8243897
 cantidad = 18
 
 [node name="Pinchos3" parent="Pinchos" unique_id=489751221 instance=ExtResource("9_4hvoh")]
+estilo = 0
+color_estaca = Color(0.8, 0.78, 0.93, 1)
 z_index = -2
 position = Vector2(-1447, 2445.9998)
 rotation = 0.24141356
 cantidad = 10
 
 [node name="Pinchos4" parent="Pinchos" unique_id=790021723 instance=ExtResource("9_4hvoh")]
+estilo = 0
+color_estaca = Color(0.8, 0.78, 0.93, 1)
 z_index = -2
 position = Vector2(-1673.9999, 2383)
 rotation = 0.10435156
@@ -1492,18 +1498,6 @@ spawn_telegrafiado = true
 
 [node name="Calma" type="Node2D" parent="Expansion" unique_id=1998719183]
 
-[node name="CalmaA" parent="Expansion/Calma" unique_id=512865508 instance=ExtResource("32_dtg")]
-position = Vector2(4056, 664)
-dialogo_id = "n2_calma_a"
-
-[node name="CalmaC2" parent="Expansion/Calma" unique_id=1072805534 instance=ExtResource("32_dtg")]
-position = Vector2(5704, 3480)
-dialogo_id = "n2_calma_c2"
-
-[node name="CalmaD2" parent="Expansion/Calma" unique_id=1002483287 instance=ExtResource("32_dtg")]
-position = Vector2(2200, 5400)
-dialogo_id = "n2_calma_d2"
-
 [node name="CalmaD3" parent="Expansion/Calma" unique_id=528969236 instance=ExtResource("32_dtg")]
 position = Vector2(-800, 5400)
 dialogo_id = "n2_calma_d3"
@@ -2363,21 +2357,29 @@ script = ExtResource("streaming_zonas")
 position = Vector2(-276, 1727)
 
 [node name="Pinchos20" parent="." unique_id=1699440114 instance=ExtResource("9_4hvoh")]
+estilo = 0
+color_estaca = Color(0.8, 0.78, 0.93, 1)
 z_index = -2
 position = Vector2(-3668, 7728)
 cantidad = 60
 
 [node name="Pinchos21" parent="." unique_id=1108560017 instance=ExtResource("9_4hvoh")]
+estilo = 0
+color_estaca = Color(0.8, 0.78, 0.93, 1)
 z_index = -2
 position = Vector2(-4997, 7683)
 rotation = 0.34208137
 
 [node name="Pinchos22" parent="." unique_id=2006002361 instance=ExtResource("9_4hvoh")]
+estilo = 0
+color_estaca = Color(0.8, 0.78, 0.93, 1)
 z_index = -2
 position = Vector2(-2336, 7685)
 rotation = -0.3474473
 
 [node name="Pinchos2" parent="." unique_id=1959376759 instance=ExtResource("9_4hvoh")]
+estilo = 0
+color_estaca = Color(0.8, 0.78, 0.93, 1)
 z_index = -2
 position = Vector2(-5253, 2769.9998)
 rotation = 1.6679387

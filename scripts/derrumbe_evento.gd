@@ -37,6 +37,26 @@ extends Node2D
 @export var ambiente_duracion := 0.6
 @export var ambiente_piedras := Vector2i(1, 3)      ## piedritas que caen con cada vibración
 
+@export_group("Ritmo del shake")
+@export var shake_valle := 0.55                     ## fracción de `fuerza_shake` entre oleadas (1 = shake constante como antes)
+@export var shake_pico := 1.35                      ## múltiplo de `fuerza_shake` en el pico de cada oleada
+@export var subida_s := 1.5                         ## s en llegar a la intensidad plena al entrar (0 = de golpe)
+@export var aviso_oleada := 0.4                     ## s antes de cada oleada: crujido y polvo del techo (la señal de que viene)
+
+@export_group("Sonido")
+@export var sonido_retumbo: AudioStream = preload("res://assets/audio/ambiente_nivel2/cueva_rumor.wav")
+@export var sonido_aviso: AudioStream = preload("res://assets/audio/sfx/gen/fragil_crujir.wav")
+@export var sonido_impacto: AudioStream = preload("res://assets/audio/sfx/gen/aterrizaje_fuerte.wav")
+@export var sonido_piedra: AudioStream = preload("res://assets/audio/sfx/gen/proyectil_impacto.wav")
+@export var volumen_retumbo_db := -14.0
+@export var volumen_aviso_db := -10.0
+@export var volumen_impacto_db := -4.0
+@export var volumen_piedra_db := -18.0
+
+@export_group("Final")
+@export var final_fuerza := 1.5                     ## múltiplo de `fuerza_shake` del último retumbo al terminar
+@export var final_fade := 1.6                       ## s en apagarse el retumbo y el polvo al terminar
+
 var _activo := false
 var _disparado := false
 var _terminado := false                             # al llegar a `fin` el evento se apaga para siempre (no vuelve a vibrar al saltar)
@@ -45,10 +65,25 @@ var _t_shake := 0.0
 var _t_roca := 0.0
 var _t_amb := 8.0
 var _jugador: Node2D
+var _t_activo := 0.0                                # s desde que arrancó el derrumbe fuerte (para la subida de intensidad)
+var _pico := 0.0                                    # 1 al empezar una oleada y decae: marca los picos del shake
+var _avisada := false                               # ya sonó el aviso de la próxima oleada
+var _retumbo: AudioStreamPlayer
+var _retumbo_vivo := false                          # el retumbo de fondo debe seguir sonando
+var _t_ult_piedra := 0                              # ms del último sonido de piedra (para no saturar)
 
 
 func _ready() -> void:
 	set_physics_process(true)
+	# Retumbo de fondo: un reproductor propio que se repite mientras dura el derrumbe fuerte.
+	_retumbo = AudioStreamPlayer.new()
+	_retumbo.stream = sonido_retumbo
+	_retumbo.bus = &"SFX"
+	_retumbo.volume_db = -80.0
+	add_child(_retumbo)
+	_retumbo.finished.connect(func() -> void:
+		if _retumbo_vivo:
+			_retumbo.play())
 
 
 ## Lo llama el `derrumbe_disparador`: el derrumbe fuerte arranca ya y dura hasta la x de `fin`.
@@ -63,6 +98,7 @@ func pulso(fuerza: float, duracion: float, piedras: int, r_min := 4.0, r_max := 
 	if not is_instance_valid(_jugador):
 		_jugador = get_tree().get_first_node_in_group("player") as Node2D
 	_sacudir(fuerza, duracion)
+	_sfx(sonido_retumbo, volumen_retumbo_db - 6.0 + clampf(fuerza - 3.0, 0.0, 14.0) * 0.6, 0.05, 1.0)
 	for i in piedras:
 		get_tree().create_timer(randf_range(0.05, duracion), false).timeout.connect(_soltar_escombro.bind(r_min, r_max, true))
 
@@ -82,21 +118,41 @@ func _physics_process(delta: float) -> void:
 		_espera = primera_espera
 		_t_shake = 0.0
 		_t_roca = pausa_roca_max
+		_t_activo = 0.0
+		_pico = 0.0
+		_avisada = false
+		_retumbo_vivo = true
+		if _retumbo != null:
+			_retumbo.volume_db = -80.0
+			_retumbo.play()
 	elif not dentro and _activo:
 		_activo = false
 		_terminado = true   # llegó a las lianas: se acabó, ni zona ni ambiente
+		_final()
 		return
 	if not _activo:
 		if inicio != null or _disparado:
 			_ambiente(delta)
 		return
+	# Ritmo del shake: sube al entrar, valle entre oleadas y pico cuando cae cada una.
+	_t_activo += delta
+	_pico = maxf(_pico - delta * 1.6, 0.0)
+	var subida := clampf(0.35 + 0.65 * _t_activo / subida_s, 0.0, 1.0) if subida_s > 0.0 else 1.0
+	var nivel := lerpf(shake_valle, shake_pico, _pico)
 	_t_shake -= delta
 	if _t_shake <= 0.0:
 		_t_shake = intervalo_shake
-		_sacudir(fuerza_shake, intervalo_shake * 1.8)
+		_sacudir(fuerza_shake * subida * nivel, intervalo_shake * 1.8)
+	if _retumbo != null:
+		_retumbo.volume_db = volumen_retumbo_db + 6.0 * _pico + (subida - 1.0) * 12.0
 	_espera -= delta
+	if not _avisada and _espera <= aviso_oleada:
+		_avisada = true
+		_aviso_oleada()
 	if _espera <= 0.0:
 		_espera = randf_range(pausa_min, pausa_max)
+		_avisada = false
+		_pico = 1.0
 		_oleada()
 	if rocas_dirigidas:
 		_t_roca -= delta
@@ -111,6 +167,58 @@ func _sacudir(fuerza: float, duracion: float) -> void:
 		cam.shake(fuerza, duracion)
 
 
+## Reproduce un sonido puntual por el AudioManager (si no está, no suena).
+func _sfx(stream: AudioStream, db: float, variacion := 0.0, tono := 1.0) -> void:
+	var am := get_node_or_null("/root/AudioManager")
+	if am != null and stream != null:
+		am.play_sfx(stream, db, variacion, tono)
+
+
+## Sonido de un impacto en `pos`: más débil cuanto más lejos del jugador; las piedras chicas se espacian.
+func sonar_impacto(pos: Vector2, grande: bool) -> void:
+	var lejos := 0.0
+	if is_instance_valid(_jugador):
+		lejos = pos.distance_to(_jugador.global_position)
+	var atenuar := -clampf(lejos / 150.0, 0.0, 16.0)
+	if grande:
+		_sfx(sonido_impacto, volumen_impacto_db + atenuar, 0.08, randf_range(0.78, 0.95))
+		return
+	var ahora := Time.get_ticks_msec()
+	if ahora - _t_ult_piedra < 70:
+		return
+	_t_ult_piedra = ahora
+	_sfx(sonido_piedra, volumen_piedra_db + atenuar, 0.15, randf_range(0.8, 1.2))
+
+
+## Señal de la próxima oleada: crujido, un retumbo corto y polvo que se desprende del techo.
+func _aviso_oleada() -> void:
+	_sacudir(fuerza_shake * shake_pico * 0.8, maxf(aviso_oleada, 0.15))
+	_sfx(sonido_aviso, volumen_aviso_db, 0.1, randf_range(0.85, 1.0))
+	for i in 6:
+		get_tree().create_timer(randf_range(0.0, maxf(aviso_oleada, 0.1)), false).timeout.connect(_soltar_escombro.bind(2.5, 5.0, true))
+
+
+## Cierre del derrumbe: un último retumbo grande, nube de polvo y escombros inofensivos; el retumbo y la
+## sacudida se apagan solos en `final_fade` s. (No hace daño: es solo despedida.)
+func _final() -> void:
+	_sacudir(fuerza_shake * final_fuerza, 0.9)
+	_sfx(sonido_impacto, volumen_impacto_db + 2.0, 0.0, 0.7)
+	_retumbo_vivo = false
+	if _retumbo != null and _retumbo.playing:
+		var tw := create_tween()
+		tw.tween_property(_retumbo, "volume_db", -60.0, maxf(final_fade, 0.1))
+		tw.tween_callback(_retumbo.stop)
+	if not is_instance_valid(_jugador):
+		return
+	var c := color_escombro.lightened(0.25)
+	for i in 4:
+		var p := _jugador.global_position + Vector2(randf_range(-420.0, 420.0), randf_range(-260.0, -60.0))
+		get_tree().create_timer(i * 0.18, false).timeout.connect(Burst.emitir.bind(self, p, c, 26, 2.0))
+	Burst.onda(self, _jugador.global_position + Vector2(0, -80), c, 280.0, 1.0, 6.0)
+	for i in 10:
+		get_tree().create_timer(randf_range(0.1, final_fade), false).timeout.connect(_soltar_escombro.bind(7.0, 18.0, true))
+
+
 ## Fuera de la zona: de vez en cuando una vibración leve y alguna piedra.
 func _ambiente(delta: float) -> void:
 	if not ambiente_activo:
@@ -120,6 +228,7 @@ func _ambiente(delta: float) -> void:
 		return
 	_t_amb = randf_range(ambiente_pausa_min, ambiente_pausa_max)
 	_sacudir(ambiente_fuerza, ambiente_duracion)
+	_sfx(sonido_retumbo, volumen_retumbo_db - 8.0, 0.05, 1.15)   # la cueva se queja a lo lejos
 	var n := randi_range(ambiente_piedras.x, ambiente_piedras.y)
 	for i in n:
 		get_tree().create_timer(randf_range(0.1, ambiente_duracion + 0.4), false).timeout.connect(_soltar_escombro.bind(4.0, 10.0, true))
@@ -144,6 +253,7 @@ func _soltar_escombro(r_min: float, r_max: float, ambiente: bool) -> void:
 	e.global_position = Vector2(x, techo + 26.0)
 	e.vel = Vector2(randf_range(-40.0, 40.0), 0.0)
 	e.giro = randf_range(-6.0, 6.0)
+	e.evento = self
 	get_parent().add_child(e)
 
 
@@ -174,6 +284,14 @@ func _roca_dirigida() -> void:
 	a.duracion = aviso_s
 	a.ancho = radio_dano
 	get_parent().add_child(a)
+	_sfx(sonido_aviso, volumen_aviso_db, 0.1, randf_range(0.9, 1.1))
+	var grieta := _Grieta.new()
+	grieta.global_position = Vector2(x, techo)
+	grieta.duracion = aviso_s
+	get_parent().add_child(grieta)
+	var n_polvo := maxi(int(aviso_s / 0.07), 1)
+	for i in n_polvo:
+		get_tree().create_timer(aviso_s * float(i) / float(n_polvo), false).timeout.connect(_caer_polvo.bind(x, techo))
 	var cuerpo := {"x": x, "techo": techo}
 	get_tree().create_timer(aviso_s, false).timeout.connect(_caer_roca_dirigida.bind(cuerpo))
 
@@ -188,6 +306,7 @@ func _caer_roca_dirigida(d: Dictionary) -> void:
 	e.dano = dano_roca
 	e.radio_dano = radio_dano
 	e.sacudir = fuerza_shake * 0.5
+	e.evento = self
 	get_parent().add_child(e)
 
 
@@ -218,6 +337,116 @@ class _Aviso extends Node2D:
 		draw_polyline(pts + PackedVector2Array([pts[0]]), Color(0.95, 0.35, 0.2, (0.35 + 0.5 * pulso) * k), 2.5)
 
 
+## Polvo y piedritas que se sueltan del techo en el punto donde va a caer una roca (señal de que se afloja).
+func _caer_polvo(x: float, techo: float) -> void:
+	var e := _Escombro.new()
+	e.radio = randf_range(2.2, 4.2)
+	e.color = color_escombro.lightened(randf_range(0.05, 0.2))
+	e.global_position = Vector2(x + randf_range(-26.0, 26.0), techo + 6.0)
+	e.vel = Vector2(randf_range(-25.0, 25.0), randf_range(20.0, 90.0))
+	e.giro = randf_range(-8.0, 8.0)
+	get_parent().add_child(e)
+
+
+## Grieta en el techo sobre la roca que va a caer: se abre durante el aviso.
+class _Grieta extends Node2D:
+	var duracion := 0.9
+	var _t := 0.0
+	var _zig := PackedFloat32Array()
+
+	func _ready() -> void:
+		z_index = 3
+		for i in 6:
+			_zig.append(randf_range(-12.0, 12.0))
+
+	func _process(delta: float) -> void:
+		_t += delta
+		queue_redraw()
+		if _t >= duracion + 0.25:
+			queue_free()
+
+	func _draw() -> void:
+		var k := clampf(_t / maxf(duracion, 0.01), 0.0, 1.0)
+		var largo := 70.0 * k
+		var a := clampf(1.0 - maxf(_t - duracion, 0.0) / 0.25, 0.0, 1.0)
+		var pts := PackedVector2Array([Vector2.ZERO])
+		for i in _zig.size():
+			var f := float(i + 1) / float(_zig.size())
+			pts.append(Vector2(_zig[i] * f, largo * f))
+		draw_polyline(pts, Color(0.02, 0.02, 0.03, 0.85 * a), 5.0)
+		draw_polyline(pts, Color(0.95, 0.5, 0.3, 0.45 * a * k), 1.6)
+
+
+## Anillo de polvo aplastado contra el piso en un impacto fuerte.
+class _Onda extends Node2D:
+	var radio := 110.0
+	var color := Color(0.5, 0.5, 0.55)
+	var _t := 0.0
+	const DUR := 0.4
+
+	func _ready() -> void:
+		z_index = 5
+
+	func _process(delta: float) -> void:
+		_t += delta
+		queue_redraw()
+		if _t >= DUR:
+			queue_free()
+
+	func _draw() -> void:
+		var k := clampf(_t / DUR, 0.0, 1.0)
+		var r := radio * (1.0 - pow(1.0 - k, 3.0))
+		var a := 1.0 - k
+		var pts := PackedVector2Array()
+		for i in 24:
+			var an := TAU * float(i) / 24.0
+			pts.append(Vector2(cos(an) * r, sin(an) * r * 0.16 - 4.0))
+		draw_colored_polygon(pts, Color(color.r, color.g, color.b, 0.18 * a))
+		draw_polyline(pts + PackedVector2Array([pts[0]]), Color(color.r, color.g, color.b, 0.7 * a), 3.0)
+
+
+## Pedazo de roca que salta del impacto, rebota una vez y se desvanece.
+class _Pedazo extends Node2D:
+	var radio := 6.0
+	var color := Color(0.3, 0.3, 0.38)
+	var vel := Vector2.ZERO
+	var _t := 0.0
+	var _rebotes := 0
+	var _giro := randf_range(-9.0, 9.0)
+	var _puntos := PackedVector2Array()
+
+	func _ready() -> void:
+		z_index = 5
+		for i in 5:
+			var an := TAU * float(i) / 5.0
+			_puntos.append(Vector2(cos(an), sin(an)) * radio * randf_range(0.6, 1.1))
+		queue_redraw()
+
+	func _draw() -> void:
+		draw_colored_polygon(_puntos, color)
+
+	func _physics_process(delta: float) -> void:
+		_t += delta
+		if _t >= 0.75:
+			queue_free()
+			return
+		modulate.a = clampf(1.0 - (_t - 0.4) / 0.35, 0.0, 1.0)
+		vel.y += 1500.0 * delta
+		rotation += _giro * delta
+		var paso := vel * delta
+		var q := PhysicsRayQueryParameters2D.create(global_position, global_position + paso + Vector2(0, radio), 1)
+		var h := get_world_2d().direct_space_state.intersect_ray(q)
+		if h.is_empty():
+			global_position += paso
+			return
+		if _rebotes == 0 and vel.y > 150.0:
+			_rebotes = 1
+			global_position.y = (h.position as Vector2).y - radio
+			vel = Vector2(vel.x * 0.6, -vel.y * 0.35)
+		else:
+			vel = Vector2.ZERO
+
+
 ## Roca que cae del techo y se deshace en polvo contra el piso. Las dirigidas (`dano` > 0) lastiman si caen sobre el jugador.
 class _Escombro extends Node2D:
 	var radio := 12.0
@@ -227,7 +456,9 @@ class _Escombro extends Node2D:
 	var dano := 0
 	var radio_dano := 80.0
 	var sacudir := 0.0
+	var evento: Node                                   # el `derrumbe_evento` (para el sonido de los impactos)
 	var _puntos := PackedVector2Array()
+	var _estela := PackedVector2Array()                # últimas posiciones (globales) de las rocas grandes: dejan estela
 
 	func _ready() -> void:
 		z_index = 4
@@ -238,6 +469,11 @@ class _Escombro extends Node2D:
 		queue_redraw()
 
 	func _draw() -> void:
+		var m := _estela.size()
+		for i in range(m - 1):
+			var k := float(i + 1) / float(m)
+			var c := Color(0.62, 0.58, 0.52, 0.32 * k)
+			draw_line(to_local(_estela[i]), to_local(_estela[i + 1]), c, radio * 0.9 * k)
 		draw_colored_polygon(_puntos, color)
 		draw_polyline(_puntos + PackedVector2Array([_puntos[0]]), color.darkened(0.45), 2.0)
 
@@ -252,13 +488,33 @@ class _Escombro extends Node2D:
 			queue_free()
 			return
 		global_position += paso
+		if dano > 0:
+			_estela.append(global_position)
+			if _estela.size() > 7:
+				_estela.remove_at(0)
+			queue_redraw()
 		if vel.y > 2600.0 and dano <= 0:
 			queue_free()
 
 	func _impacto(p: Vector2) -> void:
 		Burst.emitir(self, p, color.lightened(0.2), 10 if dano <= 0 else 26, 0.8 if dano <= 0 else 1.6)
+		if evento != null and is_instance_valid(evento) and (dano > 0 or radio >= 12.0):
+			evento.sonar_impacto(p, dano > 0)
 		if dano <= 0:
 			return
+		var padre := get_parent()
+		var onda := _Onda.new()
+		onda.global_position = p
+		onda.radio = radio_dano * 1.5
+		onda.color = color.lightened(0.3)
+		padre.add_child(onda)
+		for i in 5:
+			var pz := _Pedazo.new()
+			pz.global_position = p + Vector2(randf_range(-14.0, 14.0), -6.0)
+			pz.vel = Vector2(randf_range(-380.0, 380.0), randf_range(-540.0, -240.0))
+			pz.radio = randf_range(4.0, 9.0)
+			pz.color = color.lightened(randf_range(-0.03, 0.12))
+			padre.add_child(pz)
 		var cam := get_viewport().get_camera_2d()
 		if cam != null and cam.has_method("shake") and sacudir > 0.0:
 			cam.shake(sacudir, 0.25)

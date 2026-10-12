@@ -20,6 +20,18 @@ uniform float base : hint_range(0.0, 1.5) = 0.62;
 uniform float contraste : hint_range(0.0, 6.0) = 2.0;   // cuánto resalta el punteado del tile
 uniform float brillo : hint_range(0.3, 2.0) = 1.0;
 
+// Degradado de profundidad: la roca se oscurece (y se enfría) cuanto más lejos está del aire, para dar encierro.
+// `campo` lo genera terreno_mundo.gd (distancia al aire, 1 texel por tile). Sin campo (editor) no oscurece.
+uniform sampler2D campo : filter_linear, hint_default_black;
+uniform vec2 campo_origen = vec2(0.0);   // esquina superior izquierda del campo (px de mundo)
+uniform vec2 campo_tam = vec2(16.0);     // tamaño del campo (px de mundo)
+uniform float campo_max = 640.0;         // px de distancia que representa el blanco del campo
+uniform float prof_inicio = 40.0;        // px de distancia al aire donde empieza a oscurecer
+uniform float prof_fin = 420.0;          // px donde llega al máximo
+uniform float prof_oscuro : hint_range(0.0, 1.0) = 0.3;   // brillo que queda en lo más hondo (1 = sin efecto)
+uniform vec3 prof_tinte : source_color = vec3(0.6, 0.68, 1.0);
+uniform float prof_tinte_fuerza : hint_range(0.0, 1.0) = 0.5;
+
 // Posición de mundo del fragmento: los quadrants del TileMap dibujan en coordenadas locales, así que la
 // cámara (terreno_mundo.gd) pasa su centro y cuánto mundo se ve para reconstruirla desde SCREEN_UV.
 uniform vec2 cam_centro = vec2(0.0);
@@ -93,5 +105,7 @@ void fragment() {
 	vec3 tierra = roca * (base + lum * contraste) * brillo;
 	tierra = mix(tierra, color_veta * (base + lum * contraste) * brillo * 1.25, veta * 0.55);
 	tierra += color_veta * mica * 0.35;
+	float prof = smoothstep(prof_inicio, prof_fin, texture(campo, (wpos - campo_origen) / campo_tam).r * campo_max);
+	tierra *= mix(1.0, prof_oscuro, prof) * mix(vec3(1.0), prof_tinte, prof * prof_tinte_fuerza);
 	COLOR = vec4(mix(c.rgb, tierra, es_tierra), c.a);
 }

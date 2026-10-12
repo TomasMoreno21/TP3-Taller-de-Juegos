@@ -35,6 +35,7 @@
 [ext_resource type="PackedScene" uid="uid://dih4mbupyhdag" path="res://scenes/enredadera.tscn" id="vine"]
 [ext_resource type="Script" uid="uid://d3nihovco06v7" path="res://scripts/zona_latido.gd" id="zona_latido"]
 [ext_resource type="Script" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
+[ext_resource type="Script" uid="uid://jt077f0nd47a" path="res://scripts/terreno_mundo.gd" id="tmundo3"]
 [ext_resource type="Script" path="res://scripts/streaming_zonas.gd" id="streaming_zonas"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte3"]
@@ -45,6 +46,7 @@ shader_parameter/matiz_max = 1.0
 shader_parameter/matiz_rojo_max = 0.04
 shader_parameter/mezcla = 1.0
 shader_parameter/brillo = 0.85
+shader_parameter/prof_tinte = Color(0.5, 0.85, 0.92, 1)
 
 [node name="Nivel3" type="Node2D" unique_id=578165115]
 
@@ -95,6 +97,8 @@ position = Vector2(2400, 704)
 dialogo_id = "n3_salto"
 
 [node name="PinchosZ1a" parent="." unique_id=802555272 instance=ExtResource("pinchos")]
+estilo = 0
+color_estaca = Color(0.8, 0.78, 0.93, 1)
 z_index = -1
 position = Vector2(2750, 1158)
 cantidad = 7
@@ -115,6 +119,8 @@ color_encendido = Color(0.35, 0.9, 0.85, 1)
 color_luz = Color(0.45, 0.95, 0.9, 1)
 
 [node name="PinchosZ1b" parent="." unique_id=1459270121 instance=ExtResource("pinchos")]
+estilo = 0
+color_estaca = Color(0.8, 0.78, 0.93, 1)
 z_index = -1
 position = Vector2(4415, 1350)
 cantidad = 9
@@ -286,6 +292,8 @@ forma_requerida = 2
 tiempo_temblor = 0.8
 
 [node name="PinchosLago" parent="." unique_id=1397981842 instance=ExtResource("pinchos")]
+estilo = 0
+color_estaca = Color(0.8, 0.78, 0.93, 1)
 z_index = -1
 position = Vector2(11600, 4342)
 cantidad = 16
@@ -308,6 +316,8 @@ color_luz = Color(0.45, 0.95, 0.9, 1)
 position = Vector2(10300, 4242)
 
 [node name="PinchosAncho" parent="." unique_id=1312925018 instance=ExtResource("pinchos")]
+estilo = 0
+color_estaca = Color(0.8, 0.78, 0.93, 1)
 z_index = -1
 position = Vector2(9625, 4534)
 cantidad = 17
@@ -382,6 +392,8 @@ color_luz = Color(0.45, 0.95, 0.9, 1)
 position = Vector2(4700, 4338)
 
 [node name="PinchosCorredor" parent="." unique_id=354407912 instance=ExtResource("pinchos")]
+estilo = 0
+color_estaca = Color(0.8, 0.78, 0.93, 1)
 z_index = -1
 position = Vector2(4100, 4630)
 cantidad = 11
@@ -604,6 +616,8 @@ color_luz = Color(0.45, 0.95, 0.9, 1)
 position = Vector2(5480, 2818)
 
 [node name="PinchosPuente" parent="." unique_id=443065045 instance=ExtResource("pinchos")]
+estilo = 0
+color_estaca = Color(0.8, 0.78, 0.93, 1)
 z_index = -1
 position = Vector2(5925, 3126)
 cantidad = 17
@@ -1231,3 +1245,6 @@ devolver_control = true
 
 [node name="StreamingZonas" type="Node" parent="."]
 script = ExtResource("streaming_zonas")
+
+[node name="TerrenoMundo" type="Node" parent="."]
+script = ExtResource("tmundo3")

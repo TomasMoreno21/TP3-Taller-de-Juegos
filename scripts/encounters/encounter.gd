@@ -31,7 +31,7 @@ const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 @export var zoom_encuadre_duracion := 0.7
 
 # Antesala: al acercarse a la arena el ambiente se calla y una viñeta fría cierra la pantalla (ver antesala.gd).
-@export var espera_inicial := 1.5   ## s entre cerrarse la arena y aparecer la primera ola (tiempo para reaccionar)
+@export var espera_inicial := 0.8   ## s entre cerrarse la arena y aparecer la primera ola (tiempo para reaccionar)
 @export var intervalo_spawn := 0.8   ## s entre un enemigo y el siguiente dentro de una misma ola (0 = todos a la vez)
 @export var espera_entre_olas := 1.0   ## s extra antes de cada ola siguiente a la primera (se suma al `delay` de la ola)
 @export var antesala_activa := true

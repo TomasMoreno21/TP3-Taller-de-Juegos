@@ -54,7 +54,7 @@ const HITSTOP_COMBO := 0.11
 @export var hitstop_dano_umbral := 20       # daño mínimo para considerarlo golpe fuerte
 @export var recoil_sprite := 8.0            # px que empuja el sprite hacia atrás al recibir daño
 @export var temblor_dano := 0.13            # s que dura el micro-temblor del sprite (sin rotar)
-@export var proyectil_mira_bajo := 45.0     # px por debajo del centro del enemigo a los que apunta el proyectil teledirigido del Murciélago
+@export var proyectil_mira_bajo := 0.0      # px por debajo del centro del sprite del enemigo a los que apunta el proyectil teledirigido del Murciélago (0 = justo al medio)
 @export var zoom_heavy_mult := 1.025        # zoom punch extra en golpes pesados
 @export var zoom_special_mult := 1.04       # zoom punch extra en el golpe especial
 @export var zoom_combo_mult := 1.05         # zoom punch extra en el golpe que cierra combo
@@ -105,10 +105,11 @@ const HITSTOP_COMBO := 0.11
 @export var spark_hundir_px := 14.0         # cuánto entra el spark en el cuerpo del enemigo desde su borde
 @export var swing_visible := true           ## estela (medialuna) de cada ataque cuerpo a cuerpo
 @export var swing_alpha := 0.55
-@export var swing_alcance := 1.05          ## radio de la medialuna respecto del alcance del golpe
+@export var swing_alcance := 1.0           ## radio de la medialuna respecto del alcance del golpe (1 = llega justo al borde de la hitbox)
+@export_range(0.3, 1.2, 0.05) var swing_alto := 0.85   ## cuánto de la altura de la hitbox cubre la estela (1 = toda)
 @export var swing_duracion := 0.13
 @export_range(0.05, 0.6) var swing_grosor := 0.16  ## grosor máximo de la estela (fracción del radio)
-@export_range(0.0, 1.0) var spark_altura := 0.42  # altura del impacto dentro del hitbox (0 = arriba, 1 = pies); 0.42 ≈ puño
+@export_range(0.0, 1.0) var spark_altura := 0.62  # altura del impacto dentro del hitbox (0 = arriba, 1 = pies); 0.62 ≈ mano (antes 0.42 salía a la altura del cuello)
 @export var lobo_landing_squash_extra := 1.4  # multiplicador squash al aterrizar como Lobo (item 18)
 @export var slowmo_transformacion := 0.07 # s de cámara lenta al transformarse (0 = off)
 @export var slowmo_transformacion_escala := 0.4  # escala del tiempo mientras transforma
@@ -1434,11 +1435,13 @@ func _play_attack_fx(tipo: String, step: int) -> void:
 	# Centro detrás del hombro y radio mayor al alcance: la medialuna queda más
 	# plana y por delante del cuerpo, barriendo la zona del golpe.
 	var atras := alcance * 0.45
-	var radio := clampf(alcance * swing_alcance + atras, 150.0, 480.0)
+	var radio := clampf(alcance * swing_alcance + atras, 120.0, 800.0)
 	var grosor: float = swing_grosor * {"light": 1.0, "heavy": 1.3, "special": 1.5, "combo": 1.6}.get(tipo, 1.0)
 	var dur: float = swing_duracion * {"light": 1.0, "heavy": 1.2, "special": 1.3, "combo": 1.4}.get(tipo, 1.0)
-	var desde := deg_to_rad(-42.0)
-	var hasta := deg_to_rad(30.0)
+	# El ángulo de la medialuna sale de la altura real de la hitbox (así la estela cubre lo mismo que pega).
+	var a_max := clampf(rad_to_deg(asin(clampf(rect_golpe.size.y * 0.5 * swing_alto / radio, 0.0, 0.95))), 18.0, 62.0)
+	var desde := deg_to_rad(-a_max)
+	var hasta := deg_to_rad(a_max * 0.8)
 	if step % 2 == 0:
 		var tmp := desde
 		desde = hasta
@@ -1466,7 +1469,7 @@ func _play_attack_fx(tipo: String, step: int) -> void:
 	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 	arco.material = mat
 	arco.z_index = 2
-	arco.position = Vector2(-facing * atras, rect_golpe.position.y + rect_golpe.size.y * spark_altura - global_position.y)
+	arco.position = Vector2(-facing * atras, rect_golpe.get_center().y - global_position.y)   # centrada en la hitbox
 	add_child(arco)
 	arco.scale = Vector2.ONE * 0.85
 	var giro := 0.22 * facing * (1.0 if step % 2 == 1 else -1.0)
@@ -2830,7 +2833,7 @@ func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 70
 	if current_form == Form.MURCIELAGO:
 		var objetivo := _buscar_enemigo_homing(3000.0)
 		if objetivo != null:
-			var to_obj: Vector2 = objetivo.global_position + Vector2(0.0, proyectil_mira_bajo) - proj.global_position
+			var to_obj: Vector2 = preload("res://scripts/projectile.gd").centro_objetivo(objetivo) + Vector2(0.0, proyectil_mira_bajo) - proj.global_position
 			if to_obj.length_squared() > 0.01:
 				dir_inicial = to_obj.normalized()
 		proj.set("homing", true)

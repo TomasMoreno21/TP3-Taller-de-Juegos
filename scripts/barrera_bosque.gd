@@ -45,7 +45,7 @@ func _process(delta: float) -> void:
 		var s := 1.0 + sin(_t * 0.9) * 0.012
 		barrera_visual_root.scale = Vector2(s, s)
 		if barrera_poly != null:
-			barrera_poly.modulate.a = 0.62 + sin(_t * 1.2) * 0.09
+			barrera_poly.modulate.a = 0.40 + sin(_t * 1.2) * 0.07   # base más tenue: el detalle lo pone Energia (barrera_energia_fx.gd)
 		if luz_barrera != null:
 			luz_barrera.energy = 1.6 + sin(_t * 1.1) * 0.35
 	_actualizar_ray()
@@ -105,7 +105,7 @@ func _brillo_proximidad() -> void:
 	var d := global_position.distance_to(player.global_position)
 	var near := d < 260.0 and int(player.get("current_form")) == 3
 	if near:
-		barrera_poly.modulate = barrera_poly.modulate.lerp(Color(0.58, 0.42, 0.78, 0.65), 0.08)
+		barrera_poly.modulate = barrera_poly.modulate.lerp(Color(0.58, 0.42, 0.78, 0.5), 0.08)
 		if ray != null:
 			ray.default_color = Color(0.62, 0.42, 0.92, 0.42)
 

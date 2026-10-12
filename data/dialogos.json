@@ -633,44 +633,14 @@
 			"Ya falta poco para el sello."
 		]
 	},
-	"n2_calma_a": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"[susurro]Pisá firme. Adelante hay un vigía.",
-			"Los pinchos de piedra no perdonan."
-		]
-	},
-	"n2_calma_c2": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"Más allá, las tablas cruzan el abismo.",
-			"Si una cede, abrí las alas."
-		]
-	},
-	"n2_calma_d2": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"Se ensancha el pasaje. Hay un campamento.",
-			"Recuperá aire antes del próximo combate."
-		]
-	},
 	"n2_calma_d3": {
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.4,
 		"una_vez": true,
 		"lineas": [
-			"Una barrera de luz bloquea el paso.",
-			"[susurro]Algo la sostiene. Buscalo."
+			"El sonido es capaz de romper la barrera.",
+			"Intentalo."
 		]
 	},
 	"n2_derrumbe_fin": {

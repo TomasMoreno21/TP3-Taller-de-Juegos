@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://dyafrqkd1mjjc" path="res://scenes/cristal.tscn" id="1_cristal"]
 [ext_resource type="Script" uid="uid://bhps5fx7cd7dx" path="res://scripts/barrera_bosque.gd" id="2_barrera"]
+[ext_resource type="Script" path="res://scripts/barrera_energia_fx.gd" id="3_fx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_barrera"]
 size = Vector2(220, 677)
@@ -26,6 +27,10 @@ position = Vector2(0, -178)
 scale = Vector2(1, 2.1125)
 color = Color(0.62, 0.38, 0.88, 0.62)
 polygon = PackedVector2Array(-110, -160, 110, -160, 110, 160, -110, 160)
+
+[node name="Energia" type="Node2D" parent="Barrera/Visual"]
+position = Vector2(0, -178)
+script = ExtResource("3_fx")
 
 [node name="Sprite" type="Sprite2D" parent="Barrera/Visual" unique_id=1580003956]
 visible = false
