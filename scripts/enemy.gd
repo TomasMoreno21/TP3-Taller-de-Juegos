@@ -28,6 +28,19 @@ const TELEGRAFIA := preload("res://scripts/telegrafia_enemigo.gd")
 @export var flinch_adelanto_px := 12.0        # px que se adelanta el cuerpo en el impacto
 @export var flinch_pop_escala := 1.12         # escala del "pop" al recuperar la pose
 @export var flinch_congela_anim := false      # true = congela la animación durante todo el stun (se ve trabado si seguís pegando)
+## Dónde está la mano (el destello de aviso de ataque) en cada frame de cada animación, por tipo de enemigo:
+## {tipo: {animación: [Vector2 por frame]}}, en píxeles de la textura (origen arriba a la izquierda). Sin dato → el
+## destello cae en un punto fijo delante del cuerpo.
+@export var manos := {
+	"cultista": {
+		"attack1": [Vector2(108, 300), Vector2(156, 281), Vector2(208, 251), Vector2(239, 196), Vector2(181, 186)],
+		"attack2": [Vector2(215, 171), Vector2(193, 171), Vector2(129, 251), Vector2(86, 261), Vector2(80, 266)],
+	},
+	"arquero": {
+		"attack1": [Vector2(50, 280)],
+		"attack2": [Vector2(50, 280)],
+	},
+}
 @export var frames_impacto := {"attack1": 3, "attack2": 2}   # frame de cada animación de ataque en el que cae el tajo (se sincroniza con el daño)
 @export var stun_anim := "idle"               # animación que sigue viva durante el stun ("" = la que corresponda al movimiento)
 @export var max_atacantes_melee := 2          # cuántos cuerpo a cuerpo pueden estar atacando a la vez (los demás esperan)
@@ -352,7 +365,24 @@ func _telegrafiar(duracion: float, disparo: bool) -> void:
 	# expresado en el espacio local del sprite, no en el mundo.
 	var sp := _sprite_pose()
 	var mano_local := sp.to_local(global_position + arma) if sp != null else Vector2.ZERO
-	_tele = TELEGRAFIA.ataque(self, arma, cabeza, _dir, 0.0, duracion, embiste, sp, mano_local)
+	_tele = TELEGRAFIA.ataque(self, arma, cabeza, _dir, 0.0, duracion, embiste, sp, mano_local, _mano_mundo)
+
+
+## Posición en el mundo de la mano en el frame actual del sprite (ver `manos`); Vector2.INF si no hay dato
+## para esa animación/frame (el destello usa entonces su punto fijo de respaldo).
+func _mano_mundo() -> Vector2:
+	if animated == null or not animated.visible or animated.sprite_frames == null:
+		return Vector2.INF
+	var tabla: Dictionary = manos.get(tipo, {})
+	var puntos: Array = tabla.get(String(animated.animation), [])
+	if puntos.is_empty():
+		return Vector2.INF
+	var tex := animated.sprite_frames.get_frame_texture(animated.animation, animated.frame)
+	if tex == null:
+		return Vector2.INF
+	var px: Vector2 = puntos[clampi(animated.frame, 0, puntos.size() - 1)]
+	var origen := tex.get_size() * 0.5 if animated.centered else Vector2.ZERO
+	return animated.to_global(px - origen + animated.offset)
 
 
 ## Pose de anticipación: durante el windup el sprite se echa atrás, se inclina y se achata; en el último
@@ -587,9 +617,9 @@ func _physics_process(delta: float) -> void:
 			elif enemy_data.windup_tiempo > 0.0:
 				_windup_timer = enemy_data.windup_tiempo
 				_flash_aviso()
-				_telegrafiar(enemy_data.windup_tiempo, false)
 				_melee_anim = "attack1" if randf() < 0.5 else "attack2"
 				_reproducir_animacion_ataque(_melee_anim, enemy_data.windup_tiempo)
+				_telegrafiar(enemy_data.windup_tiempo, false)
 				_attack_anim_timer = enemy_data.windup_tiempo + enemy_data.lunge_tiempo + 0.12
 			else:
 				_ataque_melee(player)

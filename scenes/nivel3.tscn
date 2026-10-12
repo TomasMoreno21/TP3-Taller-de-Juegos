@@ -3,7 +3,6 @@
 [ext_resource type="PackedScene" uid="uid://byj8hsa3b1hpe" path="res://scenes/barrera_bosque.tscn" id="barrera"]
 [ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="cam"]
 [ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="check"]
-[ext_resource type="PackedScene" path="res://scenes/console.tscn" id="cons"]
 [ext_resource type="PackedScene" uid="uid://skni1dec001" path="res://scenes/decorativo.tscn" id="deco"]
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="dialog"]
 [ext_resource type="PackedScene" uid="uid://x0o25yeqfgsm" path="res://scenes/encounter.tscn" id="enc"]
@@ -25,7 +24,6 @@
 [ext_resource type="PackedScene" uid="uid://bf8ohs7pjg025" path="res://scenes/pinchos.tscn" id="pinchos"]
 [ext_resource type="Script" uid="uid://d4d5q3u8vx8dm" path="res://scripts/plano_intro.gd" id="plano_script"]
 [ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="player"]
-[ext_resource type="PackedScene" uid="uid://cr2s0l8k2s5l4" path="res://scenes/rompible.tscn" id="romp"]
 [ext_resource type="PackedScene" path="res://scenes/salida_nivel.tscn" id="salida"]
 [ext_resource type="PackedScene" uid="uid://c1w7l3sant0r4" path="res://scenes/santuario.tscn" id="sant"]
 [ext_resource type="Script" uid="uid://c20i4wytflcth" path="res://scripts/setup_progresion_nivel.gd" id="setup"]
@@ -183,12 +181,6 @@ color_luz = Color(0.45, 0.95, 0.9, 1)
 [node name="DialogoCampamento" parent="." unique_id=1243137212 instance=ExtResource("dialog")]
 position = Vector2(8350, 1472)
 dialogo_id = "n3_campamento"
-
-[node name="RompibleCuenco1" parent="." unique_id=781972003 instance=ExtResource("romp")]
-position = Vector2(7800, 1001)
-
-[node name="RompibleCuenco2" parent="." unique_id=1137649885 instance=ExtResource("romp")]
-position = Vector2(7870, 1001)
 
 [node name="PickupVidaCuenco" parent="." unique_id=946120300 instance=ExtResource("pickup_vida")]
 position = Vector2(7600, 994)
@@ -1053,9 +1045,6 @@ visible = false
 visible = false
 
 [node name="LevelUp" parent="." unique_id=549755035 instance=ExtResource("levelup")]
-visible = false
-
-[node name="Consola" parent="." unique_id=1843107857 instance=ExtResource("cons")]
 visible = false
 
 [node name="ObjetivoGuardian" type="Node" parent="." unique_id=682123687]

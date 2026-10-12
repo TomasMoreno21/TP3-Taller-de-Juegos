@@ -1,5 +1,5 @@
 extends Node
-## Alimenta al shader del terreno (terreno_cueva.gdshader) con la vista de la cámara para que las manchas,
+## Alimenta al shader del terreno (terreno_cueva.gdshader / tinte_terreno.gdshader) con la vista de la cámara para que las manchas,
 ## vetas y estratos queden fijos en el mundo y continuos entre tiles. Se corre después de la cámara.
 
 @export var tilemap: NodePath = ^"../TileMap"
@@ -10,22 +10,34 @@ const _TILE := 16.0
 
 
 func _ready() -> void:
-	process_priority = 1000
-	process_physics_priority = 1000
 	if profundidad:
 		_generar_campo()
 
 
-func _process(_delta: float) -> void:
-	var tm := get_node_or_null(tilemap) as CanvasItem
-	if tm == null or not (tm.material is ShaderMaterial):
+## Se actualiza justo antes de dibujar (con la cámara ya movida por tweens, shake, zoom o giro): así el terreno
+## nunca queda desfasado un frame respecto a la cámara (eso se vería como vibración).
+func _enter_tree() -> void:
+	RenderingServer.frame_pre_draw.connect(_actualizar_vista)
+
+
+func _exit_tree() -> void:
+	if RenderingServer.frame_pre_draw.is_connected(_actualizar_vista):
+		RenderingServer.frame_pre_draw.disconnect(_actualizar_vista)
+
+
+func _actualizar_vista() -> void:
+	var capa := get_node_or_null(tilemap) as CanvasItem
+	if capa == null or not (capa.material is ShaderMaterial):
 		return
-	var cam := get_viewport().get_camera_2d()
-	if cam == null:
+	var vp := get_viewport()
+	if vp == null or vp.get_camera_2d() == null:
 		return
-	var m := tm.material as ShaderMaterial
-	m.set_shader_parameter("cam_centro", cam.get_screen_center_position())
-	m.set_shader_parameter("vista_mundo", get_viewport().get_visible_rect().size / cam.zoom)
+	var inv := vp.get_canvas_transform().affine_inverse()
+	var tam := vp.get_visible_rect().size
+	var m := capa.material as ShaderMaterial
+	m.set_shader_parameter("mundo_o", inv * Vector2.ZERO)
+	m.set_shader_parameter("mundo_x", inv.basis_xform(Vector2(tam.x, 0.0)))
+	m.set_shader_parameter("mundo_y", inv.basis_xform(Vector2(0.0, tam.y)))
 
 
 ## Distancia (en tiles) de cada celda de roca al aire más cercano (transformada de distancia en dos pasadas).

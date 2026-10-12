@@ -5,7 +5,6 @@
 [ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="2_cam"]
 [ext_resource type="PackedScene" uid="uid://ssvmlcpooygw" path="res://scenes/fondo_bosque.tscn" id="3_fondo"]
 [ext_resource type="TileSet" uid="uid://cm28ivesvx3ed" path="res://resources/tileset_bosque.tres" id="4_tileset"]
-[ext_resource type="PackedScene" uid="uid://cr2s0l8k2s5l4" path="res://scenes/rompible.tscn" id="6_romp"]
 [ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="7_pick"]
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="8_dialog"]
 [ext_resource type="PackedScene" uid="uid://x0o25yeqfgsm" path="res://scenes/encounter.tscn" id="9_enc"]
@@ -13,7 +12,6 @@
 [ext_resource type="PackedScene" uid="uid://dkyk8avpptlls" path="res://scenes/hud.tscn" id="12_hud"]
 [ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="13_pause"]
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="14_levelup"]
-[ext_resource type="PackedScene" path="res://scenes/console.tscn" id="15_cons"]
 [ext_resource type="PackedScene" uid="uid://dih4mbupyhdag" path="res://scenes/enredadera.tscn" id="16_enredadera"]
 [ext_resource type="PackedScene" uid="uid://bf8ohs7pjg025" path="res://scenes/pinchos.tscn" id="17_pinchos"]
 [ext_resource type="Script" uid="uid://c20i4wytflcth" path="res://scripts/setup_progresion_nivel.gd" id="18_setup"]
@@ -485,9 +483,6 @@ script = ExtResource("99_soporte")
 modo = 1
 largo = 1300.0
 semilla = 4
-
-[node name="Rompible3" parent="." unique_id=1602575286 instance=ExtResource("6_romp")]
-position = Vector2(7305, 938)
 
 [node name="Pickup2" parent="." unique_id=937879990 instance=ExtResource("7_pick")]
 position = Vector2(7372, 826)
@@ -1650,9 +1645,6 @@ visible = false
 visible = false
 
 [node name="LevelUp" parent="." unique_id=462113082 instance=ExtResource("14_levelup")]
-visible = false
-
-[node name="Consola" parent="." unique_id=565580708 instance=ExtResource("15_cons")]
 visible = false
 
 [node name="HerramientaNivel" parent="." unique_id=700655792 instance=ExtResource("25_dr8ev")]

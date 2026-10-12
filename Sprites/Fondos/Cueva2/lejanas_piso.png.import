@@ -3,20 +3,21 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cvjkgyl6j3btn"
-path="res://.godot/imported/lejanas_piso.png-a0e166e5cbb9886eea3e3e4e514e7c5f.ctex"
+path.bptc="res://.godot/imported/lejanas_piso.png-a0e166e5cbb9886eea3e3e4e514e7c5f.bptc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://Sprites/Fondos/Cueva2/lejanas_piso.png"
-dest_files=["res://.godot/imported/lejanas_piso.png-a0e166e5cbb9886eea3e3e4e514e7c5f.ctex"]
+dest_files=["res://.godot/imported/lejanas_piso.png-a0e166e5cbb9886eea3e3e4e514e7c5f.bptc.ctex"]
 
 [params]
 
-compress/mode=0
-compress/high_quality=false
+compress/mode=2
+compress/high_quality=true
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0

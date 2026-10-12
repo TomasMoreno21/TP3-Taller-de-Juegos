@@ -24,6 +24,7 @@ var _src: ProgressBar
 var _eco: ProgressBar
 var _flash := 0.0
 var _tw: Tween
+var _firma_dibujo: Array = []   ## estado con el que se dibujó por última vez: solo se redibuja si cambia algo
 
 
 func _ready() -> void:
@@ -35,7 +36,19 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	queue_redraw()
+	# La barra solo cambia cuando se mueve el valor, el eco, el destello o el color de la fuente.
+	var col_fuente := Color.WHITE
+	var col_fill := Color.BLACK
+	if _src != null:
+		col_fuente = _src.self_modulate
+		if usar_color_de_fuente:
+			var sb := _src.get_theme_stylebox("fill") as StyleBoxFlat
+			if sb != null:
+				col_fill = sb.bg_color
+	var firma := [_frac(_src), _frac(_eco), _flash, size, col_fuente, col_fill, marcas.size(), _eco != null]
+	if firma != _firma_dibujo:
+		_firma_dibujo = firma
+		queue_redraw()
 
 
 ## Pulso al sumar (fragmentos): la barra crece un poco y destella.

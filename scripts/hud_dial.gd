@@ -40,6 +40,7 @@ var _tw_trans: Tween
 var _tw_fantasma: Tween
 var _tw_flash: Tween
 var _tw_pulso: Tween
+var _firma_dibujo: Array = []   ## estado con el que se dibujó por última vez: solo se redibuja si cambia algo
 
 
 func _ready() -> void:
@@ -61,7 +62,14 @@ func _process(delta: float) -> void:
 	_t += delta
 	if _icono != null and (_tw_trans == null or not _tw_trans.is_running()):
 		_icono.modulate.a = 0.4 if cooldown > 0.0 else 1.0
-	queue_redraw()
+	# El dial solo cambia al gastar/ganar energía, cambiar de forma, en cooldown o en las animaciones: no hace falta
+	# regrabar sus ~100 comandos de dibujo (aro, disco con puntos de semitono) en cada frame.
+	var frac := clampf(energia / maxf(energia_max, 0.01), 0.0, 1.0)
+	var parpadea := frac <= umbral_bajo and forma_actual != 0   # aro con energía baja: pulsa con el tiempo
+	var firma := [energia, energia_max, _fantasma, forma_actual, forma_sel, cooldown, _giro, _flash, size, colores, _t if parpadea else 0.0]
+	if firma != _firma_dibujo:
+		_firma_dibujo = firma.duplicate(true)
+		queue_redraw()
 
 
 func _radio() -> float:

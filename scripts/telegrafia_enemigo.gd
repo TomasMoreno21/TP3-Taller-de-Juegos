@@ -27,6 +27,7 @@ var _cancelado := false
 var _brillo: Node2D
 var seguir: Node2D = null          ## nodo cuya pose acompaña el destello (el sprite del enemigo)
 var seguir_local := Vector2.ZERO   ## punto de la mano, en el espacio local de `seguir`
+var fuente_mano := Callable()      ## () -> Vector2: mano en el mundo según el frame actual (Vector2.INF = sin dato)
 
 
 static func ritual(padre: Node2D, pies_y: float, col: Color, duracion: float) -> Node2D:
@@ -41,7 +42,7 @@ static func ritual(padre: Node2D, pies_y: float, col: Color, duracion: float) ->
 	return n
 
 
-static func ataque(padre: Node2D, cuerpo: Vector2, y_cabeza: float, mirada: int, rango: float, duracion: float, embiste: bool, sigue: Node2D = null, punto_local := Vector2.ZERO) -> Node2D:
+static func ataque(padre: Node2D, cuerpo: Vector2, y_cabeza: float, mirada: int, rango: float, duracion: float, embiste: bool, sigue: Node2D = null, punto_local := Vector2.ZERO, fuente := Callable()) -> Node2D:
 	if DisplayServer.get_name() == "headless" or padre == null:
 		return null
 	var n: Node2D = (load("res://scripts/telegrafia_enemigo.gd") as GDScript).new()
@@ -55,6 +56,9 @@ static func ataque(padre: Node2D, cuerpo: Vector2, y_cabeza: float, mirada: int,
 	if sigue != null:   # el destello viaja con el sprite: se inclina y retrocede con la pose, como la mano
 		n.seguir = sigue
 		n.seguir_local = punto_local
+		n.centro = Vector2.ZERO
+	if fuente.is_valid():
+		n.fuente_mano = fuente
 		n.centro = Vector2.ZERO
 	padre.add_child(n)
 	n._seguir_mano()
@@ -110,6 +114,11 @@ func _process(delta: float) -> void:
 
 
 func _seguir_mano() -> void:
+	if fuente_mano.is_valid():
+		var p: Vector2 = fuente_mano.call()
+		if p != Vector2.INF:
+			global_position = p
+			return
 	if seguir != null and is_instance_valid(seguir):
 		global_position = seguir.to_global(seguir_local)
 

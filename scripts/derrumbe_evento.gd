@@ -7,23 +7,23 @@ extends Node2D
 
 @export var inicio: Node2D                          ## (opcional) arranca al pasar por la x de este nodo; vacío = lo dispara `iniciar()`
 @export var fin: Node2D                             ## y se corta al llegar a la x de este nodo (o a su y si `fin_por_altura`)
-@export var fin_por_altura := false                 ## cortar por altura: el derrumbe dura mientras el jugador esté POR ENCIMA de la y de `fin` (bajadas por lianas)
+@export var fin_por_altura := false                 ## cortar por altura: dura hasta llegar a la y de `fin`, en la dirección en que queda respecto del punto de arranque (bajadas por lianas: el final está abajo; trepadas: arriba)
 
 @export_group("Zona de derrumbe")
-@export var pausa_min := 1.0                        ## s entre oleadas de escombros
-@export var pausa_max := 2.0
+@export var pausa_min := 0.8                        ## s entre oleadas de escombros
+@export var pausa_max := 1.5
 @export var primera_espera := 0.6                   ## s hasta la primera oleada tras entrar
-@export var fuerza_shake := 18.0                    ## shake constante mientras dura la zona (>= 6 desprende polvo del techo)
-@export var intervalo_shake := 0.22                 ## s entre sacudidas (cada una dura un poco más, así no hay huecos)
-@export var duracion_oleada := 1.2                  ## s en que se reparten los escombros de cada oleada
-@export var escombros_por_oleada := Vector2i(14, 22)
-@export var dispersion := Vector2(-500.0, 800.0)    ## x relativa al jugador donde caen (más hacia adelante)
+@export var fuerza_shake := 30.0                    ## shake constante mientras dura la zona (>= 6 desprende polvo del techo)
+@export var intervalo_shake := 0.18                 ## s entre sacudidas (cada una dura un poco más, así no hay huecos)
+@export var duracion_oleada := 1.4                  ## s en que se reparten los escombros de cada oleada
+@export var escombros_por_oleada := Vector2i(32, 48)
+@export var dispersion := Vector2(-950.0, 300.0)    ## x relativa al jugador donde caen, en sentido de avance (negativo = detrás: casi todo cae atrás, quedarse o retroceder castiga)
 @export var color_escombro := Color(0.28, 0.29, 0.36)
 
 @export_group("Rocas que persiguen")
 @export var rocas_dirigidas := true                 ## cae una roca con aviso sobre donde estás: hay que seguir avanzando
-@export var pausa_roca_min := 1.1                   ## s entre rocas dirigidas
-@export var pausa_roca_max := 1.8
+@export var pausa_roca_min := 0.8                   ## s entre rocas dirigidas
+@export var pausa_roca_max := 1.3
 @export var aviso_s := 0.9                          ## s que dura la sombra de aviso antes del impacto
 @export var anticipo := 0.35                        ## s de velocidad del jugador que se adelanta al apuntar
 @export var dano_roca := 12
@@ -38,8 +38,8 @@ extends Node2D
 @export var ambiente_piedras := Vector2i(1, 3)      ## piedritas que caen con cada vibración
 
 @export_group("Ritmo del shake")
-@export var shake_valle := 0.55                     ## fracción de `fuerza_shake` entre oleadas (1 = shake constante como antes)
-@export var shake_pico := 1.35                      ## múltiplo de `fuerza_shake` en el pico de cada oleada
+@export var shake_valle := 0.7                     ## fracción de `fuerza_shake` entre oleadas (1 = shake constante como antes)
+@export var shake_pico := 1.6                      ## múltiplo de `fuerza_shake` en el pico de cada oleada
 @export var subida_s := 1.5                         ## s en llegar a la intensidad plena al entrar (0 = de golpe)
 @export var aviso_oleada := 0.4                     ## s antes de cada oleada: crujido y polvo del techo (la señal de que viene)
 
@@ -48,14 +48,31 @@ extends Node2D
 @export var sonido_aviso: AudioStream = preload("res://assets/audio/sfx/gen/fragil_crujir.wav")
 @export var sonido_impacto: AudioStream = preload("res://assets/audio/sfx/gen/aterrizaje_fuerte.wav")
 @export var sonido_piedra: AudioStream = preload("res://assets/audio/sfx/gen/proyectil_impacto.wav")
-@export var volumen_retumbo_db := -14.0
-@export var volumen_aviso_db := -10.0
-@export var volumen_impacto_db := -4.0
-@export var volumen_piedra_db := -18.0
+@export var volumen_retumbo_db := -4.0
+@export var volumen_aviso_db := -2.0
+@export var volumen_impacto_db := 4.0
+@export var volumen_piedra_db := -8.0
 
 @export_group("Final")
-@export var final_fuerza := 1.5                     ## múltiplo de `fuerza_shake` del último retumbo al terminar
+@export var final_fuerza := 2.0                     ## múltiplo de `fuerza_shake` del último retumbo al terminar
 @export var final_fade := 1.6                       ## s en apagarse el retumbo y el polvo al terminar
+
+@export_group("Atmósfera y feedback")
+@export var polvo_suspension := true                ## polvo fino que flota en el aire mientras dura el derrumbe
+@export var oscurecer_oleada := 0.28                ## cuánto se oscurece la pantalla al caer cada oleada (0 = nada)
+@export var oscurecer_impacto := 0.18               ## y al impactar una roca grande
+@export var empuje_roca := 280.0                    ## px/s con que una roca que te golpea te empuja lejos del impacto (0 = sin empuje)
+@export var casi_golpe_ancho := 2.4                 ## múltiplo de `radio_dano` dentro del cual una roca que cae "casi te da" (sacudida + polvo)
+@export_group("Presión (obligar a avanzar)")
+@export var presion_activa := true
+@export var presion_vel_min := 90.0                 ## px/s de avance (en x, o de trepada en y) por debajo de los cuales sube la presión
+@export var presion_sube := 0.8                     ## por segundo mientras te frenas (retroceder sube el doble)
+@export var presion_baja := 1.8                     ## por segundo mientras avanzas
+@export var presion_sonido_db := 9.0                ## dB extra del retumbo con presión máxima
+@export var presion_sombra_base := 0.22             ## opacidad de la penumbra de atrás al avanzar
+@export var presion_sombra_max := 0.7               ## y con presión máxima
+@export var presion_sombra_ancho := 760.0           ## px de pantalla que cubre la penumbra
+@export var max_escombros := 170                     ## tope de escombros sueltos vivos a la vez (0 = sin tope; las rocas dirigidas no cuentan)
 
 var _activo := false
 var _disparado := false
@@ -71,6 +88,14 @@ var _avisada := false                               # ya sonó el aviso de la pr
 var _retumbo: AudioStreamPlayer
 var _retumbo_vivo := false                          # el retumbo de fondo debe seguir sonando
 var _t_ult_piedra := 0                              # ms del último sonido de piedra (para no saturar)
+var _y_arranque := INF                              # y del jugador al arrancar (decide si `fin_por_altura` es bajada o trepada)
+var _vivos := 0                                     # escombros sueltos vivos ahora mismo (para el tope)
+var _dim := 0.0                                     # oscurecimiento actual de la pantalla (decae solo)
+var _velo: ColorRect
+var _polvo: CPUParticles2D
+var _sombra: TextureRect                            # penumbra del lado de atrás: el derrumbe que te persigue
+var _dir := 1.0                                     # sentido de avance en x (hacia `fin`)
+var _presion := 0.0                                 # 0..1: sube si el jugador se frena o retrocede, baja al avanzar
 
 
 func _ready() -> void:
@@ -84,11 +109,66 @@ func _ready() -> void:
 	_retumbo.finished.connect(func() -> void:
 		if _retumbo_vivo:
 			_retumbo.play())
+	# Velo negro bajo el HUD (capa 5 < 10): se oscurece un instante con cada oleada o impacto fuerte.
+	var capa := CanvasLayer.new()
+	capa.layer = 5
+	add_child(capa)
+	_velo = ColorRect.new()
+	_velo.color = Color(0, 0, 0, 0)
+	_velo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_velo.set_anchors_preset(Control.PRESET_FULL_RECT)
+	capa.add_child(_velo)
+	# Penumbra del lado de atrás (degradado negro → transparente): se ve por dónde viene el derrumbe.
+	var grad := Gradient.new()
+	grad.set_color(0, Color(0, 0, 0, 1))
+	grad.set_color(1, Color(0, 0, 0, 0))
+	var gt := GradientTexture2D.new()
+	gt.gradient = grad
+	gt.fill_from = Vector2(0.0, 0.5)
+	gt.fill_to = Vector2(1.0, 0.5)
+	gt.width = 256
+	gt.height = 4
+	_sombra = TextureRect.new()
+	_sombra.texture = gt
+	_sombra.stretch_mode = TextureRect.STRETCH_SCALE
+	_sombra.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_sombra.modulate.a = 0.0
+	capa.add_child(_sombra)
+	# Polvo fino en suspensión alrededor del jugador (solo mientras dura el derrumbe fuerte).
+	_polvo = CPUParticles2D.new()
+	_polvo.emitting = false
+	_polvo.amount = 70
+	_polvo.lifetime = 3.2
+	_polvo.local_coords = false
+	_polvo.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	_polvo.emission_rect_extents = Vector2(760.0, 320.0)
+	_polvo.direction = Vector2(0.3, 1.0)
+	_polvo.spread = 40.0
+	_polvo.gravity = Vector2(0.0, 14.0)
+	_polvo.initial_velocity_min = 6.0
+	_polvo.initial_velocity_max = 28.0
+	_polvo.scale_amount_min = 2.0
+	_polvo.scale_amount_max = 5.5
+	_polvo.color = Color(0.78, 0.74, 0.7, 0.16)
+	_polvo.z_index = 6
+	add_child(_polvo)
 
 
 ## Lo llama el `derrumbe_disparador`: el derrumbe fuerte arranca ya y dura hasta la x de `fin`.
 func iniciar() -> void:
 	_disparado = true
+	var j := get_tree().get_first_node_in_group("player") as Node2D
+	if j != null:
+		_y_arranque = j.global_position.y
+
+
+## Con `fin_por_altura`: ¿el jugador todavía no llegó a la y de `fin`? Si el final queda más abajo que el punto de
+## arranque se baja (dura mientras y < fin.y); si queda más arriba se trepa (dura mientras y > fin.y).
+func _antes_del_fin_por_altura() -> bool:
+	if _y_arranque == INF:
+		_y_arranque = _jugador.global_position.y
+	var y := _jugador.global_position.y
+	return y > fin.global_position.y if fin.global_position.y < _y_arranque else y < fin.global_position.y
 
 
 ## Pulso suelto (lo usa la cinemática del disparador): una sacudida y `piedras` escombros alrededor del jugador.
@@ -111,7 +191,13 @@ func _physics_process(delta: float) -> void:
 		if _jugador == null:
 			return
 	var x := _jugador.global_position.x
-	var antes_del_fin := _jugador.global_position.y < fin.global_position.y if fin_por_altura else x < fin.global_position.x
+	if _polvo != null:
+		_polvo.global_position = _jugador.global_position + Vector2(0.0, -120.0)
+	if _dim > 0.0:
+		_dim = maxf(_dim - delta * 0.55, 0.0)
+		if _velo != null:
+			_velo.color.a = _dim
+	var antes_del_fin := _antes_del_fin_por_altura() if fin_por_altura else x < fin.global_position.x
 	var dentro := antes_del_fin and (x >= inicio.global_position.x if inicio != null else _disparado)
 	if dentro and not _activo:
 		_activo = true
@@ -122,6 +208,12 @@ func _physics_process(delta: float) -> void:
 		_pico = 0.0
 		_avisada = false
 		_retumbo_vivo = true
+		_presion = 0.0
+		var d := fin.global_position.x - _jugador.global_position.x
+		_dir = -1.0 if d < 0.0 else 1.0
+		_colocar_sombra()
+		if _polvo != null:
+			_polvo.emitting = polvo_suspension
 		if _retumbo != null:
 			_retumbo.volume_db = -80.0
 			_retumbo.play()
@@ -144,7 +236,8 @@ func _physics_process(delta: float) -> void:
 		_t_shake = intervalo_shake
 		_sacudir(fuerza_shake * subida * nivel, intervalo_shake * 1.8)
 	if _retumbo != null:
-		_retumbo.volume_db = volumen_retumbo_db + 6.0 * _pico + (subida - 1.0) * 12.0
+		_retumbo.volume_db = volumen_retumbo_db + 6.0 * _pico + (subida - 1.0) * 12.0 + presion_sonido_db * _presion
+	_actualizar_presion(delta, subida)
 	_espera -= delta
 	if not _avisada and _espera <= aviso_oleada:
 		_avisada = true
@@ -159,6 +252,39 @@ func _physics_process(delta: float) -> void:
 		if _t_roca <= 0.0:
 			_t_roca = randf_range(pausa_roca_min, pausa_roca_max)
 			_roca_dirigida()
+
+
+## Coloca la penumbra del lado contrario al avance (izquierda si se avanza hacia la derecha).
+func _colocar_sombra() -> void:
+	if _sombra == null:
+		return
+	var atras_izq := _dir > 0.0
+	_sombra.set_anchors_preset(Control.PRESET_LEFT_WIDE if atras_izq else Control.PRESET_RIGHT_WIDE)
+	if atras_izq:
+		_sombra.offset_left = 0.0
+		_sombra.offset_right = presion_sombra_ancho
+	else:
+		_sombra.offset_right = 0.0
+		_sombra.offset_left = -presion_sombra_ancho
+	_sombra.flip_h = not atras_izq
+
+
+## Presión: sube si el jugador se frena o retrocede, baja al avanzar. Refuerza el retumbo y la penumbra de atrás.
+func _actualizar_presion(delta: float, subida: float) -> void:
+	if not presion_activa:
+		return
+	var vx := 0.0
+	var vy := 0.0
+	if "velocity" in _jugador:
+		vx = float(_jugador.velocity.x) * _dir
+		vy = absf(float(_jugador.velocity.y))
+	var avanza := vx > presion_vel_min or vy > presion_vel_min
+	if avanza:
+		_presion = maxf(_presion - presion_baja * delta, 0.0)
+	else:
+		_presion = minf(_presion + presion_sube * (2.0 if vx < -presion_vel_min * 0.3 else 1.0) * delta, 1.0)
+	if _sombra != null:
+		_sombra.modulate.a = lerpf(presion_sombra_base, presion_sombra_max, _presion) * subida
 
 
 func _sacudir(fuerza: float, duracion: float) -> void:
@@ -179,15 +305,36 @@ func sonar_impacto(pos: Vector2, grande: bool) -> void:
 	var lejos := 0.0
 	if is_instance_valid(_jugador):
 		lejos = pos.distance_to(_jugador.global_position)
-	var atenuar := -clampf(lejos / 150.0, 0.0, 16.0)
+	var atenuar := -clampf(lejos / 220.0, 0.0, 12.0)
 	if grande:
+		_oscurecer(oscurecer_impacto * clampf(1.2 - lejos / 900.0, 0.0, 1.0))
 		_sfx(sonido_impacto, volumen_impacto_db + atenuar, 0.08, randf_range(0.78, 0.95))
+		_sfx(sonido_retumbo, volumen_impacto_db - 4.0 + atenuar, 0.05, randf_range(0.6, 0.75))   # capa grave que le da peso
 		return
 	var ahora := Time.get_ticks_msec()
 	if ahora - _t_ult_piedra < 70:
 		return
 	_t_ult_piedra = ahora
 	_sfx(sonido_piedra, volumen_piedra_db + atenuar, 0.15, randf_range(0.8, 1.2))
+
+
+## Oscurece la pantalla un instante (el velo decae solo); nunca baja un oscurecimiento mayor en curso.
+func _oscurecer(cantidad: float) -> void:
+	_dim = maxf(_dim, cantidad)
+
+
+## Una roca cayó cerca del jugador sin tocarlo: sacudida extra, polvo y un sonido seco ("casi me da").
+func casi_golpe(pos: Vector2, fuerza: float) -> void:
+	_sacudir(fuerza, 0.3)
+	_sfx(sonido_piedra, volumen_piedra_db + 8.0, 0.1, randf_range(0.7, 0.9))
+	if is_instance_valid(_jugador):
+		Burst.emitir(self, _jugador.global_position + Vector2(0.0, -60.0), color_escombro.lightened(0.3), 12, 1.1)
+	_oscurecer(oscurecer_impacto * 0.6)
+
+
+## Contador de escombros sueltos vivos (lo llaman ellos al nacer y morir).
+func registrar_escombro(delta: int) -> void:
+	_vivos = maxi(_vivos + delta, 0)
 
 
 ## Señal de la próxima oleada: crujido, un retumbo corto y polvo que se desprende del techo.
@@ -204,6 +351,11 @@ func _final() -> void:
 	_sacudir(fuerza_shake * final_fuerza, 0.9)
 	_sfx(sonido_impacto, volumen_impacto_db + 2.0, 0.0, 0.7)
 	_retumbo_vivo = false
+	_oscurecer(oscurecer_oleada * 1.4)   # el último golpe del derrumbe
+	if _sombra != null:
+		create_tween().tween_property(_sombra, "modulate:a", 0.0, maxf(final_fade, 0.1))
+	if _polvo != null:
+		_polvo.emitting = false   # el polvo que ya flota se asienta solo
 	if _retumbo != null and _retumbo.playing:
 		var tw := create_tween()
 		tw.tween_property(_retumbo, "volume_db", -60.0, maxf(final_fade, 0.1))
@@ -235,6 +387,7 @@ func _ambiente(delta: float) -> void:
 
 
 func _oleada() -> void:
+	_oscurecer(oscurecer_oleada)
 	var n := randi_range(escombros_por_oleada.x, escombros_por_oleada.y)
 	for i in n:
 		get_tree().create_timer(randf_range(0.0, duracion_oleada), false).timeout.connect(_soltar_escombro.bind(9.0, 26.0, false))
@@ -243,7 +396,9 @@ func _oleada() -> void:
 func _soltar_escombro(r_min: float, r_max: float, ambiente: bool) -> void:
 	if not is_instance_valid(_jugador) or (not ambiente and not _activo):
 		return
-	var x := _jugador.global_position.x + (randf_range(-450.0, 450.0) if ambiente else randf_range(dispersion.x, dispersion.y))
+	if max_escombros > 0 and _vivos >= max_escombros:
+		return
+	var x := _jugador.global_position.x + (randf_range(-450.0, 450.0) if ambiente else randf_range(dispersion.x, dispersion.y) * _dir)
 	var techo := _techo_sobre(Vector2(x, _jugador.global_position.y))
 	if techo == INF:
 		return   # sin techo sobre esa x: no cae nada
@@ -339,6 +494,8 @@ class _Aviso extends Node2D:
 
 ## Polvo y piedritas que se sueltan del techo en el punto donde va a caer una roca (señal de que se afloja).
 func _caer_polvo(x: float, techo: float) -> void:
+	if max_escombros > 0 and _vivos >= max_escombros + 30:
+		return
 	var e := _Escombro.new()
 	e.radio = randf_range(2.2, 4.2)
 	e.color = color_escombro.lightened(randf_range(0.05, 0.2))
@@ -458,15 +615,25 @@ class _Escombro extends Node2D:
 	var sacudir := 0.0
 	var evento: Node                                   # el `derrumbe_evento` (para el sonido de los impactos)
 	var _puntos := PackedVector2Array()
+	var _faceta := PackedVector2Array()                # polígono más claro sobre la roca
 	var _estela := PackedVector2Array()                # últimas posiciones (globales) de las rocas grandes: dejan estela
 
 	func _ready() -> void:
 		z_index = 4
-		var n := 7
+		# Cada roca es distinta: 5 a 9 vértices, algo achatada o alargada y con una faceta clara (volumen).
+		var n := randi_range(5, 9)
+		var achata := Vector2(randf_range(0.8, 1.3), randf_range(0.75, 1.0))
 		for i in n:
 			var a := TAU * i / n
-			_puntos.append(Vector2(cos(a), sin(a)) * radio * randf_range(0.65, 1.1))
+			_puntos.append(Vector2(cos(a), sin(a)) * achata * radio * randf_range(0.6, 1.12))
+			_faceta.append(_puntos[i] * 0.5 + Vector2(-0.18, -0.22) * radio)
+		if dano <= 0 and evento != null:
+			evento.registrar_escombro(1)
 		queue_redraw()
+
+	func _exit_tree() -> void:
+		if dano <= 0 and evento != null and is_instance_valid(evento):
+			evento.registrar_escombro(-1)
 
 	func _draw() -> void:
 		var m := _estela.size()
@@ -475,6 +642,8 @@ class _Escombro extends Node2D:
 			var c := Color(0.62, 0.58, 0.52, 0.32 * k)
 			draw_line(to_local(_estela[i]), to_local(_estela[i + 1]), c, radio * 0.9 * k)
 		draw_colored_polygon(_puntos, color)
+		if _faceta.size() >= 3 and radio >= 8.0:
+			draw_colored_polygon(_faceta, color.lightened(0.16))
 		draw_polyline(_puntos + PackedVector2Array([_puntos[0]]), color.darkened(0.45), 2.0)
 
 	func _physics_process(delta: float) -> void:
@@ -519,5 +688,14 @@ class _Escombro extends Node2D:
 		if cam != null and cam.has_method("shake") and sacudir > 0.0:
 			cam.shake(sacudir, 0.25)
 		var j := get_tree().get_first_node_in_group("player") as Node2D
-		if j != null and absf(j.global_position.x - p.x) <= radio_dano and j.global_position.y - p.y > -260.0 and j.global_position.y - p.y < 80.0 and j.has_method("take_damage"):
-			j.take_damage(dano, 0.0, 0, true)
+		if j == null:
+			return
+		var dx := j.global_position.x - p.x
+		var dy := j.global_position.y - p.y
+		var a_la_altura := dy > -260.0 and dy < 80.0
+		if absf(dx) <= radio_dano and a_la_altura and j.has_method("take_damage"):
+			# Te empuja lejos del impacto (sin tocar el daño).
+			var lado := 1 if dx >= 0.0 else -1
+			j.take_damage(dano, evento.empuje_roca if evento != null else 0.0, lado, true)
+		elif evento != null and a_la_altura and absf(dx) <= radio_dano * evento.casi_golpe_ancho:
+			evento.casi_golpe(p, maxf(sacudir * 1.5, 8.0))

@@ -26,16 +26,18 @@ uniform sampler2D campo : filter_linear, hint_default_black;
 uniform vec2 campo_origen = vec2(0.0);   // esquina superior izquierda del campo (px de mundo)
 uniform vec2 campo_tam = vec2(16.0);     // tamaño del campo (px de mundo)
 uniform float campo_max = 640.0;         // px de distancia que representa el blanco del campo
-uniform float prof_inicio = 40.0;        // px de distancia al aire donde empieza a oscurecer
-uniform float prof_fin = 420.0;          // px donde llega al máximo
-uniform float prof_oscuro : hint_range(0.0, 1.0) = 0.3;   // brillo que queda en lo más hondo (1 = sin efecto)
+uniform float prof_inicio = 0.0;        // px de distancia al aire donde empieza a oscurecer
+uniform float prof_fin = 130.0;          // px donde llega al máximo
+uniform float prof_oscuro : hint_range(0.0, 1.0) = 0.06;   // brillo que queda en lo más hondo (1 = sin efecto)
 uniform vec3 prof_tinte : source_color = vec3(0.6, 0.68, 1.0);
-uniform float prof_tinte_fuerza : hint_range(0.0, 1.0) = 0.5;
+uniform float prof_tinte_fuerza : hint_range(0.0, 1.0) = 0.6;
 
 // Posición de mundo del fragmento: los quadrants del TileMap dibujan en coordenadas locales, así que la
 // cámara (terreno_mundo.gd) pasa su centro y cuánto mundo se ve para reconstruirla desde SCREEN_UV.
-uniform vec2 cam_centro = vec2(0.0);
-uniform vec2 vista_mundo = vec2(1920.0, 1080.0);
+// mundo = mundo_o + SCREEN_UV.x * mundo_x + SCREEN_UV.y * mundo_y (lo fija terreno_mundo.gd justo antes de dibujar, con la cámara final).
+uniform vec2 mundo_o = vec2(0.0);
+uniform vec2 mundo_x = vec2(1920.0, 0.0);
+uniform vec2 mundo_y = vec2(0.0, 1080.0);
 
 float hash(vec2 p) {
 	p = fract(p * vec2(123.34, 456.21));
@@ -65,7 +67,7 @@ float fbm(vec2 p) {
 }
 
 void fragment() {
-	vec2 wpos = cam_centro + (SCREEN_UV - 0.5) * vista_mundo;
+	vec2 wpos = mundo_o + SCREEN_UV.x * mundo_x + SCREEN_UV.y * mundo_y;
 	vec4 c = texture(TEXTURE, UV);
 	float mx = max(c.r, max(c.g, c.b));
 	float mn = min(c.r, min(c.g, c.b));

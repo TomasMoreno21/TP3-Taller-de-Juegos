@@ -28,13 +28,14 @@ uniform sampler2D campo : filter_linear, hint_default_black;
 uniform vec2 campo_origen = vec2(0.0);
 uniform vec2 campo_tam = vec2(16.0);
 uniform float campo_max = 640.0;
-uniform float prof_inicio = 40.0;
-uniform float prof_fin = 420.0;
-uniform float prof_oscuro : hint_range(0.0, 1.0) = 0.3;
+uniform float prof_inicio = 0.0;
+uniform float prof_fin = 130.0;
+uniform float prof_oscuro : hint_range(0.0, 1.0) = 0.06;
 uniform vec3 prof_tinte : source_color = vec3(0.6, 0.68, 1.0);
-uniform float prof_tinte_fuerza : hint_range(0.0, 1.0) = 0.5;
-uniform vec2 cam_centro = vec2(0.0);
-uniform vec2 vista_mundo = vec2(1920.0, 1080.0);
+uniform float prof_tinte_fuerza : hint_range(0.0, 1.0) = 0.6;
+uniform vec2 mundo_o = vec2(0.0);
+uniform vec2 mundo_x = vec2(1920.0, 0.0);
+uniform vec2 mundo_y = vec2(0.0, 1080.0);
 
 varying vec2 wpos;
 
@@ -91,7 +92,7 @@ void fragment() {
 	vec3 tierra = col * (base + lum * contraste) * brillo;
 	// Guijarros claros dispersos.
 	tierra += step(0.9, vnoise(wpos / 7.0)) * brillo_guijarros;
-	vec2 wmundo = cam_centro + (SCREEN_UV - 0.5) * vista_mundo;
+	vec2 wmundo = mundo_o + SCREEN_UV.x * mundo_x + SCREEN_UV.y * mundo_y;
 	float prof = smoothstep(prof_inicio, prof_fin, texture(campo, (wmundo - campo_origen) / campo_tam).r * campo_max);
 	tierra *= mix(1.0, prof_oscuro, prof) * mix(vec3(1.0), prof_tinte, prof * prof_tinte_fuerza);
 	COLOR = vec4(mix(c.rgb, tierra, es_violeta * mezcla), c.a);

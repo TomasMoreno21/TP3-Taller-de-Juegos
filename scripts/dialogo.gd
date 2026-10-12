@@ -28,6 +28,8 @@ const LIMITE_TROZO := 44   ## un texto más largo se parte en globos cortos
 @export var radio_peligro := 480.0       ## enemigos más cerca que esto → el globo se hace chico y translúcido
 @export var seg_tras_dano := 1.5         ## tras recibir daño el globo sigue chico este tiempo
 @export var seg_calma_tras_dano := 2.0   ## el Amuleto espera este tiempo sin daño para hablar
+@export var hud_ancho_libre := 470.0         ## zona del HUD (arriba a la izquierda) que los globos esquivan: ancho
+@export var hud_alto_libre := 170.0          ## … y alto
 @export var seg_entre_charlas := 7.0     ## respiro mínimo entre una charla y la siguiente (no se pisan ni se encadenan)
 @export var seg_charla_vence := 30.0     ## una charla que esperó más que esto ya no viene al caso (el jugador siguió de largo) y se descarta
 @export var seg_tip_vence := 25.0        ## un consejo que esperó la calma más que esto ya no tiene sentido y se descarta
@@ -433,6 +435,7 @@ func _colocar() -> void:
 		pos.x = clampf(pos.x, 24.0, maxf(vp.x - tam.x - 24.0, 24.0))
 		pos.y = clampf(pos.y, 24.0, maxf(vp.y - tam.y - 24.0, 24.0))
 		punta = cabeza
+	pos = _evitar_hud(pos, tam, vp)
 	if _fase != Fase.SALIENDO:
 		var dt := get_process_delta_time()
 		pos += Vector2(0.0, sin(_t * 1.8) * flotacion_px)
@@ -450,6 +453,14 @@ func _colocar() -> void:
 	# la cola apunta a la gema (o a la cabeza) y se estira por el retraso; con el giro se pasa a coordenadas locales
 	var pivote := globo.position + globo.pivot_offset
 	globo.cola_a = globo.pivot_offset + (punta - pivote).rotated(-globo.rotation)
+
+
+## Si el globo caería sobre el HUD (arriba a la izquierda: vida y energía), lo corre hacia la derecha.
+func _evitar_hud(pos: Vector2, tam: Vector2, vp: Vector2) -> Vector2:
+	var hud := Rect2(0, 0, hud_ancho_libre, hud_alto_libre)
+	if Rect2(pos, tam).intersects(hud):
+		pos.x = minf(hud.end.x + 12.0, maxf(vp.x - tam.x - 24.0, 24.0))
+	return pos
 
 
 ## Lugar sin acción: ningún enemigo cerca y sin daño reciente. El Amuleto habla (casi siempre) solo ahí,

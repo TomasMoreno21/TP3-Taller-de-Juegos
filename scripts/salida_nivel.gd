@@ -15,6 +15,8 @@ extends Area2D
 @export var alto_oscuridad_arriba := 1400.0           ## cuánto sube la oscuridad desde la puerta (px)
 @export var alto_oscuridad_abajo := 700.0             ## cuánto baja (px)
 @export var ancho_oscuridad_solida := 3000.0          ## ancho del negro sólido tras el degradé (px)
+@export var difuminado_vertical := 350.0              ## px en que los bordes de arriba y abajo se desvanecen (así no se ve un cuadrado)
+@export var cubrir_pantalla := true                   ## al avanzar por el degradé, la oscuridad cubre TODA la pantalla (no solo el rectángulo)
 @export_group("Aspecto de umbral")
 @export var color_marco := Color(0.13, 0.11, 0.1)      ## piedra del arco
 @export var color_interior := Color(0.02, 0.02, 0.03)  ## oscuridad al otro lado
@@ -28,6 +30,8 @@ extends Area2D
 
 var _usada := false
 var _t := 0.0
+var _velo: ColorRect
+var _jugador: Node2D
 
 @onready var visual: Polygon2D = $Visual
 
@@ -44,6 +48,8 @@ func _ready() -> void:
 		var l := get_node_or_null("Luz") as PointLight2D
 		if l != null:
 			l.visible = false
+		if cubrir_pantalla and DisplayServer.get_name() != "headless":
+			_crear_velo()
 	elif visual != null:
 		visual.color = Color(color, 0.15)
 	if particulas and not modo_oscuridad and DisplayServer.get_name() != "headless":
@@ -84,8 +90,28 @@ func _entrar_oscuridad(jugador: Node) -> void:
 	TransicionPantalla.de(get_tree()).cambiar_escena(siguiente_escena)
 
 
+func _crear_velo() -> void:
+	var capa := CanvasLayer.new()
+	capa.layer = 30   # sobre el mundo, debajo de cartelería e intro
+	add_child(capa)
+	_velo = ColorRect.new()
+	_velo.color = Color(color_oscuridad, 0.0)
+	_velo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_velo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	capa.add_child(_velo)
+
+
 func _process(delta: float) -> void:
 	if modo_oscuridad:
+		if _velo != null:
+			if not is_instance_valid(_jugador):
+				_jugador = get_tree().get_first_node_in_group("player") as Node2D
+			if _jugador != null:
+				# Solo dentro del rectángulo de oscuridad (otros tramos del nivel pueden pasar por la misma x).
+				var d := _jugador.global_position - global_position
+				var dentro := d.y > -alto_oscuridad_arriba and d.y < alto_oscuridad_abajo and d.x < largo_oscuridad + ancho_oscuridad_solida
+				var k := clampf(d.x / (largo_oscuridad * 0.8), 0.0, 1.0) if dentro else 0.0
+				_velo.color.a = smoothstep(0.15, 1.0, k)
 		return
 	_t += delta
 	var k := 0.5 + 0.5 * sin(_t * 2.0)
@@ -159,3 +185,12 @@ func _dibujar_oscuridad() -> void:
 	var c1 := Color(color_oscuridad, 1.0)
 	draw_polygon(PackedVector2Array([Vector2(0, -arriba), Vector2(largo_oscuridad, -arriba), Vector2(largo_oscuridad, abajo), Vector2(0, abajo)]), PackedColorArray([c0, c1, c1, c0]))
 	draw_rect(Rect2(largo_oscuridad - 1.0, -arriba, ancho_oscuridad_solida, arriba + abajo), c1)
+	# Bordes de arriba y abajo difuminados: la oscuridad se funde con la cueva en vez de cortarse en recto.
+	var f := difuminado_vertical
+	if f > 0.0:
+		var xs := largo_oscuridad + ancho_oscuridad_solida
+		for lado in [-1.0, 1.0]:
+			var y0: float = -arriba if lado < 0.0 else abajo
+			var y1: float = y0 + lado * f
+			draw_polygon(PackedVector2Array([Vector2(0, y0), Vector2(largo_oscuridad, y0), Vector2(largo_oscuridad, y1), Vector2(0, y1)]), PackedColorArray([c0, c1, c0, c0]))
+			draw_polygon(PackedVector2Array([Vector2(largo_oscuridad - 1.0, y0), Vector2(xs, y0), Vector2(xs, y1), Vector2(largo_oscuridad - 1.0, y1)]), PackedColorArray([c1, c1, c0, c0]))

@@ -4,8 +4,9 @@ Instrucciones de trabajo para el asistente en este proyecto.
 
 ## Cómo trabajar conmigo
 - **Leé `MEMORY.md`** (corto: sesiones recientes, reglas, lecciones + índice). El historial completo está en `docs/MEMORY_HISTORIAL.md`: leelo SOLO por rango de líneas (índice al final de MEMORY.md).
-- **Ahorro de tokens:** Grep/Glob y Read con offset/limit; no releer ni verificar con Read tras Edit; llamadas en paralelo; respuestas mínimas; sin subagentes salvo pedido; verificar solo si cambió código.
+- **Ahorro de tokens (prioridad):** capturas solo cuando el cambio es visual y como máximo 1-2 por pedido (nunca series); preferir verificar con tests/números. Respuestas finales de 3-6 líneas, sin listas largas ni recapitular lo hecho. Grep/Glob y Read con offset/limit; no releer ni verificar con Read tras Edit; llamadas en paralelo; sin subagentes salvo pedido; verificar solo si cambió código.
 - **Comunicate SIEMPRE en español**, con respuestas concisas y directas. Sin relleno.
+- **MODO CAVERMAN (activo, todas las sesiones):** habla telegráfico. Frases cortas, fragmentos, sin saludos, sin introducciones, sin resumen de lo que ya dijiste, sin adornos. Ej: "Bug en `boss.gd:210`. Arreglado. Autotest 0." Listas/tablas solo si ahorran palabras. Código, rutas, comandos, nombres y mensajes de commit: normales y exactos. Excepción: avisos de riesgo, acciones destructivas y preguntas de diseño van claras y completas (sin telegrafiar).
 - **Antes de implementar algo no trivial, preguntame** y ofrecé opciones concretas (recomendando una), salvo que yo te pida el cambio explícito. No me sorprendas con cambios grandes sin consultar.
 - **No hagas commits ni pushes sin que yo te lo pida.** Cuando corresponda, preguntame el mensaje.
 - Si te muestro un error o algo no anda, investigá la causa real (log, `--headless`, tests) antes de proponer una solución al azar. Explicame en 1 o 2 líneas qué pasaba y qué cambiaste.
@@ -29,7 +30,6 @@ Instrucciones de trabajo para el asistente en este proyecto.
 - **Progresión:** autoload `Progresion`; el nivel sube con fragmentos acumulados `FRAGMENTOS_NIVEL = [8, 25, 50, 74]` (4 subidas en los 3 niveles de juego ≈ 1⅓ por nivel; 11/29/42 pickups); cada subida abre el LevelUp para elegir el combo de una forma (1 combo por forma; las completas ya no aparecen; sin formas elegibles la mejora queda en `mejoras_diferidas` hasta desbloquear otra). `SetupProgresion.nivel_minimo` ya no sube el nivel: solo fija `pasos_luz_base`.
 - **Enemigos:** cultista/arquero/chamán, stats en `enemy.gd::config_por_tipo(tipo)` (NO hay `.tres`). Sprites en `resources/enemigo{1,2}_frames.tres`.
 - **UIX ya implementada (15/08):** menú principal (`main_menu.tscn`, main scene), pausa (`pause.tscn`), controles (`controls.tscn`), HUD (`hud.tscn`).
-- **Consola dev:** `` ` `` abre consola; comandos `help`, `form <humano|lobo|oso|murcielago>`, `god`, `mv`, `frags <n>`, `nivel <n>`, `kill`.
 
 ## Verificación (solo si cambió código/escenas)
 ```

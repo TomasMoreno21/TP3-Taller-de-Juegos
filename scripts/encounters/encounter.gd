@@ -108,6 +108,8 @@ func _liberar_enemigos() -> void:
 ## tras morir DENTRO de un combate: sin esto el encounter quedaba RUNNING y la
 ## cámara fija al centro, con el jugador fuera de encuadre.
 func reiniciar() -> void:
+	if estado == Estado.COMPLETED:
+		return   # arena ya vencida: al reaparecer no se rearma (si no, al pasar se cerraba sin enemigos: destello y cámara)
 	estado = Estado.INACTIVE
 	_gen += 1   # invalida cualquier pausa entre olas que estuviera esperando
 	_ola_idx = -1

@@ -75,6 +75,7 @@ var _jugador: Node2D
 var _empalados := {}                       # id de enemigo -> ms del último empalado
 var _fase_chequeo := randi() % 4           # escalona el chequeo de enemigos entre pinchos
 var _hit_cd := 0.0
+var _radio_cercania_cuad := 0.0   # (distancia a la que el jugador ya cuenta como cercano)² — se fija en _dibujar
 var _editor_sync := true
 
 
@@ -175,9 +176,12 @@ func _physics_process(delta: float) -> void:
 	if _jugador == null or not is_instance_valid(_jugador):
 		_jugador = get_tree().get_first_node_in_group("player")
 	var player: Node2D = _jugador
-	if player == null or _hit_cd > 0.0 or player.get("_derrota_activa"):
+	if player == null or _hit_cd > 0.0:
 		return
-	if global_position.distance_to(player.global_position) > _kill_zone_size.length() + 400.0:
+	# Lo barato primero: casi todos los pinchos están lejos del jugador casi siempre.
+	if global_position.distance_squared_to(player.global_position) > _radio_cercania_cuad:
+		return
+	if player.get("_derrota_activa"):
 		return
 	if _cuerpo_en_zona(player):
 		# Al golpear saltamos el cooldown para no repetir el daño cada frame.
@@ -194,10 +198,8 @@ func _physics_process(delta: float) -> void:
 func _empalar_enemigos() -> void:
 	if not enemigos_mueren:
 		return
-	for e in get_tree().get_nodes_in_group("enemy"):
-		if not is_instance_valid(e) or e.is_in_group("boss") or not (e is Node2D):
-			continue
-		if float(e.get("_stun_timer")) <= 0.0 or int(e.get("health")) <= 0:
+	for e in _enemigos_aturdidos(get_tree()):
+		if not is_instance_valid(e) or int(e.get("health")) <= 0:
 			continue
 		if global_position.distance_to((e as Node2D).global_position) > _kill_zone_size.length() + 300.0:
 			continue
@@ -208,6 +210,26 @@ func _empalar_enemigos() -> void:
 			_empalados[e.get_instance_id()] = ahora
 			Burst.emitir(self, (e as Node2D).global_position, color_sangre, 12, 0.8)
 			e.take_damage(dano_a_enemigos, 0.0, 1, false)
+
+
+## Enemigos en hitstun (los únicos que un pincho puede empalar), calculados UNA vez por frame de física y
+## compartidos por todos los pinchos del nivel (antes cada pincho recorría el grupo "enemy" entero).
+static var _cache_frame := -1
+static var _cache_aturdidos: Array = []
+
+
+static func _enemigos_aturdidos(arbol: SceneTree) -> Array:
+	var f := Engine.get_physics_frames()
+	if f != _cache_frame:
+		_cache_frame = f
+		_cache_aturdidos = []
+		for e in arbol.get_nodes_in_group("enemy"):
+			if not is_instance_valid(e) or e.is_in_group("boss") or not (e is Node2D):
+				continue
+			if float(e.get("_stun_timer")) <= 0.0 or int(e.get("health")) <= 0:
+				continue
+			_cache_aturdidos.append(e)
+	return _cache_aturdidos
 
 
 ## Superpone el rect del collider del body con el área de daño (determinista,
@@ -233,13 +255,17 @@ func _cuerpo_en_zona(body: Node2D) -> bool:
 	# baja hacia la base, no al revés: el rect anterior cubría la base/tallo.
 	var alto_vis := _kill_zone_size.y
 	var alto_zona := maxf(alto, 10.0) * fraccion_zona_dano
-	var rect_zona := Rect2(
-		global_position.x - _kill_zone_size.x * 0.5,
-		global_position.y - alto_vis,
-		_kill_zone_size.x,
-		alto_zona
-	)
-	return rect_zona.intersects(rect_body)
+	# La zona se evalúa en el espacio LOCAL del nodo: así respeta rotación/escala (antes era un rect
+	# horizontal en la posición del nodo y los pinchos inclinados mataban en el aire, lejos de las puntas).
+	var rect_zona := Rect2(-_kill_zone_size.x * 0.5, -alto_vis, _kill_zone_size.x, alto_zona)
+	var inv := global_transform.affine_inverse()
+	var a := inv * rect_body.position
+	var b := inv * Vector2(rect_body.end.x, rect_body.position.y)
+	var c := inv * rect_body.end
+	var d := inv * Vector2(rect_body.position.x, rect_body.end.y)
+	var lmin := Vector2(minf(minf(a.x, b.x), minf(c.x, d.x)), minf(minf(a.y, b.y), minf(c.y, d.y)))
+	var lmax := Vector2(maxf(maxf(a.x, b.x), maxf(c.x, d.x)), maxf(maxf(a.y, b.y), maxf(c.y, d.y)))
+	return rect_zona.intersects(Rect2(lmin, lmax - lmin))
 
 
 func _csc_de(body: Node2D) -> CollisionShape2D:
@@ -251,6 +277,7 @@ func _csc_de(body: Node2D) -> CollisionShape2D:
 
 func _dibujar() -> void:
 	_kill_zone_size = Vector2(maxf(cantidad * ancho_pincho, 10.0), maxf(alto * altura_mult * _factor_estilo(), 10.0))
+	_radio_cercania_cuad = pow(_kill_zone_size.length() + 400.0, 2.0)
 	var alto_vis := _kill_zone_size.y
 	var alto_zona := maxf(alto, 10.0) * fraccion_zona_dano
 	# Collider visible/depurable (no se usa para detección, pero ayuda a ver el área)

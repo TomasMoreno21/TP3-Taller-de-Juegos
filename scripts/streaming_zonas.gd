@@ -17,7 +17,7 @@ extends Node
 @export var scripts_luces_excluidos := PackedStringArray(["luciernagas_ambiente.gd"])
 @export var scripts_gestionados := PackedStringArray([
 	"decorativo.gd", "pinchos.gd", "pickup.gd", "pickup_vida.gd",
-	"enredadera.gd", "plataforma_fragil.gd", "rompible.gd",
+	"enredadera.gd", "plataforma_fragil.gd",
 ])
 
 var _nodos: Array[Node2D] = []

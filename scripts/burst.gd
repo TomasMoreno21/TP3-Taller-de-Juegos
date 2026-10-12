@@ -1,6 +1,6 @@
 class_name Burst
 extends CPUParticles2D
-## Estallido one-shot reutilizable (golpes, muertes, checkpoint, rompibles...).
+## Estallido one-shot reutilizable (golpes, muertes, checkpoint...).
 ## Se libera solo al terminar para no acumular nodos en el árbol.
 
 ## Margen extra (s) del respaldo por si "finished" nunca llega (p.ej. nunca se emitió).
