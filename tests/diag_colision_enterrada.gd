@@ -2,9 +2,9 @@ extends SceneTree
 ## Verifica el terreno de un nivel (NIVEL=1|2|3, por defecto 1): toda celda sin colisión está rodeada (8 vecinas) de
 ## tiles sólidos, y todas las celdas con colisión son cuadrados completos de 16 px (así lo enterrado no se puede tocar).
 ## Se toleran las celdas expuestas sin colisión que ya traían los niveles: nivel 1 = 962 (borde inferior del mundo,
-## y≈7040-7200 px, x 16800-26000: quedó así al recortar el terreno sin re-hornear), nivel 2 = 271 (franja en y≈1120 px, x 8960-13600).
+## y≈7040-7200 px, x 16800-26000: quedó así al recortar el terreno sin re-hornear), nivel 2 = 0 (la franja de y≈1120 px se re-horneó).
 ## NIVEL=2 godot --headless --path . --script res://tests/diag_colision_enterrada.gd
-const EXPUESTAS_DE_ORIGEN := {"1": 962, "2": 271, "3": 0}
+const EXPUESTAS_DE_ORIGEN := {"1": 962, "2": 0, "3": 0}
 
 var fallos := 0
 

@@ -7,9 +7,11 @@ signal nivel_subio(nuevo_nivel: int)
 signal forma_desbloqueada_evento(form_index: int)
 
 ## Fragmentos acumulados para alcanzar los niveles 2, 3, 4 y 5 (4 subidas = 1 combo por forma).
-## Ajustados a ~1 y 1/3 de subida por nivel de juego (fragmentos: nivel 1 = 11, nivel 2 = 29, nivel 3 = 42):
-## 1.ª al ~75 % del nivel 1, 2.ª a la mitad del nivel 2, 3.ª al ~25 % del nivel 3 y 4.ª cerca del final.
-const FRAGMENTOS_NIVEL: Array[int] = [8, 25, 50, 74]
+## Ajustados a ~1 y 1/3 de subida por nivel de juego (orbes azules en los niveles, 13/10: nivel 1 = 11, nivel 2 = 17, nivel 3 = 42):
+## 1.ª al ~75 % del nivel 1; 2.ª la da el orbe `PremioA1_3` del nivel 2 (`da_subida_de_nivel`: 28 = 11 del nivel 1 + los otros 16 del nivel 2 + ese; sin él no se llega);
+## 3.ª al ~25 % del nivel 3 y 4.ª cerca del final (deja margen si no se juntan todos).
+## Si se agregan o quitan orbes, reajustar.
+const FRAGMENTOS_NIVEL: Array[int] = [8, 28, 38, 64]
 const FRAGMENTOS_IMPOSIBLE := 999999
 
 var fragmentos := 0
@@ -46,6 +48,13 @@ func add_fragmentos(cantidad: int) -> void:
 	fragmentos_cambiado.emit(fragmentos)
 	while fragmentos >= fragmentos_para_nivel(nivel + 1):
 		subir_nivel()
+
+
+## Subida garantizada (orbes especiales): completa los fragmentos que faltan para el siguiente nivel.
+func forzar_subida() -> void:
+	if es_nivel_maximo():
+		return
+	add_fragmentos(maxi(fragmentos_para_nivel(nivel + 1) - fragmentos, 0))
 
 
 func subir_nivel() -> void:

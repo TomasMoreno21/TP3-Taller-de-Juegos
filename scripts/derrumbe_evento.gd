@@ -365,7 +365,9 @@ func _final() -> void:
 	var c := color_escombro.lightened(0.25)
 	for i in 4:
 		var p := _jugador.global_position + Vector2(randf_range(-420.0, 420.0), randf_range(-260.0, -60.0))
-		get_tree().create_timer(i * 0.18, false).timeout.connect(Burst.emitir.bind(self, p, c, 26, 2.0))
+		get_tree().create_timer(i * 0.18, false).timeout.connect(func() -> void:
+			if is_instance_valid(self) and is_inside_tree():   # el nivel puede cambiar antes de que dispare
+				Burst.emitir(self, p, c, 26, 2.0))
 	Burst.onda(self, _jugador.global_position + Vector2(0, -80), c, 280.0, 1.0, 6.0)
 	for i in 10:
 		get_tree().create_timer(randf_range(0.1, final_fade), false).timeout.connect(_soltar_escombro.bind(7.0, 18.0, true))

@@ -2,6 +2,10 @@ extends SceneTree
 ## Cinemática del tótem del Lobo (nivel 1). Con ventana: godot --path . --resolution 1920x1080 --script res://tests/diag_unlock_cine.gd -- <dir_capturas> [escena] [nodo] [forma]
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
+	if args.is_empty():   # es una herramienta de capturas, no un test: sin directorio de salida no hace nada
+		print("Uso: ver el comentario de la cabecera (necesita -- <dir_capturas>)")
+		quit()
+		return
 	var dir: String = args[0]
 	var escena: String = args[1] if args.size() > 1 else "res://scenes/nivel1.tscn"
 	var nodo: String = args[2] if args.size() > 2 else "UnlockLobo"

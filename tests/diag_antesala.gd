@@ -34,7 +34,7 @@ func _initialize() -> void:
 	for i in 30:
 		await process_frame
 	_check(ant.k < 0.01, "lejos de la arena no hay antesala (k=%.3f)" % ant.k)
-	_check(is_equal_approx(amb._capas[1].volume_db, vol0), "lejos el ambiente suena normal")
+	_check(absf(amb._capas[1].volume_db - vol0) < 0.3, "lejos el ambiente suena normal (el silencio termina de apagarse: %.2f dB)" % (amb._capas[1].volume_db - vol0))
 	# Cerca: se calla.
 	p.global_position = Vector2(enc.arena_center.x - enc.arena_medio_ancho - 100.0, enc.arena_center.y)
 	for i in 120:

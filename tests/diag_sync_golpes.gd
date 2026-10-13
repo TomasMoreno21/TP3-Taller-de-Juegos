@@ -123,6 +123,7 @@ func _dano_en_golpe() -> void:
 	await physics_frame
 
 func _initialize() -> void:
+	await process_frame   # antes del primer frame los nodos recién agregados aún no corrieron su _ready
 	await _caso(0, "attack", "attack1", 2)
 	await _caso(0, "heavy", "attack2", 1)
 	await _caso(0, "special", "attack_full", 2)

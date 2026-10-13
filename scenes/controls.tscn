@@ -117,7 +117,7 @@ text = "[color=#e6554f][b]TECLADO[/b][/color]
 [color=#b8b4a6]Golpe:[/color]  J
 [color=#b8b4a6]Fuerte:[/color]  K
 [color=#b8b4a6]Especial / Interactuar:[/color]  L
-[color=#b8b4a6]Bloquear:[/color]  Shift
+[color=#b8b4a6]Bloquear (Humano):[/color]  Shift
 [color=#b8b4a6]Parry (Humano):[/color]  Shift justo al recibir el golpe
 [color=#b8b4a6]Aleteo (Murciélago):[/color]  Espacio en el aire
 [color=#b8b4a6]Picada (Murciélago):[/color]  S / ↓ en el aire
@@ -140,7 +140,7 @@ text = "[color=#e6554f][b]MANDO[/b][/color]
 [color=#b8b4a6]Golpe:[/color]  X
 [color=#b8b4a6]Fuerte:[/color]  Y
 [color=#b8b4a6]Especial / Interactuar:[/color]  B
-[color=#b8b4a6]Bloquear:[/color]  LB
+[color=#b8b4a6]Bloquear (Humano):[/color]  LB
 [color=#b8b4a6]Parry (Humano):[/color]  LB justo al recibir el golpe
 [color=#b8b4a6]Aleteo (Murciélago):[/color]  A en el aire
 [color=#b8b4a6]Picada (Murciélago):[/color]  Stick / Cruz abajo en el aire

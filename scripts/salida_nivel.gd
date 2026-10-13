@@ -1,5 +1,7 @@
 extends Area2D
 ## Puerta de salida colocable: al tocarla, el jugador pasa a la siguiente escena.
+
+signal alcanzada   ## el jugador llegó a la salida (los objetivos de lista del tipo "Llegá a…" se tachan con esto)
 ## `siguiente_escena` es editable desde el Inspector (ninguna ruta hardcodeada en el nivel).
 
 @export var siguiente_escena: String = ""
@@ -67,6 +69,7 @@ func _on_body_entered(_body: Node2D) -> void:
 	if _usada or siguiente_escena.is_empty():
 		return
 	_usada = true
+	alcanzada.emit()
 	if modo_oscuridad:
 		_entrar_oscuridad(_body)
 		return

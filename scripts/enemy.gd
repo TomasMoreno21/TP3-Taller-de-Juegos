@@ -70,9 +70,9 @@ const TELEGRAFIA := preload("res://scripts/telegrafia_enemigo.gd")
 const FRAMES_POR_TIPO := {
 	"cultista": preload("res://resources/enemigo1_frames.tres"),
 	"arquero": preload("res://resources/enemigo2_frames.tres"),
-	"chaman": null,
 }
 
+@export var orbe_vida_altura := 70.0   ## px que sube el orbe de vida soltado al morir (más alto = más fácil de agarrar)
 var health: int = 40
 var _activo := true
 var _telegraph_timer := 0.0
@@ -177,29 +177,6 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.windup_disparo = 0.42
 			d.poise_max = 3
 			d.sonico_dano_mult = 1.5
-		"chaman":
-			d.tipo_nombre = "Chamán"
-			d.max_health = 155
-			d.speed = 72.0
-			d.stop_distance = 40.0
-			d.attack_damage = 15
-			d.attack_cooldown = 1.6
-			d.projectile = true
-			d.shoot_range = 950.0
-			d.retrocede_dist = 190.0
-			d.proyectil_speed = 470.0
-			d.color = Color(0.4, 0.34, 0.24)
-			d.collider_size = Vector2(102, 330)
-			d.collider_pies_y = 65.4
-			d.offset_visual_x = 0.0
-			d.visual_scale = Vector2.ONE
-			d.knockback_resist = 0.6
-			d.stun_duracion = 0.35
-			d.windup_disparo = 0.5
-			d.poise_max = 4
-			d.sonico_dano_mult = 1.2
-			d.energia_al_morir = 20.0
-			d.armor_umbral = 18  # solo golpes pesados (18+) rompen su ataque; Lobo/Murciélago no pueden
 	return d
 
 
@@ -1030,7 +1007,7 @@ func _soltar_orbe_vida() -> void:
 	if randf() > 0.55:
 		return
 	var orbe: Area2D = preload("res://scenes/pickup_vida.tscn").instantiate()
-	orbe.global_position = global_position
+	orbe.global_position = global_position + Vector2(0, -orbe_vida_altura)
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	destino.add_child(orbe)
 

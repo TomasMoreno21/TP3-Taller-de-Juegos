@@ -115,6 +115,7 @@ func _direccion(fin_y: float, y_cruce: float, nombre: String) -> void:
 	await physics_frame
 
 func _initialize() -> void:
+	await process_frame   # la cámara no puede ser la actual antes del primer frame
 	# 1) Ritmo del shake: antes constante (18), ahora con valles y picos
 	var antes: Array = await _ritmo(true)
 	var ahora: Array = await _ritmo(false)

@@ -216,7 +216,8 @@ func _initialize() -> void:
 				var tope: Vector2 = cad.to_global(Vector2(xl, rr.position.y + 3.0 - float(largos[i])))
 				var hit := espacio.intersect_ray(PhysicsRayQueryParameters2D.create(tope + Vector2(0, 20), tope + Vector2(0, -2), 1))
 				_chk(not hit.is_empty() and float(largos[i]) > 20.0, "%s: cadena %d toca el techo (%d px)" % [n.name, i, int(largos[i])])
-	_chk(con_cadena >= 10, "plataformas frágiles con cadenas: %d" % con_cadena)
+	var total_pf := nivel.find_children("PlataformaFragil*", "StaticBody2D", true, false).size()
+	_chk(total_pf > 0 and con_cadena == total_pf, "todas las plataformas frágiles tienen cadenas (%d de %d)" % [con_cadena, total_pf])
 	# Decorados apoyados en una superficie: los de piso con el pie sobre el suelo, los colgantes pegados al techo.
 	var tipos_techo := {6: 0.0, 9: 0.0, 14: 22.0, 15: 0.0, 19: 30.0}
 	var deco_mal := 0
@@ -237,19 +238,6 @@ func _initialize() -> void:
 					deco_mal += 1
 					print("  decorado flotando/enterrado: ", d.name, " ", pd)
 	_chk(deco_mal == 0, "decorados sobre una superficie (fuera de lugar: %d)" % deco_mal)
-	# Tablas del puente de la galería B: cadena con saltos cortos (<= 340 px entre centros).
-	var xs: Array[float] = []
-	for n in nivel.get_children():
-		if String(n.name).begins_with("PlataformaFragil") and n.global_position.y < 2000.0 and n.global_position.y > 1600.0:
-			xs.append(n.global_position.x)
-	for n in exp.get_node("B").get_children():
-		if String(n.name).begins_with("PlataformaFragil"):
-			xs.append(n.global_position.x)
-	xs.sort()
-	var salto_max := 0.0
-	for i in range(1, xs.size()):
-		salto_max = maxf(salto_max, xs[i] - xs[i - 1])
-	_chk(xs.size() >= 5 and salto_max <= 340.0, "puente B: %d tablas, salto máx %d px" % [xs.size(), int(salto_max)])
-
+	# (El puente de tablas de la galería B se quitó del diseño: las plataformas frágiles que quedan son la escalera de planeo y B3.)
 	print("FALLOS = ", fallos)
 	quit(1 if fallos > 0 else 0)

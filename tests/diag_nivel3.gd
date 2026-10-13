@@ -138,14 +138,14 @@ func _init() -> void:
 				if "tipo" in sub and "ola_asignada" in sub:
 					enemigos += 1
 					var pos: Vector2 = hijo.position + sub.position
-					var pies: float = 29.0 if sub.tipo != "chaman" else 65.4
+					var pies: float = 29.0
 					var piso: float = _piso_bajo(pos.x, pos.y)
 					if absf((pos.y + pies) - piso) > 3.0:
 						mal_puestos += 1
 						print("  [AVISO] enemigo mal apoyado: ", hijo.name, "/", sub.name, " pies=", pos.y + pies, " piso=", piso)
 	_check(mal_puestos == 0, "Nivel3: checkpoints, pickups y enemigos apoyados, sin incrustar (%d mal puestos)" % mal_puestos)
 	_check(checkpoints >= 18, "Nivel3: checkpoints frecuentes (hay %d)" % checkpoints)
-	_check(encounters == 5 and enemigos == 30, "Nivel3: 5 arenas y 30 enemigos (hay %d / %d)" % [encounters, enemigos])
+	_check(encounters == 5 and enemigos == 25, "Nivel3: 5 arenas y 25 enemigos (hay %d / %d)" % [encounters, enemigos])
 	_check(pickups >= 45 and orbes >= 11, "Nivel3: almas (%d en total) y orbes de vida (%d)" % [pickups, orbes])
 
 	# --- Decoración mínima y apoyada ---

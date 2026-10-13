@@ -20,8 +20,13 @@ func _init() -> void:
 	await process_frame
 	await process_frame
 	var player: CharacterBody2D = nivel.get_node("Player")
-	var pf: Node = nivel.get_node("PlataformaFragil")
+	var pf: Node = nivel.get_node("PlataformaFragil3")
 	var origen: Vector2 = pf.position
+	# La plataforma está lejos del inicio: el streaming la duerme (sin timers) hasta que el jugador se acerca.
+	player.global_position = pf.global_position + Vector2(0, -700)
+	player.set_physics_process(false)   # quieto en el aire: no cae sobre la plataforma ni rompe nada
+	for i in 40:
+		await physics_frame
 
 	# --- Plataforma frágil: se rompe y vuelve por tiempo ---
 	pf.tiempo_reaparicion = 0.5
@@ -35,6 +40,7 @@ func _init() -> void:
 	_check(pf.position.is_equal_approx(origen), "Frágil: vuelve a su posición original")
 	_check(not pf._shape.disabled, "Frágil: collider reactivado")
 
+	player.set_physics_process(true)
 	# --- Frágil: vuelve al reaparecer en checkpoint (tiempo = 0 → solo por checkpoint) ---
 	pf.tiempo_reaparicion = 0.0
 	pf.call("_romper")

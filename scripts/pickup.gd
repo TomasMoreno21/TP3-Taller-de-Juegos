@@ -12,6 +12,16 @@ extends Area2D
 @export var iman_radio := 150.0         ## px: dentro de este radio el alma vuela hacia el jugador (0 = sin imán)
 @export var iman_velocidad := 700.0      ## velocidad máxima del imán (px/s)
 @export var iman_aceleracion := 1800.0
+@export_group("Aspecto de alma")
+@export var color_cabeza := Color(0.82, 0.94, 1.0, 0.95)   ## centro de la cabeza del espíritu
+@export var color_borde := Color(0.38, 0.62, 1.0, 0.85)     ## contorno de la cabeza
+@export var color_cola := Color(0.3, 0.5, 1.0, 0.0)         ## punta de la cola (se desvanece)
+@export var radio_cabeza := 22.0
+@export var largo_cola := 66.0
+@export var oleaje_cola := 10.0              ## px que se mece la cola
+@export var velocidad_oleaje := 3.2
+@export_group("")
+@export var da_subida_de_nivel := false   ## al recogerlo completa los fragmentos y sube de nivel (ajustar FRAGMENTOS_NIVEL en progresion.gd)
 @export var recoger_radio := 50.0        ## px: si el imán la acerca tanto, se recoge aunque no toque el collider (planeo, formas chicas)
 
 var _t := randf() * TAU
@@ -33,6 +43,7 @@ func _ready() -> void:
 	collision_mask = 4
 	body_entered.connect(_on_body_entered)
 	_base_visual = visual.position
+	_dibujar_alma(0.0)
 	if halo != null:
 		_base_halo = halo.position
 		_alpha_halo = halo.modulate.a
@@ -49,12 +60,66 @@ func _process(delta: float) -> void:
 	_atraer(delta)
 	var dy := sin(_t * flote_velocidad) * flote_amplitud
 	visual.position = _base_visual + Vector2(0, dy)
+	_dibujar_alma(_t)
 	var latido := 0.8 + 0.2 * sin(_t * pulso_velocidad)
 	if halo != null:
 		halo.position = _base_halo + Vector2(0, dy)
 		halo.modulate.a = _alpha_halo * latido
 	if luz != null:
 		luz.energy = _energia_luz * latido
+
+
+## Espíritu: cabeza redonda y una cola ondulante que se desvanece (como un alma suelta).
+## El contorno se recalcula cada cuadro con un vaivén; los colores van por vértice (cabeza clara → cola transparente).
+const _N_CABEZA := 9
+const _N_COLA := 8
+
+
+func _dibujar_alma(t: float) -> void:
+	var cy := -radio_cabeza * 0.5
+	_contorno(visual, radio_cabeza, largo_cola, oleaje_cola, t, 0.0, color_borde.lerp(color_cabeza, 0.15), color_borde, color_cola, 0.85)
+	# Dos velos translúcidos más grandes que se mecen a otro ritmo: el alma parece flotar en su propia estela.
+	var n := 0
+	for v in visual.get_children():
+		if v.name.begins_with("Velo"):
+			n += 1
+			_contorno(v as Polygon2D, radio_cabeza * (1.3 + 0.15 * n), largo_cola * (1.2 + 0.15 * n), oleaje_cola * (1.4 + 0.3 * n), t, 1.7 * n,
+				Color(color_cabeza, 0.28), Color(color_borde, 0.2), Color(color_cola, 0.0), 1.0)
+	var nucleo := visual.get_node_or_null("Nucleo") as Polygon2D
+	if nucleo != null:
+		nucleo.position = Vector2(0, cy)
+		nucleo.scale = Vector2.ONE * (radio_cabeza / 15.0) * (1.0 + 0.08 * sin(t * pulso_velocidad))
+
+
+## Contorno de espíritu (cabeza + cola ondulante) con color por vértice en `destino`.
+func _contorno(destino: Polygon2D, radio: float, largo: float, oleaje: float, t: float, fase: float, c_cab: Color, c_borde: Color, c_cola: Color, opacidad: float) -> void:
+	var pts := PackedVector2Array()
+	var cols := PackedColorArray()
+	var cy := -radio * 0.5
+	for i in _N_CABEZA:   # semicírculo superior, de izquierda a derecha
+		var a := PI + PI * float(i) / float(_N_CABEZA - 1)
+		pts.append(Vector2(cos(a) * radio, cy + sin(a) * radio))
+		cols.append(c_cab)
+	var der := PackedVector2Array()
+	var izq := PackedVector2Array()
+	var cols_l := PackedColorArray()
+	for k in range(1, _N_COLA + 1):
+		var f := float(k) / float(_N_COLA)
+		var ancho := radio * pow(1.0 - f, 0.75)
+		var mece := sin(t * velocidad_oleaje + fase + f * 3.4) * oleaje * f
+		var y := cy + f * largo
+		der.append(Vector2(ancho + mece, y))
+		izq.append(Vector2(-ancho + mece, y))
+		var c := c_borde.lerp(c_cola, pow(f, 0.9))
+		c.a *= opacidad
+		cols_l.append(c)
+	pts.append_array(der)
+	cols.append_array(cols_l)
+	for k in range(_N_COLA - 2, -1, -1):   # vuelve por el lado izquierdo (sin repetir la punta)
+		pts.append(izq[k])
+		cols.append(cols_l[k])
+	destino.polygon = pts
+	destino.vertex_colors = cols
 
 
 ## Imán suave: cerca del jugador el alma acelera hacia él (más rápido cuanto más cerca).
@@ -88,6 +153,8 @@ func _recoger(body: Node2D) -> void:
 	body.recoger_energia()
 	# El alma contribuye a subir de nivel (fragmentos → desbloqueo de combos).
 	get_node("/root/Progresion").add_fragmentos(1)
+	if da_subida_de_nivel:
+		get_node("/root/Progresion").forzar_subida()
 	_efecto_recoger()
 	queue_free()
 

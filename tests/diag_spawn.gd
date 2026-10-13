@@ -29,7 +29,7 @@ func _init() -> void:
 
 	var escena: PackedScene = load("res://scenes/enemy.tscn")
 	var i := 0
-	for tipo in ["cultista", "arquero", "chaman"]:
+	for tipo in ["cultista", "arquero"]:
 		for desfase in [60.0, -100.0]:
 			var e: Node2D = escena.instantiate()
 			e.set("tipo", tipo)

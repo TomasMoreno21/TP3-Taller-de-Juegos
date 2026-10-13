@@ -4,7 +4,7 @@ extends Forma
 
 func _init() -> void:
 	form_name = "Murciélago"
-	speed = 380.0
+	speed = 420.0
 	jump_velocity = -400.0
 	gravity_scale = 0.50
 	max_health = 100
@@ -20,8 +20,8 @@ func _init() -> void:
 	special_damage = 15
 	dano_recibido_mult = 1.1
 	special_cost = 8.0
-	flap_impulso = 330.0
-	flap_costo = 7.0
+	flap_impulso = 360.0
+	flap_costo = 5.0
 	special_cooldown = 0.3
 	special_cooldown_combate = 0.6
 	color = Color(0.52, 0.4, 0.62)
@@ -37,9 +37,9 @@ func _init() -> void:
 	flotar_frecuencia = 1.9
 	sprint_zoom_out = 0.04        # la cámara se abre un poco al ir rápido (sensación de velocidad al planear)
 	sprint_min_speed = 330.0
-	accel = 3000.0
+	accel = 3600.0
 	friction = 2000.0
-	accel_air_mult = 0.65
+	accel_air_mult = 0.95
 	coyote_time = 0.16
 	jump_buffer_time = 0.18
 	jump_cut_multiplier = 0.20

@@ -50,6 +50,12 @@ func _init() -> void:
 		if is_instance_valid(a):
 			a.queue_free()
 
+	# Sin enemigos sueltos: sus golpes ensuciarían la medición de vida de las pruebas siguientes.
+	for e in get_nodes_in_group("enemy"):
+		if e != boss and not e.is_in_group("boss"):
+			e.queue_free()
+	await _wait_frames(2)
+
 	# --- Onda baja: pega al que estÃ¡ en el piso (se salta). ---
 	player._restaurar_forma(0)
 	await _wait_frames(30)

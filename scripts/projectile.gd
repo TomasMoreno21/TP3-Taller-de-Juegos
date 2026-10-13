@@ -31,7 +31,7 @@ var _estela: Line2D
 
 @export_group("Aspecto")
 @export var color_jugador := Color(0.72, 0.52, 1.0)   ## onda sónica del Murciélago
-@export var color_enemigo := Color(1.0, 0.45, 0.25)   ## orbe de brasa de los enemigos
+@export var color_enemigo := Color(1.0, 0.2, 0.18)   ## onda roja de los enemigos
 @export var tamano := 1.5                              ## escala del dibujo (el hitbox no cambia)
 @export var giro_estrella_s := 6.0                     ## rad/s a los que gira la estrella del orbe enemigo
 @export_group("")
@@ -200,6 +200,8 @@ func _buscar_enemigo_cercano() -> Node2D:
 		if not _activo_y_vivo(n):
 			continue
 		var d := global_position.distance_to(n.global_position)
+		if n.get("flotante") == true:
+			d *= 0.35   # prioridad a los voladores
 		if d < mejor_dist:
 			mejor_dist = d
 			mejor = n
@@ -283,10 +285,7 @@ func _aplicar_color() -> void:
 
 func _dibujar_arte(ci: CanvasItem) -> void:
 	var c := visual.color if visual != null else color_jugador
-	if enemy_shot:
-		_dibujar_orbe(ci, c, tamano)
-	else:
-		_dibujar_onda(ci, c, tamano)
+	_dibujar_onda(ci, c, tamano)
 
 
 func _escalar(pts: Array, k: float) -> PackedVector2Array:
@@ -299,31 +298,15 @@ func _escalar(pts: Array, k: float) -> PackedVector2Array:
 ## Onda sónica: núcleo brillante, cola afilada y medialunas que se abren hacia adelante.
 func _dibujar_onda(ci: CanvasItem, c: Color, k: float) -> void:
 	var luz := c.lerp(Color.WHITE, 0.6)
-	ci.draw_colored_polygon(_escalar([Vector2(-8, -9), Vector2(-62, 0), Vector2(-8, 9)], k), Color(c.r, c.g, c.b, 0.45))
-	ci.draw_circle(Vector2.ZERO, 17.0 * k, Color(c.r, c.g, c.b, 0.3))
+	ci.draw_colored_polygon(_escalar([Vector2(-8, -8), Vector2(-52, 0), Vector2(-8, 8)], k), Color(c.r, c.g, c.b, 0.4))
 	ci.draw_circle(Vector2.ZERO, 11.0 * k, c)
-	ci.draw_circle(Vector2.ZERO, 6.0 * k, luz)
-	for i in 3:
-		var avance := fposmod(_t * 3.0 + float(i) / 3.0, 1.0)   # las ondas salen del núcleo y se desvanecen
-		var r := (16.0 + avance * 26.0) * k
-		var x := (6.0 + avance * 30.0) * k
-		var ancho := (8.0 - avance * 4.0) * k
-		var alfa := (1.0 - avance) * 0.9
-		_media_luna(ci, Vector2(x - r * 0.4, 0.0), r, ancho, deg_to_rad(52.0), Color(luz.r, luz.g, luz.b, alfa))
-
-
-## Orbe de brasa: halo, estrella giratoria y núcleo oscuro con centro incandescente, con estela de fuego.
-func _dibujar_orbe(ci: CanvasItem, c: Color, k: float) -> void:
-	var caliente := c.lerp(Color(1.0, 0.92, 0.55), 0.7)
-	ci.draw_colored_polygon(_escalar([Vector2(-6, -12), Vector2(-52, 0), Vector2(-6, 12)], k), Color(c.r, c.g, c.b, 0.5))
-	ci.draw_circle(Vector2.ZERO, 24.0 * k, Color(c.r, c.g, c.b, 0.28))
-	var pts := PackedVector2Array()
-	for i in 16:
-		var a := TAU * float(i) / 16.0 + _t * giro_estrella_s
-		pts.append(Vector2.from_angle(a) * (22.0 if i % 2 == 0 else 11.0) * k)
-	ci.draw_colored_polygon(pts, c)
-	ci.draw_circle(Vector2.ZERO, 10.0 * k, c.darkened(0.55))
-	ci.draw_circle(Vector2.ZERO, 5.5 * k, caliente)
+	ci.draw_circle(Vector2.ZERO, 5.5 * k, luz)
+	for i in 2:
+		var avance := fposmod(_t * 3.0 + float(i) / 2.0, 1.0)   # dos ondas salen del núcleo y se desvanecen
+		var r := (16.0 + avance * 22.0) * k
+		var x := (6.0 + avance * 26.0) * k
+		var ancho := (7.0 - avance * 3.0) * k
+		_media_luna(ci, Vector2(x - r * 0.4, 0.0), r, ancho, deg_to_rad(50.0), Color(luz.r, luz.g, luz.b, (1.0 - avance) * 0.85))
 
 
 ## Medialuna (arco afinado en las puntas) con la punta mirando a +X.

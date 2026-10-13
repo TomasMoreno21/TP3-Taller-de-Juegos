@@ -63,15 +63,24 @@ func _init() -> void:
 	_progresion().add_fragmentos(8)
 	_check(int(_progresion().nivel) == 2, "8 fragmentos suben a nivel 2")
 	_check(_progresion().forma_desbloqueada(1) == true, "Nivel 2: Lobo desbloqueado")
-	_progresion().add_fragmentos(17)
-	_check(int(_progresion().nivel) == 3, "25 fragmentos suben a nivel 3")
-	_progresion().add_fragmentos(25)
-	_check(int(_progresion().nivel) == 4, "50 fragmentos suben a nivel 4")
-	_progresion().add_fragmentos(24)
-	_check(int(_progresion().nivel) == 5 and _progresion().es_nivel_maximo(), "74 fragmentos suben a nivel 5 (máximo)")
+	_progresion().add_fragmentos(20)
+	_check(int(_progresion().nivel) == 3, "28 fragmentos suben a nivel 3")
+	_progresion().add_fragmentos(10)
+	_check(int(_progresion().nivel) == 4, "38 fragmentos suben a nivel 4")
+	_progresion().add_fragmentos(26)
+	_check(int(_progresion().nivel) == 5 and _progresion().es_nivel_maximo(), "64 fragmentos suben a nivel 5 (máximo)")
 	_progresion().add_fragmentos(30)
 	_check(int(_progresion().nivel) == 5, "más fragmentos no pasan del nivel máximo")
 	_check(_progresion().forma_desbloqueada(3) == true, "Nivel 4: Murciélago desbloqueado")
+	# Subida garantizada (orbe especial): completa los fragmentos que faltan para el siguiente nivel.
+	var fr_ant: int = int(_progresion().fragmentos)
+	var niv_ant: int = int(_progresion().nivel)
+	_progresion().fragmentos = 20
+	_progresion().nivel = 2
+	_progresion().forzar_subida()
+	_check(int(_progresion().nivel) == 3 and int(_progresion().fragmentos) == 28, "forzar_subida: 20 fragmentos -> nivel 3 con 28")
+	_progresion().fragmentos = fr_ant
+	_progresion().nivel = niv_ant
 
 	# --- Melee: el humano daña al dummy ---
 	_progresion().set_nivel(4)
@@ -162,13 +171,11 @@ func _init() -> void:
 	var enemy_script := preload("res://scripts/enemy.gd")
 	var cult: Enemigo = enemy_script.config_por_tipo("cultista")
 	var ark: Enemigo = enemy_script.config_por_tipo("arquero")
-	var cham: Enemigo = enemy_script.config_por_tipo("chaman")
-	_check(cult != null and ark != null and cham != null, "Enemigos: config de los 3 tipos")
+	_check(cult != null and ark != null, "Enemigos: config de los 2 tipos")
 	_check(ark.projectile == true, "Enemigos: arquero dispara proyectil")
-	_check(cham.max_health > cult.max_health, "Enemigos: chamán resistente tiene más vida que el cultista")
 
 	# --- Bloque 2: hitstop por peso del enemigo (2c) ---
-	for combo_peso in [["cultista", 1.0], ["arquero", 0.85], ["chaman", 1.4]]:
+	for combo_peso in [["cultista", 1.0], ["arquero", 0.85]]:
 		var en_c2: Node2D = preload("res://scenes/enemy.tscn").instantiate()
 		en_c2.tipo = combo_peso[0]
 		_scene.add_child(en_c2)
@@ -194,29 +201,6 @@ func _init() -> void:
 	Input.action_release("attack")
 	await _esperar_recuperacion("light")
 	_check(en.health < hp_en, "Enemigos: el melee del humano daña al sectario (%d -> %d)" % [hp_en, en.health])
-	_limpiar_enemigos()
-
-	# --- Armadura por umbral: un golpe ligero NO interrumpe al chamán en windup ---
-	var en_ch := preload("res://scenes/enemy.tscn").instantiate()
-	en_ch.tipo = "chaman"
-	_scene.add_child(en_ch)
-	en_ch.global_position = _player.global_position + Vector2(60, 0)
-	await _wait_frames(10)
-	_player.global_position = en_ch.global_position - Vector2(28, 0)
-	_player.facing = 1
-	_player.velocity = Vector2.ZERO
-	await physics_frame
-	en_ch.set("_windup_timer", 0.6)
-	var hp_cham_antes: int = en_ch.health
-	Input.action_press("attack")
-	await physics_frame
-	await physics_frame
-	await physics_frame
-	Input.action_release("attack")
-	await _wait_frames(3)
-	_check(en_ch.health < hp_cham_antes, "Armadura chamán: el golpe ligero igual hace daño (%d -> %d)" % [hp_cham_antes, en_ch.health])
-	_check(float(en_ch.get("_stun_timer")) == 0.0, "Armadura chamán: el golpe ligero NO lo interrumpe (stun=0)")
-	_check(float(en_ch.get("_windup_timer")) > 0.0, "Armadura chamán: conserva su telegrafo")
 	_limpiar_enemigos()
 
 	# --- Melee: el Lobo daña a un enemigo real (bug 27/08: attack_range=90 no alcanzaba
@@ -368,7 +352,7 @@ func _init() -> void:
 	_check(_progresion().combos_desbloqueados_forma(0) == 1, "LevelUp: combo del humano desbloqueado tras elegir")
 
 	# --- LevelUp: la forma que ya tiene su combo no vuelve a aparecer ---
-	_progresion().add_fragmentos(17)   # 25 en total: nivel 3 (Humano, Lobo y Oso desbloqueados)
+	_progresion().add_fragmentos(20)   # 28 en total: nivel 3 (Humano, Lobo y Oso desbloqueados)
 	await process_frame
 	_check(lvl.get("panel").visible == true, "LevelUp nivel 3: abre el menú")
 	var op_lvl3: Array = lvl.get("_opciones")
@@ -382,7 +366,7 @@ func _init() -> void:
 
 	# --- LevelUp: sin forma con combo pendiente, la mejora espera a la próxima forma desbloqueada ---
 	_progresion().formas_forzadas = [0, 1]
-	_progresion().add_fragmentos(25)   # 50 en total: nivel 4, pero Humano y Lobo ya están completos
+	_progresion().add_fragmentos(10)   # 38 en total: nivel 4, pero Humano y Lobo ya están completos
 	await process_frame
 	_check(lvl.get("panel").visible == false and int(_progresion().mejoras_diferidas) == 1, "LevelUp: sin formas con combo pendiente la mejora queda diferida")
 	_progresion().desbloquear_forma(2)

@@ -9,6 +9,14 @@ func _check(c: bool, m: String) -> void:
 	if not c:
 		fallos += 1
 
+func _gotas(goteo: Node) -> int:
+	var n := 0
+	for c in goteo.get_children():
+		if "formacion" in c:
+			n += 1
+	return n
+
+
 func _initialize() -> void:
 	var nivel: Node = load("res://scenes/nivel2.tscn").instantiate()
 	root.add_child(nivel)
@@ -25,13 +33,14 @@ func _initialize() -> void:
 
 	# Goteo: nace de un techo real y llega a un piso.
 	var goteo: Node = nivel.get_node("EfectosCueva/GoteoTecho")
-	var antes := goteo.get_child_count()
+	var antes := _gotas(goteo)   # (los charcos que dejan las gotas son permanentes y acotados: no cuentan)
 	for i in 40:
 		goteo.call("_nueva_gota")
-	var gotas := goteo.get_child_count() - antes
+	var gotas := _gotas(goteo) - antes
 	_check(gotas > 0, "el goteo genera gotas desde el techo (%d de 40 intentos)" % gotas)
+	goteo.set_process(false)   # que no nazcan gotas nuevas durante la espera (cada gota tiene su propio proceso)
 	await create_timer(3.0).timeout
-	_check(goteo.get_child_count() <= antes + gotas, "las gotas caen y se liberan")
+	_check(_gotas(goteo) <= antes + gotas, "las gotas caen y se liberan")
 
 	# Murciélago lejano.
 	var ml: Node = nivel.get_node("EfectosCueva/MurcielagoLejano")
@@ -47,10 +56,10 @@ func _initialize() -> void:
 	for i in 20:
 		await process_frame
 	_check(latido.intensidad_actual() < 0.005 and not motas.emitting, "arriba no late ni hay motas (%.3f)" % latido.intensidad_actual())
-	jug.global_position = Vector2(-4800, 6800)
+	jug.global_position = Vector2(-1550, 6800)   # GaleriaMedia (0.04)
 	await create_timer(2.5).timeout
 	var i_descenso: float = latido.intensidad_actual()
-	jug.global_position = Vector2(3200, 6800)
+	jug.global_position = Vector2(2200, 6800)    # Santuario (0.075), fuera de UmbralMedio
 	await create_timer(4.0).timeout
 	var i_santuario: float = latido.intensidad_actual()
 	_check(i_descenso > 0.02 and i_santuario > i_descenso, "el latido crece hacia el santuario (%.3f -> %.3f)" % [i_descenso, i_santuario])

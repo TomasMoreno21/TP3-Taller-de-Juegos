@@ -67,6 +67,7 @@ func _initialize() -> void:
 	p.set("god_mode", false)
 	p.set("health", 100)
 	p.set("blocking", true)
+	p.set("facing", -1)   # la guardia solo cubre el frente: el golpe (dir 1) viene de la izquierda
 	p.set("_parry_t", 0.1)
 	p.energia = 50.0
 	p.take_damage(20, 0.0, 1)

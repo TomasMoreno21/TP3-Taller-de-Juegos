@@ -18,6 +18,7 @@ enum Form { HUMAN, LOBO, OSO, MURCIELAGO }
 const GRAVITY := 980.0
 const MAX_FALL_SPEED := 950.0
 const GLIDE_FALL_MULTIPLIER := 0.22
+const PLANEO_COSTO_S := 2.0   # energía/s que cuesta planear con el Murciélago
 const COYOTE_TIME := 0.14  # base; overridden per form in _init()
 const JUMP_BUFFER_TIME := 0.18  # base; overridden per form in _init()
 const JUMP_CUT_MULTIPLIER := 0.42  # base; overridden per form in _init()
@@ -54,7 +55,8 @@ const HITSTOP_COMBO := 0.11
 @export var hitstop_dano_umbral := 20       # daño mínimo para considerarlo golpe fuerte
 @export var recoil_sprite := 8.0            # px que empuja el sprite hacia atrás al recibir daño
 @export var temblor_dano := 0.13            # s que dura el micro-temblor del sprite (sin rotar)
-@export var proyectil_mira_bajo := 0.0      # px por debajo del centro del sprite del enemigo a los que apunta el proyectil teledirigido del Murciélago (0 = justo al medio)
+@export_range(0.0, 1.0, 0.05) var especial_costo_fuera_combate := 0.5   # multiplicador del costo de energía de los especiales fuera de combate
+@export var proyectil_mira_bajo := 0.0     # px por debajo del centro del sprite del enemigo a los que apunta el proyectil teledirigido del Murciélago (0 = justo al medio)
 @export var zoom_heavy_mult := 1.025        # zoom punch extra en golpes pesados
 @export var zoom_special_mult := 1.04       # zoom punch extra en el golpe especial
 @export var zoom_combo_mult := 1.05         # zoom punch extra en el golpe que cierra combo
@@ -75,7 +77,7 @@ const HITSTOP_COMBO := 0.11
 @export var tag_bonus_mult := 1.5           # cambiar de forma a mitad de racha: el próximo golpe pega esto de más
 @export var tag_bonus_tiempo := 2.0         # cuánto dura ese bonus (s)
 @export var tag_energia := 8.0              # energía que da el cambio de forma dentro de una racha
-@export var flap_cooldown := 0.28           # s entre aleteos del Murciélago
+@export var flap_cooldown := 0.2          # s entre aleteos del Murciélago
 @export var aleteo := 1.0                    # ritmo del aleteo visual quieto/planeando (0 = alas quietas)
 @export_group("Cuerpo elástico")
 @export var resorte_rigidez := 420.0        # cuánto tira el cuerpo de vuelta a su forma (más alto = más rápido)
@@ -620,9 +622,11 @@ func _physics_process(delta: float) -> void:
 		if not _was_gliding:
 			squash_y(0.12, 0.15)
 		_murci_glide_t += delta
+		energia = maxf(energia - PLANEO_COSTO_S * delta, 0.0)
+		energia_changed.emit(energia)
 		_was_gliding = true
 		var prog := clampf(_murci_glide_t / 1.4, 0.0, 1.0)
-		g *= lerpf(0.18, 0.52, prog)
+		g *= lerpf(0.22, 0.5, prog)
 	else:
 		if _was_gliding:
 			stretch_y(0.14, 0.18)
@@ -648,8 +652,8 @@ func _physics_process(delta: float) -> void:
 		if absf(dir_glide) < 0.35:
 			dir_glide = 0.0
 		if dir_glide != 0.0:
-			var m := 1.35 if current_form == Form.MURCIELAGO else 1.1
-			var a := 0.9 if current_form == Form.MURCIELAGO else 0.6
+			var m := 1.75 if current_form == Form.MURCIELAGO else 1.1
+			var a := 1.6 if current_form == Form.MURCIELAGO else 0.6
 			velocity.x = move_toward(velocity.x, dir_glide * data.speed * m, data.accel * a * delta)
 	var x_ini := global_position.x
 	var vx_antes := velocity.x
@@ -853,6 +857,16 @@ func _handle_attack(delta: float) -> void:
 		if airborne:
 			_attack_air_buffer_type = "special"
 			_attack_air_buffer = ATTACK_AIR_BUFFER_TIME
+	elif current_form == Form.MURCIELAGO and Input.is_action_pressed("special") and _special_cooldown <= 0.0 and _puede_pagar_especial(data):
+		_procesar_ataque("special", data, airborne)   # manteniendo L el Murciélago sigue disparando (al ritmo de su cooldown)
+
+
+## Si alcanza la energía para otro disparo especial (evita que el auto-disparo repita el aviso de "sin energía").
+func _puede_pagar_especial(data: Forma) -> bool:
+	var costo: float = data.special_cost
+	if not _en_combate():
+		costo *= especial_costo_fuera_combate
+	return costo <= 0.0 or energia >= costo
 
 
 func _buffer_durante_recuperacion() -> void:
@@ -954,6 +968,8 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 			if _special_cooldown > 0.0 and forms[current_form].special_cooldown > 0.0:
 				return
 			var costo: float = forms[current_form].special_cost
+			if not _en_combate():
+				costo *= especial_costo_fuera_combate
 			if costo > 0.0:
 				if energia < costo:
 					_denegar_transformacion()
@@ -1583,6 +1599,11 @@ func _aletear(data: Forma) -> void:
 	energia = maxf(energia - data.flap_costo, 0.0)
 	energia_changed.emit(energia)
 	velocity.y = -data.flap_impulso
+	# Cada aleteo también empuja hacia adelante (impulso de velocidad en la dirección que se pulsa).
+	var dir_flap := 0.0 if _dialogo_bloquea_input() else Input.get_axis("move_left", "move_right")
+	if absf(dir_flap) > 0.35:
+		var vmax := data.speed * 1.75
+		velocity.x = move_toward(velocity.x, signf(dir_flap) * vmax, 180.0)
 	_emitir_polvo(0.35)
 	_picada = false
 
@@ -1683,8 +1704,9 @@ func _handle_energia(delta: float) -> void:
 			energia = minf(energia + ENERGIA_REGEN * delta, ENERGIA_MAX)
 	else:
 		var drain := ENERGIA_DRAIN * forms[current_form].drenaje_mult * (0.45 if not _en_combate() else 1.0)
-		energia -= drain * delta
-		if energia <= 0.0:
+		if not cinematica_activa:   # en cinemáticas (intros, tótems) la forma no gasta energía
+			energia -= drain * delta
+		if energia <= 0.0 and not cinematica_activa:
 			energia = 0.0
 			var agotada := current_form
 			# Solo si el cambio se concretó (bajo un techo bajo puede no haber lugar: se reintenta sin repetir aviso ni sonido).
@@ -2200,6 +2222,9 @@ func _update_animacion() -> void:
 	# Trepando, el sprite se corre hacia atrás (según hacia dónde mira) para que las manos queden sobre la
 	# liana; al girar pasa al otro lado y al soltarse vuelve a su sitio.
 	var obj_x := -float(facing) * trepar_desplazamiento_x if _trepando else 0.0
+	if _trepando and is_instance_valid(_enredadera_actual):
+		# Si una pared impidió centrarse en la liana, el sprite se corre lo que falta para que las manos igual la agarren.
+		obj_x += clampf(_enredadera_actual.global_position.x - global_position.x, -90.0, 90.0)
 	if _trepar_off_x != obj_x:
 		var nuevo_x := lerpf(_trepar_off_x, obj_x, minf(trepar_giro_vel * get_physics_process_delta_time(), 1.0))
 		if absf(nuevo_x - obj_x) < 0.1:
@@ -2871,6 +2896,8 @@ func _buscar_enemigo_homing(rango: float) -> Node2D:
 		if "health" in n and n.health <= 0:
 			continue
 		var d := global_position.distance_to(n.global_position)
+		if n.get("flotante") == true:
+			d *= 0.35   # prioridad a los voladores
 		if d < mejor_dist:
 			mejor_dist = d
 			mejor = n
@@ -3029,6 +3056,12 @@ func _handle_enredadera(delta: float) -> void:
 		else:
 			velocity.y = lerpf(velocity.y, 0.0, TREPAR_STOP_LERP * delta)
 		velocity.x = 0.0
+		# Se sigue acercando al centro de la liana mientras haya lugar (el agarre inicial pudo quedar torcido contra una pared).
+		var falta_x: float = _enredadera_actual.global_position.x - global_position.x
+		if absf(falta_x) > 0.5:
+			var paso_x := clampf(falta_x, -900.0 * delta, 900.0 * delta)
+			if not test_move(global_transform, Vector2(paso_x, 0)):
+				global_position.x += paso_x
 		_gravity_override = 0.0
 		var dx: float = _enredadera_actual.global_position.x - global_position.x
 		if absf(dx) > 1.0:

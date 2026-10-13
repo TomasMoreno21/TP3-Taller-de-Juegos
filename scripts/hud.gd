@@ -4,7 +4,7 @@ const Jugador := preload("res://scripts/player.gd")
 
 const SALIDA_DUR := 2.2
 const GOLPES_MAX := 2
-const FILA_PASO := 44.0
+const FILA_PASO := 54.0
 
 var _player: Node2D
 var _idle_timer: Timer
@@ -322,7 +322,6 @@ func _nombre_forma(form_index: int) -> String:
 
 
 func _on_form_changed(form_name: String) -> void:
-	_aviso("Forma: %s" % form_name)
 	dial.forma_actual = _player.current_form
 	dial.pulso_transformacion()
 	_t_reposo = 0.0
@@ -422,7 +421,7 @@ func _crear_filas() -> void:
 		var f := RichTextLabel.new()
 		f.bbcode_enabled = true
 		f.scroll_active = false
-		f.add_theme_font_size_override("normal_font_size", 34)
+		f.add_theme_font_size_override("normal_font_size", 42)
 		f.vertical_alignment = 1
 		f.horizontal_alignment = 2
 		f.anchor_left = 1.0
@@ -431,7 +430,7 @@ func _crear_filas() -> void:
 		f.anchor_bottom = 1.0
 		f.offset_left = -560.0
 		f.offset_right = -160.0
-		f.offset_top = -80.0 - i * FILA_PASO
+		f.offset_top = -92.0 - i * FILA_PASO
 		f.offset_bottom = -32.0 - i * FILA_PASO
 		f.modulate.a = 0.0
 		f.visible = false

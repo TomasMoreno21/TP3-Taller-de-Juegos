@@ -27,7 +27,7 @@ func _initialize() -> void:
 
 	# 2) En el inicio real: corre completa.
 	var nivel: Node = load("res://scenes/nivel2.tscn").instantiate()
-	nivel.get_node("Player").position = Vector2(8, -85)
+	nivel.get_node("Player").position = Vector2(-3680, -61)
 	var intro: Node = nivel.get_node("IntroNivel")
 	var vis_antes := true   # hud.gd se muestra solo en _ready
 	intro.set("probar_en_headless", true)

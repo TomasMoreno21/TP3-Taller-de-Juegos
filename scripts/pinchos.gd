@@ -14,10 +14,10 @@ extends Area2D
 @export var enemigos_mueren := true         # un enemigo empujado (en hitstun) contra los pinchos muere
 @export var dano_a_enemigos := 200          # daño que reciben al empalarse
 @export var dano := 9999       # daño al tocar (por defecto mata de un toque)
-## Aspecto: ROCA = colmillos de piedra afilada (cueva); MADERA = estacas talladas (bosque).
+## Aspecto: ROCA (por defecto) = colmillos de piedra afilada (cueva); MADERA = estacas talladas.
 ## TRIBAL = estacas de una tribu: troncos atados con cuerda, banda de pintura ocre y puntitos de hueso.
 enum Estilo { ROCA, MADERA, TRIBAL }
-@export var estilo := Estilo.MADERA
+@export var estilo := Estilo.ROCA
 @export var color_base := Color(0.13, 0.12, 0.17)     # escombros / base enterrada
 @export var color_estaca := Color(0.74, 0.72, 0.86)  # cara iluminada de cada pincho (la sombra se deriva)
 ## Solo ROCA: contorno oscuro que los despega del fondo y punta de peligro (rojiza) que los hace leer como trampa.
