@@ -1,0 +1,136 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/jefe_estrella.gd" id="1_jefe"]
+[ext_resource type="Script" path="res://scripts/ojo_central.gd" id="2_ojo"]
+[ext_resource type="Script" path="res://scripts/ojo_central_hurtbox.gd" id="3_hurt"]
+[ext_resource type="Script" path="res://scripts/nudo_tallo.gd" id="4_nudo"]
+[ext_resource type="PackedScene" path="res://scenes/ojo_verde.tscn" id="5_verde"]
+[ext_resource type="Script" path="res://scripts/foso_pinchos.gd" id="6_foso"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hurt"]
+radius = 100.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nudo"]
+size = Vector2(170, 210)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_losa"]
+size = Vector2(600, 200)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fondo"]
+size = Vector2(600, 40)
+
+[node name="JefeEstrella" type="Node2D"]
+z_index = -2
+script = ExtResource("1_jefe")
+
+[node name="Tallo" type="Polygon2D" parent="."]
+color = Color(0.5, 0.14, 0.44, 1)
+polygon = PackedVector2Array(-40, 90, -34, 0, -22, -180, -16, -400, -12, -550, 12, -550, 16, -400, 22, -180, 34, 0, 40, 90)
+
+[node name="Cuerpo" type="Node2D" parent="."]
+position = Vector2(0, -550)
+
+[node name="Estrella" type="Polygon2D" parent="Cuerpo"]
+color = Color(0.85, 0.25, 0.75, 1)
+polygon = PackedVector2Array(0, -310, 54, -129, 219, -219, 129, -54, 310, 0, 129, 54, 219, 219, 54, 129, 0, 310, -54, 129, -219, 219, -129, 54, -310, 0, -129, -54, -219, -219, -54, -129)
+
+[node name="Ojo" type="Node2D" parent="Cuerpo"]
+script = ExtResource("2_ojo")
+
+[node name="Hurtbox" type="StaticBody2D" parent="Cuerpo"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("3_hurt")
+
+[node name="Collision" type="CollisionShape2D" parent="Cuerpo/Hurtbox"]
+shape = SubResource("CircleShape2D_hurt")
+disabled = true
+
+[node name="FondoFoso" type="StaticBody2D" parent="."]
+
+[node name="Collision" type="CollisionShape2D" parent="FondoFoso"]
+position = Vector2(0, 80)
+shape = SubResource("RectangleShape2D_fondo")
+
+[node name="Foso" type="Node2D" parent="."]
+script = ExtResource("6_foso")
+
+[node name="LosaCentral" type="StaticBody2D" parent="."]
+
+[node name="Collision" type="CollisionShape2D" parent="LosaCentral"]
+position = Vector2(0, 100)
+shape = SubResource("RectangleShape2D_losa")
+
+[node name="Visual" type="Polygon2D" parent="LosaCentral"]
+color = Color(0.2, 0.18, 0.27, 1)
+polygon = PackedVector2Array(-300, 0, 300, 0, 300, 200, -300, 200)
+
+[node name="Linea" type="Polygon2D" parent="LosaCentral"]
+color = Color(0.42, 0.3, 0.55, 1)
+polygon = PackedVector2Array(-300, 0, 300, 0, 300, 16, -300, 16)
+
+[node name="Nudo" type="StaticBody2D" parent="."]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("4_nudo")
+
+[node name="Collision" type="CollisionShape2D" parent="Nudo"]
+position = Vector2(0, -105)
+shape = SubResource("RectangleShape2D_nudo")
+disabled = true
+
+[node name="Ojos" type="Node2D" parent="."]
+
+[node name="Llave1A" parent="Ojos" instance=ExtResource("5_verde")]
+position = Vector2(-700, -150)
+ciclo_llave = 0
+ciclo_torreta = 0
+acorazado_torreta = true
+
+[node name="Llave2A" parent="Ojos" instance=ExtResource("5_verde")]
+position = Vector2(520, -330)
+ciclo_llave = 0
+ciclo_torreta = 1
+
+[node name="Llave3A" parent="Ojos" instance=ExtResource("5_verde")]
+position = Vector2(-430, -500)
+ciclo_llave = 0
+ciclo_torreta = 1
+
+[node name="Llave4A" parent="Ojos" instance=ExtResource("5_verde")]
+position = Vector2(760, -720)
+ciclo_llave = 0
+ciclo_torreta = 0
+
+[node name="Llave1B" parent="Ojos" instance=ExtResource("5_verde")]
+position = Vector2(680, -150)
+ciclo_llave = 1
+ciclo_torreta = 1
+acorazado_torreta = true
+
+[node name="Llave2B" parent="Ojos" instance=ExtResource("5_verde")]
+position = Vector2(-560, -330)
+ciclo_llave = 1
+ciclo_torreta = 0
+
+[node name="Llave3B" parent="Ojos" instance=ExtResource("5_verde")]
+position = Vector2(430, -500)
+ciclo_llave = 1
+ciclo_torreta = 0
+
+[node name="Llave4B" parent="Ojos" instance=ExtResource("5_verde")]
+position = Vector2(-780, -720)
+ciclo_llave = 1
+ciclo_torreta = 1
+
+[node name="Dormido1" parent="Ojos" instance=ExtResource("5_verde")]
+position = Vector2(-900, -430)
+
+[node name="Dormido2" parent="Ojos" instance=ExtResource("5_verde")]
+position = Vector2(900, -430)
+
+[node name="Dormido3" parent="Ojos" instance=ExtResource("5_verde")]
+position = Vector2(-560, -880)
+
+[node name="Dormido4" parent="Ojos" instance=ExtResource("5_verde")]
+position = Vector2(560, -880)

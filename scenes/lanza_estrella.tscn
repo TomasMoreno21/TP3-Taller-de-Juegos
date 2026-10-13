@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/lanza_estrella.gd" id="1_lanza"]
+
+[node name="LanzaEstrella" type="Area2D"]
+collision_layer = 0
+collision_mask = 4
+monitoring = false
+script = ExtResource("1_lanza")

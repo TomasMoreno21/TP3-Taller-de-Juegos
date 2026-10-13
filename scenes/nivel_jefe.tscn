@@ -6,7 +6,7 @@
 [ext_resource type="Script" uid="uid://c20i4wytflcth" path="res://scripts/setup_progresion_nivel.gd" id="4_setup"]
 [ext_resource type="PackedScene" uid="uid://x0o25yeqfgsm" path="res://scenes/encounter.tscn" id="5_enc"]
 [ext_resource type="Script" uid="uid://bwvbj2bycs3nq" path="res://scripts/nivel_jefe.gd" id="6_niveljefe"]
-[ext_resource type="PackedScene" path="res://scenes/jefe.tscn" id="7_jefe"]
+[ext_resource type="PackedScene" path="res://scenes/jefe_estrella.tscn" id="7_jefe"]
 [ext_resource type="PackedScene" uid="uid://dkyk8avpptlls" path="res://scenes/hud.tscn" id="8_hud"]
 [ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="9_pause"]
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="10_levelup"]
@@ -18,10 +18,16 @@
 [ext_resource type="Script" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
-size = Vector2(9200, 200)
+size = Vector2(4900, 200)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_piso_der"]
+size = Vector2(3700, 200)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_jefe"]
-size = Vector2(980, 700)
+size = Vector2(1900, 1000)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_techo"]
+size = Vector2(3200, 520)
 
 [node name="NivelJefe" type="Node2D" unique_id=157071022]
 script = ExtResource("6_niveljefe")
@@ -49,15 +55,41 @@ position = Vector2(4600, 1100)
 
 [node name="PisoVisual" type="Polygon2D" parent="Piso" unique_id=323803502]
 color = Color(0.2, 0.18, 0.27, 1)
-polygon = PackedVector2Array(-4600, -100, 4600, -100, 4600, 100, -4600, 100)
+polygon = PackedVector2Array(-4600, -100, 300, -100, 300, 100, -4600, 100)
+
+[node name="PisoVisualDer" type="Polygon2D" parent="Piso"]
+color = Color(0.2, 0.18, 0.27, 1)
+polygon = PackedVector2Array(900, -100, 4600, -100, 4600, 100, 900, 100)
 
 [node name="LineaSuperior" type="Polygon2D" parent="Piso" unique_id=949387143]
 color = Color(0.42, 0.3, 0.55, 1)
-polygon = PackedVector2Array(-4600, -100, 4600, -100, 4600, -84, -4600, -84)
+polygon = PackedVector2Array(-4600, -100, 300, -100, 300, -84, -4600, -84)
+
+[node name="LineaSuperiorDer" type="Polygon2D" parent="Piso"]
+color = Color(0.42, 0.3, 0.55, 1)
+polygon = PackedVector2Array(900, -100, 4600, -100, 4600, -84, 900, -84)
 
 [node name="PisoCollision" type="CollisionShape2D" parent="Piso" unique_id=855132670]
-position = Vector2(2, 1)
+position = Vector2(-2150, 1)
 shape = SubResource("RectangleShape2D_piso")
+
+[node name="PisoCollisionDer" type="CollisionShape2D" parent="Piso"]
+position = Vector2(2750, 1)
+shape = SubResource("RectangleShape2D_piso_der")
+
+[node name="Techo" type="StaticBody2D" parent="."]
+position = Vector2(5200, -200)
+
+[node name="TechoVisual" type="Polygon2D" parent="Techo"]
+color = Color(0.2, 0.18, 0.27, 1)
+polygon = PackedVector2Array(-1600, -260, 1600, -260, 1600, 260, -1600, 260)
+
+[node name="TechoLinea" type="Polygon2D" parent="Techo"]
+color = Color(0.42, 0.3, 0.55, 1)
+polygon = PackedVector2Array(-1600, 244, 1600, 244, 1600, 260, -1600, 260)
+
+[node name="TechoCollision" type="CollisionShape2D" parent="Techo"]
+shape = SubResource("RectangleShape2D_techo")
 
 [node name="DialogoIntro" parent="." unique_id=2086547178 instance=ExtResource("12_dialog")]
 position = Vector2(500, 900)
@@ -81,10 +113,11 @@ position = Vector2(7600, 983)
 [node name="Encounter" parent="." unique_id=1219823109 instance=ExtResource("5_enc")]
 position = Vector2(5200, 970)
 
-[node name="Arzobispo" parent="Encounter/Enemies" parent_id_path=PackedInt32Array(1219823109, 223207692) index="0" unique_id=641933076 instance=ExtResource("7_jefe")]
-position = Vector2(0, 130)
+[node name="JefeEstrella" parent="Encounter/Enemies" parent_id_path=PackedInt32Array(1219823109, 223207692) index="0" unique_id=641933076 instance=ExtResource("7_jefe")]
+position = Vector2(0, 30)
 
 [node name="ArenaShape" parent="Encounter/Arena" index="0"]
+position = Vector2(0, -440)
 shape = SubResource("RectangleShape2D_arena_jefe")
 
 [node name="CheckpointInicio" parent="." unique_id=1234388143 instance=ExtResource("ck_1")]

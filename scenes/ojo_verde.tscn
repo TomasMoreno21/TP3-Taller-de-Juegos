@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ojo_verde.gd" id="1_ojo"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ojo"]
+radius = 42.0
+
+[node name="OjoVerde" type="StaticBody2D"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_ojo")
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_ojo")
+disabled = true
