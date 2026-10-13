@@ -10,7 +10,9 @@ var enemy_shot := false
 var homing := false
 var homing_strength := 24.0
 var homing_range := 3000.0
+var homing_offset := Vector2.ZERO   # punto de mira respecto del objetivo (p. ej. más abajo que el pecho)
 var _life := 2.5
+var margen_camara := 80.0   # px fuera de pantalla hasta los que el disparo del jugador sigue vivo (más margen = más alcance visible)
 var _consumido := false
 var _cam: Camera2D
 var _homing_timer := 0.0
@@ -27,8 +29,33 @@ const TERRAIN_LAYER := 1  # capa de colisión del TileMap
 
 var _estela: Line2D
 
+@export_group("Aspecto")
+@export var color_jugador := Color(0.72, 0.52, 1.0)   ## onda sónica del Murciélago
+@export var color_enemigo := Color(1.0, 0.2, 0.18)   ## onda roja de los enemigos
+@export var tamano := 1.5                              ## escala del dibujo (el hitbox no cambia)
+@export var giro_estrella_s := 6.0                     ## rad/s a los que gira la estrella del orbe enemigo
+@export_group("")
+
+var _t := 0.0
+var _arte: Node2D
+
+## Capa de dibujo del proyectil: se orienta con la dirección y se redibuja cada frame.
+class _Arte extends Node2D:
+	var proj: Area2D
+
+	func _draw() -> void:
+		if proj != null:
+			proj._dibujar_arte(self)
+
 
 func _ready() -> void:
+	_aplicar_color()
+	_arte = _Arte.new()
+	(_arte as _Arte).proj = self
+	_arte.z_index = 2
+	add_child(_arte)
+	if visual != null:
+		visual.visible = false   # el dibujo lo hace _Arte; el Polygon2D queda solo como fuente del color
 	# Detecta al Player (4) o Enemigos (2) según el dueño, y además el terreno (1).
 	collision_mask = (4 if enemy_shot else 2) | TERRAIN_LAYER
 	body_entered.connect(_on_body_entered)
@@ -60,6 +87,10 @@ func _actualizar_estela() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_t += delta
+	if _arte != null:
+		_arte.rotation = direction.angle()
+		_arte.queue_redraw()
 	if visual != null and giro_grados_s > 0.0:
 		visual.rotation += deg_to_rad(giro_grados_s) * delta
 	_actualizar_estela()
@@ -68,7 +99,10 @@ func _physics_process(delta: float) -> void:
 		_homing_timer = HOMING_TICK
 		var target: Node2D = _buscar_enemigo_cercano()
 		if target != null:
-			var to_target: Vector2 = target.global_position - global_position
+			# El punto de mira bajo es para el torso de los enemigos; al cristal se le apunta al centro
+			# (si no, el proyectil pasaba por debajo y nunca lo tocaba).
+			var mira := homing_offset if target.is_in_group("enemy") else Vector2.ZERO
+			var to_target: Vector2 = centro_objetivo(target) + mira - global_position
 			if to_target.length_squared() > 0.01:
 				var dir_deseada: Vector2 = to_target.normalized()
 				var blended: Vector2 = direction.lerp(dir_deseada, clampf(homing_strength * HOMING_TICK, 0.0, 1.0))
@@ -98,6 +132,7 @@ func _reflejar() -> void:
 	collision_mask = 2 | TERRAIN_LAYER
 	if visual != null:
 		visual.color = Color(0.85, 0.95, 1.0)
+	_aplicar_color()
 	_life = maxf(_life, 1.5)
 	_impacto(0.8)
 	Burst.chispas(self, global_position, int(signf(direction.x)) if direction.x != 0.0 else 1, Color(0.85, 0.95, 1.0), 9, 1.4)
@@ -154,7 +189,7 @@ func _fuera_de_camara() -> bool:
 	var view_size: Vector2 = get_viewport_rect().size / _cam.zoom
 	var cam_pos: Vector2 = _cam.global_position
 	# Los disparos enemigos nacen a veces fuera de pantalla (arquero lejano): margen amplio para que no se borren al aparecer.
-	var half: Vector2 = view_size * 0.5 + (Vector2(400, 400) if enemy_shot else Vector2(80, 80))
+	var half: Vector2 = view_size * 0.5 + (Vector2(400, 400) if enemy_shot else Vector2(margen_camara, margen_camara))
 	return global_position.x < cam_pos.x - half.x or global_position.x > cam_pos.x + half.x or global_position.y < cam_pos.y - half.y or global_position.y > cam_pos.y + half.y
 
 
@@ -165,6 +200,8 @@ func _buscar_enemigo_cercano() -> Node2D:
 		if not _activo_y_vivo(n):
 			continue
 		var d := global_position.distance_to(n.global_position)
+		if n.get("flotante") == true:
+			d *= 0.35   # prioridad a los voladores
 		if d < mejor_dist:
 			mejor_dist = d
 			mejor = n
@@ -218,3 +255,69 @@ func _on_body_entered(body: Node2D) -> void:
 				tw.tween_property(v, "modulate", Color(1, 1, 1), 0.12)
 		_impacto(1.0)
 		queue_free()
+
+
+## Centro del collider del objetivo (el medio del sprite). `global_position` de un enemigo son sus pies.
+static func centro_objetivo(n: Node2D) -> Vector2:
+	for c in n.get_children():
+		if c is CollisionShape2D and (c as CollisionShape2D).shape != null and not (c as CollisionShape2D).disabled:
+			return ((c as CollisionShape2D).global_transform * (c as CollisionShape2D).shape.get_rect()).get_center()
+	return n.global_position
+
+
+## Color según el dueño (onda violeta del jugador / brasa naranja del enemigo) en el dibujo, el halo, la luz y la estela.
+func _aplicar_color() -> void:
+	if visual == null:
+		return
+	if visual.color == Color(0.72, 0.52, 1.0, 1.0):   # color de la escena sin tocar: lo decide quién dispara
+		visual.color = color_enemigo if enemy_shot else color_jugador
+	var c := visual.color
+	var halo := get_node_or_null("Halo") as Sprite2D
+	if halo != null:
+		halo.modulate = Color(c.r, c.g, c.b, 0.55)
+	var luz := get_node_or_null("Luz") as PointLight2D
+	if luz != null:
+		luz.color = c
+	var trail := get_node_or_null("Trail") as CPUParticles2D
+	if trail != null:
+		trail.color = Color(c.r, c.g, c.b, 0.65)
+
+
+func _dibujar_arte(ci: CanvasItem) -> void:
+	var c := visual.color if visual != null else color_jugador
+	_dibujar_onda(ci, c, tamano)
+
+
+func _escalar(pts: Array, k: float) -> PackedVector2Array:
+	var res := PackedVector2Array()
+	for v in pts:
+		res.append((v as Vector2) * k)
+	return res
+
+
+## Onda sónica: núcleo brillante, cola afilada y medialunas que se abren hacia adelante.
+func _dibujar_onda(ci: CanvasItem, c: Color, k: float) -> void:
+	var luz := c.lerp(Color.WHITE, 0.6)
+	ci.draw_colored_polygon(_escalar([Vector2(-8, -8), Vector2(-52, 0), Vector2(-8, 8)], k), Color(c.r, c.g, c.b, 0.4))
+	ci.draw_circle(Vector2.ZERO, 11.0 * k, c)
+	ci.draw_circle(Vector2.ZERO, 5.5 * k, luz)
+	for i in 2:
+		var avance := fposmod(_t * 3.0 + float(i) / 2.0, 1.0)   # dos ondas salen del núcleo y se desvanecen
+		var r := (16.0 + avance * 22.0) * k
+		var x := (6.0 + avance * 26.0) * k
+		var ancho := (7.0 - avance * 3.0) * k
+		_media_luna(ci, Vector2(x - r * 0.4, 0.0), r, ancho, deg_to_rad(50.0), Color(luz.r, luz.g, luz.b, (1.0 - avance) * 0.85))
+
+
+## Medialuna (arco afinado en las puntas) con la punta mirando a +X.
+func _media_luna(ci: CanvasItem, centro: Vector2, r: float, grosor: float, ang: float, color: Color) -> void:
+	var puntos := PackedVector2Array()
+	const N := 10
+	for i in N + 1:
+		var a := lerpf(-ang, ang, float(i) / N)
+		puntos.append(centro + Vector2.from_angle(a) * r)
+	for i in range(N, -1, -1):
+		var a := lerpf(-ang, ang, float(i) / N)
+		var g := grosor * cos(a / ang * PI * 0.5)
+		puntos.append(centro + Vector2.from_angle(a) * (r - g))
+	ci.draw_colored_polygon(puntos, color)

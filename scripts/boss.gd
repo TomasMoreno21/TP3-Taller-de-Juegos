@@ -102,6 +102,14 @@ const ZONA_SLOTS: Array[float] = [-190.0, 0.0, 190.0]
 @export var fase_grieta := true            ## grieta de luz en la pantalla al cambiar de fase
 @export var muerte_slowmo := 2.6           ## s de cámara muy lenta al morir el jefe
 @export var muerte_slowmo_escala := 0.2
+@export_group("Aparición (cine)")
+@export var emerger_cine := true           ## el jefe sale temblando desde atrás y abajo; el jugador pierde el control
+@export var emerger_tension := 2.2         ## s de temblor creciente antes de que se vea al jefe
+@export var emerger_subida := 2.6          ## s que tarda en subir hasta su posición de vuelo
+@export var emerger_profundidad := 900.0   ## px por debajo de su posición de vuelo desde donde sube
+@export var emerger_temblor := 14.0        ## px de vibración lateral del jefe al subir
+@export var emerger_shake := 18.0          ## intensidad máxima del temblor de cámara
+@export var estallido_cine := true         ## muerte: grietas de luz escalonadas, temblor y estallido tras el flash
 # Si se deja vacío, el rugido se genera por código (ruido grave sintetizado).
 @export var sonido_roar: AudioStream
 
@@ -110,6 +118,7 @@ var fase: int = Fase.UNO
 var enemy_data: Enemigo   # solo alimenta el factor de peso del hitstop del jugador
 
 var _activo := false
+var _emergiendo := false   # durante la aparición el jefe está bajo la arena: el Encounter no debe darlo por caído
 var _muerto := false
 var _invocado := false
 var _shield_active := false
@@ -188,6 +197,7 @@ func _ready() -> void:
 func preparar_ola() -> void:
 	reiniciado.emit()
 	_activo = false
+	_emergiendo = false
 	_invocado = false
 	_gate = "inactivo"
 	_shield_active = false
@@ -206,14 +216,21 @@ func activar() -> void:
 	if _invocado or _muerto:
 		return
 	_invocado = true
-	_activo = true
+	var gen := _gen
 	var arena := _datos_arena()
 	_centro_arena = arena[0]
 	_medio_arena = arena[1]
-	visual.visible = true
 	_vuelta = 0
 	_medir_suelo()
 	salud_cambio.emit(health, vida_max)
+	if emerger_cine and DisplayServer.get_name() != "headless":
+		_emergiendo = true
+		await _cine_emerger(gen)
+		_emergiendo = false
+		if gen != _gen or _muerto:
+			return
+	_activo = true
+	visual.visible = true
 	_ritual_entrada()
 	_cine_entrada()
 	_hablar([
@@ -224,9 +241,54 @@ func activar() -> void:
 	_ronda()
 
 
+## Entrada épica: el jugador pierde el control, la arena tiembla cada vez más y el jefe sube
+## desde atrás y abajo, vibrando, hasta su posición de vuelo. Termina con rugido y sacudida.
+func _cine_emerger(gen: int) -> void:
+	var arbol := get_tree()
+	var jugador := _obtener_player()
+	if jugador != null:
+		jugador.set("cinematica_activa", true)
+	var pos_vuelo := _piso_y - altura_vuelo
+	global_position = Vector2(_centro_arena, _piso_y + emerger_profundidad)
+	visual.visible = false
+	var base_x := visual.position.x
+	var cam := get_viewport().get_camera_2d()
+	_silencio_ambiente(emerger_tension + emerger_subida)
+	# 1) Tensión: nada se ve, solo la tierra temblando cada vez más fuerte.
+	var pasos := maxi(int(emerger_tension / 0.25), 1)
+	for i in pasos:
+		if cam != null and cam.has_method("shake"):
+			cam.shake(lerpf(2.0, emerger_shake * 0.6, float(i) / pasos), 0.3)
+		await arbol.create_timer(0.25, true, false, true).timeout
+		if gen != _gen:
+			break
+	# 2) Aparición: sube vibrando, oscuro, y se enciende al llegar.
+	if gen == _gen:
+		visual.visible = true
+		visual.modulate = Color(0.25, 0.2, 0.3, 1.0)
+		var tw := create_tween()
+		tw.tween_method(func(t: float) -> void:
+			global_position.y = lerpf(_piso_y + emerger_profundidad, pos_vuelo, t)
+			visual.position.x = base_x + sin(t * 140.0) * emerger_temblor * (1.0 - t * 0.7)
+			visual.modulate = Color(0.25, 0.2, 0.3, 1.0).lerp(Color.WHITE, t * t)
+			if cam != null and cam.has_method("shake") and int(t * 100.0) % 12 == 0:
+				cam.shake(emerger_shake, 0.2), 0.0, 1.0, emerger_subida).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+		await tw.finished
+	visual.position.x = base_x
+	visual.modulate = Color.WHITE
+	if gen == _gen:
+		global_position.y = pos_vuelo
+		_rugido()
+		if cam != null and cam.has_method("shake"):
+			cam.shake(emerger_shake * 1.4, 0.8)
+		await arbol.create_timer(0.7, true, false, true).timeout
+	if jugador != null and is_instance_valid(jugador):
+		jugador.set("cinematica_activa", false)
+
+
 ## Mata al jefe desde afuera (anti soft-lock del Encounter si cae a un pozo).
 func matar_por_caida() -> void:
-	if _muerto:
+	if _muerto or _emergiendo:
 		return
 	health = 0
 	_morir()
@@ -630,7 +692,10 @@ func _morir() -> void:
 		_slowmo(muerte_slowmo, muerte_slowmo_escala)
 		_silencio_ambiente(muerte_slowmo * 0.6)
 		JefeCine.destello_final(get_tree(), muerte_slowmo * 0.55)
-		_burst_muerte()
+		if estallido_cine:
+			JefeCine.estallido(get_tree(), global_position + Vector2(0, -180), _color_fase(), muerte_slowmo * 0.55)
+		else:
+			_burst_muerte()
 	else:
 		_slowmo(0.7, 0.3)
 	if visual != null:

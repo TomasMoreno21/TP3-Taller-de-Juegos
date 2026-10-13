@@ -14,12 +14,16 @@ extends Area2D
 @export var enemigos_mueren := true         # un enemigo empujado (en hitstun) contra los pinchos muere
 @export var dano_a_enemigos := 200          # daño que reciben al empalarse
 @export var dano := 9999       # daño al tocar (por defecto mata de un toque)
-## Aspecto: ROCA = colmillos de piedra afilada (cueva); MADERA = estacas talladas (bosque).
+## Aspecto: ROCA (por defecto) = colmillos de piedra afilada (cueva); MADERA = estacas talladas.
 ## TRIBAL = estacas de una tribu: troncos atados con cuerda, banda de pintura ocre y puntitos de hueso.
 enum Estilo { ROCA, MADERA, TRIBAL }
-@export var estilo := Estilo.MADERA
+@export var estilo := Estilo.ROCA
 @export var color_base := Color(0.13, 0.12, 0.17)     # escombros / base enterrada
 @export var color_estaca := Color(0.74, 0.72, 0.86)  # cara iluminada de cada pincho (la sombra se deriva)
+## Solo ROCA: contorno oscuro que los despega del fondo y punta de peligro (rojiza) que los hace leer como trampa.
+@export var color_contorno := Color(0.04, 0.03, 0.08)
+@export var color_punta := Color(0.95, 0.32, 0.38)
+@export_range(0.0, 1.0) var largo_punta := 0.3         # fracción del alto que se tiñe de color_punta
 ## Solo MADERA: cara iluminada de la estaca, sangre en la punta y qué fracción de estacas la lleva.
 @export var color_madera := Color(0.68, 0.49, 0.29)
 @export var color_sangre := Color(0.62, 0.06, 0.08)
@@ -36,6 +40,10 @@ enum Estilo { ROCA, MADERA, TRIBAL }
 @export var enterrado := 36.0  # tramo que queda DENTRO del tile (tapado por el tilemap)
 @export var z_index_detras := -2 # el nodo se dibuja detrás del suelo (asoman las puntas, la base enterrada queda tapada)
 @export var fraccion_zona_dano := 0.4  # qué porción del alto VISIBLE mata (el resto es decorativo)
+## El collider del jugador es mucho más ancho que su cuerpo visible (190 px el Humano, 470 el Oso): para los
+## pinchos solo cuenta una "hurtbox" chica, centrada y sobre los pies, así no matan desde lejos.
+@export_range(0.1, 1.0, 0.05) var hurtbox_ancho_jugador := 0.35   ## fracción del ancho del collider que cuenta
+@export_range(0.1, 1.0, 0.05) var hurtbox_alto_jugador := 0.4     ## fracción del alto del collider (desde los pies) que cuenta
 
 ## Todo el dibujo de un grupo de pinchos va en UN solo item de dibujo (antes eran ~60 nodos Polygon2D/Line2D por pincho).
 class _Rec:
@@ -56,11 +64,18 @@ class _Rec:
 
 
 var _ops: Array = []
+## En juego el dibujo se compila a pasos: las tandas de polígonos seguidos pasan a UNA malla con colores por
+## vértice (1 llamada de dibujo en vez de una por polígono); las líneas siguen como están, en el mismo orden.
+## Reduce ~50 % las llamadas de dibujo de los pinchos (en el nivel 1 completo, 19-28 % del total). Contra el dibujo original difiere en unos pocos píxeles de
+## borde (~2 % de los de las puntas) y en ±1/255 de color; apagalo si querés el dibujo original exacto.
+@export var dibujo_por_lotes := true
+var _pasos: Array = []
 var _kill_zone_size := Vector2.ZERO
 var _jugador: Node2D
 var _empalados := {}                       # id de enemigo -> ms del último empalado
 var _fase_chequeo := randi() % 4           # escalona el chequeo de enemigos entre pinchos
 var _hit_cd := 0.0
+var _radio_cercania_cuad := 0.0   # (distancia a la que el jugador ya cuenta como cercano)² — se fija en _dibujar
 var _editor_sync := true
 
 
@@ -71,6 +86,8 @@ func _ready() -> void:
 	z_index = z_index_detras
 	if not Engine.is_editor_hint():
 		set_process(false)   # el _process solo sirve en el editor (hay cientos de pinchos)
+		monitoring = false   # el daño se mide a mano (_cuerpo_en_zona): el Area2D no necesita detectar nada
+		monitorable = false
 	if Engine.is_editor_hint():
 		queue_redraw()
 		return
@@ -114,13 +131,20 @@ func _factor_estilo() -> float:
 # tapar, zona de daño resaltada y guía de hundimiento (hasta dónde queda enterrado).
 func _draw() -> void:
 	if not Engine.is_editor_hint():
-		for op in _ops:
-			var pts: PackedVector2Array = op["p"]
-			if int(op["t"]) == 0:
-				if pts.size() >= 3:
-					draw_colored_polygon(pts, op["c"])
+		if _pasos.is_empty():
+			for op in _ops:   # dibujo original (dibujo_por_lotes = false)
+				var pts: PackedVector2Array = op["p"]
+				if int(op["t"]) == 0:
+					if pts.size() >= 3:
+						draw_colored_polygon(pts, op["c"])
+				else:
+					draw_polyline(pts, op["c"], float(op["w"]))
+			return
+		for paso in _pasos:
+			if paso is ArrayMesh:
+				draw_mesh(paso, null)
 			else:
-				draw_polyline(pts, op["c"], float(op["w"]))
+				draw_polyline(paso["p"], paso["c"], float(paso["w"]))
 		return
 	var ancho_total := maxf(cantidad * ancho_pincho, 10.0)
 	var alto_vis := maxf(alto * altura_mult * _factor_estilo(), 10.0)
@@ -152,9 +176,12 @@ func _physics_process(delta: float) -> void:
 	if _jugador == null or not is_instance_valid(_jugador):
 		_jugador = get_tree().get_first_node_in_group("player")
 	var player: Node2D = _jugador
-	if player == null or _hit_cd > 0.0 or player.get("_derrota_activa"):
+	if player == null or _hit_cd > 0.0:
 		return
-	if global_position.distance_to(player.global_position) > _kill_zone_size.length() + 400.0:
+	# Lo barato primero: casi todos los pinchos están lejos del jugador casi siempre.
+	if global_position.distance_squared_to(player.global_position) > _radio_cercania_cuad:
+		return
+	if player.get("_derrota_activa"):
 		return
 	if _cuerpo_en_zona(player):
 		# Al golpear saltamos el cooldown para no repetir el daño cada frame.
@@ -171,10 +198,8 @@ func _physics_process(delta: float) -> void:
 func _empalar_enemigos() -> void:
 	if not enemigos_mueren:
 		return
-	for e in get_tree().get_nodes_in_group("enemy"):
-		if not is_instance_valid(e) or e.is_in_group("boss") or not (e is Node2D):
-			continue
-		if float(e.get("_stun_timer")) <= 0.0 or int(e.get("health")) <= 0:
+	for e in _enemigos_aturdidos(get_tree()):
+		if not is_instance_valid(e) or int(e.get("health")) <= 0:
 			continue
 		if global_position.distance_to((e as Node2D).global_position) > _kill_zone_size.length() + 300.0:
 			continue
@@ -185,6 +210,26 @@ func _empalar_enemigos() -> void:
 			_empalados[e.get_instance_id()] = ahora
 			Burst.emitir(self, (e as Node2D).global_position, color_sangre, 12, 0.8)
 			e.take_damage(dano_a_enemigos, 0.0, 1, false)
+
+
+## Enemigos en hitstun (los únicos que un pincho puede empalar), calculados UNA vez por frame de física y
+## compartidos por todos los pinchos del nivel (antes cada pincho recorría el grupo "enemy" entero).
+static var _cache_frame := -1
+static var _cache_aturdidos: Array = []
+
+
+static func _enemigos_aturdidos(arbol: SceneTree) -> Array:
+	var f := Engine.get_physics_frames()
+	if f != _cache_frame:
+		_cache_frame = f
+		_cache_aturdidos = []
+		for e in arbol.get_nodes_in_group("enemy"):
+			if not is_instance_valid(e) or e.is_in_group("boss") or not (e is Node2D):
+				continue
+			if float(e.get("_stun_timer")) <= 0.0 or int(e.get("health")) <= 0:
+				continue
+			_cache_aturdidos.append(e)
+	return _cache_aturdidos
 
 
 ## Superpone el rect del collider del body con el área de daño (determinista,
@@ -201,18 +246,26 @@ func _cuerpo_en_zona(body: Node2D) -> bool:
 	else:
 		return false
 	var rect_body := Rect2(body.global_position + csc.position - s * 0.5, s)
+	if body.is_in_group("player"):
+		var ancho_h := s.x * hurtbox_ancho_jugador
+		var alto_h := s.y * hurtbox_alto_jugador
+		rect_body = Rect2(rect_body.get_center().x - ancho_h * 0.5, rect_body.end.y - alto_h, ancho_h, alto_h)
 	# La zona de daño es SOLO la porción superior del alto visible (fair: tocar
 	# el tallo/palo no mata). Está anclada a la PUNTA (cima del alto visible) y
 	# baja hacia la base, no al revés: el rect anterior cubría la base/tallo.
 	var alto_vis := _kill_zone_size.y
 	var alto_zona := maxf(alto, 10.0) * fraccion_zona_dano
-	var rect_zona := Rect2(
-		global_position.x - _kill_zone_size.x * 0.5,
-		global_position.y - alto_vis,
-		_kill_zone_size.x,
-		alto_zona
-	)
-	return rect_zona.intersects(rect_body)
+	# La zona se evalúa en el espacio LOCAL del nodo: así respeta rotación/escala (antes era un rect
+	# horizontal en la posición del nodo y los pinchos inclinados mataban en el aire, lejos de las puntas).
+	var rect_zona := Rect2(-_kill_zone_size.x * 0.5, -alto_vis, _kill_zone_size.x, alto_zona)
+	var inv := global_transform.affine_inverse()
+	var a := inv * rect_body.position
+	var b := inv * Vector2(rect_body.end.x, rect_body.position.y)
+	var c := inv * rect_body.end
+	var d := inv * Vector2(rect_body.position.x, rect_body.end.y)
+	var lmin := Vector2(minf(minf(a.x, b.x), minf(c.x, d.x)), minf(minf(a.y, b.y), minf(c.y, d.y)))
+	var lmax := Vector2(maxf(maxf(a.x, b.x), maxf(c.x, d.x)), maxf(maxf(a.y, b.y), maxf(c.y, d.y)))
+	return rect_zona.intersects(Rect2(lmin, lmax - lmin))
 
 
 func _csc_de(body: Node2D) -> CollisionShape2D:
@@ -224,6 +277,7 @@ func _csc_de(body: Node2D) -> CollisionShape2D:
 
 func _dibujar() -> void:
 	_kill_zone_size = Vector2(maxf(cantidad * ancho_pincho, 10.0), maxf(alto * altura_mult * _factor_estilo(), 10.0))
+	_radio_cercania_cuad = pow(_kill_zone_size.length() + 400.0, 2.0)
 	var alto_vis := _kill_zone_size.y
 	var alto_zona := maxf(alto, 10.0) * fraccion_zona_dano
 	# Collider visible/depurable (no se usa para detección, pero ayuda a ver el área)
@@ -278,7 +332,10 @@ func _dibujar() -> void:
 		pinch.add_child(_poli([Vector2(j, e), Vector2(j, -h), Vector2(w * 0.24, -h * (k + 0.22)), Vector2(w * 0.5, -h * k * 0.8), Vector2(w * 0.5, e)], oscura))
 		# Filo brillante a lo largo del borde iluminado + punta clara.
 		pinch.add_child(_linea(PackedVector2Array([Vector2(-w * 0.47, -h * k), Vector2(-w * 0.2, -h * (k + 0.3)), Vector2(j, -h)]), 2.2, clara.lightened(0.5)))
-		pinch.add_child(_poli([Vector2(j - w * 0.11, -h * 0.8), Vector2(j, -h), Vector2(j + w * 0.1, -h * 0.8)], Color(0.86, 0.3, 0.36)))
+		var pb := 1.0 - largo_punta
+		pinch.add_child(_poli([Vector2(j - w * 0.11 * (1.0 + largo_punta * 2.0), -h * pb), Vector2(j, -h), Vector2(j + w * 0.1 * (1.0 + largo_punta * 2.0), -h * pb)], color_punta))
+		pinch.add_child(_linea(PackedVector2Array([Vector2(-w * 0.5, 0.0), Vector2(-w * 0.47, -h * k), Vector2(-w * 0.2, -h * (k + 0.3)), Vector2(j, -h),
+			Vector2(w * 0.24, -h * (k + 0.22)), Vector2(w * 0.5, -h * k * 0.8), Vector2(w * 0.5, 0.0)]), 2.6, color_contorno))
 		# Punta descubierta: la cara iluminada se aclara hacia la cima.
 		pinch.add_child(_poli([Vector2(-w * 0.2 * 0.85, -h * (k + 0.3) * 0.9), Vector2(j, -h), Vector2(j, -h * 0.72)], clara.lightened(luz_punta)))
 		_musgo_pie(pinch, rng, w, h)
@@ -293,7 +350,49 @@ func _dibujar() -> void:
 			pts.append(c + Vector2(cos(ang) * r * 1.3, sin(ang) * r))
 		base.add_child(_poli(pts, color_base.lightened(0.12)))
 		x += rng.randf_range(20.0, 44.0)
+	if not Engine.is_editor_hint() and dibujo_por_lotes:
+		_compilar_pasos()
 	queue_redraw()
+
+
+## Convierte `_ops` en `_pasos` (mallas de polígonos + líneas sueltas) conservando el orden de dibujo.
+func _compilar_pasos() -> void:
+	_pasos.clear()
+	var origen := global_position
+	var puntos := PackedVector2Array()
+	var colores := PackedColorArray()
+	for op in _ops:
+		var pts: PackedVector2Array = op["p"]
+		if int(op["t"]) == 0:
+			if pts.size() < 3:
+				continue
+			var tri := Geometry2D.triangulate_polygon(pts)   # la misma triangulación que usa draw_colored_polygon
+			var col: Color = op["c"]
+			# La malla guarda el color en 8 bits y lo trunca (Polygon/draw_colored_polygon lo redondea): +0.5/255 lo iguala.
+			col = Color(col.r + 0.5 / 255.0, col.g + 0.5 / 255.0, col.b + 0.5 / 255.0, col.a + 0.5 / 255.0)
+			for idx in tri:
+				var w := pts[idx] + origen
+				puntos.append(Vector2(floorf(w.x + 0.5), floorf(w.y + 0.5)) - origen)   # snap_2d_vertices_to_pixel: draw_mesh no ajusta a la grilla solo
+				colores.append(col)
+		else:
+			_volcar_malla(puntos, colores)
+			puntos = PackedVector2Array()
+			colores = PackedColorArray()
+			_pasos.append(op)
+	_volcar_malla(puntos, colores)
+	_ops = []
+
+
+func _volcar_malla(puntos: PackedVector2Array, colores: PackedColorArray) -> void:
+	if puntos.is_empty():
+		return
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = puntos
+	arrays[Mesh.ARRAY_COLOR] = colores
+	var malla := ArrayMesh.new()
+	malla.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	_pasos.append(malla)
 
 
 ## Estaca de madera tallada: tronco con punta en bisel, betas, muesca y (a veces) sangre en la punta.

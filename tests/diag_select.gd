@@ -38,8 +38,8 @@ func _init() -> void:
 	await physics_frame
 	await physics_frame
 	Input.action_release("form_next")
-	_check(player.forma_seleccionada == 1,
-		"Q preselecciona Lobo. Es: " + str(player.forma_seleccionada))
+	_check(player.forma_seleccionada == 3,
+		"Q preselecciona la forma anterior (desde Humano: Murciélago). Es: " + str(player.forma_seleccionada))
 
 	_write_formas(player)
 
@@ -48,8 +48,8 @@ func _init() -> void:
 	await physics_frame
 	Input.action_release("transform")
 	await _esperar_transform()
-	_check(player.current_form == 1,
-		"T confirma y transforma a Lobo. Es: " + str(player.current_form))
+	_check(player.current_form == 3,
+		"T confirma y transforma a la preseleccionada (Murciélago). Es: " + str(player.current_form))
 
 	# T de nuevo ya transformado en la forma preseleccionada = revertir a Humano al toque
 	Input.action_press("transform")

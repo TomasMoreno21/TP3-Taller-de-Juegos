@@ -110,8 +110,10 @@ func _initialize() -> void:
 			_chk(c.motion_mirroring.x > 0.0 and c.get_child_count() > 0 and (c.get_child(0) as Sprite2D).texture != null, "capa %s repite y tiene textura" % c.name)
 			# El fondo se escala con el zoom de la cámara (mín. ~0.7): debe cubrir 1080/0.7 px de alto, sin franja negra.
 			var sp := c.get_child(0) as Sprite2D
-			var alto: float = (sp.position.y + sp.texture.get_height() * sp.scale.y)
-			_chk(sp.position.y <= 0.0 and alto >= 1080.0 / 0.7, "capa %s cubre el alto con zoom 0.7 (%d px)" % [c.name, int(alto)])
+			# Con region_rect (recorte de filas transparentes, optimización) el resto de la textura es transparente: se mide la textura completa.
+			var y0: float = sp.position.y - (sp.region_rect.position.y * sp.scale.y if sp.region_enabled else 0.0)
+			var alto: float = (y0 + sp.texture.get_height() * sp.scale.y)
+			_chk(y0 <= 0.0 and alto >= 1080.0 / 0.7, "capa %s cubre el alto con zoom 0.7 (%d px)" % [c.name, int(alto)])
 	_chk(capas >= 7, "fondo con %d capas" % capas)
 	_chk(nivel.get_node_or_null("PrimerPlano") == null, "nivel2 sin elementos de primer plano")
 
@@ -147,7 +149,7 @@ func _initialize() -> void:
 						var d4: float = piso_de.call(e.global_position, -100.0, 700.0)
 						_chk(d4 < INF and d4 > -10.0, "%s/%s tiene piso debajo (%d px)" % [nm, e.name, int(d4)])
 	var calma: Node = exp.get_node_or_null("Calma")
-	_chk(calma != null and calma.get_child_count() >= 8, "Expansion/Calma tiene tramos de respiro")
+	_chk(calma != null and calma.get_child_count() >= 1, "Expansion/Calma conserva su diálogo (barrera de luz)")
 	if calma != null:
 		for n in calma.get_children():
 			var dc: float = piso_de.call(n.global_position, 0.0, 600.0)
@@ -167,18 +169,22 @@ func _initialize() -> void:
 			_chk(str(l).length() <= 48, "%s: línea corta (%d)" % [id, str(l).length()])
 	# Evento de derrumbe: cableado y simulación (shake + escombros dentro de la zona, nada fuera).
 	var der: Node = exp.get_node_or_null("C/Derrumbe")
-	_chk(der != null and der.inicio != null and der.fin != null, "Derrumbe tiene inicio y fin")
-	if der != null and der.inicio != null and der.fin != null:
-		_chk(der.inicio.global_position.x < der.fin.global_position.x, "Derrumbe: inicio antes que fin")
+	var disp: Node2D = exp.get_node_or_null("C/DisparadorDerrumbe")
+	_chk(der != null and disp != null and der.fin != null and disp.derrumbe == der, "Derrumbe tiene disparador y fin")
+	if der != null and disp != null and der.fin != null:
+		_chk(disp.global_position.x < der.fin.global_position.x, "Derrumbe: disparador antes que fin")
 		_chk(exp.get_node("C/DialogoDerrumbe").dialogo_id == "n2_derrumbe_fin", "Derrumbe: diálogo final")
 		_chk((datos as Dictionary).has("n2_derrumbe_fin"), "dialogos.json tiene n2_derrumbe_fin")
 		var camd: Camera2D = nivel.get_node("Camara")
-		player.global_position = Vector2(der.inicio.global_position.x + 600.0, der.inicio.global_position.y - 100.0)
+		player.global_position = Vector2(disp.global_position.x + 600.0, disp.global_position.y - 100.0)
 		player.velocity = Vector2.ZERO
+		der.iniciar()
 		var shake_visto := false
 		var max_esc := 0
+		var avisos := 0
+		var dano_vivo := 0
 		for f in 360:
-			player.global_position.y = minf(player.global_position.y, der.inicio.global_position.y)
+			player.global_position.y = minf(player.global_position.y, disp.global_position.y)
 			camd.global_position = player.global_position
 			await physics_frame
 			if float(camd.get("_shake_timer")) > 0.0 and float(camd.get("_shake_strength")) >= 6.0:
@@ -187,9 +193,14 @@ func _initialize() -> void:
 			for n in der.get_parent().get_children():
 				if "radio" in n and "giro" in n:
 					c += 1
+					if int(n.get("dano")) > 0:
+						dano_vivo += 1
+				if "duracion" in n and "ancho" in n:
+					avisos += 1
 			max_esc = maxi(max_esc, c)
 		_chk(shake_visto, "Derrumbe: shake fuerte durante la zona")
 		_chk(max_esc >= 1, "Derrumbe: caen escombros (%d a la vez)" % max_esc)
+		_chk(avisos >= 1 and dano_vivo >= 1, "Derrumbe: rocas dirigidas con aviso (%d) y daño (%d)" % [avisos, dano_vivo])
 
 	# Cadenas de las plataformas frágiles: llegan hasta el techo.
 	var con_cadena := 0
@@ -205,7 +216,8 @@ func _initialize() -> void:
 				var tope: Vector2 = cad.to_global(Vector2(xl, rr.position.y + 3.0 - float(largos[i])))
 				var hit := espacio.intersect_ray(PhysicsRayQueryParameters2D.create(tope + Vector2(0, 20), tope + Vector2(0, -2), 1))
 				_chk(not hit.is_empty() and float(largos[i]) > 20.0, "%s: cadena %d toca el techo (%d px)" % [n.name, i, int(largos[i])])
-	_chk(con_cadena >= 10, "plataformas frágiles con cadenas: %d" % con_cadena)
+	var total_pf := nivel.find_children("PlataformaFragil*", "StaticBody2D", true, false).size()
+	_chk(total_pf > 0 and con_cadena == total_pf, "todas las plataformas frágiles tienen cadenas (%d de %d)" % [con_cadena, total_pf])
 	# Decorados apoyados en una superficie: los de piso con el pie sobre el suelo, los colgantes pegados al techo.
 	var tipos_techo := {6: 0.0, 9: 0.0, 14: 22.0, 15: 0.0, 19: 30.0}
 	var deco_mal := 0
@@ -226,19 +238,6 @@ func _initialize() -> void:
 					deco_mal += 1
 					print("  decorado flotando/enterrado: ", d.name, " ", pd)
 	_chk(deco_mal == 0, "decorados sobre una superficie (fuera de lugar: %d)" % deco_mal)
-	# Tablas del puente de la galería B: cadena con saltos cortos (<= 340 px entre centros).
-	var xs: Array[float] = []
-	for n in nivel.get_children():
-		if String(n.name).begins_with("PlataformaFragil") and n.global_position.y < 2000.0 and n.global_position.y > 1600.0:
-			xs.append(n.global_position.x)
-	for n in exp.get_node("B").get_children():
-		if String(n.name).begins_with("PlataformaFragil"):
-			xs.append(n.global_position.x)
-	xs.sort()
-	var salto_max := 0.0
-	for i in range(1, xs.size()):
-		salto_max = maxf(salto_max, xs[i] - xs[i - 1])
-	_chk(xs.size() >= 5 and salto_max <= 340.0, "puente B: %d tablas, salto máx %d px" % [xs.size(), int(salto_max)])
-
+	# (El puente de tablas de la galería B se quitó del diseño: las plataformas frágiles que quedan son la escalera de planeo y B3.)
 	print("FALLOS = ", fallos)
 	quit(1 if fallos > 0 else 0)

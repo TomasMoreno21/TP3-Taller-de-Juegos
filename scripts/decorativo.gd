@@ -81,6 +81,7 @@ const LUZ_RADIAL := preload("res://resources/luz_radial.tres")
 	set(value):
 		viento_velocidad = absf(value)
 ## Arbustos y pastos se apartan al pasar el jugador y se sacuden con golpes fuertes cercanos.
+@export var distancia_animacion := Vector2(2600, 1800)   ## más lejos que esto del centro de la cámara (px) no se anima: viento, llamas ni reacción
 @export var reactivo := true
 @export var reaccion_angulo := 0.28      # rad máx. que se dobla al pasar el jugador
 @export var reaccion_margen := 50.0      # px extra de alcance más allá del ancho de la silueta
@@ -158,6 +159,12 @@ func _process(delta: float) -> void:
 			_rehacer()
 		_aplicar_config()
 		return
+	# Fuera de cámara no se anima nada: mover "Hoja" actualiza la transformada de todos sus polígonos (decenas por árbol).
+	var cam := get_viewport().get_camera_2d()
+	if cam != null:
+		var c := cam.get_screen_center_position()
+		if absf(global_position.x - c.x) > distancia_animacion.x or absf(global_position.y - c.y) > distancia_animacion.y:
+			return
 	if _hoja != null:
 		var rot_viento := 0.0
 		if viento:

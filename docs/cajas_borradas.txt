@@ -1,0 +1,23 @@
+Cajas (rompible.tscn) borradas del juego: posición local, para colocar los orbes azules.
+main: Rompible (padre .) pos 7969, 1247
+main: Rompible2 (padre .) pos 7969, 1164
+main: Rompible3 (padre .) pos 849, 949
+nivel1: Rompible3 (padre .) pos 7305, 938
+nivel1oficial: Rompible1 (padre .) pos 23578, 698
+nivel1oficial: Rompible2 (padre .) pos 23583, 612
+nivel1oficial: Rompible3 (padre .) pos 5560, 936.5
+nivel1oficial: Rompible7 (padre .) pos 9149, 936.5
+nivel1oficial: Rompible5 (padre .) pos 23676, 696
+nivel2: Rompible (padre .) pos -2351, 4616
+nivel2: Rompible2 (padre .) pos -2260, 4616
+nivel2: Rompible3 (padre .) pos -2304, 4524
+nivel2: Rompible4 (padre .) pos 4907, -907
+nivel2: Rompible5 (padre .) pos 4955, -988
+nivel2: Rompible6 (padre .) pos 5001, -906
+nivel3: RompibleCuenco1 (padre .) pos 7800, 1001
+nivel3: RompibleCuenco2 (padre .) pos 7870, 1001
+nivel4: Rompible1 (padre .) pos 5450, 1644.5
+nivel5: RompiblePruebaHumano (padre .) pos 700, 936.5
+nivel_jefe: Rompible1 (padre .) pos 6400, 983
+nivel_jefe: Rompible2 (padre .) pos 7000, 983
+nivel_jefe: Rompible3 (padre .) pos 7600, 983

@@ -2,7 +2,7 @@ extends SceneTree
 
 
 func _init() -> void:
-	for action in ["move_left", "move_right", "jump", "attack", "transform", "console_toggle"]:
+	for action in ["move_left", "move_right", "jump", "attack", "transform"]:
 		var has := InputMap.has_action(action)
 		var count := 0
 		if has:

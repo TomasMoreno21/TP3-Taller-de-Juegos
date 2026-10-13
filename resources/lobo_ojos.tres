@@ -1,0 +1,35 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" uid="uid://bqnvvljamfa5h" path="res://Sprites/Jugador y Transformaciones/lobo ojo1.png" id="1_ojo1"]
+[ext_resource type="Texture2D" uid="uid://bb6dqlset58c6" path="res://Sprites/Jugador y Transformaciones/lobo ojo2.png" id="2_ojo2"]
+[ext_resource type="Texture2D" uid="uid://bw03f7rxcrstt" path="res://Sprites/Jugador y Transformaciones/lobo ojo3.png" id="3_ojo3"]
+[ext_resource type="Texture2D" uid="uid://46htnb3u68lq" path="res://Sprites/Jugador y Transformaciones/lobo ojo4.png" id="4_ojo4"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_ojo1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_ojo2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_ojo3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_ojo4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_ojo3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_ojo2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("1_ojo1")
+}],
+"loop": 0,
+"name": &"parpadeo",
+"speed": 34.0
+}]

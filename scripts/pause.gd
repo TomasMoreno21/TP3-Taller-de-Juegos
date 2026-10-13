@@ -2,6 +2,7 @@ extends CanvasLayer
 
 const SCENE_CONTROLES := "res://scenes/controls.tscn"
 const SCENE_MENU := "res://scenes/main_menu.tscn"
+const SCENE_OPCIONES := "res://scenes/opciones.tscn"
 const SCENE_AYUDA := "res://scripts/ayuda_panel.gd"   # panel armado por código
 
 @export var duracion_fundido := 0.14   ## s del fundido al abrir/cerrar la pausa
@@ -13,6 +14,7 @@ var _controls: CanvasLayer
 @onready var botones: Array[Button] = [
 	$Panel/Margin/VBox/Reanudar,
 	$Panel/Margin/VBox/Controles,
+	$Panel/Margin/VBox/Opciones,
 	$Panel/Margin/VBox/Ayuda,
 	$Panel/Margin/VBox/Menu,
 	$Panel/Margin/VBox/VolverMenu,
@@ -36,7 +38,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_instance_valid(_controls):
 		return
 	if event.is_action_pressed("pause"):
-		if _consola_abierta() or _dialogo_activo() or _levelup_abierto() or _jugador_muerto():
+		if _dialogo_activo() or _levelup_abierto() or _jugador_muerto():
 			return
 		toggle()
 		get_viewport().set_input_as_handled()
@@ -52,11 +54,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("menu_confirm"):
 		get_viewport().set_input_as_handled()
 		_on_boton_pressed(_indice)
-
-
-func _consola_abierta() -> bool:
-	var consola = get_tree().get_first_node_in_group("console")
-	return consola != null and consola.esta_abierta()
 
 
 func _dialogo_activo() -> bool:
@@ -160,12 +157,14 @@ func _on_boton_pressed(i: int) -> void:
 		1:
 			_abrir_controles()
 		2:
-			_abrir_ayuda()
+			_abrir_opciones()
 		3:
-			_reiniciar_nivel()
+			_abrir_ayuda()
 		4:
-			_volver_menu()
+			_reiniciar_nivel()
 		5:
+			_volver_menu()
+		6:
 			get_tree().quit()
 
 
@@ -175,6 +174,12 @@ func _reiniciar_nivel() -> void:
 
 func _abrir_controles() -> void:
 	var c: CanvasLayer = (load(SCENE_CONTROLES) as PackedScene).instantiate()
+	_controls = c
+	add_child(c)
+
+
+func _abrir_opciones() -> void:
+	var c: CanvasLayer = (load(SCENE_OPCIONES) as PackedScene).instantiate()
 	_controls = c
 	add_child(c)
 

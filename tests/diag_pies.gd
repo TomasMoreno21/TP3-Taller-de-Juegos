@@ -15,7 +15,7 @@ func _initialize() -> void:
 	for f in 4:
 		player.set("current_form", f)
 		player.call("_apply_form")
-		var suelo: float = 142.5 - float(player.get("forms")[f].flight_lift) + hundidos
+		var suelo: float = 142.5 - float(player.get("forms")[f].flight_lift) - float(player.get("forms")[f].patas_alto) + hundidos
 		for anim in sf.get_animation_names():
 			for i in sf.get_frame_count(anim):
 				visual.animation = anim

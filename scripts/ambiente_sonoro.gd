@@ -13,6 +13,7 @@ extends Node
 @export var acento_intervalo_max := 50.0
 @export var acento_volumen_db := 0.0
 @export var volumen_master_db := 0.0
+@export var bus_ambiente := &"Musica"   ## bus de las capas y acentos (si no existe, usa Musica); ambiente_zonas.gd crea uno con eco por zona
 @export var silencio_db := 14.0   ## cuánto baja cada capa con el silencio al máximo
 @export var silencio_corta_acentos := 0.3   ## con silencio mayor a esto no suenan acentos (búho, aullido)
 
@@ -20,6 +21,10 @@ var _timer_acento: Timer
 var _capas: Array[AudioStreamPlayer] = []
 var _base_db: Array[float] = []
 var _silencios := {}   # fuente (instance id) -> k 0..1; se aplica el máximo
+
+
+func _bus() -> StringName:
+	return bus_ambiente if AudioServer.get_bus_index(bus_ambiente) >= 0 else &"Musica"
 
 
 func _ready() -> void:
@@ -37,6 +42,7 @@ func _ready() -> void:
 		var player := AudioStreamPlayer.new()
 		player.stream = stream
 		var vol: float = capas_loop_volumen_db[i] if i < capas_loop_volumen_db.size() else 0.0
+		player.bus = _bus()
 		player.volume_db = vol + volumen_master_db
 		add_child(player)
 		player.play()
@@ -93,6 +99,7 @@ func _reproducir_acento() -> void:
 	var stream: AudioStream = acentos[randi() % acentos.size()]
 	var player := AudioStreamPlayer.new()
 	player.stream = stream
+	player.bus = _bus()
 	player.volume_db = acento_volumen_db + volumen_master_db
 	add_child(player)
 	player.finished.connect(player.queue_free)

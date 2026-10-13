@@ -18,6 +18,7 @@ enum Form { HUMAN, LOBO, OSO, MURCIELAGO }
 const GRAVITY := 980.0
 const MAX_FALL_SPEED := 950.0
 const GLIDE_FALL_MULTIPLIER := 0.22
+const PLANEO_COSTO_S := 2.0   # energía/s que cuesta planear con el Murciélago
 const COYOTE_TIME := 0.14  # base; overridden per form in _init()
 const JUMP_BUFFER_TIME := 0.18  # base; overridden per form in _init()
 const JUMP_CUT_MULTIPLIER := 0.42  # base; overridden per form in _init()
@@ -36,7 +37,7 @@ const ENERGIA_MAX := 100.0
 const ENERGIA_DRAIN := 4.0
 const ENERGIA_REGEN := 8.0
 const ENERGIA_KILL := 20.0
-const ENERGIA_PICKUP := 30.0
+const ENERGIA_PICKUP := 12.0   # un orbe azul da "un poquito" de energía (antes 30)
 const ENERGIA_RESPAWN := 50.0
 const RECOVERY_LIGHT := 0.28
 const RECOVERY_HEAVY := 0.52
@@ -54,6 +55,8 @@ const HITSTOP_COMBO := 0.11
 @export var hitstop_dano_umbral := 20       # daño mínimo para considerarlo golpe fuerte
 @export var recoil_sprite := 8.0            # px que empuja el sprite hacia atrás al recibir daño
 @export var temblor_dano := 0.13            # s que dura el micro-temblor del sprite (sin rotar)
+@export_range(0.0, 1.0, 0.05) var especial_costo_fuera_combate := 0.5   # multiplicador del costo de energía de los especiales fuera de combate
+@export var proyectil_mira_bajo := 0.0     # px por debajo del centro del sprite del enemigo a los que apunta el proyectil teledirigido del Murciélago (0 = justo al medio)
 @export var zoom_heavy_mult := 1.025        # zoom punch extra en golpes pesados
 @export var zoom_special_mult := 1.04       # zoom punch extra en el golpe especial
 @export var zoom_combo_mult := 1.05         # zoom punch extra en el golpe que cierra combo
@@ -74,7 +77,7 @@ const HITSTOP_COMBO := 0.11
 @export var tag_bonus_mult := 1.5           # cambiar de forma a mitad de racha: el próximo golpe pega esto de más
 @export var tag_bonus_tiempo := 2.0         # cuánto dura ese bonus (s)
 @export var tag_energia := 8.0              # energía que da el cambio de forma dentro de una racha
-@export var flap_cooldown := 0.28           # s entre aleteos del Murciélago
+@export var flap_cooldown := 0.2          # s entre aleteos del Murciélago
 @export var aleteo := 1.0                    # ritmo del aleteo visual quieto/planeando (0 = alas quietas)
 @export_group("Cuerpo elástico")
 @export var resorte_rigidez := 420.0        # cuánto tira el cuerpo de vuelta a su forma (más alto = más rápido)
@@ -92,25 +95,38 @@ const HITSTOP_COMBO := 0.11
 @export var rampa_distancia := 80.0         # px de recorrido sobre los que se ajusta la recta (una escalera de peldaños se vuelve rampa recta)
 @export var suavizado_escalon := 6.0       # rapidez con que el sprite se asienta cuando estás quieto o en el aire (0 = sin suavizar)
 @export var suavizado_escalon_max := 24.0   # px: desniveles mayores no se suavizan (teletransportes, caídas)
+@export var transicion_salida_ataque := 0.12  # s que se disuelve la última pose del golpe al volver a idle/correr (0 = corte seco)
+@export var piernas_vel_min := 0.15         # piso de la velocidad de las piernas al arrancar/frenar (antes 0.35: patinaban)
+@export var reaccion_dano_en_ataque := true # recibir daño en pleno golpe corta el avance del ataque y el retroceso solo mueve el sprite en X
+@export var trepar_desplazamiento_x := 60.0 # px que se corre el sprite hacia atrás al trepar para que las manos queden sobre la liana (0 = cuerpo centrado en la liana)
+@export var trepar_giro_vel := 16.0         # rapidez con que el sprite pasa de un lado de la liana al otro al girar trepando
 @export_group("")
 @export var hitstop_rafaga_ventana := 0.4   # segundos entre golpes para considerarlo ráfaga
 @export var racha_spark_3 := 1.35           # escala del spark al llegar a racha 3
 @export var racha_spark_5 := 1.7            # escala del spark al llegar a racha 5
 @export var spark_hundir_px := 14.0         # cuánto entra el spark en el cuerpo del enemigo desde su borde
 @export var swing_visible := true           ## estela (medialuna) de cada ataque cuerpo a cuerpo
-@export var swing_alpha := 0.7
-@export var swing_alcance := 1.05          ## radio de la medialuna respecto del alcance del golpe
+@export var swing_alpha := 0.55
+@export var swing_alcance := 1.0           ## radio de la medialuna respecto del alcance del golpe (1 = llega justo al borde de la hitbox)
+@export_range(0.3, 1.2, 0.05) var swing_alto := 0.85   ## cuánto de la altura de la hitbox cubre la estela (1 = toda)
 @export var swing_duracion := 0.13
-@export_range(0.05, 0.6) var swing_grosor := 0.3   ## grosor de la medialuna (fracción del radio)
-@export_range(0.0, 1.0) var spark_altura := 0.42  # altura del impacto dentro del hitbox (0 = arriba, 1 = pies); 0.42 ≈ puño
+@export_range(0.05, 0.6) var swing_grosor := 0.16  ## grosor máximo de la estela (fracción del radio)
+@export_range(0.0, 1.0) var spark_altura := 0.62  # altura del impacto dentro del hitbox (0 = arriba, 1 = pies); 0.62 ≈ mano (antes 0.42 salía a la altura del cuello)
 @export var lobo_landing_squash_extra := 1.4  # multiplicador squash al aterrizar como Lobo (item 18)
 @export var slowmo_transformacion := 0.07 # s de cámara lenta al transformarse (0 = off)
 @export var slowmo_transformacion_escala := 0.4  # escala del tiempo mientras transforma
 @export var tint_dano := Color(1.0, 0.28, 0.28)  # tinte del sprite al recibir daño
 @export var tint_dano_duracion := 0.11  # s que tarda en volver al color normal
+@export_group("Aviso de especial listo")
+@export var tint_especial_listo := Color(1.7, 1.55, 1.1)  ## destello del sprite al terminar el cooldown del especial
+@export var especial_listo_duracion := 0.18  ## s que tarda en volver al color normal
+@export var sonido_especial_listo: AudioStream = preload("res://assets/audio/sfx/gen/checkpoint.wav")
+@export var volumen_especial_listo_db := -20.0
+@export_group("")
 @export_group("Juice (golpe, transformación, parry)")
 @export var tajo_luz := true                      ## tajo blanco diagonal sobre el enemigo al conectar
-@export var tajo_escala := 1.0                    ## tamaño del tajo
+@export var tajo_escala := 0.6                    ## tamaño del tajo (sutil)
+@export_range(0.0, 1.0) var tajo_alpha := 0.65    ## opacidad del tajo; su color sale de la forma activa
 @export var transformacion_cine := true           ## destello, congelado y estallido de color al transformarse
 @export var transformacion_congelado := 0.07      ## s con el mundo congelado al transformarse
 @export var transformacion_slowmo := 0.2          ## s de cámara lenta justo después
@@ -118,9 +134,12 @@ const HITSTOP_COMBO := 0.11
 @export var transformacion_tinte_duracion := 0.5  ## s que la pantalla queda teñida del color de la forma
 @export var transformacion_radio := 1500.0        ## alcance del estallido de rayos
 @export var parry_bn := true                      ## pantalla en blanco y negro (menos tú) en el parry perfecto
-@export var parry_congelado := 0.3                ## s con todo congelado al hacer un parry perfecto
-@export var parry_slowmo := 1.3                   ## s de cámara lenta para contraatacar
-@export var parry_slowmo_escala := 0.45
+@export var parry_congelado := 0.08               ## s con todo congelado al hacer un parry perfecto (corto: impacto sin cortar el ritmo)
+## Cámara lenta del parry como curva: cada tramo es (duración en s, escala de tiempo). Entra lento y vuelve suave a 1.
+@export var parry_slowmo_tramos: Array[Vector2] = [Vector2(0.16, 0.25), Vector2(0.2, 0.5), Vector2(0.3, 0.8)]
+@export var contragolpe_tiempo := 1.3             ## s tras un parry en que el próximo golpe sale potenciado
+@export var contragolpe_mult := 1.5               ## multiplicador de daño del contragolpe
+@export var contragolpe_dano_min := 24            ## daño mínimo del contragolpe (rompe la resistencia/poise del enemigo)
 @export_range(0.05, 0.6) var parry_radio_color := 0.2  ## círculo que conserva el color alrededor del jugador
 @export var dano_cine := true                     ## recibir daño: pantalla sin color y bordes rojos
 @export var dano_empuje_mult := 1.35              ## el golpe recibido te empuja más lejos
@@ -146,11 +165,18 @@ var _attack_timer := 0.0
 var _ultimo_hitstop_s: float = -10.0
 var _parry_t: float = 0.0
 var _tag_t: float = 0.0
+var _contra_t: float = 0.0
+var _viento_planeo_t := 0.0
+var _ultima_forma := -1   # última forma no humana a la que te transformaste (T de una vuelve a ella)
+var _ultimo_dano_ms := -100000   # cuándo recibió daño por última vez (para saber si está en calma)
+var _tips_pendientes := {}          # consejos de una sola vez que esperan a que no haya pelea (clave -> texto)
+var _t_tips := 0.0
 var _flap_cd: float = 0.0
 var _picada: bool = false
 var _pose_rot: float = 0.0        # rotación extra del sprite al golpear (rad), vuelve sola a 0
 var _pose_tween: Tween
 var _lunge_t: float = 0.0
+var _dano_reciente_t := 0.0   # tras recibir daño: el avance/imán del ataque no pisan el retroceso
 var _lunge_vel: float = 0.0
 const LUNGE_DUR := 0.09           # el avance del golpe dura esto (la distancia la define la forma)
 var _hit_applied := false
@@ -186,11 +212,60 @@ var _attack_frame_dur := PackedFloat32Array()   # tiempo planificado de cada fra
 static var _tips_vistos: Dictionary = {}
 @export var tips_ayuda := true             ## muestra avisos de ayuda la primera vez (parry, energía)
 @export_group("Defensa")
-@export var bloqueo_costo_energia := 3.0  ## energía que gasta cada golpe bloqueado (0 = gratis)
+@export var bloqueo_costo_energia := 3.0  ## energía base que gasta cada golpe bloqueado (0 = gratis)
+@export var bloqueo_costo_por_dano := 0.25  ## energía extra por punto de daño bloqueado (golpes fuertes cuestan más)
+@export var bloqueo_cooldown := 0.6       ## s sin poder volver a bloquear tras soltar (el parry exitoso lo evita)
+@export var bloqueo_toque_max := 0.25      ## un toque de bloqueo más corto que esto (tap) no genera cooldown; si lo mantenés, sí
+@export var bloqueo_max := 0.0            ## s máximos de guardia continua (0 = sin límite; al pasarse hay que soltar el botón)
+@export var bloqueo_empuje := 220.0       ## px/s que te empuja hacia atrás cada golpe bloqueado
+@export var bloqueo_drenaje := 4.0        ## energía/s que gasta mantener la guardia (el parry no cuesta)
+@export var bloqueo_energia_min := 10.0   ## sin energía no se puede bloquear hasta recuperar este mínimo
+var _bloqueo_sin_energia := false
+var _bloqueo_cd := 0.0
+var _bloqueo_t := 0.0
+var _bloqueo_agotado := false
+var _bloqueo_sin_cd := false
 @export_group("Alineación")
 @export var anclar_pies := true         ## apoya la base de cada frame en el piso (evita flotar/hundirse)
 @export var pies_hundidos := 4.0         ## px que los pies se meten en el suelo (sensación de peso)
 @export var ajuste_frames: Dictionary = {}  ## offset por frame encima del anclaje; clave "anim:frame" o "anim" -> Vector2 (px). Ej: "lobo_idle:2" -> Vector2(0, -6)
+@export var parpadeo_min := 2.0             ## segundos mínimos entre parpadeos del Oso
+@export var parpadeo_max := 5.5             ## segundos máximos entre parpadeos del Oso
+## Posición local (px) del ojo del Oso por frame del cuerpo: esquina superior izq. de la imagen del ojo
+## respecto al centro del sprite. La capa "Ojos" (hijo del Sprite2D) la usa para pegar el ojo en cada frame.
+@export var ojos_oso: Dictionary = {
+	"oso_idle:0": Vector2(159.5, -33.0),
+	"oso_idle:1": Vector2(161.5, -21.0),
+	"oso_idle:2": Vector2(164.0, -31.5),
+	"oso_idle:3": Vector2(161.0, -36.5),
+	"oso_caminar:0": Vector2(163.0, -26.5),
+	"oso_caminar:1": Vector2(168.0, -24.5),
+	"oso_caminar:2": Vector2(162.5, -26.5),
+	"oso_caminar:3": Vector2(170.5, -28.0),
+	"oso_caminar:4": Vector2(177.5, -25.0),
+	"oso_caminar:5": Vector2(162.0, -27.5),
+}
+@export var ojos_ajuste := Vector2.ZERO     ## desplazamiento global (px) de la capa Ojos, para afinar de una todos los frames
+## Animaciones del Oso cuyo arte ya NO trae el ojo dibujado: en estas la capa "Ojos" queda
+## visible (ojo abierto) y parpadea.
+@export var ojos_animaciones: PackedStringArray = ["oso_caminar", "oso_idle"]
+## Posición local (px) del ojo del Lobo por frame del cuerpo (esquina superior izq. de la imagen del ojo
+## respecto al centro del sprite). El Lobo solo la usa en las animaciones sin el ojo dibujado.
+@export var ojos_lobo: Dictionary = {
+	"lobo_idle:0": Vector2(86.1, -68.5),
+	"lobo_idle:1": Vector2(84.6, -61.7),
+	"lobo_idle:2": Vector2(83.7, -56.3),
+	"lobo_idle:3": Vector2(84.6, -61.7),
+	"lobo_run:0": Vector2(111.5, -27.4),
+	"lobo_run:1": Vector2(106.4, -25.6),
+	"lobo_run:2": Vector2(86.7, -44.4),
+	"lobo_run:3": Vector2(91.5, -42.8),
+}
+@export var ojos_ajuste_lobo := Vector2.ZERO   ## desplazamiento global (px) de la capa Ojos para el Lobo
+## Animaciones del Lobo cuyo arte ya NO trae el ojo dibujado (el resto sí lo trae):
+## en estas la capa "Ojos" queda visible (ojo abierto) y parpadea.
+@export var ojos_animaciones_lobo: PackedStringArray = ["lobo_idle", "lobo_run"]
+@export var ojos_frames_lobo: SpriteFrames = preload("res://resources/lobo_ojos.tres")   ## parpadeo del Lobo
 @export_group("")
 var _was_blocking := false
 var _was_on_floor := false
@@ -214,6 +289,7 @@ var _eco_t := 0.0
 var _tint_tween: Tween
 var _recoil_tween: Tween
 var _visual_base_x := 0.0          # x de reposo del sprite (el retroceso siempre vuelve acá)
+var _trepar_off_x := 0.0         # corrimiento X del sprite mientras trepa (manos sobre la liana); vuelve a 0 al soltarse
 var _tween_muerte: Tween
 var _amb: Node                     # autoload Ambiente (cacheado)
 var _turn_prev_facing := 0
@@ -229,6 +305,7 @@ var cinematica_activa := false   ## intro de nivel en curso: sin control ni dañ
 var _velo_muerte: CanvasLayer
 var _invuln_timer := 0.0
 var _invuln_sin_parpadeo := false
+var _parpadeo_cd := 0.0
 var _cooldown_formas: Dictionary = {}
 const COOLDOWN_AGOTADA := 2.0
 const COOLDOWN_TRANSFORM := 0.35   # anti-spam: el freno real son la energía mínima y el drenaje
@@ -328,10 +405,14 @@ var _golpe_rapido_t := 0.0
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $Collision
+@onready var patas_shape: CollisionShape2D = $Patas
 @onready var attack_area: Area2D = $AttackArea
 @onready var attack_hitbox: CollisionShape2D = $AttackArea/AttackHitbox
 @onready var polvo: CPUParticles2D = $Polvo
 @onready var sombra: Polygon2D = $Sombra
+@onready var ojos: AnimatedSprite2D = $Sprite2D/Ojos
+
+var _ojos_frames_oso: SpriteFrames   # SpriteFrames del parpadeo del Oso (tomado del nodo al iniciar)
 
 var _derrape_cd := 0.0
 var _t_sin_suelo := 0.0
@@ -367,11 +448,18 @@ func _ready() -> void:
 	floor_stop_on_slope = false
 	floor_max_angle = deg_to_rad(45.0)
 	wall_min_slide_angle = deg_to_rad(15.0)
+	if ojos != null:
+		_ojos_frames_oso = ojos.sprite_frames
 	_apply_form()
 	visual.frame_changed.connect(_on_frame_animacion)
 	visual.animation_changed.connect(_anclar_pies)
+	visual.animation_changed.connect(_actualizar_ojos_pos)
+	if ojos != null:
+		ojos.visible = false
+		_parpadeo_cd = randf_range(parpadeo_min, parpadeo_max)
 	_liana_loop = AudioStreamPlayer.new()
 	_liana_loop.stream = sonido_liana_deslizar
+	_liana_loop.bus = &"SFX"
 	add_child(_liana_loop)
 
 
@@ -390,7 +478,21 @@ func _limitar_a_camara() -> void:
 
 func _physics_process(delta: float) -> void:
 	var dialogo_bloquea := _dialogo_bloquea_input()
-	blocking = false if dialogo_bloquea else Input.is_action_pressed("block")
+	var quiere_bloquear := not dialogo_bloquea and current_form == Form.HUMAN and Input.is_action_pressed("block")   # solo el Humano bloquea y hace parry
+	if not quiere_bloquear:
+		_bloqueo_agotado = false
+	_bloqueo_cd = maxf(_bloqueo_cd - delta, 0.0)
+	if _was_blocking:
+		_bloqueo_t += delta
+		if bloqueo_max > 0.0 and _bloqueo_t >= bloqueo_max:
+			_bloqueo_agotado = true
+	else:
+		_bloqueo_t = 0.0
+	blocking = quiere_bloquear and not _bloqueo_agotado and _bloqueo_cd <= 0.0 and not _bloqueo_sin_energia
+	if _was_blocking and not blocking:
+		var fue_toque := _bloqueo_t <= bloqueo_toque_max
+		_bloqueo_cd = 0.0 if (_bloqueo_sin_cd or fue_toque) else bloqueo_cooldown
+		_bloqueo_sin_cd = false
 	if blocking != _was_blocking:
 		if blocking:
 			_cancelar_recuperacion()
@@ -401,13 +503,27 @@ func _physics_process(delta: float) -> void:
 
 	var data: Forma = forms[current_form]
 	data.tick(self, delta)
+	_tick_parpadeo(delta)
 	_derrape_cd = maxf(_derrape_cd - delta, 0.0)
 	_t_sin_suelo = 0.0 if is_on_floor() else _t_sin_suelo + delta
 	_denegar_cd = maxf(_denegar_cd - delta, 0.0)
+	if _dano_reciente_t > 0.0:
+		_dano_reciente_t = maxf(_dano_reciente_t - delta, 0.0)
 	if _step_up_cd > 0.0:
 		_step_up_cd = maxf(_step_up_cd - delta, 0.0)
+	if not _tips_pendientes.is_empty():
+		_t_tips += delta
+		if _t_tips >= 0.5:
+			_t_tips = 0.0
+			if en_calma():
+				var clave: String = _tips_pendientes.keys()[0]
+				var texto: String = _tips_pendientes[clave]
+				_tips_pendientes.erase(clave)
+				_mostrar_tip_ahora(clave, texto)
 	if _special_cooldown > 0.0:
 		_special_cooldown = maxf(_special_cooldown - delta, 0.0)
+		if _special_cooldown <= 0.0:
+			_flash_especial_listo()
 	_handle_enredadera(delta)
 	if _attack_air_buffer > 0.0:
 		_attack_air_buffer -= delta
@@ -427,7 +543,11 @@ func _physics_process(delta: float) -> void:
 	if _attacking and cmd_axis != 0.0:
 		facing = 1 if cmd_axis > 0 else -1
 		attack_area.position.x = absf(attack_area.position.x) * facing   # la hitbox acompaña el giro
-	var dir := 0.0 if (_attacking and not _early_liberado) else cmd_axis
+	# Bloqueando el personaje se planta: solo puede girar hacia el enemigo.
+	if blocking and cmd_axis != 0.0:
+		facing = 1 if cmd_axis > 0 else -1
+		attack_area.position.x = absf(attack_area.position.x) * facing
+	var dir := 0.0 if ((_attacking and not _early_liberado) or blocking) else cmd_axis
 	if dialogo_bloquea and not cine_camina:
 		dir = 0.0
 	if _trepando:
@@ -502,9 +622,11 @@ func _physics_process(delta: float) -> void:
 		if not _was_gliding:
 			squash_y(0.12, 0.15)
 		_murci_glide_t += delta
+		energia = maxf(energia - PLANEO_COSTO_S * delta, 0.0)
+		energia_changed.emit(energia)
 		_was_gliding = true
 		var prog := clampf(_murci_glide_t / 1.4, 0.0, 1.0)
-		g *= lerpf(0.18, 0.52, prog)
+		g *= lerpf(0.22, 0.5, prog)
 	else:
 		if _was_gliding:
 			stretch_y(0.14, 0.18)
@@ -530,8 +652,8 @@ func _physics_process(delta: float) -> void:
 		if absf(dir_glide) < 0.35:
 			dir_glide = 0.0
 		if dir_glide != 0.0:
-			var m := 1.35 if current_form == Form.MURCIELAGO else 1.1
-			var a := 0.9 if current_form == Form.MURCIELAGO else 0.6
+			var m := 1.75 if current_form == Form.MURCIELAGO else 1.1
+			var a := 1.6 if current_form == Form.MURCIELAGO else 0.6
 			velocity.x = move_toward(velocity.x, dir_glide * data.speed * m, data.accel * a * delta)
 	var x_ini := global_position.x
 	var vx_antes := velocity.x
@@ -673,6 +795,8 @@ func _handle_racha(delta: float) -> void:
 		_parry_t = maxf(_parry_t - delta, 0.0)
 	if _tag_t > 0.0:
 		_tag_t = maxf(_tag_t - delta, 0.0)
+	if _contra_t > 0.0:
+		_contra_t = maxf(_contra_t - delta, 0.0)
 	if _flap_cd > 0.0:
 		_flap_cd = maxf(_flap_cd - delta, 0.0)
 	if _racha_timer <= 0.0:
@@ -733,6 +857,16 @@ func _handle_attack(delta: float) -> void:
 		if airborne:
 			_attack_air_buffer_type = "special"
 			_attack_air_buffer = ATTACK_AIR_BUFFER_TIME
+	elif current_form == Form.MURCIELAGO and Input.is_action_pressed("special") and _special_cooldown <= 0.0 and _puede_pagar_especial(data):
+		_procesar_ataque("special", data, airborne)   # manteniendo L el Murciélago sigue disparando (al ritmo de su cooldown)
+
+
+## Si alcanza la energía para otro disparo especial (evita que el auto-disparo repita el aviso de "sin energía").
+func _puede_pagar_especial(data: Forma) -> bool:
+	var costo: float = data.special_cost
+	if not _en_combate():
+		costo *= especial_costo_fuera_combate
+	return costo <= 0.0 or energia >= costo
 
 
 func _buffer_durante_recuperacion() -> void:
@@ -755,7 +889,7 @@ func _lanzar_buffered(data: Forma, airborne: bool) -> void:
 
 
 func _melee_sticky(data: Forma, delta: float) -> void:
-	if not _attacking or _hit_applied or data.melee_sticky <= 0.0:
+	if not _attacking or _hit_applied or data.melee_sticky <= 0.0 or _dano_reciente_t > 0.0:
 		return
 	var objetivo := _buscar_enemigo_homing(MELEE_STICKY_REACH)
 	if objetivo == null:
@@ -834,6 +968,8 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 			if _special_cooldown > 0.0 and forms[current_form].special_cooldown > 0.0:
 				return
 			var costo: float = forms[current_form].special_cost
+			if not _en_combate():
+				costo *= especial_costo_fuera_combate
 			if costo > 0.0:
 				if energia < costo:
 					_denegar_transformacion()
@@ -1052,6 +1188,10 @@ func _check_attack_hits() -> void:
 	elif _current_attack_type == "heavy" and _heavy_step == forms[current_form].heavy_combo_steps:
 		mult_tercer = 1.5
 	var critico := mult_tercer > 1.0 or _current_attack_type == "combo"
+	var contra := _contra_t > 0.0
+	if contra:
+		_contra_t = 0.0
+		critico = true
 	var bono_tag := _tag_t > 0.0
 	if bono_tag:
 		_tag_t = 0.0
@@ -1061,6 +1201,8 @@ func _check_attack_hits() -> void:
 		var dmg := _current_attack_damage
 		if bono_tag:
 			dmg = int(dmg * tag_bonus_mult)
+		if contra and idx == 0:
+			dmg = maxi(int(dmg * contragolpe_mult), contragolpe_dano_min)
 		var kb := _current_attack_knockback * mult_tercer
 		if idx == 1:
 			dmg = int(dmg * 0.6)
@@ -1270,7 +1412,8 @@ func _juice_golpe(pos: Vector2, tinte: Color, idx: int) -> void:
 		_tajo_alterno = not _tajo_alterno
 		var largo := (560.0 if remate else (430.0 if pesado else 320.0)) * tajo_escala * (0.75 + racha * 0.25)
 		var grosor := (15.0 if remate else (12.0 if pesado else 9.0)) * tajo_escala
-		TajoLuz.lanzar(JuiceCapa.obtener(get_tree()), pos, facing, _tajo_alterno, largo, grosor, Color(0.9, 0.08, 0.1))
+		var base: Color = forms[current_form].color if current_form < forms.size() else Color.WHITE
+		TajoLuz.lanzar(JuiceCapa.obtener(get_tree()), pos, facing, _tajo_alterno, largo, grosor, Color(base.lerp(Color.WHITE, 0.45), tajo_alpha))
 
 
 ## Punto donde el golpe "toca" al objetivo: el borde del cuerpo que mira al jugador
@@ -1308,36 +1451,41 @@ func _play_attack_fx(tipo: String, step: int) -> void:
 	# Centro detrás del hombro y radio mayor al alcance: la medialuna queda más
 	# plana y por delante del cuerpo, barriendo la zona del golpe.
 	var atras := alcance * 0.45
-	var radio := clampf(alcance * swing_alcance + atras, 150.0, 480.0)
+	var radio := clampf(alcance * swing_alcance + atras, 120.0, 800.0)
 	var grosor: float = swing_grosor * {"light": 1.0, "heavy": 1.3, "special": 1.5, "combo": 1.6}.get(tipo, 1.0)
 	var dur: float = swing_duracion * {"light": 1.0, "heavy": 1.2, "special": 1.3, "combo": 1.4}.get(tipo, 1.0)
-	var desde := deg_to_rad(-42.0)
-	var hasta := deg_to_rad(30.0)
+	# El ángulo de la medialuna sale de la altura real de la hitbox (así la estela cubre lo mismo que pega).
+	var a_max := clampf(rad_to_deg(asin(clampf(rect_golpe.size.y * 0.5 * swing_alto / radio, 0.0, 0.95))), 18.0, 62.0)
+	var desde := deg_to_rad(-a_max)
+	var hasta := deg_to_rad(a_max * 0.8)
 	if step % 2 == 0:
 		var tmp := desde
 		desde = hasta
 		hasta = tmp
 	var puntos := PackedVector2Array()
+	var colores := PackedColorArray()
 	const N := 14
+	var color: Color = forms[current_form].color.lerp(Color.WHITE, 0.35) if current_form < forms.size() else Color.WHITE
+	# Estela: la cabeza (t=1) es nítida y la cola (t=0) se desvanece; el grosor es máximo cerca de la cabeza.
 	for i in N + 1:
 		var a := lerpf(desde, hasta, float(i) / N)
 		puntos.append(Vector2(cos(a) * facing, sin(a)) * radio)
+		colores.append(Color(color, swing_alpha * pow(float(i) / N, 1.4)))
 	for i in range(N, -1, -1):
 		var t := float(i) / N
-		# Borde interno: más grueso en el medio, afinado en las puntas.
-		var r := radio * (1.0 - grosor * sin(t * PI))
+		var r := radio * (1.0 - grosor * sin(PI * pow(t, 1.9)))
 		var a := lerpf(desde, hasta, t)
 		puntos.append(Vector2(cos(a) * facing, sin(a)) * r)
+		colores.append(Color(color, swing_alpha * pow(t, 1.4)))
 	var arco := Polygon2D.new()
 	arco.polygon = puntos
-	var color: Color = forms[current_form].color.lerp(Color.WHITE, 0.35) if current_form < forms.size() else Color.WHITE
-	arco.color = Color(color, swing_alpha)
+	arco.vertex_colors = colores
 	# Sin sombrear: la noche (CanvasModulate) no lo apaga.
 	var mat := CanvasItemMaterial.new()
 	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 	arco.material = mat
 	arco.z_index = 2
-	arco.position = Vector2(-facing * atras, rect_golpe.position.y + rect_golpe.size.y * spark_altura - global_position.y)
+	arco.position = Vector2(-facing * atras, rect_golpe.get_center().y - global_position.y)   # centrada en la hitbox
 	add_child(arco)
 	arco.scale = Vector2.ONE * 0.85
 	var giro := 0.22 * facing * (1.0 if step % 2 == 1 else -1.0)
@@ -1451,6 +1599,11 @@ func _aletear(data: Forma) -> void:
 	energia = maxf(energia - data.flap_costo, 0.0)
 	energia_changed.emit(energia)
 	velocity.y = -data.flap_impulso
+	# Cada aleteo también empuja hacia adelante (impulso de velocidad en la dirección que se pulsa).
+	var dir_flap := 0.0 if _dialogo_bloquea_input() else Input.get_axis("move_left", "move_right")
+	if absf(dir_flap) > 0.35:
+		var vmax := data.speed * 1.75
+		velocity.x = move_toward(velocity.x, signf(dir_flap) * vmax, 180.0)
 	_emitir_polvo(0.35)
 	_picada = false
 
@@ -1460,6 +1613,32 @@ func apply_zip(impulso: float) -> void:
 
 
 ## Eco espectral: silueta del momento actual que se desvanece (lunge del Lobo, picada, pisotón).
+## Copia la pose actual del sprite encima y la funde en `dur` s: el cambio de animación (p. ej. del
+## final de un golpe a idle/correr, que arranca en otro frame) deja de verse como un corte seco.
+func _disolver_pose(dur: float, alpha: float = 0.85) -> void:
+	if dur <= 0.0 or DisplayServer.get_name() == "headless" or visual == null or not is_inside_tree():
+		return
+	var g := AnimatedSprite2D.new()
+	g.sprite_frames = visual.sprite_frames
+	g.animation = visual.animation
+	g.frame = visual.frame
+	g.speed_scale = 0.0
+	g.texture_filter = visual.texture_filter
+	g.flip_h = visual.flip_h
+	g.offset = visual.offset
+	g.position = visual.position
+	g.scale = visual.scale
+	g.rotation = visual.rotation
+	g.skew = visual.skew
+	g.self_modulate = visual.self_modulate
+	g.modulate = Color(1, 1, 1, alpha)
+	g.z_index = visual.z_index + 1
+	add_child(g)
+	var tw := g.create_tween()
+	tw.tween_property(g, "modulate:a", 0.0, dur)   # lineal: el cambio se reparte parejo entre los frames
+	tw.tween_callback(g.queue_free)
+
+
 func emitir_eco() -> void:
 	if eco_alpha <= 0.0 or DisplayServer.get_name() == "headless" or visual == null:
 		return
@@ -1470,7 +1649,7 @@ func emitir_eco() -> void:
 	eco.frame = visual.frame
 	eco.speed_scale = 0.0
 	eco.global_position = visual.global_position
-	eco.global_rotation = visual.global_rotation
+	eco.rotation = visual.rotation   # global_rotation con escala X negativa (mirando a la izquierda) daba +180° y el eco salía cabeza abajo
 	eco.skew = visual.skew
 	eco.scale = visual.scale
 	eco.modulate = Color(color.r, color.g, color.b, eco_alpha)
@@ -1514,12 +1693,20 @@ func _handle_energia(delta: float) -> void:
 		_cooldown_formas[k] -= delta
 		if _cooldown_formas[k] <= 0.0:
 			_cooldown_formas.erase(k)
+	if blocking:
+		energia = maxf(energia - bloqueo_drenaje * delta, 0.0)
+	if energia <= 0.0:
+		_bloqueo_sin_energia = true
+	elif energia >= bloqueo_energia_min:
+		_bloqueo_sin_energia = false
 	if current_form == Form.HUMAN:
-		energia = minf(energia + ENERGIA_REGEN * delta, ENERGIA_MAX)
+		if not blocking:   # guardia activa: no regenera (si no, el drenaje se compensaría solo)
+			energia = minf(energia + ENERGIA_REGEN * delta, ENERGIA_MAX)
 	else:
 		var drain := ENERGIA_DRAIN * forms[current_form].drenaje_mult * (0.45 if not _en_combate() else 1.0)
-		energia -= drain * delta
-		if energia <= 0.0:
+		if not cinematica_activa:   # en cinemáticas (intros, tótems) la forma no gasta energía
+			energia -= drain * delta
+		if energia <= 0.0 and not cinematica_activa:
 			energia = 0.0
 			var agotada := current_form
 			# Solo si el cambio se concretó (bajo un techo bajo puede no haber lugar: se reintenta sin repetir aviso ni sonido).
@@ -1531,10 +1718,10 @@ func _handle_energia(delta: float) -> void:
 
 
 func _handle_seleccion_forma() -> void:
-	# Solo Q (form_next) cicla la preselecciÃ³n del flujo viejo.
-	# W/S/â†‘â†“ ya no tocan la selecciÃ³n: causaban transformaciones accidentales.
+	# Q: selecciona la forma anterior (no transforma; se confirma con T).
 	if Input.is_action_just_pressed("form_next"):
-		_avanzar_seleccion()
+		if _retroceder_seleccion():
+			_mostrar_fantasma_forma(forma_seleccionada)
 
 
 func _retroceder_seleccion() -> bool:
@@ -1588,8 +1775,8 @@ func _handle_formas_cruceta() -> void:
 
 
 func _handle_forma_ciclo() -> void:
-	# RT/E: cicla la preselecciÃ³n hacia adelante; LT: hacia atrÃ¡s.
-	# RB/T es quien confirma y transforma en la preseleccionada.
+	# E/RT: selecciona la forma siguiente; R/LT: la anterior. Solo cambia la selección:
+	# T (o RB) es quien confirma y transforma.
 	if Input.is_action_just_pressed("forma_swap"):
 		if _avanzar_seleccion():
 			_mostrar_fantasma_forma(forma_seleccionada)
@@ -1612,7 +1799,12 @@ func _handle_transform() -> void:
 			_transform_buffer = 0.0
 		return
 	if forma_seleccionada == current_form:
-		_avanzar_seleccion()
+		# T sin haber elegido nada (siendo Humano): va directo a la última forma que usaste.
+		if _ultima_forma >= 0 and _ultima_forma != current_form and _progresion().forma_desbloqueada(_ultima_forma) 				and not _forma_en_cooldown(_ultima_forma):
+			forma_seleccionada = _ultima_forma
+			forma_selectada_cambiada.emit(_ultima_forma)
+		else:
+			_avanzar_seleccion()
 	if not _progresion().forma_desbloqueada(forma_seleccionada) or _forma_en_cooldown(forma_seleccionada):
 		if Input.is_action_just_pressed("transform"):
 			_denegar_transformacion()
@@ -1635,18 +1827,24 @@ func _transformar(nueva: int, forzar: bool = false) -> bool:
 	var data_nueva: Forma = forms[nueva]
 	var prev_size: Vector2 = (collision_shape.shape as RectangleShape2D).size
 	var prev_pos: Vector2 = collision_shape.position
-	var new_pos_y := 142.5 - data_nueva.collider_size.y * 0.5
-	(collision_shape.shape as RectangleShape2D).size = data_nueva.collider_size
-	collision_shape.position.y = new_pos_y
+	var prev_patas_pos: Vector2 = patas_shape.position
+	var prev_patas_size: Vector2 = (patas_shape.shape as RectangleShape2D).size
+	var prev_patas_off: bool = patas_shape.disabled
+	_aplicar_colision(data_nueva)
 	var bloqueado := test_move(global_transform, Vector2.ZERO)
 	(collision_shape.shape as RectangleShape2D).size = prev_size
 	collision_shape.position = prev_pos
+	(patas_shape.shape as RectangleShape2D).size = prev_patas_size
+	patas_shape.position = prev_patas_pos
+	patas_shape.disabled = prev_patas_off
 	if bloqueado:
 		if not forzar:
 			_denegar_transformacion()   # forzada (energía agotada): se reintenta sin repetir el sonido cada frame
 		return false
 	forms[current_form].reset_form_state()
 	current_form = nueva
+	if nueva != Form.HUMAN:
+		_ultima_forma = nueva
 	forma_seleccionada = nueva
 	_limpiar_estado_transitorio()
 	_cancelar_recuperacion(true)
@@ -1744,15 +1942,38 @@ func _zoom_transform(data: Forma, cine: bool = false) -> void:
 		_tip_una_vez("energia", "Las formas gastan energía. Al llegar a cero volvés a Humano; matá enemigos para recuperarla.")
 
 
-## Aviso de ayuda que se muestra una sola vez por partida (no bloquea el juego).
+## Aviso de ayuda que se muestra una sola vez por partida (no bloquea el juego). Si hay pelea o acaba de
+## recibir daño, espera a que haya calma en vez de interrumpir.
 func _tip_una_vez(clave: String, texto: String) -> void:
 	if not tips_ayuda or _tips_vistos.has(clave) or DisplayServer.get_name() == "headless":
 		return
+	if not en_calma():
+		_tips_pendientes[clave] = texto
+		return
+	_mostrar_tip_ahora(clave, texto)
+
+
+func _mostrar_tip_ahora(clave: String, texto: String) -> void:
 	var dlg := get_node_or_null("/root/Dialogo")
 	if dlg == null or not dlg.has_method("mostrar_tip"):
 		return
 	_tips_vistos[clave] = true
 	dlg.mostrar_tip([texto], "Amuleto")
+
+
+## Sin enemigos cerca, sin daño reciente y sin estar atacando o bloqueando: buen momento para hablarle.
+func en_calma() -> bool:
+	if Time.get_ticks_msec() - _ultimo_dano_ms < 4000 or _attacking or blocking or not is_on_floor():
+		return false
+	for e in get_tree().get_nodes_in_group("enemy"):
+		if not (e is Node2D) or not is_instance_valid(e):
+			continue
+		var h = e.get("health")
+		if h != null and int(h) <= 0:
+			continue
+		if (e as Node2D).global_position.distance_to(global_position) < 700.0:
+			return false
+	return true
 
 
 func _flash_transformacion(color: Color) -> void:
@@ -1844,6 +2065,18 @@ func _visual_base_y() -> float:
 	return collision_shape.position.y + 7.5 - lift + _suave_entero
 
 
+## Collider del cuerpo (apoyado en el piso o, si la forma flota, `patas_alto` px más arriba) y, en ese caso,
+## un collider angosto debajo que lo sostiene sobre el piso.
+func _aplicar_colision(data: Forma) -> void:
+	var alto := maxf(data.patas_alto, 0.0)
+	collision_shape.shape.size = data.collider_size
+	collision_shape.position.y = 142.5 - alto - data.collider_size.y * 0.5
+	patas_shape.disabled = alto <= 0.0
+	if alto > 0.0:
+		(patas_shape.shape as RectangleShape2D).size = Vector2(data.patas_ancho, alto)
+		patas_shape.position = Vector2(collision_shape.position.x, 142.5 - alto * 0.5)
+
+
 func _apply_form() -> void:
 	var data: Forma = forms[current_form]
 	_aplicar_facing()
@@ -1851,14 +2084,16 @@ func _apply_form() -> void:
 	visual.self_modulate = _tinte_forma(data.color)
 	visual.skew = 0.0
 	_cancelar_anim_ataque()
-	collision_shape.shape.size = data.collider_size
-	collision_shape.position.y = 142.5 - data.collider_size.y * 0.5
+	_aplicar_colision(data)
 	if _recoil_tween != null and _recoil_tween.is_valid():
 		_recoil_tween.kill()   # no debe pisar la Y de la forma nueva
-	visual.position = Vector2(_visual_base_x, _visual_base_y())
+	visual.position = Vector2(_visual_base_x + _trepar_off_x, _visual_base_y())
 	_anclar_pies()
 	_gravity_override = -1.0
 	blocking = false
+	if ojos != null and _ojos_cfg()["pos"] == null and ojos.visible:
+		ojos.stop()
+		ojos.visible = false
 
 
 func _tinte_forma(color: Color, alpha: float = 1.0) -> Color:
@@ -1984,6 +2219,18 @@ func _cancelar_anim_ataque() -> void:
 func _update_animacion() -> void:
 	_esc_reposo = Vector2.ZERO
 	_aplicar_facing()
+	# Trepando, el sprite se corre hacia atrás (según hacia dónde mira) para que las manos queden sobre la
+	# liana; al girar pasa al otro lado y al soltarse vuelve a su sitio.
+	var obj_x := -float(facing) * trepar_desplazamiento_x if _trepando else 0.0
+	if _trepando and is_instance_valid(_enredadera_actual):
+		# Si una pared impidió centrarse en la liana, el sprite se corre lo que falta para que las manos igual la agarren.
+		obj_x += clampf(_enredadera_actual.global_position.x - global_position.x, -90.0, 90.0)
+	if _trepar_off_x != obj_x:
+		var nuevo_x := lerpf(_trepar_off_x, obj_x, minf(trepar_giro_vel * get_physics_process_delta_time(), 1.0))
+		if absf(nuevo_x - obj_x) < 0.1:
+			nuevo_x = obj_x
+		visual.position.x += nuevo_x - _trepar_off_x
+		_trepar_off_x = nuevo_x
 # Ataques del Humano con cola propia: la anim se estira (speed_scale) para
 	# durar exactamente la recuperación del golpe. Light -> attack1 (1-3),
 	# Heavy -> attack2 (4-6), Special/Combo -> attack_full (1-6).
@@ -1996,6 +2243,7 @@ func _update_animacion() -> void:
 				_attack_anim_timer = _duracion_anim(_attack_anim_actual) / maxf(_attack_anim_speed_scale, 0.05)
 				visual.play(_attack_anim_actual)
 			else:
+				_disolver_pose(transicion_salida_ataque)   # la pose final del golpe se funde con la de reposo/correr
 				_attack_anim_cola.clear()
 				_attack_anim_timer = 0.0
 		if _attack_anim_cola.size() > 0:
@@ -2027,7 +2275,14 @@ func _update_animacion() -> void:
 		var prog_rot := clampf(_murci_glide_t / 1.4, 0.0, 1.0)
 		var ang := lerpf(5.0, 16.0, prog_rot)
 		var ang_q := lerpf(3.0, 10.0, prog_rot)
-		visual.rotation = lerpf(visual.rotation, deg_to_rad(ang) * facing, minf(6.0 * get_physics_process_delta_time(), 1.0))
+		var tg := Time.get_ticks_msec() / 1000.0
+		var balanceo := sin(tg * TAU * 0.7) * deg_to_rad(2.0)   # el cuerpo se mece mientras planea
+		visual.rotation = lerpf(visual.rotation, deg_to_rad(ang) * facing + balanceo, minf(6.0 * get_physics_process_delta_time(), 1.0))
+		visual.position.y = lerpf(visual.position.y, _visual_base_y() + sin(tg * TAU * 0.9) * 7.0, minf(6.0 * get_physics_process_delta_time(), 1.0))
+		_viento_planeo_t -= get_physics_process_delta_time()
+		if _viento_planeo_t <= 0.0 and (absf(velocity.x) > 120.0 or velocity.y > 120.0):
+			_viento_planeo_t = lerpf(0.14, 0.05, clampf(velocity.length() / 650.0, 0.0, 1.0))
+			_estela_viento()
 		return
 	var quieto := absf(velocity.x) < 10.0 and is_on_floor()
 	var data: Forma = forms[current_form]
@@ -2068,7 +2323,7 @@ func _update_animacion() -> void:
 		# El Murciélago sigue aleteando aunque esté quieto o no avance (0 = alas quietas).
 		escala_obj = aleteo if current_form == Form.MURCIELAGO else 0.0
 	else:
-		var speed_min := 0.35 if current_form != Form.MURCIELAGO else 0.7
+		var speed_min := piernas_vel_min if current_form != Form.MURCIELAGO else 0.7
 		escala_obj = clampf(absf(velocity.x) / maxf(data.speed, 1.0), speed_min, 1.6)
 		if current_form == Form.LOBO:
 			escala_obj = pow(escala_obj, 0.82)
@@ -2123,12 +2378,14 @@ func _update_animacion() -> void:
 		var cam_tilt2 := get_viewport().get_camera_2d()
 		if cam_tilt2 != null and cam_tilt2.has_method("tilt"):
 			cam_tilt2.tilt(-deg_to_rad(1.4) * signf(velocity.x) * clampf(absf(velocity.x) / 690.0, 0.0, 1.0))
-	if current_form == Form.MURCIELAGO and not _trepando and not is_on_floor():
-		var t := Time.get_ticks_msec() / 1000.0
-		var onda := sin(t * 5.0) * 3.5 + sin(t * 9.0) * 1.8
-		visual.position.y = _visual_base_y() + onda
-	elif current_form == Form.MURCIELAGO and not _trepando:
-		visual.position.y = lerpf(visual.position.y, _visual_base_y(), minf(6.0 * get_physics_process_delta_time(), 1.0))
+	if data.flotar_frecuencia > 0.0 and not _trepando:
+		# Vaivén de vuelo: sube y baja un poco en reposo y más marcado al avanzar.
+		var tv := Time.get_ticks_msec() / 1000.0
+		var mov := clampf(absf(velocity.x) / maxf(data.speed, 1.0), 0.0, 1.0)
+		var amp := lerpf(data.flotar_amplitud, data.flotar_amplitud_mov, mov)
+		var frec := data.flotar_frecuencia * lerpf(1.0, 1.7, mov)
+		var onda := sin(tv * TAU * frec) * amp + sin(tv * TAU * frec * 2.3) * amp * 0.22
+		visual.position.y = lerpf(visual.position.y, _visual_base_y() + onda, minf(10.0 * dt, 1.0))
 
 
 func _handle_death() -> void:
@@ -2227,18 +2484,24 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_blo
 	if ignora_bloqueo:
 		blocking = false
 		_parry_t = 0.0
-	if _parry_t > 0.0 and blocking and not god_mode and _invuln_timer <= 0.0 and not _dialogo_bloquea_input():
+	# La guardia solo cubre el frente: `dir` es hacia donde empuja el golpe, así que el atacante está
+	# delante cuando miramos en sentido contrario (dir 0 = sin dirección, se cubre).
+	var guardia := blocking and (dir == 0 or facing != dir)
+	if guardia and _parry_t > 0.0 and not god_mode and _invuln_timer <= 0.0 and not _dialogo_bloquea_input():
 		_parry_perfecto(dir)
 		return
-	if blocking and not god_mode and _invuln_timer <= 0.0 and not _dialogo_bloquea_input():
+	if guardia and not god_mode and _invuln_timer <= 0.0 and not _dialogo_bloquea_input():
 		_sfx(sonido_bloqueo, volumen_estado_db, 0.08)
-		if bloqueo_costo_energia > 0.0 and energia > 0.0:
-			energia = maxf(energia - bloqueo_costo_energia, 0.0)
+		var costo := bloqueo_costo_energia + cantidad * bloqueo_costo_por_dano
+		if costo > 0.0 and energia > 0.0:
+			energia = maxf(energia - costo, 0.0)
 			energia_changed.emit(energia)
-	if god_mode or blocking or _invuln_timer > 0.0 or _dialogo_bloquea_input():
+		velocity.x = -dir * bloqueo_empuje
+	if god_mode or guardia or _invuln_timer > 0.0 or _dialogo_bloquea_input():
 		return
 	cantidad = maxi(roundi(cantidad * forms[current_form].dano_recibido_mult), 1)
 	health -= cantidad
+	_ultimo_dano_ms = Time.get_ticks_msec()
 	_sfx(sonido_dano, volumen_dano_db, 0.08)
 	# Golpe fuerte = más daño = más pausa de impacto (y el cel el umbral queda sin pausa).
 	var dur := hitstop_dano
@@ -2254,6 +2517,9 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_blo
 	_juice_dano(cantidad)
 	stretch_y(-0.12, 0.14)
 	_recoil_dano(dir)
+	if reaccion_dano_en_ataque and _attacking:
+		_lunge_t = 0.0          # el avance del golpe no empuja contra el retroceso
+		_dano_reciente_t = 0.25 # ni el imán del golpe tira hacia el enemigo
 	if knockback > 0.0:
 		velocity.x = dir * knockback * (dano_empuje_mult if dano_cine else 1.0)
 	_invuln_timer = invuln_dano
@@ -2292,7 +2558,11 @@ func parry_activo() -> bool:
 ## Bloqueo justo a tiempo: no recibe daño, recupera energía, aturde a los cercanos y hace un mini slow-mo.
 func _parry_perfecto(_dir: int) -> void:
 	_parry_t = 0.0
+	_bloqueo_t = 0.0
+	_bloqueo_sin_cd = true
 	_invuln_timer = maxf(_invuln_timer, 0.3)
+	_invuln_sin_parpadeo = true   # el parry no hace parpadear al personaje
+	visual.visible = true
 	energia = minf(energia + parry_energia, ENERGIA_MAX)
 	energia_changed.emit(energia)
 	_sfx(sonido_bloqueo, volumen_estado_db + 4.0, 0.05)
@@ -2301,8 +2571,8 @@ func _parry_perfecto(_dir: int) -> void:
 		# Parry cinematográfico: todo se congela, el mundo pasa a blanco y negro (menos vos) y queda
 		# una cámara lenta para contraatacar.
 		_freeze_hitstop(parry_congelado)
-		_freeze_slowmo(parry_congelado + parry_slowmo, parry_slowmo_escala)
-		ParryBN.lanzar(get_tree(), self, parry_congelado, parry_slowmo, parry_radio_color)
+		var total_slow := _parry_slowmo_curva()
+		ParryBN.lanzar(get_tree(), self, parry_congelado, total_slow * 0.7, parry_radio_color)
 		OndaTransformacion.lanzar(JuiceCapa.obtener(get_tree()), global_position + Vector2(0, 90), Color(0.95, 0.98, 1.0), 1100.0, 12, 0.5)
 	else:
 		_freeze_hitstop(0.1)
@@ -2314,7 +2584,25 @@ func _parry_perfecto(_dir: int) -> void:
 		cam.punch(1.09 if cine else 1.06)
 	if not cine:
 		_flash_transformacion(Color(0.9, 0.95, 1.0))
+	_contra_t = contragolpe_tiempo
 	parry_exitoso.emit()
+
+
+## Cámara lenta del parry en tramos (entra lento, sale suave). Usa temporizadores en tiempo real.
+## Devuelve la duración total de la curva.
+func _parry_slowmo_curva() -> float:
+	var total := 0.0
+	var inicio := parry_congelado
+	for tramo in parry_slowmo_tramos:
+		var dur: float = tramo.x
+		var esc: float = tramo.y
+		if total <= 0.0:
+			_freeze_slowmo(inicio + dur, esc)
+		else:
+			get_tree().create_timer(inicio + total, true, false, true).timeout.connect(
+				func() -> void: _freeze_slowmo(dur, esc))
+		total += dur
+	return total
 
 
 ## Onda alrededor del jugador: daña y empuja a los enemigos cercanos. `solo_atras` excluye a los
@@ -2373,9 +2661,18 @@ func _recoil_dano(dir: int) -> void:
 		_recoil_tween.kill()
 	# Base fija (no la posición actual): dos golpes seguidos o un cambio de forma a mitad de tween
 	# ya no dejan el sprite desplazado para siempre.
-	var base := Vector2(_visual_base_x, _visual_base_y())
-	visual.position = base + Vector2(-dir * recoil_sprite, 0)
+	var base := Vector2(_visual_base_x + _trepar_off_x, _visual_base_y())
 	_recoil_tween = create_tween()
+	if reaccion_dano_en_ataque:
+		# Solo se mueve el sprite en X: la Y la maneja el suavizado de desniveles (si no, el tween la pisa).
+		visual.position.x = base.x - dir * recoil_sprite
+		if temblor_dano > 0.0:
+			var mitad_x: float = temblor_dano * 0.5
+			_recoil_tween.tween_property(visual, "position:x", base.x - dir * recoil_sprite * 0.25, mitad_x)
+			_recoil_tween.tween_property(visual, "position:x", base.x, temblor_dano)
+		_recoil_tween.tween_property(visual, "position:x", base.x, 0.06).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		return
+	visual.position = base + Vector2(-dir * recoil_sprite, 0)
 	if temblor_dano > 0.0:
 		var mitad: float = temblor_dano * 0.5
 		_recoil_tween.tween_property(visual, "position", base + Vector2(-dir * recoil_sprite * 0.25, 0), mitad)
@@ -2396,6 +2693,51 @@ func _flash_tint_dano() -> void:
 	visual.modulate = tint_dano
 	_tint_tween = create_tween()
 	_tint_tween.tween_property(visual, "modulate", Color.WHITE, tint_dano_duracion)
+
+
+## Avisa (sutil) que el cooldown del especial terminó: destello del sprite + tick suave.
+func _flash_especial_listo() -> void:
+	if visual == null or (_tween_muerte != null and _tween_muerte.is_valid()):
+		return
+	if _tint_tween != null and _tint_tween.is_valid():
+		_tint_tween.kill()
+	visual.modulate = tint_especial_listo
+	_tint_tween = create_tween()
+	_tint_tween.tween_property(visual, "modulate", Color.WHITE, especial_listo_duracion)
+	_sfx(sonido_especial_listo, volumen_especial_listo_db, 0.05)
+
+
+## Líneas de viento que quedan atrás mientras el Murciélago planea (refuerzan la sensación de velocidad).
+func _estela_viento() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var linea := Line2D.new()
+	var largo := randf_range(110.0, 220.0)
+	linea.points = PackedVector2Array([Vector2.ZERO, Vector2(-facing * largo, 0.0)])
+	linea.width = randf_range(2.0, 4.0)
+	var g := Gradient.new()
+	g.set_color(0, Color(1, 1, 1, 0.0))
+	g.set_color(1, Color(0.85, 0.9, 1.0, 0.45))
+	linea.gradient = g
+	linea.position = global_position + Vector2(-facing * randf_range(40.0, 120.0), randf_range(-70.0, 70.0))
+	linea.z_index = 3
+	JuiceCapa.obtener(get_tree()).add_child(linea)
+	var tw := linea.create_tween().set_parallel(true)
+	tw.tween_property(linea, "position:x", linea.position.x - facing * 160.0, 0.35)
+	tw.tween_property(linea, "modulate:a", 0.0, 0.35)
+	tw.chain().tween_callback(linea.queue_free)
+
+
+## Un golpe cuerpo a cuerpo rebotó contra un enemigo flotante (solo reciben daño de proyectiles):
+## empujón corto hacia atrás, una pausa y un aviso la primera vez.
+func rebote_golpe(dir: int) -> void:
+	velocity.x -= dir * 260.0
+	_freeze_hitstop(0.05)
+	var cam := get_viewport().get_camera_2d()
+	if cam != null and cam.has_method("shake"):
+		cam.shake(5.0, 0.1, Vector2(-dir, 0))
+	if tips_ayuda and not _tips_vistos.has("flotante"):
+		_mostrar_tip_ahora("flotante", "Los enemigos flotantes solo reciben daño de proyectiles. Transformate en Murciélago y disparales con L.")
 
 
 func heal_full() -> void:
@@ -2430,7 +2772,7 @@ func reaparecer_en_checkpoint() -> void:
 		return
 	global_position = _spawn_position
 	velocity = Vector2.ZERO
-	health = _checkpoint_vida
+	health = VIDA_MAX   # al reaparecer en un checkpoint se cura completo
 	energia = _checkpoint_energia
 	_derrota_activa = false
 	if _tween_muerte != null and _tween_muerte.is_valid():
@@ -2448,6 +2790,7 @@ func reaparecer_en_checkpoint() -> void:
 	_seq.clear()
 	_combo_timer = 0.0
 	_tag_t = 0.0
+	_contra_t = 0.0
 	_murci_glide_t = 0.0
 	_esc_off = Vector2.ZERO
 	_esc_vel = Vector2.ZERO
@@ -2507,19 +2850,30 @@ func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 70
 	_sfx(sonido_disparo, volumen_estado_db, 0.08)
 	var proj: Area2D = preload("res://scenes/projectile.tscn").instantiate()
 	proj.global_position = global_position + Vector2(facing * 90.0, -60.0) + pos_referencia
+	if current_form == Form.MURCIELAGO:
+		# Sale de su cuerpo (el collider coincide con el sprite), no de un punto fijo del origen.
+		var cuerpo: Vector2 = collision_shape.shape.size
+		proj.global_position = global_position + Vector2(facing * (cuerpo.x * 0.5 + 6.0), collision_shape.position.y) + pos_referencia
 	var dir_inicial := Vector2(facing, 0.0)
 	if current_form == Form.MURCIELAGO:
 		var objetivo := _buscar_enemigo_homing(3000.0)
 		if objetivo != null:
-			var to_obj: Vector2 = objetivo.global_position - proj.global_position
+			var to_obj: Vector2 = preload("res://scripts/projectile.gd").centro_objetivo(objetivo) + Vector2(0.0, proyectil_mira_bajo) - proj.global_position
 			if to_obj.length_squared() > 0.01:
 				dir_inicial = to_obj.normalized()
 		proj.set("homing", true)
 		proj.set("homing_range", 3000.0)
+		proj.set("homing_offset", Vector2(0.0, proyectil_mira_bajo))
 		# Teledirigido agresivo: giro fuerte constantemente hacia el objetivo.
 		proj.set("homing_strength", 30.0)
 	proj.set("direction", dir_inicial)
-	proj.set("speed", alcance)
+	var vel := alcance
+	if current_form == Form.MURCIELAGO:
+		var f: Forma = forms[current_form]
+		vel = float(f.get("proyectil_velocidad"))
+		proj.set("_life", float(f.get("proyectil_alcance")) / maxf(vel, 1.0))   # alcance en px = velocidad × vida
+		proj.set("margen_camara", 900.0)   # no se borra al salir de pantalla: cruza todo el alcance
+	proj.set("speed", vel)
 	proj.set("damage", forms[current_form].special_damage)
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	destino.add_child(proj)
@@ -2542,6 +2896,8 @@ func _buscar_enemigo_homing(rango: float) -> Node2D:
 		if "health" in n and n.health <= 0:
 			continue
 		var d := global_position.distance_to(n.global_position)
+		if n.get("flotante") == true:
+			d *= 0.35   # prioridad a los voladores
 		if d < mejor_dist:
 			mejor_dist = d
 			mejor = n
@@ -2645,6 +3001,11 @@ func _handle_enredadera(delta: float) -> void:
 		var dir_x := Input.get_axis("move_left", "move_right")
 		if absf(dir_x) < 0.5:
 			dir_x = 0.0
+		if dir_x != 0.0 and (1 if dir_x > 0.0 else -1) != facing:
+			# Se puede girar de un lado a otro mientras se trepa (sin soltar la liana).
+			facing = 1 if dir_x > 0.0 else -1
+			attack_area.position.x = absf(attack_area.position.x) * facing
+			_esc_off.x = clampf(_esc_off.x - giro_squash, -0.6, 0.6)
 		var dir_y: int = 0
 		if Input.is_action_pressed("move_up"):
 			dir_y -= 1
@@ -2695,6 +3056,12 @@ func _handle_enredadera(delta: float) -> void:
 		else:
 			velocity.y = lerpf(velocity.y, 0.0, TREPAR_STOP_LERP * delta)
 		velocity.x = 0.0
+		# Se sigue acercando al centro de la liana mientras haya lugar (el agarre inicial pudo quedar torcido contra una pared).
+		var falta_x: float = _enredadera_actual.global_position.x - global_position.x
+		if absf(falta_x) > 0.5:
+			var paso_x := clampf(falta_x, -900.0 * delta, 900.0 * delta)
+			if not test_move(global_transform, Vector2(paso_x, 0)):
+				global_position.x += paso_x
 		_gravity_override = 0.0
 		var dx: float = _enredadera_actual.global_position.x - global_position.x
 		if absf(dx) > 1.0:
@@ -2819,8 +3186,66 @@ func _ajuste_frame() -> Vector2:
 	return Vector2.ZERO
 
 
+## Config de la capa "Ojos" según la forma actual: posiciones por frame, animaciones cuyo arte va sin
+## el ojo dibujado, SpriteFrames del parpadeo y ajuste global. `pos` = null si la forma no usa la capa.
+func _ojos_cfg() -> Dictionary:
+	match current_form:
+		Form.OSO:
+			return {"pos": ojos_oso, "anim": ojos_animaciones, "frames": _ojos_frames_oso, "ajuste": ojos_ajuste}
+		Form.LOBO:
+			return {"pos": ojos_lobo, "anim": ojos_animaciones_lobo, "frames": ojos_frames_lobo, "ajuste": ojos_ajuste_lobo}
+	return {"pos": null, "anim": PackedStringArray(), "frames": null, "ajuste": Vector2.ZERO}
+
+
+## Ojos de Oso/Lobo: capa "Ojos" (hijo del Sprite2D) pegada al frame de la cabeza. En las animaciones
+## de `ojos_animaciones`/`ojos_animaciones_lobo` (arte sin el ojo dibujado) queda visible con el ojo
+## abierto y, cada tanto, reproduce "parpadeo" (~0,2 s) que la deja otra vez abierta. En el resto se oculta.
+func _tick_parpadeo(delta: float) -> void:
+	if ojos == null:
+		return
+	var cfg := _ojos_cfg()
+	var pos = cfg["pos"]
+	var mostrar := pos != null and not _derrota_activa and not _attacking \
+		and (cfg["anim"] as PackedStringArray).has(String(visual.animation))
+	if not mostrar:
+		if ojos.visible:
+			ojos.stop()
+			ojos.visible = false
+		_parpadeo_cd = randf_range(parpadeo_min, parpadeo_max)
+		return
+	if ojos.sprite_frames != cfg["frames"]:
+		ojos.sprite_frames = cfg["frames"]
+	if ojos.animation == &"parpadeo" and ojos.is_playing():
+		return
+	if not ojos.visible:
+		_actualizar_ojos_pos()
+		ojos.frame = 0
+		ojos.visible = true
+	_parpadeo_cd -= delta
+	if _parpadeo_cd <= 0.0:
+		_parpadeo_cd = randf_range(parpadeo_min, parpadeo_max)
+		ojos.frame = 0
+		ojos.play(&"parpadeo")
+
+
+## Coloca la capa "Ojos" sobre el ojo del frame actual del cuerpo (solo cambia la posición).
+func _actualizar_ojos_pos() -> void:
+	if ojos == null:
+		return
+	var cfg := _ojos_cfg()
+	var pos = cfg["pos"]
+	if pos == null:
+		return
+	var clave := "%s:%d" % [visual.animation, visual.frame]
+	if not pos.has(clave):
+		return
+	ojos.self_modulate = visual.self_modulate
+	ojos.position = (pos[clave] as Vector2) + visual.offset + (cfg["ajuste"] as Vector2)
+
+
 func _on_frame_animacion() -> void:
 	_anclar_pies()
+	_actualizar_ojos_pos()
 	if _trepando:
 		return
 	var anim := visual.animation

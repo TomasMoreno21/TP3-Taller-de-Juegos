@@ -30,7 +30,7 @@ func _init() -> void:
 		if not String(hijo.name).begins_with("Pickup"):
 			continue
 		var from: Vector2 = hijo.global_position
-		var params := PhysicsRayQueryParameters2D.create(from, Vector2(from.x, 2000.0), 1)
+		var params := PhysicsRayQueryParameters2D.create(from, Vector2(from.x, from.y + 2000.0), 1)
 		var hit := root.world_2d.direct_space_state.intersect_ray(params)
 		if hit.is_empty():
 			flotantes.append([hijo.name, "sin soporte debajo"])

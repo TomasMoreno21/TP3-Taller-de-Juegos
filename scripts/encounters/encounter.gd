@@ -14,7 +14,7 @@ const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 # Diálogo opcional al completar la arena (post-combate). Vacío = no habla.
 @export var lineas_post_combate: PackedStringArray = []
 @export var hablante_post_combate := "Amuleto"
-@export var texto_despejada := "Zona despejada"   ## aviso del HUD al vencer la última ola (vacío = sin aviso)
+@export var color_despejada := Color(0.75, 0.95, 1.0)   ## destello de la onda de luz al vencer la última ola
 @export var sonido_despejada: AudioStream = preload("res://assets/audio/sfx/gen/zona_despejada.wav")
 @export var sonido_inicio: AudioStream = preload("res://assets/audio/sfx/gen/arena_inicio.wav")   ## al cerrarse la arena
 @export var volumen_despejada_db := -6.0
@@ -31,6 +31,9 @@ const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 @export var zoom_encuadre_duracion := 0.7
 
 # Antesala: al acercarse a la arena el ambiente se calla y una viñeta fría cierra la pantalla (ver antesala.gd).
+@export var espera_inicial := 0.8   ## s entre cerrarse la arena y aparecer la primera ola (tiempo para reaccionar)
+@export var intervalo_spawn := 0.8   ## s entre un enemigo y el siguiente dentro de una misma ola (0 = todos a la vez)
+@export var espera_entre_olas := 1.0   ## s extra antes de cada ola siguiente a la primera (se suma al `delay` de la ola)
 @export var antesala_activa := true
 @export var antesala_distancia := 1500.0   ## px desde el borde de la arena donde empieza a notarse
 @export_range(0.0, 1.0, 0.05) var antesala_silencio := 1.0   ## cuánto se calla el ambiente (0 = nada, 1 = lo máximo de ambiente_sonoro)
@@ -105,6 +108,8 @@ func _liberar_enemigos() -> void:
 ## tras morir DENTRO de un combate: sin esto el encounter quedaba RUNNING y la
 ## cámara fija al centro, con el jugador fuera de encuadre.
 func reiniciar() -> void:
+	if estado == Estado.COMPLETED:
+		return   # arena ya vencida: al reaparecer no se rearma (si no, al pasar se cerraba sin enemigos: destello y cámara)
 	estado = Estado.INACTIVE
 	_gen += 1   # invalida cualquier pausa entre olas que estuviera esperando
 	_ola_idx = -1
@@ -194,6 +199,10 @@ func _siguiente_ola() -> void:
 	var delay := 0.0
 	if _ola_idx < olas.size():
 		delay = olas[_ola_idx].delay
+	if _ola_idx == 0:
+		delay += espera_inicial
+	else:
+		delay += espera_entre_olas
 	if delay > 0.0:
 		var gen := _gen
 		# `false`: el timer respeta la pausa (con el juego pausado no se lanza la siguiente ola).
@@ -208,20 +217,37 @@ func _siguiente_ola() -> void:
 
 func _lanzar_ola(idx: int) -> void:
 	_vivos_ola = 0
+	var k := 0   # posición en la fila de entrada: cada enemigo aparece `intervalo_spawn` después del anterior
 	if idx < _manuales.size():
 		for e in _manuales[idx]:
 			if is_instance_valid(e):
 				if e.has_signal("died"):
 					_conectar_died(e, idx)
-				e.activar()
+				_activar_en(e, float(k) * intervalo_spawn, idx)
 				_vivos_ola += 1
+				k += 1
 	if idx < olas.size():
-		_vivos_ola += _spawnear_auto(olas[idx], idx)
+		_vivos_ola += _spawnear_auto(olas[idx], idx, k)
 	if _vivos_ola <= 0:
 		_ola_resuelta()
 
 
-func _spawnear_auto(ola: WaveOla, ola_idx: int) -> int:
+## Activa al enemigo tras `espera` segundos (si la pelea sigue en esa ola). Entran de a uno para no abrumar.
+func _activar_en(e: Node, espera: float, ola_idx: int) -> void:
+	if espera <= 0.0:
+		e.activar()
+		return
+	if e.has_method("preparar_ola"):
+		e.preparar_ola()
+	var gen := _gen
+	await get_tree().create_timer(espera, false).timeout
+	if gen != _gen or estado != Estado.RUNNING or ola_idx != _ola_idx:
+		return
+	if is_instance_valid(e):
+		e.activar()
+
+
+func _spawnear_auto(ola: WaveOla, ola_idx: int, k0: int = 0) -> int:
 	var total := maxi(ola.cantidad, 0) + (maxi(ola.cantidad_extra, 0) if ola.tipo_extra != "" else 0)
 	if total <= 0:
 		return 0
@@ -233,8 +259,8 @@ func _spawnear_auto(ola: WaveOla, ola_idx: int) -> int:
 		add_child(e)
 		e.global_position = _posicion_spawn(i, ola, total)
 		_conectar_died(e, ola_idx)
-		e.activar()
 		_spawned.append(e)
+		_activar_en(e, float(k0 + i) * intervalo_spawn, ola_idx)
 	return total
 
 
@@ -303,9 +329,10 @@ func _completar() -> void:
 	var audio := get_node_or_null("/root/AudioManager")
 	if audio != null:
 		audio.play_sfx(sonido_despejada, volumen_despejada_db)
-	var hud := get_tree().get_first_node_in_group("hud")
-	if hud != null and not texto_despejada.is_empty():
-		hud.mostrar_aviso(texto_despejada)
+	var jugador := get_tree().get_first_node_in_group("player") as Node2D
+	if jugador != null:   # aviso visual y breve: la luz del espíritu se expande desde el jugador
+		Burst.onda(self, jugador.global_position + Vector2(0, -50), color_despejada, 520.0, 1.0, 9.0)
+		Burst.emitir(self, jugador.global_position + Vector2(0, -50), color_despejada, 24, 1.6)
 	if not lineas_post_combate.is_empty():
 		get_node("/root/Dialogo").mostrar(Array(lineas_post_combate), hablante_post_combate)
 	completado.emit()

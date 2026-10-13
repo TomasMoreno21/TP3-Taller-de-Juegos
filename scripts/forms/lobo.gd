@@ -31,6 +31,7 @@ func _init() -> void:
 	flight_lift = 8.0
 	camera_lookahead_mult = 1.1
 	lean_angulo = 4.5
+	salto_rot_grados = 7.0   # inclinación leve al subir/caer
 	hit_zoom = 1.025
 	accel = 5200.0
 	friction = 5200.0

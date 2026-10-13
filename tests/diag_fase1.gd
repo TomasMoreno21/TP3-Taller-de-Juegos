@@ -97,6 +97,7 @@ func _initialize() -> void:
 	enc.global_position = base + Vector2(0, -400)
 	await process_frame
 	enc.arena_center = base
+	enc.espera_inicial = 0.0
 	enc.empezar()
 	await create_timer(0.3).timeout
 	var tipos := {}

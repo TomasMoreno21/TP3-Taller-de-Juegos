@@ -1,14 +1,32 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" uid="uid://dthp36xrhpex8" path="res://scripts/projectile.gd" id="1_proj"]
+[ext_resource type="Texture2D" path="res://resources/luz_radial.tres" id="2_luz"]
+
+[sub_resource type="CanvasItemMaterial" id="Mat_halo_p"]
+blend_mode = 1
+light_mode = 1
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hitbox"]
-radius = 11.0
+radius = 16.0
 
 [node name="Projectile" type="Area2D"]
 collision_layer = 0
 collision_mask = 3
 script = ExtResource("1_proj")
+
+[node name="Halo" type="Sprite2D" parent="."]
+modulate = Color(0.72, 0.52, 1, 0.55)
+material = SubResource("Mat_halo_p")
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("2_luz")
+texture_filter = 2
+
+[node name="Luz" type="PointLight2D" parent="."]
+color = Color(0.72, 0.52, 1, 1)
+energy = 0.7
+texture = ExtResource("2_luz")
+texture_scale = 0.6
 
 [node name="Visual" type="Polygon2D" parent="."]
 color = Color(0.72, 0.52, 1.0, 1)
@@ -25,8 +43,8 @@ spread = 12.0
 gravity = Vector2(0, 0)
 initial_velocity_min = 22.0
 initial_velocity_max = 42.0
-scale_amount_min = 1.8
-scale_amount_max = 2.4
+scale_amount_min = 2.4
+scale_amount_max = 3.4
 color = Color(0.72, 0.52, 1.0, 0.65)
 
 [node name="Hitbox" type="CollisionShape2D" parent="."]

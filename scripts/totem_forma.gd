@@ -22,6 +22,7 @@ var gastado := false             ## ya desbloqueado: brillo en calma
 var _t := 0.0
 var _flare := 0.0
 var _brillo: Node2D
+var _visible: VisibleOnScreenNotifier2D
 
 
 func _ready() -> void:
@@ -33,6 +34,10 @@ func _ready() -> void:
 	add_child(_brillo)
 	_brillo.draw.connect(_dibujar_brillo)
 	_t = randf() * 10.0
+	# Fuera de pantalla no hace falta redibujarlo (cientos de comandos por frame): el último dibujo queda en el canvas.
+	_visible = VisibleOnScreenNotifier2D.new()
+	_visible.rect = Rect2(-420, -620, 840, 780)   # el tótem (~300 de alto, 150 de ancho) + el haz y las motas + holgura para no ver el "salto"
+	add_child(_visible)
 
 
 func configurar(f: int, color_acento: Color, orbe_ref: Node2D, ya_dado: bool) -> void:
@@ -54,6 +59,8 @@ func despertar() -> void:
 func _process(delta: float) -> void:
 	_t += delta
 	if DisplayServer.get_name() == "headless":
+		return
+	if _visible != null and not _visible.is_on_screen():
 		return
 	queue_redraw()
 	if _brillo != null:

@@ -6,6 +6,7 @@ var fallos := 0
 func _init() -> void:
 	await process_frame
 	var dlg: Node = root.get_node("Dialogo")
+	dlg.seg_entre_charlas = 0.0   # el respiro entre charlas se prueba aparte, al final
 	var suelo := StaticBody2D.new()
 	var col := CollisionShape2D.new()
 	var rect := RectangleShape2D.new()
@@ -86,6 +87,23 @@ func _init() -> void:
 	await create_timer(1.0).timeout
 	_check(dlg.texto_actual() == "Charla con pelea cerca.", "al calmarse, el Amuleto habla")
 	await create_timer(4.0).timeout
+
+	# --- respiro entre charlas: la segunda no se pega a la primera
+	await create_timer(1.0).timeout
+	dlg.seg_entre_charlas = 6.0
+	dlg.mostrar(["Primera."])
+	await create_timer(3.2).timeout   # termina de leerse (y de salir)
+	dlg.mostrar(["Segunda."])
+	await create_timer(0.5).timeout
+	_check(dlg.texto_actual() != "Segunda." and dlg.hay_narrativa(), "una charla recién terminada hace esperar a la siguiente")
+	await create_timer(7.5).timeout
+	_check(dlg.texto_actual() == "Segunda." or not dlg.hay_narrativa(), "la charla en espera sale pasado el respiro")
+	dlg.seg_charla_vence = 1.0
+	dlg.seg_entre_charlas = 100.0
+	dlg.mostrar(["Tercera."])
+	dlg.mostrar(["Cuarta."])
+	await create_timer(2.5).timeout
+	_check(not dlg.hay_narrativa() or dlg.texto_actual() == "", "una charla vieja que esperó demasiado se descarta")
 
 	print("DIAG_GLOBOS: FALLOS = ", fallos)
 	quit(fallos)

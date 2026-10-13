@@ -19,7 +19,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Humano... soy el Amuleto, guardián del bosque.",
+			"Humano, soy el Amuleto del bosque.",
 			"Una secta quiere su poder.",
 			"Sus cultistas atrajeron a tu hijo.",
 			"Te presto mi fuerza. ¡Vamos!"
@@ -44,7 +44,31 @@
 		"una_vez": true,
 		"lineas": [
 			"Lobo: doble salto para este paso.",
-			"Cambiá con {forma_swap}, transformate con {transform}."
+			"Cambiá de forma con {forma_swap}.",
+			"Transformate con {transform}."
+		]
+	},
+	"n1_bosque1": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": [
+			"[humano][susurro]¿Oís eso? Qué silencio...",
+			"Hasta los pájaros huyeron. Están cerca.",
+			"[humano][susurro]Tengo un mal presentimiento.",
+			"Lo sé. Sigamos juntos."
+		]
+	},
+	"n1_final": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": [
+			"Dejamos el bosque. Ahora, hacia su guarida.",
+			"[humano]¿Falta mucho?",
+			"Ya falta menos. Seguí conmigo."
 		]
 	},
 	"n1_zona2": {
@@ -54,7 +78,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Rompé las cajas: dan energía."
+			"Juntá las almas azules: dan energía."
 		]
 	},
 	"n1_zona3": {
@@ -86,57 +110,6 @@
 			"Mové la cámara con {camara}."
 		]
 	},
-	"n1_arquero": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"Esquivá o bloqueá sus flechas.",
-			"Atacá entre disparos."
-		]
-	},
-	"n1_lobo_uso": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"Cruzá el abismo con el Lobo."
-		]
-	},
-	"n1_fragil": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"Las tablas ceden: corré y saltá."
-		]
-	},
-	"p1_intro": {
-		"hablante": "Amuleto",
-		"modo": "Automatico",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"Las almas que liberes te curarán.",
-			"Te necesito vivo."
-		]
-	},
-	"p1_enredadera": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"Otra enredadera: trepá con {trepar}."
-		]
-	},
 	"p1_combate": {
 		"tipo": "tip",
 		"hablante": "Amuleto",
@@ -146,24 +119,6 @@
 		"lineas": [
 			"Tres cultistas: no te dejes encerrar.",
 			"Hay almas para recuperar energía."
-		]
-	},
-	"p1_combate2": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"Esquivá y golpeá en los huecos."
-		]
-	},
-	"p1_combate3": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"[grito]¡Último grupo, ya casi!"
 		]
 	},
 	"p1_plataformas": {
@@ -184,15 +139,6 @@
 		"una_vez": true,
 		"lineas": [
 			"Usá el Lobo para estos saltos."
-		]
-	},
-	"p1_santuario": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"Su guarida está cerca..."
 		]
 	},
 	"n2_intro": {
@@ -222,7 +168,6 @@
 		"una_vez": true,
 		"lineas": [
 			"Los murciélagos te reconocen.",
-			"Desbloqueaste al Murciélago.",
 			"Cambiá con {forma_swap}."
 		]
 	},
@@ -278,16 +223,6 @@
 			"Trepá por las lianas: hay premios arriba."
 		]
 	},
-	"n2_chaman": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"[alerta]Un chamán: su escudo es duro.",
-			"Solo los golpes pesados lo frenan."
-		]
-	},
 	"n2_abismo": {
 		"hablante": "Amuleto",
 		"modo": "Zona",
@@ -306,27 +241,6 @@
 		"lineas": [
 			"[susurro]Un respiro. Aprovechalo.",
 			"Recuperá fuerzas antes de seguir."
-		]
-	},
-	"n2_vacio": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"El piso se corta: usá las tablas.",
-			"Murciélago: planeá para ir más lejos."
-		]
-	},
-	"n2_guardia": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"[alerta]La guardia del santuario.",
-			"Usá todo lo que aprendiste."
 		]
 	},
 	"n2_final": {
@@ -370,7 +284,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Desbloqueaste al Oso: lento, pero imparable."
+			"Lento, pero imparable. Cambiá con {forma_swap}."
 		]
 	},
 	"n3_guardian": {
@@ -489,15 +403,6 @@
 		],
 		"pista": "Cubrite cuando te ataquen: {block}.",
 		"cierre": "Bien. Así lucha un guardián."
-	},
-	"n3_muro": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"[susurro]Esa piedra no cede... aún."
-		]
 	},
 	"n3_descenso": {
 		"tipo": "tip",
@@ -643,8 +548,8 @@
 		"retraso": 0.5,
 		"una_vez": true,
 		"lineas": [
-			"Tres sellos, tres formas.",
-			"Cristales, un muro alto y una losa."
+			"Dos sellos, dos formas.",
+			"Cristales y un muro alto."
 		]
 	},
 	"n3_sala_lobo": {
@@ -655,16 +560,6 @@
 		"una_vez": true,
 		"lineas": [
 			"Muro alto: el Lobo escala más."
-		]
-	},
-	"n3_sala_losa": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.5,
-		"una_vez": true,
-		"lineas": [
-			"Una losa. Ahora, el Oso."
 		]
 	},
 	"n3_madriguera": {
@@ -738,104 +633,14 @@
 			"Ya falta poco para el sello."
 		]
 	},
-	"n2_calma_a": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"[susurro]Pisá firme. Adelante hay un vigía.",
-			"Los pinchos de piedra no perdonan."
-		]
-	},
-	"n2_calma_b1": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"Las galerías bajan hacia el abismo.",
-			"Cuidá las tablas: ceden al pisarlas."
-		]
-	},
-	"n2_calma_c1": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"Este tramo es largo. Caminá sin apuro.",
-			"Cuando haya vacío, el vuelo es tu aliado."
-		]
-	},
-	"n2_calma_c2": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"Más allá, las tablas cruzan el abismo.",
-			"Si una cede, abrí las alas."
-		]
-	},
-	"n2_calma_d1": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"La cámara inferior está llena de cultistas.",
-			"[susurro]Respirá. Todavía no te vieron."
-		]
-	},
-	"n2_calma_d2": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"El pasaje se ensancha. Pronto, el campamento.",
-			"Recuperá aire antes del próximo combate."
-		]
-	},
 	"n2_calma_d3": {
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.4,
 		"una_vez": true,
 		"lineas": [
-			"Una barrera de luz bloquea el paso.",
-			"[susurro]Algo la sostiene. Buscalo."
-		]
-	},
-	"n2_calma_e1": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"Ya casi llegamos al santuario.",
-			"Siento el latido de la cueva más fuerte."
-		]
-	},
-	"n2_calma_e2": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"[susurro]Lo que buscamos está más allá.",
-			"Prepará todo lo que aprendiste."
-		]
-	},
-	"n2_calma_inicio": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"[susurro]Se oyen alas más adelante.",
-			"Sigamos con cuidado."
+			"El sonido es capaz de romper la barrera.",
+			"Intentalo."
 		]
 	},
 	"n2_derrumbe_fin": {
@@ -844,7 +649,7 @@
 		"retraso": 0.3,
 		"una_vez": true,
 		"lineas": [
-			"Uf... eso estuvo cerca.",
+			"[susurro]Eso estuvo cerca.",
 			"Las lianas bajan hacia lo más profundo."
 		]
 	}

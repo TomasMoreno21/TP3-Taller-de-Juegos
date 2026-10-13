@@ -1,5 +1,7 @@
 extends Area2D
 ## Puerta de salida colocable: al tocarla, el jugador pasa a la siguiente escena.
+
+signal alcanzada   ## el jugador llegó a la salida (los objetivos de lista del tipo "Llegá a…" se tachan con esto)
 ## `siguiente_escena` es editable desde el Inspector (ninguna ruta hardcodeada en el nivel).
 
 @export var siguiente_escena: String = ""
@@ -12,8 +14,11 @@ extends Area2D
 @export var velocidad_entrada := 0.4                   ## 0.35 = paso tranquilo
 @export var espera_maxima := 5.0                       ## seguro por si el jugador se traba
 @export var color_oscuridad := Color(0, 0, 0)          ## tinte de la oscuridad (distinto por zona)
-@export var zona_destino := ""                         ## nombre de la zona a la que se entra (se muestra al apagarse la pantalla)
-@export var tamano_texto_zona := 44
+@export var alto_oscuridad_arriba := 1400.0           ## cuánto sube la oscuridad desde la puerta (px)
+@export var alto_oscuridad_abajo := 700.0             ## cuánto baja (px)
+@export var ancho_oscuridad_solida := 3000.0          ## ancho del negro sólido tras el degradé (px)
+@export var difuminado_vertical := 350.0              ## px en que los bordes de arriba y abajo se desvanecen (así no se ve un cuadrado)
+@export var cubrir_pantalla := true                   ## al avanzar por el degradé, la oscuridad cubre TODA la pantalla (no solo el rectángulo)
 @export_group("Aspecto de umbral")
 @export var color_marco := Color(0.13, 0.11, 0.1)      ## piedra del arco
 @export var color_interior := Color(0.02, 0.02, 0.03)  ## oscuridad al otro lado
@@ -27,6 +32,8 @@ extends Area2D
 
 var _usada := false
 var _t := 0.0
+var _velo: ColorRect
+var _jugador: Node2D
 
 @onready var visual: Polygon2D = $Visual
 
@@ -43,6 +50,8 @@ func _ready() -> void:
 		var l := get_node_or_null("Luz") as PointLight2D
 		if l != null:
 			l.visible = false
+		if cubrir_pantalla and DisplayServer.get_name() != "headless":
+			_crear_velo()
 	elif visual != null:
 		visual.color = Color(color, 0.15)
 	if particulas and not modo_oscuridad and DisplayServer.get_name() != "headless":
@@ -60,6 +69,7 @@ func _on_body_entered(_body: Node2D) -> void:
 	if _usada or siguiente_escena.is_empty():
 		return
 	_usada = true
+	alcanzada.emit()
 	if modo_oscuridad:
 		_entrar_oscuridad(_body)
 		return
@@ -72,40 +82,39 @@ func _on_body_entered(_body: Node2D) -> void:
 func _entrar_oscuridad(jugador: Node) -> void:
 	jugador.set("cinematica_activa", true)
 	jugador.set("cinematica_dir", velocidad_entrada)
-	var etiqueta := _crear_texto_zona()
 	var x_fin := global_position.x + largo_oscuridad * 0.8
 	var t := 0.0
 	while t < espera_maxima and (jugador as Node2D).global_position.x < x_fin:
 		await get_tree().process_frame
 		t += get_process_delta_time()
-		if etiqueta != null:
-			var avance := clampf(((jugador as Node2D).global_position.x - global_position.x) / maxf(largo_oscuridad, 1.0), 0.0, 1.0)
-			etiqueta.modulate.a = clampf((avance - 0.3) / 0.5, 0.0, 1.0)
 	var audio := get_node_or_null("/root/AudioManager")
 	if audio != null:
 		audio.play_sfx(sonido_salida, volumen_salida_db)
 	TransicionPantalla.de(get_tree()).cambiar_escena(siguiente_escena)
 
 
-func _crear_texto_zona() -> Label:
-	if zona_destino.is_empty():
-		return null
+func _crear_velo() -> void:
 	var capa := CanvasLayer.new()
-	capa.layer = 90
+	capa.layer = 30   # sobre el mundo, debajo de cartelería e intro
 	add_child(capa)
-	var l := Label.new()
-	l.text = zona_destino
-	l.modulate.a = 0.0
-	l.add_theme_font_size_override("font_size", tamano_texto_zona)
-	l.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	capa.add_child(l)
-	return l
+	_velo = ColorRect.new()
+	_velo.color = Color(color_oscuridad, 0.0)
+	_velo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_velo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	capa.add_child(_velo)
 
 
 func _process(delta: float) -> void:
 	if modo_oscuridad:
+		if _velo != null:
+			if not is_instance_valid(_jugador):
+				_jugador = get_tree().get_first_node_in_group("player") as Node2D
+			if _jugador != null:
+				# Solo dentro del rectángulo de oscuridad (otros tramos del nivel pueden pasar por la misma x).
+				var d := _jugador.global_position - global_position
+				var dentro := d.y > -alto_oscuridad_arriba and d.y < alto_oscuridad_abajo and d.x < largo_oscuridad + ancho_oscuridad_solida
+				var k := clampf(d.x / (largo_oscuridad * 0.8), 0.0, 1.0) if dentro else 0.0
+				_velo.color.a = smoothstep(0.15, 1.0, k)
 		return
 	_t += delta
 	var k := 0.5 + 0.5 * sin(_t * 2.0)
@@ -173,9 +182,18 @@ func _crear_particulas() -> void:
 
 ## Degradé de transparente a negro hacia la derecha, y negro sólido después: el jugador se "apaga" al entrar.
 func _dibujar_oscuridad() -> void:
-	var arriba := 1400.0
-	var abajo := 700.0
+	var arriba := alto_oscuridad_arriba
+	var abajo := alto_oscuridad_abajo
 	var c0 := Color(color_oscuridad, 0.0)
 	var c1 := Color(color_oscuridad, 1.0)
 	draw_polygon(PackedVector2Array([Vector2(0, -arriba), Vector2(largo_oscuridad, -arriba), Vector2(largo_oscuridad, abajo), Vector2(0, abajo)]), PackedColorArray([c0, c1, c1, c0]))
-	draw_rect(Rect2(largo_oscuridad - 1.0, -arriba, 3000.0, arriba + abajo), c1)
+	draw_rect(Rect2(largo_oscuridad - 1.0, -arriba, ancho_oscuridad_solida, arriba + abajo), c1)
+	# Bordes de arriba y abajo difuminados: la oscuridad se funde con la cueva en vez de cortarse en recto.
+	var f := difuminado_vertical
+	if f > 0.0:
+		var xs := largo_oscuridad + ancho_oscuridad_solida
+		for lado in [-1.0, 1.0]:
+			var y0: float = -arriba if lado < 0.0 else abajo
+			var y1: float = y0 + lado * f
+			draw_polygon(PackedVector2Array([Vector2(0, y0), Vector2(largo_oscuridad, y0), Vector2(largo_oscuridad, y1), Vector2(0, y1)]), PackedColorArray([c0, c1, c0, c0]))
+			draw_polygon(PackedVector2Array([Vector2(largo_oscuridad - 1.0, y0), Vector2(xs, y0), Vector2(xs, y1), Vector2(largo_oscuridad - 1.0, y1)]), PackedColorArray([c1, c1, c0, c0]))

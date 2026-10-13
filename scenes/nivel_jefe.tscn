@@ -10,12 +10,10 @@
 [ext_resource type="PackedScene" uid="uid://dkyk8avpptlls" path="res://scenes/hud.tscn" id="8_hud"]
 [ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="9_pause"]
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="10_levelup"]
-[ext_resource type="PackedScene" path="res://scenes/console.tscn" id="11_cons"]
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="12_dialog"]
-[ext_resource type="PackedScene" uid="uid://cr2s0l8k2s5l4" path="res://scenes/rompible.tscn" id="13_romp"]
 [ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="14_pick"]
 [ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="ck_1"]
-[ext_resource type="Script" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
+[ext_resource type="Script" uid="uid://b2knw64qxpag6" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
 size = Vector2(4900, 200)
@@ -33,7 +31,7 @@ size = Vector2(3200, 520)
 script = ExtResource("6_niveljefe")
 
 [node name="Player" parent="." unique_id=1861947130 instance=ExtResource("1_player")]
-position = Vector2(3549, 734)
+position = Vector2(221, 772)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=985519331]
 limit_left = 0
@@ -101,15 +99,6 @@ position = Vector2(750, 940)
 [node name="PickupCalma2" parent="." unique_id=314348362 instance=ExtResource("14_pick")]
 position = Vector2(1050, 940)
 
-[node name="Rompible1" parent="." unique_id=1188803197 instance=ExtResource("13_romp")]
-position = Vector2(6400, 983)
-
-[node name="Rompible2" parent="." unique_id=757073103 instance=ExtResource("13_romp")]
-position = Vector2(7000, 983)
-
-[node name="Rompible3" parent="." unique_id=1500454370 instance=ExtResource("13_romp")]
-position = Vector2(7600, 983)
-
 [node name="Encounter" parent="." unique_id=1219823109 instance=ExtResource("5_enc")]
 position = Vector2(5200, 970)
 
@@ -135,12 +124,8 @@ visible = false
 [node name="LevelUp" parent="." unique_id=2040631456 instance=ExtResource("10_levelup")]
 visible = false
 
-[node name="Consola" parent="." unique_id=1846535058 instance=ExtResource("11_cons")]
-visible = false
+[node name="TituloNivel" type="CanvasLayer" parent="." unique_id=537983969]
+script = ExtResource("titulo_niv")
+titulo = "El Santuario"
 
 [editable path="Encounter"]
-
-[node name="TituloNivel" type="CanvasLayer" parent="."]
-script = ExtResource("titulo_niv")
-titulo = "NIVEL 4"
-subtitulo = "El Santuario"

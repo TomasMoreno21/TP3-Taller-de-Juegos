@@ -18,6 +18,26 @@ signal desbloqueada
 @export_range(0.05, 1.0) var slowmo_escala := 0.3
 @export var sonido_desbloqueo: AudioStream = preload("res://assets/audio/sfx/gen/nivel_subido.wav")
 @export var volumen_db := -4.0
+@export_group("Cinemática")
+@export var cinematica := false                 ## al tocar el tótem: control congelado, cámara cerca, el sello viaja al pecho del jugador y recién ahí se desbloquea
+@export var cine_zoom := 1.3                    ## acercamiento de cámara (multiplica el zoom actual)
+@export var cine_acercar := 0.8                 ## s que tarda la cámara en acercarse
+@export var cine_pausa_tras_acercar := 0.35     ## s de calma antes de que el tótem despierte
+@export var cine_viaje := 1.0                   ## s que tarda el sello en llegar al jugador
+@export var cine_pausa_final := 0.9             ## s de pausa tras desbloquear, antes de devolver el control
+@export var transformar_al_final := true         ## tras desbloquear, el jugador se transforma solo en la forma (se ve qué es)
+@export var titulo := ""                        ## nombre en grande (vacío = nombre de la forma)
+@export_multiline var descripcion := ""         ## qué hace la forma (vacío = texto por defecto de la forma)
+@export var cine_texto_duracion := 4.5          ## s que se lee la presentación
+@export var cine_tam_titulo := 88
+@export var cine_tam_descripcion := 38
+@export var cine_barras := 90.0                 ## alto (px) de las barras negras de cine (0 = sin barras)
+
+const TEXTOS := {
+	1: ["LOBO", "Pequeño y ágil: se cuela por pasajes estrechos y salta más alto."],
+	2: ["OSO", "Su peso activa las placas pesadas y rompe los muros de piedra."],
+	3: ["MURCIÉLAGO", "Planea y vuela. Sus ondas sónicas golpean desde lejos."],
+}
 
 var _dado := false
 var _t := 0.0
@@ -59,13 +79,17 @@ func _color_de_forma() -> Color:
 ## Baja un rayo hasta el piso y apoya ahí el tótem; el sello flota `altura_sello` sobre él.
 func _apoyar_en_suelo() -> void:
 	var suelo := 120.0
-	await get_tree().physics_frame
-	if not is_inside_tree():
-		return
-	var q := PhysicsRayQueryParameters2D.create(global_position + Vector2(0, -150), global_position + Vector2(0, 800), 1)
-	var hit := get_world_2d().direct_space_state.intersect_ray(q)
-	if not hit.is_empty():
-		suelo = (hit["position"] as Vector2).y - global_position.y
+	# La colisión del terreno (TileMapLayer) se registra en la física unos frames después de entrar al árbol:
+	# si el rayo sale demasiado pronto no encuentra el piso y el tótem queda flotando. Se reintenta.
+	for i in 30:
+		await get_tree().physics_frame
+		if not is_inside_tree():
+			return
+		var q := PhysicsRayQueryParameters2D.create(global_position + Vector2(0, -150), global_position + Vector2(0, 800), 1)
+		var hit := get_world_2d().direct_space_state.intersect_ray(q)
+		if not hit.is_empty():
+			suelo = (hit["position"] as Vector2).y - global_position.y
+			break
 	totem.position = Vector2(0, suelo)
 	orbe_offset = Vector2(0, suelo - altura_sello)
 
@@ -92,6 +116,9 @@ func _on_body_entered(body: Node2D) -> void:
 	_dado = true
 	if una_vez:
 		set_deferred("monitoring", false)
+	if cinematica and orbe != null and DisplayServer.get_name() != "headless":
+		_cinematica(body, prog as Node)
+		return
 	_efecto_desbloqueo()
 	if totem != null:
 		totem.despertar()
@@ -129,3 +156,161 @@ func _efecto_desbloqueo() -> void:
 	var tf := flash.create_tween().set_ignore_time_scale(true)
 	tf.tween_property(flash, "color:a", 0.0, 0.6)
 	tf.tween_callback(capa.queue_free)
+
+
+## Secuencia: congela al jugador, acerca la cámara al tótem, el tótem despierta, el sello viaja al pecho
+## del jugador, estalla y recién ahí se desbloquea la forma. Devuelve el control al final.
+func _cinematica(jugador: Node2D, prog: Node) -> void:
+	var cam := get_viewport().get_camera_2d()
+	var tree := get_tree()
+	jugador.set("cinematica_activa", true)
+	jugador.set("cinematica_dir", 0.0)
+	jugador.velocity = Vector2.ZERO
+	# Sin interfaz ni consejos del Amuleto mientras dura: la presentación es lo único en pantalla.
+	var hud := tree.get_first_node_in_group("hud") as CanvasLayer
+	var hud_visible := hud != null and hud.visible
+	if hud != null:
+		hud.visible = false
+	var dlg := get_node_or_null("/root/Dialogo") as CanvasLayer
+	var dlg_visible := dlg != null and dlg.visible
+	if dlg != null:
+		dlg.visible = false
+	var tips_antes = jugador.get("tips_ayuda")
+	jugador.set("tips_ayuda", false)
+	var capa := CanvasLayer.new()
+	capa.layer = 95
+	var barras: Array[ColorRect] = []
+	if cine_barras > 0.0:
+		for arriba in [true, false]:
+			var b := ColorRect.new()
+			b.color = Color.BLACK
+			b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			b.set_anchors_preset(Control.PRESET_TOP_WIDE if arriba else Control.PRESET_BOTTOM_WIDE)
+			b.custom_minimum_size.y = 0.0
+			if not arriba:
+				b.grow_vertical = Control.GROW_DIRECTION_BEGIN   # crece hacia arriba desde el borde inferior
+			capa.add_child(b)
+			barras.append(b)
+			var tb := b.create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+			tb.tween_property(b, "custom_minimum_size:y", cine_barras, cine_acercar)
+	tree.root.add_child(capa)
+	var con_cam := cam != null and cam.has_method("modo_cine")
+	if con_cam:
+		cam.call("modo_cine")
+		var medio := (global_position + orbe.global_position) * 0.5 + Vector2(0, 40)
+		var tc := cam.create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tc.tween_property(cam, "global_position", medio, cine_acercar)
+		tc.tween_property(cam, "zoom", cam.zoom * cine_zoom, cine_acercar)
+	await tree.create_timer(cine_acercar + cine_pausa_tras_acercar).timeout
+	if not is_inside_tree():
+		return
+	# El tótem despierta y el sello se carga antes de partir.
+	if totem != null:
+		totem.despertar()
+	if cam != null and cam.has_method("shake"):
+		cam.call("shake", 8.0, 0.3)
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null:
+		audio.play_sfx(sonido_desbloqueo, volumen_db)
+	var carga := orbe.create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	carga.tween_property(orbe, "scale", orbe.scale * 1.35, 0.4)
+	await carga.finished
+	if not is_inside_tree():
+		return
+	# Viaje al pecho del jugador, dejando chispas.
+	var destino := jugador.global_position + Vector2(0, 70)
+	var origen := orbe.global_position
+	var viaje := orbe.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	viaje.tween_method(func(k: float) -> void:
+		var pos := origen.lerp(destino, k) + Vector2(0, -sin(k * PI) * 90.0)
+		orbe.global_position = pos
+		if randf() < 0.5:
+			Burst.emitir(self, pos, _color, 3, 0.6), 0.0, 1.0, cine_viaje)
+	await viaje.finished
+	if not is_inside_tree():
+		return
+	# Llegada: estallido, onda y desbloqueo.
+	_efecto_desbloqueo()
+	OndaTransformacion.lanzar(JuiceCapa.obtener(tree), destino, _color.lightened(0.25), 260.0, 24, 0.45)
+	if jugador.has_method("squash_y"):
+		jugador.squash_y(-0.18)
+	prog.desbloquear_forma(forma)
+	desbloqueada.emit()
+	if transformar_al_final and is_instance_valid(jugador) and jugador.has_method("_transformar"):
+		await tree.create_timer(0.5).timeout
+		jugador.call("_transformar", forma, true)
+	await tree.create_timer(cine_pausa_final).timeout
+	await _presentacion(capa, tree)
+	if is_instance_valid(jugador):
+		jugador.set("cinematica_activa", false)
+		jugador.set("tips_ayuda", tips_antes)
+	if hud != null and is_instance_valid(hud):
+		hud.visible = hud_visible
+	if dlg != null:
+		dlg.visible = dlg_visible
+	if con_cam and is_instance_valid(cam):
+		cam.call("modo_normal")
+	for b in barras:
+		if is_instance_valid(b):
+			var tq := b.create_tween()
+			tq.tween_property(b, "custom_minimum_size:y", 0.0, 0.5)
+	await tree.create_timer(0.6).timeout
+	capa.queue_free()
+
+
+## Tarjeta de presentación: nombre grande, filete que se abre y la descripción debajo.
+func _presentacion(capa: CanvasLayer, tree: SceneTree) -> void:
+	var base: Array = TEXTOS.get(forma, ["", ""])
+	var t := titulo if titulo != "" else str(base[0])
+	var d := descripcion if descripcion != "" else str(base[1])
+	if t == "" and d == "":
+		return
+	var caja := Control.new()
+	caja.set_anchors_preset(Control.PRESET_FULL_RECT)
+	caja.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	capa.add_child(caja)
+	var y0 := cine_barras + 40.0
+	var etiquetas: Array[Label] = []
+	for par in [[t, cine_tam_titulo, y0], [d, cine_tam_descripcion, y0 + cine_tam_titulo + 40.0]]:
+		var l := Label.new()
+		l.text = par[0]
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.set_anchors_preset(Control.PRESET_TOP_WIDE)
+		l.offset_left = 360.0
+		l.offset_right = -360.0
+		l.offset_top = par[2]
+		l.add_theme_font_size_override("font_size", par[1])
+		l.add_theme_color_override("font_color", _color.lerp(Color.WHITE, 0.55) if par[1] == cine_tam_titulo else Color(1, 1, 1, 0.92))
+		l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+		l.add_theme_constant_override("outline_size", 10)
+		l.modulate.a = 0.0
+		caja.add_child(l)
+		etiquetas.append(l)
+	var filete := ColorRect.new()
+	filete.color = Color(_color.lerp(Color.WHITE, 0.3), 0.9)
+	filete.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	filete.offset_left = -260.0
+	filete.offset_right = 260.0
+	filete.offset_top = y0 + cine_tam_titulo + 22.0
+	filete.offset_bottom = filete.offset_top + 3.0
+	filete.pivot_offset = Vector2(260, 1)
+	filete.scale.x = 0.0
+	caja.add_child(filete)
+	var tw := caja.create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(etiquetas[0], "modulate:a", 1.0, 0.6)
+	tw.tween_property(filete, "scale:x", 1.0, 0.7).set_delay(0.2)
+	tw.tween_property(etiquetas[1], "modulate:a", 1.0, 0.7).set_delay(0.7)
+	await tree.create_timer(cine_texto_duracion).timeout
+	if not is_instance_valid(caja):
+		return
+	var tf := caja.create_tween()
+	tf.tween_property(caja, "modulate:a", 0.0, 0.5)
+	await tf.finished
+
+
+func _exit_tree() -> void:
+	# Si el nivel se descarga a mitad de la cinemática no deja al jugador congelado.
+	var j := get_tree().get_first_node_in_group("player") if is_inside_tree() else null
+	if j != null and j.get("cinematica_activa") == true and _dado:
+		j.set("cinematica_activa", false)

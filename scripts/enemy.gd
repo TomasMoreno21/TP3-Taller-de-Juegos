@@ -8,9 +8,13 @@ const MAX_FALL_SPEED := 950.0
 @export var tipo: String = "cultista"
 @export var enemy_data: Enemigo
 @export var ola_asignada: int = 0          # a qué ola pertenece (enemigo manual del Encounter)
+const TELEGRAFIA := preload("res://scripts/telegrafia_enemigo.gd")
+
 @export var spawn_telegrafiado: bool = false  # aparece con el círculo ritual antes de actuar
 @export var ritual_duracion: float = 0.7  # tiempo del círculo ritual antes de que el enemigo actúe
 @export var sonido_golpe: AudioStream
+@export var sonido_rebote: AudioStream = preload("res://assets/audio/sfx/gen/bloqueo.wav")   ## suena cuando un golpe cuerpo a cuerpo rebota contra un flotante
+@export var volumen_rebote_db := -4.0
 @export var sonido_muerte: AudioStream = preload("res://assets/audio/sfx/gen/enemigo_muerte.wav")
 @export var sonido_disparo: AudioStream = preload("res://assets/audio/sfx/gen/arquero_disparo.wav")
 @export var volumen_sfx_db := -10.0
@@ -24,10 +28,29 @@ const MAX_FALL_SPEED := 950.0
 @export var flinch_adelanto_px := 12.0        # px que se adelanta el cuerpo en el impacto
 @export var flinch_pop_escala := 1.12         # escala del "pop" al recuperar la pose
 @export var flinch_congela_anim := false      # true = congela la animación durante todo el stun (se ve trabado si seguís pegando)
+## Dónde está la mano (el destello de aviso de ataque) en cada frame de cada animación, por tipo de enemigo:
+## {tipo: {animación: [Vector2 por frame]}}, en píxeles de la textura (origen arriba a la izquierda). Sin dato → el
+## destello cae en un punto fijo delante del cuerpo.
+@export var manos := {
+	"cultista": {
+		"attack1": [Vector2(108, 300), Vector2(156, 281), Vector2(208, 251), Vector2(239, 196), Vector2(181, 186)],
+		"attack2": [Vector2(215, 171), Vector2(193, 171), Vector2(129, 251), Vector2(86, 261), Vector2(80, 266)],
+	},
+	"arquero": {
+		"attack1": [Vector2(50, 280)],
+		"attack2": [Vector2(50, 280)],
+	},
+}
 @export var frames_impacto := {"attack1": 3, "attack2": 2}   # frame de cada animación de ataque en el que cae el tajo (se sincroniza con el daño)
 @export var stun_anim := "idle"               # animación que sigue viva durante el stun ("" = la que corresponda al movimiento)
 @export var max_atacantes_melee := 2          # cuántos cuerpo a cuerpo pueden estar atacando a la vez (los demás esperan)
-@export var flash_aviso := Color(1.7, 1.7, 1.7)  # destello al iniciar un ataque (aviso de lectura)
+@export var flash_aviso := Color(1.25, 1.2, 1.2)  # leve brillo al iniciar un ataque (aviso de lectura)
+@export_group("Anticipación del ataque")
+@export var ant_retroceso := 9.0      # px que se echa atrás antes de pegar
+@export var ant_inclinacion := 0.12   # rad que se inclina hacia atrás
+@export var ant_achatar := 0.08       # cuánto se achata (0.08 = 8 %)
+@export var ant_temblor := 1.6        # px de temblor al final de la preparación
+@export_group("")
 @export var flash_impacto := 6.0               # brillo blanco quemado del impacto (1 = sin destello blanco)
 @export var pausa_impacto := 0.05              # s que queda "colgado" tras el golpe antes de salir despedido (0 = sin)
 @export var polvo_aterrizaje := true           # nube de polvo al caer de una altura
@@ -37,7 +60,7 @@ const MAX_FALL_SPEED := 950.0
 @export_group("Flotante")
 @export var flotante: bool = false             # flota sobre el suelo sostenido por un aura mística (sin gravedad)
 @export var alcance_flotante_mult := 1.2       # multiplica shoot_range del flotante (ve y dispara desde más lejos)
-@export var altura_flote := 360.0             # px que se eleva sobre el piso donde lo pusiste en el editor
+@export var altura_flote := 560.0             # px que se eleva sobre el piso donde lo pusiste en el editor
 @export var flote_amplitud := 14.0             # vaivén vertical (px)
 @export var flote_velocidad := 1.8             # velocidad del vaivén (rad/s)
 @export var solo_proyectil := true             # flotante: el cuerpo a cuerpo rebota; solo daña el proyectil
@@ -47,13 +70,22 @@ const MAX_FALL_SPEED := 950.0
 const FRAMES_POR_TIPO := {
 	"cultista": preload("res://resources/enemigo1_frames.tres"),
 	"arquero": preload("res://resources/enemigo2_frames.tres"),
-	"chaman": null,
 }
 
+@export var orbe_vida_altura := 70.0   ## px que sube el orbe de vida soltado al morir (más alto = más fácil de agarrar)
 var health: int = 40
 var _activo := true
 var _telegraph_timer := 0.0
-var _ritual: Polygon2D
+var _ritual: Node2D       # círculo de invocación (telegrafia_enemigo.gd)
+var _tele: Node2D         # aviso del ataque en curso (telegrafia_enemigo.gd)
+var _ant_a := 0.0         # pose de anticipación: 0 = normal, 1 = echado atrás y achatado
+var _ant_t := 0.0
+var _ant_dur := 0.0
+var _ant_activa := false
+var _ant_tween: Tween
+var _ant_base_x := 0.0
+var _en_flinch := false     # hay un flinch en curso: al terminar el stun se suelta el "pop"
+var _ant_base_escala := Vector2.ONE
 var _pies_h0 := 0.0
 var _attack_anim :=""
 var _attack_anim_timer := 0.0
@@ -114,10 +146,11 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.speed = 140.0
 			d.stop_distance = 30.0
 			d.attack_damage = 10
-			d.attack_range = 110.0
+			d.attack_range = 90.0
 			d.attack_cooldown = 0.9
 			d.windup_tiempo = 0.28
 			d.lunge_velocidad = 420.0
+			d.lunge_alcance = 75.0
 			d.color = Color(0.55, 0.38, 0.3)
 			d.collider_size = Vector2(127, 380)
 			d.visual_scale = Vector2.ONE
@@ -144,29 +177,6 @@ static func config_por_tipo(enemy_tipo: String) -> Enemigo:
 			d.windup_disparo = 0.42
 			d.poise_max = 3
 			d.sonico_dano_mult = 1.5
-		"chaman":
-			d.tipo_nombre = "Chamán"
-			d.max_health = 155
-			d.speed = 72.0
-			d.stop_distance = 40.0
-			d.attack_damage = 15
-			d.attack_cooldown = 1.6
-			d.projectile = true
-			d.shoot_range = 950.0
-			d.retrocede_dist = 190.0
-			d.proyectil_speed = 470.0
-			d.color = Color(0.4, 0.34, 0.24)
-			d.collider_size = Vector2(102, 330)
-			d.collider_pies_y = 65.4
-			d.offset_visual_x = 0.0
-			d.visual_scale = Vector2.ONE
-			d.knockback_resist = 0.6
-			d.stun_duracion = 0.35
-			d.windup_disparo = 0.5
-			d.poise_max = 4
-			d.sonico_dano_mult = 1.2
-			d.energia_al_morir = 20.0
-			d.armor_umbral = 18  # solo golpes pesados (18+) rompen su ataque; Lobo/Murciélago no pueden
 	return d
 
 
@@ -300,20 +310,132 @@ func _colision(on: bool) -> void:
 
 
 func _mostrar_circulo_ritual() -> void:
-	_ritual = Polygon2D.new()
-	if enemy_data != null:
-		_ritual.color = Color(enemy_data.color.r, enemy_data.color.g, enemy_data.color.b, 0.7)
-	else:
-		_ritual.color = Color(0.8, 0.4, 0.4, 0.7)
-	_ritual.polygon = _circulo_poligono(24)
+	var col := enemy_data.color if enemy_data != null else Color(0.8, 0.4, 0.4)
 	var pies_y := 0.0
 	if collide_shape != null and collide_shape.shape is RectangleShape2D:
 		pies_y = collide_shape.position.y + collide_shape.shape.size.y * 0.5
-	_ritual.position = Vector2(0, pies_y)
-	add_child(_ritual)
-	var tw := create_tween()
-	tw.tween_property(_ritual, "scale", Vector2(1.5, 1.5), 0.6)
-	tw.parallel().tween_property(_ritual, "modulate:a", 0.0, 0.6)
+	_ritual = TELEGRAFIA.ritual(self, pies_y, col, maxf(ritual_duracion, 0.05))
+
+
+## Cuerpo (centro del collider) y altura de la cabeza, para ubicar los avisos de ataque.
+func _geom_aviso() -> Array:
+	var centro := Vector2.ZERO
+	var cabeza := -80.0
+	if collide_shape != null and collide_shape.shape is RectangleShape2D:
+		centro = collide_shape.position
+		cabeza = collide_shape.position.y - collide_shape.shape.size.y * 0.5
+	return [centro, cabeza]
+
+
+## Aviso del ataque que empieza (sutil): el enemigo se echa atrás y se achata (anticipación) y un brillito
+## crece en su mano justo antes del golpe. Sin marcas en el piso.
+func _telegrafiar(duracion: float, disparo: bool) -> void:
+	_anticipacion_iniciar(duracion)
+	if is_instance_valid(_tele):
+		_tele.queue_free()
+	var g := _geom_aviso()
+	var centro: Vector2 = g[0]
+	var cabeza: float = g[1]
+	var arma := centro + Vector2(_dir * (24.0 if disparo else 30.0), -6.0)
+	var embiste := enemy_data != null and enemy_data.lunge_velocidad > 0.0 and not disparo
+	# El brillito viaja con el sprite (su pose de anticipación y su animación): se ancla en un punto de la mano
+	# expresado en el espacio local del sprite, no en el mundo.
+	var sp := _sprite_pose()
+	var mano_local := sp.to_local(global_position + arma) if sp != null else Vector2.ZERO
+	_tele = TELEGRAFIA.ataque(self, arma, cabeza, _dir, 0.0, duracion, embiste, sp, mano_local, _mano_mundo)
+
+
+## Posición en el mundo de la mano en el frame actual del sprite (ver `manos`); Vector2.INF si no hay dato
+## para esa animación/frame (el destello usa entonces su punto fijo de respaldo).
+func _mano_mundo() -> Vector2:
+	if animated == null or not animated.visible or animated.sprite_frames == null:
+		return Vector2.INF
+	var tabla: Dictionary = manos.get(tipo, {})
+	var puntos: Array = tabla.get(String(animated.animation), [])
+	if puntos.is_empty():
+		return Vector2.INF
+	var tex := animated.sprite_frames.get_frame_texture(animated.animation, animated.frame)
+	if tex == null:
+		return Vector2.INF
+	var px: Vector2 = puntos[clampi(animated.frame, 0, puntos.size() - 1)]
+	var origen := tex.get_size() * 0.5 if animated.centered else Vector2.ZERO
+	return animated.to_global(px - origen + animated.offset)
+
+
+## Pose de anticipación: durante el windup el sprite se echa atrás, se inclina y se achata; en el último
+## tramo tiembla y al soltar el golpe vuelve de golpe (con un rebote hacia adelante).
+func _anticipacion_iniciar(duracion: float) -> void:
+	if _ant_tween != null and _ant_tween.is_valid():
+		_ant_tween.kill()
+	var sp := _sprite_pose()
+	if sp != null and absf(_ant_a) < 0.001:   # captura la pose de reposo del sprite
+		_ant_base_x = sp.position.x
+		_ant_base_escala = sp.scale
+	_ant_dur = maxf(duracion, 0.05)
+	_ant_t = 0.0
+	_ant_activa = true
+
+
+func _sprite_pose() -> Node2D:
+	return animated if (animated != null and animated.visible) else poly
+
+
+func _anticipacion_actualizar(delta: float) -> void:
+	if _ant_activa:
+		_ant_t += delta
+		var u := clampf(_ant_t / (_ant_dur * 0.7), 0.0, 1.0)
+		_ant_a = u * u * (3.0 - 2.0 * u)
+		if _ant_t >= _ant_dur:
+			_ant_activa = false
+			_ant_tween = create_tween()
+			_ant_tween.tween_property(self, "_ant_a", -0.4, 0.06).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			_ant_tween.tween_property(self, "_ant_a", 0.0, 0.14).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var sp := _sprite_pose()
+	if sp == null:
+		return
+	if not _ant_activa and absf(_ant_a) < 0.001:
+		if sp.rotation != 0.0 or sp.scale != _ant_base_escala:
+			sp.rotation = 0.0
+			sp.scale = _ant_base_escala
+			sp.position.x = _ant_base_x
+		return
+	var temblor := 0.0
+	if _ant_activa and _ant_t > _ant_dur * 0.7:
+		temblor = sin(_ant_t * 90.0) * ant_temblor
+	# En el espacio local del Visual, +x es "hacia atrás" (el Visual se espeja según hacia dónde mira).
+	sp.position.x = _ant_base_x + ant_retroceso * _ant_a + temblor
+	sp.rotation = ant_inclinacion * _ant_a
+	sp.scale = _ant_base_escala * Vector2(1.0 + ant_achatar * 0.6 * _ant_a, 1.0 - ant_achatar * _ant_a)
+
+
+## Inclinación de rechazo mientras dura el stun: se acerca suave al ángulo del golpe y, al terminar, vuelve a la vertical.
+func _pose_stun_actualizar(delta: float) -> void:
+	if visual == null or health <= 0:
+		return
+	var objetivo := 0.0
+	var vel := 16.0
+	if _stun_timer > 0.0:
+		objetivo = deg_to_rad(-stun_tilt_angulo) * signf(_stun_dir)
+		vel = 34.0
+	elif absf(visual.rotation) < 0.002:
+		if visual.rotation != 0.0 and _en_flinch:
+			visual.rotation = 0.0
+		return
+	visual.rotation = lerpf(visual.rotation, objetivo, 1.0 - exp(-vel * delta))
+
+
+func _anticipacion_cancelar() -> void:
+	_ant_activa = false
+	if _ant_tween != null and _ant_tween.is_valid():
+		_ant_tween.kill()
+	_ant_a = 0.0
+
+
+func _cancelar_aviso() -> void:
+	_anticipacion_cancelar()
+	if is_instance_valid(_tele) and _tele.has_method("cancelar"):
+		_tele.cancelar()
+	_tele = null
 
 
 func _circulo_poligono(puntos: int) -> PackedVector2Array:
@@ -325,6 +447,8 @@ func _circulo_poligono(puntos: int) -> PackedVector2Array:
 
 
 func _physics_process(delta: float) -> void:
+	_anticipacion_actualizar(delta)
+	_pose_stun_actualizar(delta)
 	if health <= 0:
 		return
 	# Guardia anti-NaN: una colisión degenerada con el jugador (bordes exactos)
@@ -337,6 +461,11 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 	_ultima_pos_valida = global_position
+	# Optimización: un enemigo en espera (encuentro sin disparar), apoyado y lejos de la cámara no hace nada visible.
+	if not _activo and _telegraph_timer <= 0.0 and is_on_floor():
+		var p := _obtener_player()
+		if p != null and global_position.distance_squared_to(p.global_position) > 9000000.0:
+			return
 	if global_position.y > limite_caida:
 		matar_por_caida()
 		return
@@ -357,8 +486,6 @@ func _physics_process(delta: float) -> void:
 			visual.visible = true
 			_activo = true
 			_colision(true)
-			if is_instance_valid(_ritual):
-				_ritual.queue_free()
 		return
 	if not _activo:
 		velocity.x = 0.0
@@ -372,6 +499,9 @@ func _physics_process(delta: float) -> void:
 			_anim_congelada = false
 			if animated != null and not animated.is_playing():
 				animated.play()
+			if _en_flinch:
+				_en_flinch = false
+				_reanudar_flinch(_base_scale)
 		if _pausa_impacto_t > 0.0:
 			# Colgado un instante en el impacto (asimetría: pesa más el golpe que el jugador),
 			# y recién después sale despedido.
@@ -417,6 +547,7 @@ func _physics_process(delta: float) -> void:
 				_windup_disparo = enemy_data.windup_disparo
 				_reproducir_animacion_ataque("attack2")
 				_flash_aviso()
+				_telegrafiar(enemy_data.windup_disparo, true)
 			else:
 				_disparar(player)
 				_attack_timer = enemy_data.attack_cooldown
@@ -465,6 +596,7 @@ func _physics_process(delta: float) -> void:
 				_flash_aviso()
 				_melee_anim = "attack1" if randf() < 0.5 else "attack2"
 				_reproducir_animacion_ataque(_melee_anim, enemy_data.windup_tiempo)
+				_telegrafiar(enemy_data.windup_tiempo, false)
 				_attack_anim_timer = enemy_data.windup_tiempo + enemy_data.lunge_tiempo + 0.12
 			else:
 				_ataque_melee(player)
@@ -529,6 +661,7 @@ func _update_animacion() -> void:
 	var nombre := "idle"
 	if _stun_timer > 0.0 and stun_anim != "" and animated.sprite_frames != null and animated.sprite_frames.has_animation(stun_anim):
 		# En hitstun la animación sigue VIVA (idle) en vez de quedarse en el frame de ataque.
+		animated.speed_scale = 1.0   # puede venir comprimida por el windup del ataque interrumpido
 		if animated.animation != stun_anim or not animated.is_playing():
 			animated.play(stun_anim)
 		return
@@ -700,6 +833,12 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 		_stun_timer = maxf(_stun_timer, dur_stun)
 		_windup_timer = 0.0
 		_lunge_timer = 0.0
+		if not _usar_proyectil():
+			_attack_anim_timer = 0.0   # un golpe corta el ataque: sin esto, al salir del stun retoma un tajo viejo (se ve trabado)
+			_ataque_frame_impacto = -1
+			if animated != null:
+				animated.speed_scale = 1.0
+			_cancelar_aviso()   # el arquero sigue su disparo aunque lo golpeen: su aviso también
 		if knockback > 0.0:
 			var resist: float = enemy_data.knockback_resist if enemy_data != null else 1.0
 			velocity.x = dir * knockback * (1.0 - resist)
@@ -719,15 +858,40 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 
 ## El aura repele el cuerpo a cuerpo: destello violeta y chispas, sin daño.
 func _rebotar_golpe() -> void:
+	# Aviso claro de que el golpe cuerpo a cuerpo no le hace nada: sonido metálico, anillo de escudo,
+	# chispas, destello y un rechazo del jugador.
+	var audio_r := get_node_or_null("/root/AudioManager")
+	if audio_r != null:
+		audio_r.play_sfx(sonido_rebote, volumen_rebote_db, 0.06)
+	var jugador := get_tree().get_first_node_in_group("player")
+	if jugador != null and jugador.has_method("rebote_golpe"):
+		jugador.rebote_golpe(1 if global_position.x >= (jugador as Node2D).global_position.x else -1)
 	if DisplayServer.get_name() == "headless":
 		return
-	Burst.emitir(self, global_position, Color(0.7, 0.55, 1.0), 8, 0.8)
+	var centro := global_position + (collide_shape.position if collide_shape != null else Vector2.ZERO)
+	Burst.emitir(self, centro, Color(0.8, 0.7, 1.0), 14, 1.1)
+	var aro := Line2D.new()
+	var pts := PackedVector2Array()
+	for i in 25:
+		var a := TAU * float(i) / 24.0
+		pts.append(Vector2(cos(a), sin(a)) * 90.0)
+	aro.points = pts
+	aro.width = 6.0
+	aro.default_color = Color(0.8, 0.72, 1.0, 0.95)
+	aro.position = centro
+	aro.scale = Vector2(0.5, 0.5)
+	aro.z_index = 5
+	JuiceCapa.obtener(get_tree()).add_child(aro)
+	var tw_a := aro.create_tween().set_parallel(true)
+	tw_a.tween_property(aro, "scale", Vector2(1.5, 1.5), 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw_a.tween_property(aro, "modulate:a", 0.0, 0.25)
+	tw_a.chain().tween_callback(aro.queue_free)
 	if visual != null:
 		if _tint_tween != null and _tint_tween.is_valid():
 			_tint_tween.kill()
-		visual.modulate = Color(0.75, 0.6, 1.6)
+		visual.modulate = Color(0.85, 0.7, 2.0)
 		_tint_tween = create_tween()
-		_tint_tween.tween_property(visual, "modulate", Color(1, 1, 1), 0.2)
+		_tint_tween.tween_property(visual, "modulate", Color(1, 1, 1), 0.3)
 
 
 ## Reacción de flinch (estilo caricaturesco): congelo la animación en el frame del
@@ -759,13 +923,9 @@ func _pose_stun(dur_stun: float, _fuerza: float = 1.0) -> void:
 	_reaction_tween.tween_property(visual, "position", base_pos + dir_flex, 0.03)
 	_reaction_tween.tween_property(visual, "position", base_pos - dir_flex * 0.5, 0.05).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	_reaction_tween.tween_property(visual, "position", base_pos, 0.05).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	# Inclinación hacia atrás (rechazo) que se sostiene todo el hitstun y vuelve suave.
-	var tilt := deg_to_rad(-stun_tilt_angulo) * signf(_stun_dir)
-	_stun_tween = create_tween()
-	_stun_tween.tween_property(visual, "rotation", tilt, 0.05).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_stun_tween.tween_interval(maxf(dur_stun, 0.05))
-	_stun_tween.tween_callback(_reanudar_flinch.bind(base_scale))
-	_stun_tween.tween_property(visual, "rotation", 0.0, stun_recuperar_tiempo).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# La inclinación hacia atrás (rechazo) la lleva `_pose_stun_actualizar` cada frame: en una tanda de golpes
+	# se sostiene y se afloja suave, en vez de reiniciarse (y temblar) con cada impacto.
+	_en_flinch = true
 
 
 ## Guarda la pose de reposo del visual. Si hay una reacción en curso NO la recapturo
@@ -804,6 +964,7 @@ func _reanudar_flinch(base_scale: Vector2) -> void:
 
 
 func _morir() -> void:
+	_cancelar_aviso()
 	if _reaction_tween != null and _reaction_tween.is_valid():
 		_reaction_tween.kill()
 	if _stun_tween != null and _stun_tween.is_valid():
@@ -846,7 +1007,7 @@ func _soltar_orbe_vida() -> void:
 	if randf() > 0.55:
 		return
 	var orbe: Area2D = preload("res://scenes/pickup_vida.tscn").instantiate()
-	orbe.global_position = global_position
+	orbe.global_position = global_position + Vector2(0, -orbe_vida_altura)
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	destino.add_child(orbe)
 

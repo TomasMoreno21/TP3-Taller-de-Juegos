@@ -15,7 +15,6 @@ signal activado
 @export var luz_destello := 3.0       ## pico al activarse
 @export var halo_apagado := 0.25      ## opacidad del halo (brillo visible en el aire) apagado
 @export var halo_encendido := 0.6
-@export var texto_aviso := "Punto de control"   ## aviso en el HUD al activarse (vacío = sin aviso)
 @export var sonido_activar: AudioStream = preload("res://assets/audio/sfx/gen/checkpoint.wav")
 @export var volumen_activar_db := -6.0
 
@@ -79,9 +78,9 @@ func _feedback_activar() -> void:
 	var audio := get_node_or_null("/root/AudioManager")
 	if audio != null:
 		audio.play_sfx(sonido_activar, volumen_activar_db)
-	var hud := get_tree().get_first_node_in_group("hud")
-	if hud != null and not texto_aviso.is_empty():
-		hud.mostrar_aviso(texto_aviso)
+	# Aviso visual y breve: onda de luz y chispas del color del cristal (sin texto).
+	Burst.onda(self, global_position, color_encendido, 190.0, 0.8)
+	Burst.emitir(self, global_position, color_encendido, 18, 1.2)
 	# Pop del cristal: crece y vuelve con rebote.
 	var tw := create_tween()
 	tw.tween_property(visual, "scale", Vector2.ONE * 1.45, 0.08)

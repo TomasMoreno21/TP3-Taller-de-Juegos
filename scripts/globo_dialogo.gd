@@ -18,6 +18,8 @@ var _label: Label
 var _nombre: Label
 var _t := 0.0
 var _margen := Vector2(22, 16)
+var _extra_nombre := 0.0
+var _bump := 0.0   ## golpecito del texto al aparecer cada letra (0..1, decae solo)
 
 
 func _ready() -> void:
@@ -55,6 +57,7 @@ func configurar(texto: String, hablante: String, tono_nuevo: Tono, tam_fuente: i
 	var alto_txt := medida.y + 4.0
 	_margen = Vector2(22, 16)
 	var extra_nombre := 20.0 if mostrar_nombre else 0.0
+	_extra_nombre = extra_nombre
 	var contenido := Vector2(ancho_txt, alto_txt + extra_nombre)
 	if tono == Tono.GRITO:   # el texto debe caber dentro de la elipse con puntas
 		_margen = (contenido / 0.66 + Vector2(24, 16) - contenido) * 0.5
@@ -70,12 +73,20 @@ func set_ratio(r: float) -> void:
 	_label.visible_ratio = r
 
 
+## Cada letra nueva da un empujoncito al texto (como un tipeo con rebote); el grito pega más fuerte.
+func golpe_letra() -> void:
+	_bump = 1.0
+
+
 func _process(delta: float) -> void:
 	if not visible:
 		return
 	_t += delta
+	_bump = maxf(_bump - delta * 10.0, 0.0)
+	var pos := _margen + Vector2(0, _extra_nombre) + Vector2(0, -_bump * (3.0 if tono == Tono.GRITO else 1.6))
 	if tono == Tono.GRITO:
-		_label.position = _margen + Vector2(sin(_t * 40.0), cos(_t * 37.0)) * 1.6 + Vector2(0, 20.0 if _nombre.visible else 0.0)
+		pos += Vector2(sin(_t * 40.0), cos(_t * 37.0)) * 1.6
+	_label.position = pos.round() if tono != Tono.GRITO else pos
 	queue_redraw()
 
 
@@ -99,38 +110,92 @@ func _cuerpo() -> PackedVector2Array:
 	return pts
 
 
+## Cola del globo: una punta afilada y curva (como en un cómic) que sale de la base del globo hacia `cola_a`.
+## Devuelve [lado izquierdo, lado derecho], de la base a la punta.
+func _lados_cola(base: Vector2, punta: Vector2, ancho_base: float) -> Array:
+	var dir := punta - base
+	var largo := dir.length()
+	var izq := PackedVector2Array()
+	var der := PackedVector2Array()
+	var n := dir / maxf(largo, 0.001)
+	var perp := Vector2(-n.y, n.x)
+	var curva := clampf(largo * (0.08 if tono == Tono.GRITO else 0.16), 3.0, 20.0) * (1.0 if dir.x >= 0.0 else -1.0)   # la panza se abre hacia afuera del globo
+	var control := base + dir * 0.5 + perp * curva
+	var pasos := 14
+	for k in pasos + 1:
+		var t := float(k) / float(pasos)
+		var c := base * (1.0 - t) * (1.0 - t) + control * 2.0 * (1.0 - t) * t + punta * t * t
+		var tang := (control - base) * 2.0 * (1.0 - t) + (punta - control) * 2.0 * t
+		var pt := Vector2(-tang.y, tang.x).normalized()
+		if tono == Tono.GRITO:   # la cola del grito es un relámpago: quiebra de lado a lado
+			c += pt * sin(t * TAU * 1.5) * 5.0 * (1.0 - t)
+		var w := ancho_base * 0.5 * pow(1.0 - t, 0.85)
+		izq.append(c + pt * w)
+		der.append(c - pt * w)
+	return [izq, der]
+
+
+## Rellena la cola por tramos (cuadriláteros): un polígono entero podía fallar al triangularse si la cola era muy corta.
+func _rellenar_cola(lados: Array, col: Color, desfase := Vector2.ZERO) -> void:
+	var li: PackedVector2Array = lados[0]
+	var ld: PackedVector2Array = lados[1]
+	for k in li.size() - 1:
+		draw_primitive(PackedVector2Array([li[k] + desfase, li[k + 1] + desfase, ld[k + 1] + desfase, ld[k] + desfase]),
+			PackedColorArray([col, col, col, col]), PackedVector2Array())
+
+
+func _contorno_linea(pts: PackedVector2Array, ancho: float) -> void:
+	if tono == Tono.SUSURRO:
+		_punteado(pts, TINTA, 3.0)
+	else:
+		draw_polyline(pts, TINTA, ancho, true)
+
+
 func _draw() -> void:
 	if _fuente == null:
 		return
 	var cuerpo := _cuerpo()
 	var ancho_borde := 5.0 if tono == Tono.ALERTA else 4.0
-	var relleno := PAPEL if tono != Tono.SUSURRO else Color(PAPEL, 0.88)
-	# sombra
+	var relleno := PAPEL if tono != Tono.SUSURRO else Color(0.91, 0.89, 0.85)   # opaco: con transparencia, la cola y el cuerpo se doblan y manchan
+	# --- cola: nace del borde de abajo (en el grito, del borde de la elipse) y apunta a quien habla
+	var ancho_base := clampf(size.x * 0.13, 36.0, 54.0) * (1.15 if tono == Tono.GRITO else 1.0)
+	var margen_cola := 28.0 + ancho_base * 0.5
+	var base_x := clampf(cola_a.x, margen_cola, maxf(size.x - margen_cola, margen_cola))
+	var base_y := size.y
+	if tono == Tono.GRITO:
+		var rx := size.x * 0.5
+		var ry := size.y * 0.5
+		var u := clampf((base_x - rx) / rx, -0.9, 0.9)
+		base_x = rx + u * rx
+		base_y = ry + ry * 0.9 * sqrt(1.0 - u * u)
+	var con_cola := cola_a.y > base_y + 6.0
+	var lados: Array = []
+	if con_cola:
+		lados = _lados_cola(Vector2(base_x, base_y), cola_a, ancho_base)
+	# sombra (cuerpo y cola)
 	var sombra := PackedVector2Array()
 	for p in cuerpo:
 		sombra.append(p + Vector2(5, 5))
 	draw_colored_polygon(sombra, Color(0, 0, 0, 0.8))
-	# cola (hacia abajo, hacia el Amuleto)
-	var base_x := clampf(cola_a.x, 40.0, maxf(size.x - 40.0, 40.0))
-	var base_y := size.y - 6.0
-	var cola := PackedVector2Array([Vector2(base_x - 16.0, base_y - 4.0), cola_a, Vector2(base_x + 16.0, base_y - 4.0)])
-	draw_colored_polygon(PackedVector2Array([cola[0] + Vector2(5, 5), cola_a + Vector2(5, 5), cola[2] + Vector2(5, 5)]), Color(0, 0, 0, 0.8))
+	if con_cola:
+		_rellenar_cola(lados, Color(0, 0, 0, 0.8), Vector2(5, 5))
+	# cuerpo y contorno
 	draw_colored_polygon(cuerpo, relleno)
-	draw_colored_polygon(cola, relleno)
 	var contorno := cuerpo.duplicate()
 	contorno.append(cuerpo[0])
-	if tono == Tono.SUSURRO:
-		_punteado(contorno, TINTA, 3.0)
-	else:
-		draw_polyline(contorno, TINTA, ancho_borde, true)
-	# el tapón de la cola tapa el borde del globo en su base
-	draw_line(Vector2(base_x - 14.0, base_y - 4.0), Vector2(base_x + 14.0, base_y - 4.0), relleno, ancho_borde + 1.0)
-	draw_line(cola[0], cola[1], TINTA, ancho_borde, true)
-	draw_line(cola[1], cola[2], TINTA, ancho_borde, true)
+	_contorno_linea(contorno, ancho_borde)
+	# cola por encima del borde del cuerpo: relleno + bordes; el tapón borra el borde del cuerpo bajo su base
+	if con_cola:
+		_rellenar_cola(lados, relleno)
+		var li: PackedVector2Array = lados[0]
+		var ld: PackedVector2Array = lados[1]
+		draw_line(li[0] + Vector2(2.5, -1.0), ld[0] - Vector2(2.5, 1.0), relleno, ancho_borde + 4.0)
+		_contorno_linea(li, ancho_borde)
+		_contorno_linea(ld, ancho_borde)
 	if tono == Tono.ALERTA:
-		var b := Vector2(size.x - 6.0, 4.0)
-		draw_circle(b, 19.0, TINTA)
-		draw_circle(b, 15.0, PAPEL)
+		var b := Vector2(size.x - 8.0, 6.0)
+		draw_circle(b, 20.0, TINTA)
+		draw_circle(b, 16.0, PAPEL)
 		draw_string(_fuente, b + Vector2(-5.0, 9.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, TINTA)
 
 

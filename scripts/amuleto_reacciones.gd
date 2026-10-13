@@ -5,7 +5,7 @@ extends Node
 ## ante el jefe ni con la ayuda en "Ligera"/"Ninguna". Las frases salen de dialogos.json
 ## (reaccion_puas, reaccion_racha, reaccion_quieto, reaccion_muertes) y no se repiten seguidas.
 
-@export var pausa_min := 20.0
+@export var pausa_min := 45.0
 @export var segundos_quieto := 25.0
 @export var racha_para_comentar := 6
 @export var muertes_para_comentar := 3
@@ -104,6 +104,8 @@ func _puede_hablar() -> bool:
 		return false
 	if get_tree().get_first_node_in_group("boss") != null:
 		return false   # ante el jefe habla la historia, no los comentarios
+	if is_instance_valid(_jugador) and _jugador.has_method("en_calma") and not _jugador.en_calma():
+		return false   # no habla mientras peleás, saltás o acabás de recibir daño
 	return _t - _ultimo_comentario >= pausa_min
 
 

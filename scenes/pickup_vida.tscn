@@ -1,6 +1,15 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/pickup_vida.gd" id="1_pickv"]
+[ext_resource type="Texture2D" path="res://resources/luz_radial.tres" id="2_luz"]
+
+[sub_resource type="CanvasItemMaterial" id="Mat_halo_v"]
+blend_mode = 1
+light_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_estela_v"]
+offsets = PackedFloat32Array(0, 0.3, 1)
+colors = PackedColorArray(1, 1, 1, 0, 1, 1, 1, 0.7, 1, 1, 1, 0)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_pickv"]
 radius = 26.0
@@ -12,6 +21,63 @@ script = ExtResource("1_pickv")
 [node name="Collision" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_pickv")
 
+[node name="Halo" type="Sprite2D" parent="."]
+modulate = Color(1, 0.3, 0.3, 0.6)
+material = SubResource("Mat_halo_v")
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("2_luz")
+texture_filter = 2
+
 [node name="Visual" type="Polygon2D" parent="."]
-color = Color(1, 0.32, 0.28, 1)
+color = Color(1, 0.4, 0.35, 1)
 polygon = PackedVector2Array(0, -20, 16, 0, 0, 20, -16, 0)
+
+[node name="Velo1" type="Polygon2D" parent="Visual"]
+show_behind_parent = true
+color = Color(1, 0.4, 0.35, 0.3)
+polygon = PackedVector2Array(0, -20, 16, 0, 0, 20, -16, 0)
+
+[node name="Velo2" type="Polygon2D" parent="Visual"]
+show_behind_parent = true
+color = Color(1, 0.4, 0.35, 0.3)
+polygon = PackedVector2Array(0, -20, 16, 0, 0, 20, -16, 0)
+
+[node name="Nucleo" type="Polygon2D" parent="Visual"]
+color = Color(1, 0.95, 0.9, 0.9)
+polygon = PackedVector2Array(0, -7, 5, -3.5, 5, 3.5, 0, 7, -5, 3.5, -5, -3.5)
+
+[node name="OjoIzq" type="Polygon2D" parent="Visual"]
+position = Vector2(-7, -10)
+scale = Vector2(1.3, 1.3)
+color = Color(0.45, 0.04, 0.1, 0.6)
+polygon = PackedVector2Array(-1.8, -3, 1.8, -3, 1.2, 3, -1.2, 3)
+
+[node name="OjoDer" type="Polygon2D" parent="Visual"]
+position = Vector2(7, -10)
+scale = Vector2(1.3, 1.3)
+color = Color(0.45, 0.04, 0.1, 0.6)
+polygon = PackedVector2Array(-1.8, -3, 1.8, -3, 1.2, 3, -1.2, 3)
+
+[node name="Estela" type="CPUParticles2D" parent="."]
+position = Vector2(0, 20)
+amount = 9
+lifetime = 1.3
+local_coords = false
+texture = ExtResource("2_luz")
+emission_shape = 1
+emission_sphere_radius = 10.0
+direction = Vector2(0, -1)
+spread = 30.0
+gravity = Vector2(0, -22)
+initial_velocity_min = 4.0
+initial_velocity_max = 16.0
+scale_amount_min = 0.04
+scale_amount_max = 0.08
+color = Color(1, 0.5, 0.42, 0.55)
+color_ramp = SubResource("Gradient_estela_v")
+
+[node name="Luz" type="PointLight2D" parent="."]
+color = Color(1, 0.36, 0.32, 1)
+energy = 0.9
+texture = ExtResource("2_luz")
+texture_scale = 0.9

@@ -4,7 +4,7 @@ const Jugador := preload("res://scripts/player.gd")
 
 const SALIDA_DUR := 2.2
 const GOLPES_MAX := 2
-const FILA_PASO := 44.0
+const FILA_PASO := 54.0
 
 var _player: Node2D
 var _idle_timer: Timer
@@ -23,6 +23,7 @@ var _combo_base_pos: Vector2
 @onready var hp_bar: ProgressBar = $Izquierda/Vida/HpBar
 @onready var hp_bar_delayed: ProgressBar = $Izquierda/Vida/HpBarDelayed
 @onready var hp_label: Label = $Izquierda/Vida/HpLabel
+@onready var fragmentos_barra: Control = $Izquierda/Fragmentos   ## barra de tinta que lee a prog_bar
 @onready var nivel_label: Label = $Derecha/Nivel
 @onready var prog_bar: ProgressBar = $Derecha/ProgBar
 @onready var prog_label: Label = $Derecha/ProgLabel
@@ -268,16 +269,10 @@ func _on_fragmentos(_total: int) -> void:
 	_t_reposo = 0.0
 
 
-## "Pop" del contador al sumar un fragmento: crece, destella en azul y vuelve.
+## "Pop" de la barra de fragmentos al sumar uno: crece, destella y vuelve.
 func _pop_fragmentos() -> void:
-	if _prog_tween != null and _prog_tween.is_valid():
-		_prog_tween.kill()
-	prog_label.pivot_offset = Vector2(prog_label.size.x, prog_label.size.y * 0.5)
-	prog_label.scale = Vector2.ONE * pop_fragmentos_escala
-	prog_label.self_modulate = pop_fragmentos_color
-	_prog_tween = create_tween().set_parallel(true)
-	_prog_tween.tween_property(prog_label, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_prog_tween.tween_property(prog_label, "self_modulate", Color.WHITE, 0.5)
+	if fragmentos_barra != null:
+		fragmentos_barra.pop(pop_fragmentos_escala)
 
 
 ## Aviso arriba al centro para otros sistemas (checkpoint, arenas...).
@@ -327,7 +322,6 @@ func _nombre_forma(form_index: int) -> String:
 
 
 func _on_form_changed(form_name: String) -> void:
-	_aviso("Forma: %s" % form_name)
 	dial.forma_actual = _player.current_form
 	dial.pulso_transformacion()
 	_t_reposo = 0.0
@@ -427,7 +421,7 @@ func _crear_filas() -> void:
 		var f := RichTextLabel.new()
 		f.bbcode_enabled = true
 		f.scroll_active = false
-		f.add_theme_font_size_override("normal_font_size", 34)
+		f.add_theme_font_size_override("normal_font_size", 42)
 		f.vertical_alignment = 1
 		f.horizontal_alignment = 2
 		f.anchor_left = 1.0
@@ -436,7 +430,7 @@ func _crear_filas() -> void:
 		f.anchor_bottom = 1.0
 		f.offset_left = -560.0
 		f.offset_right = -160.0
-		f.offset_top = -80.0 - i * FILA_PASO
+		f.offset_top = -92.0 - i * FILA_PASO
 		f.offset_bottom = -32.0 - i * FILA_PASO
 		f.modulate.a = 0.0
 		f.visible = false

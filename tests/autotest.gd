@@ -1,7 +1,6 @@
 extends SceneTree
 
 var _failures := 0
-var _console: Node
 var _player: Node2D
 var _scene: Node
 
@@ -11,8 +10,6 @@ func _init() -> void:
 	_quitar_dialogos_automaticos(_scene)
 	root.add_child(_scene)
 	_scene.get_node("LevelUp").set("pausar_al_abrir", false)  # no congelar el árbol durante los tests
-	_console = load("res://scenes/console.tscn").instantiate()
-	_scene.add_child(_console)
 	await process_frame
 	await process_frame
 
@@ -43,15 +40,15 @@ func _init() -> void:
 	_player.take_damage(30)
 	await process_frame
 	var hp_antes: int = _player.health
-	_console._ejecutar(PackedStringArray(["form", "lobo"]))
+	_player._transformar(1, true)
 	await process_frame
 	_check(_player.current_form == 1, "Consola 'form lobo' -> 1")
 	_check(_player.health == hp_antes, "Vida compartida: transformar no resetea la vida")
-	_console._ejecutar(PackedStringArray(["form", "oso"]))
+	_player._transformar(2, true)
 	await process_frame
 	_check(_player.current_form == 2, "Consola 'form oso' -> 2")
 	_check(_player.health == hp_antes, "Vida compartida: Oso hereda la vida del Lobo")
-	_console._ejecutar(PackedStringArray(["form", "murcielago"]))
+	_player._transformar(3, true)
 	await process_frame
 	_check(_player.current_form == 3, "Consola 'form murcielago' -> 3")
 
@@ -66,19 +63,28 @@ func _init() -> void:
 	_progresion().add_fragmentos(8)
 	_check(int(_progresion().nivel) == 2, "8 fragmentos suben a nivel 2")
 	_check(_progresion().forma_desbloqueada(1) == true, "Nivel 2: Lobo desbloqueado")
-	_progresion().add_fragmentos(17)
-	_check(int(_progresion().nivel) == 3, "25 fragmentos suben a nivel 3")
-	_progresion().add_fragmentos(25)
-	_check(int(_progresion().nivel) == 4, "50 fragmentos suben a nivel 4")
-	_progresion().add_fragmentos(24)
-	_check(int(_progresion().nivel) == 5 and _progresion().es_nivel_maximo(), "74 fragmentos suben a nivel 5 (máximo)")
+	_progresion().add_fragmentos(20)
+	_check(int(_progresion().nivel) == 3, "28 fragmentos suben a nivel 3")
+	_progresion().add_fragmentos(10)
+	_check(int(_progresion().nivel) == 4, "38 fragmentos suben a nivel 4")
+	_progresion().add_fragmentos(26)
+	_check(int(_progresion().nivel) == 5 and _progresion().es_nivel_maximo(), "64 fragmentos suben a nivel 5 (máximo)")
 	_progresion().add_fragmentos(30)
 	_check(int(_progresion().nivel) == 5, "más fragmentos no pasan del nivel máximo")
 	_check(_progresion().forma_desbloqueada(3) == true, "Nivel 4: Murciélago desbloqueado")
+	# Subida garantizada (orbe especial): completa los fragmentos que faltan para el siguiente nivel.
+	var fr_ant: int = int(_progresion().fragmentos)
+	var niv_ant: int = int(_progresion().nivel)
+	_progresion().fragmentos = 20
+	_progresion().nivel = 2
+	_progresion().forzar_subida()
+	_check(int(_progresion().nivel) == 3 and int(_progresion().fragmentos) == 28, "forzar_subida: 20 fragmentos -> nivel 3 con 28")
+	_progresion().fragmentos = fr_ant
+	_progresion().nivel = niv_ant
 
 	# --- Melee: el humano daña al dummy ---
 	_progresion().set_nivel(4)
-	_console._ejecutar(PackedStringArray(["form", "humano"]))
+	_player._transformar(0, true)
 	await process_frame
 	var dummy := _spawn_dummy(Vector2(60, 0))
 	_player.facing = 1
@@ -93,7 +99,7 @@ func _init() -> void:
 	_check(dummy.health < hp_dummy, "Melee humano daña al dummy (%d -> %d)" % [hp_dummy, dummy.health])
 	_limpiar_dummies()
 
-	# --- Combo por secuencia J→K = Remate (42) ---
+	# --- Combo por secuencia J→K = Remate (40) ---
 	_progresion().elegir_mejora(0)
 	_check(_progresion().combos_desbloqueados_forma(0) == 1, "elegir_mejora(0) desbloquea el combo del humano")
 	var e_combo := _spawn_dummy(Vector2(40, 0))
@@ -117,7 +123,7 @@ func _init() -> void:
 		if e_combo.health < hp_tras_j:
 			break
 	var remate_dmg: int = hp_tras_j - e_combo.health
-	_check(remate_dmg == 52, "J→K ejecuta el Remate (52 dmg, fue %d)" % remate_dmg)
+	_check(remate_dmg == 40, "J→K ejecuta el Remate (40 dmg, fue %d)" % remate_dmg)
 	await _esperar_recuperacion("combo")
 	_limpiar_dummies()
 
@@ -125,14 +131,20 @@ func _init() -> void:
 	var hp_block: int = _player.health
 	Input.action_press("block")
 	await physics_frame
-	_player.take_damage(20)
+	_player.take_damage(20, 0.0, -_player.facing)   # golpe de frente
 	await physics_frame
-	_check(_player.health == hp_block, "Block: bloquea el daño")
+	_check(_player.health == hp_block, "Block: bloquea el daño de frente")
+	_player.set("_invuln_timer", 0.0)
+	_player.take_damage(20, 0.0, _player.facing)    # golpe por la espalda: la guardia no cubre
+	await physics_frame
+	_check(_player.health < hp_block, "Block: no cubre golpes por la espalda")
+	_player.health = hp_block
+	_player.set("_invuln_timer", 0.0)
 	Input.action_release("block")
 	await physics_frame
 
 	# --- Murciélago: special dispara proyectil sónico ---
-	_console._ejecutar(PackedStringArray(["form", "murcielago"]))
+	_player._transformar(3, true)
 	await process_frame
 	var proj_before := _count_projectiles()
 	Input.action_press("special")
@@ -153,19 +165,17 @@ func _init() -> void:
 	Input.action_release("jump")
 
 	# --- Enemigos: el melee daña y mueren; tipos cargan ---
-	_console._ejecutar(PackedStringArray(["form", "humano"]))
+	_player._transformar(0, true)
 	await _wait_frames(40)
 	_player.velocity = Vector2.ZERO
 	var enemy_script := preload("res://scripts/enemy.gd")
 	var cult: Enemigo = enemy_script.config_por_tipo("cultista")
 	var ark: Enemigo = enemy_script.config_por_tipo("arquero")
-	var cham: Enemigo = enemy_script.config_por_tipo("chaman")
-	_check(cult != null and ark != null and cham != null, "Enemigos: config de los 3 tipos")
+	_check(cult != null and ark != null, "Enemigos: config de los 2 tipos")
 	_check(ark.projectile == true, "Enemigos: arquero dispara proyectil")
-	_check(cham.max_health > cult.max_health, "Enemigos: chamán resistente tiene más vida que el cultista")
 
 	# --- Bloque 2: hitstop por peso del enemigo (2c) ---
-	for combo_peso in [["cultista", 1.0], ["arquero", 0.85], ["chaman", 1.4]]:
+	for combo_peso in [["cultista", 1.0], ["arquero", 0.85]]:
 		var en_c2: Node2D = preload("res://scenes/enemy.tscn").instantiate()
 		en_c2.tipo = combo_peso[0]
 		_scene.add_child(en_c2)
@@ -193,29 +203,6 @@ func _init() -> void:
 	_check(en.health < hp_en, "Enemigos: el melee del humano daña al sectario (%d -> %d)" % [hp_en, en.health])
 	_limpiar_enemigos()
 
-	# --- Armadura por umbral: un golpe ligero NO interrumpe al chamán en windup ---
-	var en_ch := preload("res://scenes/enemy.tscn").instantiate()
-	en_ch.tipo = "chaman"
-	_scene.add_child(en_ch)
-	en_ch.global_position = _player.global_position + Vector2(60, 0)
-	await _wait_frames(10)
-	_player.global_position = en_ch.global_position - Vector2(28, 0)
-	_player.facing = 1
-	_player.velocity = Vector2.ZERO
-	await physics_frame
-	en_ch.set("_windup_timer", 0.6)
-	var hp_cham_antes: int = en_ch.health
-	Input.action_press("attack")
-	await physics_frame
-	await physics_frame
-	await physics_frame
-	Input.action_release("attack")
-	await _wait_frames(3)
-	_check(en_ch.health < hp_cham_antes, "Armadura chamán: el golpe ligero igual hace daño (%d -> %d)" % [hp_cham_antes, en_ch.health])
-	_check(float(en_ch.get("_stun_timer")) == 0.0, "Armadura chamán: el golpe ligero NO lo interrumpe (stun=0)")
-	_check(float(en_ch.get("_windup_timer")) > 0.0, "Armadura chamán: conserva su telegrafo")
-	_limpiar_enemigos()
-
 	# --- Melee: el Lobo daña a un enemigo real (bug 27/08: attack_range=90 no alcanzaba
 	# el collider de 210px de ancho del propio Lobo, quedaba "whiffeando") ---
 	# Reposiciona a piso despejado: el collider ancho del Lobo (360px) puede quedar
@@ -224,7 +211,7 @@ func _init() -> void:
 	_player.global_position = Vector2(-350, 900)
 	_player.velocity = Vector2.ZERO
 	await _wait_frames(10)
-	_console._ejecutar(PackedStringArray(["form", "lobo"]))
+	_player._transformar(1, true)
 	await process_frame
 	var en_lobo := preload("res://scenes/enemy.tscn").instantiate()
 	en_lobo.tipo = "cultista"
@@ -242,7 +229,7 @@ func _init() -> void:
 	await _esperar_recuperacion("light")
 	_check(en_lobo.health < hp_en_lobo, "Lobo: el melee daña a un enemigo real (%d -> %d)" % [hp_en_lobo, en_lobo.health])
 	_limpiar_enemigos()
-	_console._ejecutar(PackedStringArray(["form", "humano"]))
+	_player._transformar(0, true)
 	await process_frame
 
 	# --- Enemigos: muerte recarga energía (Documento: golpes en combate) ---
@@ -286,27 +273,14 @@ func _init() -> void:
 	# --- Interact: el tronco solo lo rompe el Oso ---
 	await _funcion_tronco()
 
-	# --- Rompibles: 3 golpes (el fragmento lo da el alma al recogerla, ver pickup) ---
-	_console._ejecutar(PackedStringArray(["form", "humano"]))
+	# --- Vuelta al piso de prueba como Humano ---
+	_player._transformar(0, true)
 	await process_frame
 	# La ruptura del tronco deja al Oso desplazado por la física hasta sobre el
 	# pozo (x < -450): sin piso los golpes whiffean. Se vuelve al piso de prueba.
 	_player.global_position = Vector2(-350, 900)
 	_player.velocity = Vector2.ZERO
 	await _wait_frames(40)
-	var crate: Node2D = preload("res://scenes/rompible.tscn").instantiate()
-	_scene.add_child(crate)
-	crate.global_position = _player.global_position + Vector2(40, 0)
-	await _wait_frames(3)
-	_player.facing = 1
-	for i in range(3):
-		Input.action_press("attack")
-		await physics_frame
-		await physics_frame
-		Input.action_release("attack")
-		await _wait_frames(3)
-		await _esperar_recuperacion("light")
-	_check(not is_instance_valid(crate), "Rompible: se rompe al 3er golpe")
 
 	# --- Pickup: recarga la energía Y otorga un fragmento (sube nivel) ---
 	_player.energia = 20.0
@@ -319,35 +293,19 @@ func _init() -> void:
 	_check(_player.energia > 20.0, "Pickup: recarga la energía del espíritu")
 	_check(int(_progresion().fragmentos) > frag_antes, "Pickup: el alma otorga un fragmento al recogerla")
 
-	# --- Consola: god y mv ---
-	_console._ejecutar(PackedStringArray(["god"]))
-	_check(_player.god_mode == true, "Consola 'god' activa invencibilidad")
-	_console._ejecutar(PackedStringArray(["god"]))
-	_check(_player.god_mode == false, "Consola 'god' desactiva invencibilidad")
+	# --- God y vida completa ---
+	_player.heal_full()
+	_player.god_mode = true
 	_player.take_damage(50)
-	_console._ejecutar(PackedStringArray(["mv"]))
-	_check(_player.health == 100, "Consola 'mv' restaura la vida")
-
-	# --- Consola: dummy de entrenamiento ---
-	_console._ejecutar(PackedStringArray(["dummy"]))
-	await _wait_frames(3)
-	var dummys := get_nodes_in_group("dummy_entrenamiento")
-	_check(dummys.size() > 0, "Consola 'dummy' crea el muñeco de entrenamiento")
-	if dummys.size() > 0:
-		var maniqui: Node2D = dummys[0]
-		maniqui.registrar_golpe(10)
-		_check(maniqui.golpes == 1 and maniqui.dano_total == 10, "Dummy: registra golpe y daño")
-		maniqui.registrar_golpe(999)
-		_check(is_instance_valid(maniqui), "Dummy: invencible, no muere")
-		maniqui.queue_free()
-		await physics_frame
-
-	# --- Consola: toggle alterna la visibilidad (sin pausa en este diseño) ---
-	_console.toggle()
-	_check(_console.panel.visible == true, "Consola: toggle abre el panel")
+	_check(_player.health == 100, "God mode: no recibe daño")
+	_player.god_mode = false
+	_player.set("_invuln_timer", 0.0)
+	_player.take_damage(50)
+	_check(_player.health < 100, "Sin god mode: recibe daño")
+	_player.heal_full()
+	_check(_player.health == 100, "heal_full restaura la vida")
 
 	# --- LevelUp: subir nivel abre el menú y elegir desbloquea el combo (J+K) ---
-	_console.toggle()
 	_progresion().reset()
 	var lvl: CanvasLayer = _scene.get_node("LevelUp")
 	lvl.set("_pendientes", 0)  # descarta niveles en cola de tests previos (bloque 18/09)
@@ -394,7 +352,7 @@ func _init() -> void:
 	_check(_progresion().combos_desbloqueados_forma(0) == 1, "LevelUp: combo del humano desbloqueado tras elegir")
 
 	# --- LevelUp: la forma que ya tiene su combo no vuelve a aparecer ---
-	_progresion().add_fragmentos(17)   # 25 en total: nivel 3 (Humano, Lobo y Oso desbloqueados)
+	_progresion().add_fragmentos(20)   # 28 en total: nivel 3 (Humano, Lobo y Oso desbloqueados)
 	await process_frame
 	_check(lvl.get("panel").visible == true, "LevelUp nivel 3: abre el menú")
 	var op_lvl3: Array = lvl.get("_opciones")
@@ -408,7 +366,7 @@ func _init() -> void:
 
 	# --- LevelUp: sin forma con combo pendiente, la mejora espera a la próxima forma desbloqueada ---
 	_progresion().formas_forzadas = [0, 1]
-	_progresion().add_fragmentos(25)   # 50 en total: nivel 4, pero Humano y Lobo ya están completos
+	_progresion().add_fragmentos(10)   # 38 en total: nivel 4, pero Humano y Lobo ya están completos
 	await process_frame
 	_check(lvl.get("panel").visible == false and int(_progresion().mejoras_diferidas) == 1, "LevelUp: sin formas con combo pendiente la mejora queda diferida")
 	_progresion().desbloquear_forma(2)
@@ -510,7 +468,7 @@ func _esperar_recuperacion(ataque: String) -> void:
 
 func _funcion_tronco() -> void:
 	# Piso real del nivel (Level/Ground, tope y=1003) lejos de rompibles y triggers
-	_console._ejecutar(PackedStringArray(["form", "humano"]))
+	_player._transformar(0, true)
 	_player.global_position = Vector2(-350, 900)
 	_player.velocity = Vector2.ZERO
 	await _wait_frames(60)
@@ -540,7 +498,7 @@ func _funcion_tronco() -> void:
 	tronco.set_deferred("collision_layer", 0)
 	tronco.set_deferred("collision_mask", 0)
 	await _wait_frames(4)
-	_console._ejecutar(PackedStringArray(["form", "oso"]))
+	_player._transformar(2, true)
 	await process_frame
 	_check(int(_player.current_form) == 2, "Interact: se transformó en Oso")
 	tronco.set_deferred("collision_layer", 1)
@@ -556,7 +514,7 @@ func _funcion_tronco() -> void:
 	await _wait_frames(20)
 	_check(not is_instance_valid(tronco), "Interact: oso rompe el tronco")
 
-	_console._ejecutar(PackedStringArray(["form", "humano"]))
+	_player._transformar(0, true)
 	await process_frame
 
 

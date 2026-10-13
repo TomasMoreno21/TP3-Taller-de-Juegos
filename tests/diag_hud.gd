@@ -35,7 +35,7 @@ func _init() -> void:
 	player.current_form = 0
 	player._transformar(1)
 	await process_frame
-	_check(aviso.text.contains("Lobo"), "HUD: aviso muestra el cambio de forma: " + aviso.text)
+	_check(not aviso.text.contains("Forma:"), "HUD: ya no hay aviso de texto al cambiar de forma")
 
 	print("DIAG HUD: FALLOS = " + str(_failures))
 	if _failures == 0:

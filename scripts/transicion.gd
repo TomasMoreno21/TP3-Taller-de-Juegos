@@ -46,14 +46,10 @@ func precargar(ruta: String) -> void:
 
 
 func cambiar_escena(ruta: String) -> void:
-	precargar(ruta)   # arranca a cargar mientras se oscurece la pantalla
+	# precargar(ruta)   # deshabilitado para nivel1/comic largo por fallo threaded
 	fundido(func() -> void:
 		get_tree().paused = false
-		var escena := await _esperar_carga(ruta)
-		if escena != null:
-			get_tree().change_scene_to_packed(escena)
-		else:
-			get_tree().change_scene_to_file(ruta))
+		get_tree().change_scene_to_file(ruta))
 
 
 ## Espera (sin congelar el fundido) a que termine la carga en segundo plano.

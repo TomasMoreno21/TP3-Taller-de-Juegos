@@ -23,7 +23,8 @@ func _ready() -> void:
 		if hijo is Control:
 			_vinetas.append(hijo)
 	_actualizar_pista()
-	_precargar.call_deferred()   # el nivel carga mientras se lee el cómic
+	# No precargar en hilo: evita fallos de threaded load en Windows con ciertos recursos
+	# _precargar.call_deferred()   # el nivel carga mientras se lee el cómic
 	if DisplayServer.get_name() != "headless":
 		modulate.a = 0.0
 		create_tween().tween_property(self, "modulate:a", 1.0, 0.6)
@@ -36,7 +37,7 @@ func _ready() -> void:
 
 
 func _precargar() -> void:
-	TransicionPantalla.de(get_tree()).precargar(escena_siguiente)
+	pass  # deshabilitado: carga directa al terminar
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -15,6 +15,7 @@ signal terminada
 @export var bajar_camara := 150.0           ## px que la cámara se corre hacia abajo mientras sigue al jugador, para que la barra inferior no lo tape
 @export var tam_cartela := 34
 @export var seg_mantener_saltar := 1.0
+@export var seg_maximos := 40.0              ## red de seguridad: pasado este tiempo (desde que carga el nivel) la intro se corta y el jugador recupera el control
 @export var resplandor: CanvasItem            ## luz lejana: aparece con la intro y se apaga al entregar el control
 @export var velocidad_caminata := 0.35     ## fracción de la velocidad del jugador al caminar solo
 @export var inicio_x := -1400.0             ## el jugador arranca la intro en esta x (para que el paseo dure toda la charla)
@@ -22,6 +23,7 @@ signal terminada
 @export var caminar_hasta_x := 0.0          ## el jugador se detiene al llegar a esta x (tope de seguridad)
 @export var color_pulso := Color(0.6, 0.85, 1.0, 0.55)
 @export var sonido_pulso: AudioStream         ## opcional: sonido grave del Amuleto al despertar
+@export var lanzar_en_pulso: Node             ## opcional: nodo con `lanzar()` que se dispara con el pulso (p. ej. un murciélago que cruza)
 @export var probar_en_headless := false       ## en headless la intro se omite (los tests esperan control inmediato)
 
 var _planos: Array[PlanoIntro] = []
@@ -40,11 +42,13 @@ var _tw_cam: Tween
 var _tw_cartela: Tween
 var _activa := false
 var _saltar := false
+var _adelanto := false     ## el jugador adelantó los globos: al terminar la charla se le devuelve el control
 var _mantenido := 0.0
 var _t := 0.0
 var _seguir := false
 var _camina := false
 var _escala_resplandor := 1.0
+var _titulo_listo := false
 
 
 func _ready() -> void:
@@ -74,6 +78,9 @@ func _ready() -> void:
 	if _hud != null:
 		_hud_visible = _hud.visible
 		_hud.visible = false
+	var dlg := get_node_or_null("/root/Dialogo")
+	if dlg != null:
+		dlg.lista_ocultar(true)
 	_construir_capa()
 	_cam.call("modo_cine")
 	set_process(true)
@@ -92,10 +99,18 @@ func _hay_lugar(x: float) -> bool:
 	return true
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if _activa and (event.is_action_pressed("dialog_next") or event.is_action_pressed("dialog_skip")
+			or (event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).keycode == KEY_ENTER)):
+		_adelanto = true
+
+
 func _process(delta: float) -> void:
 	if not _activa:
 		return
 	_t += delta
+	if _t >= seg_maximos:
+		_saltar = true   # nada puede dejar al jugador bloqueado para siempre
 	if _seguir:
 		var meta := _jugador.global_position + (_cam.get("desplazamiento") as Vector2) + Vector2(0, bajar_camara)
 		_cam.global_position = _cam.global_position.lerp(meta, 1.0 - exp(-3.5 * delta))
@@ -115,9 +130,7 @@ func _process(delta: float) -> void:
 
 
 func _correr() -> void:
-	var ti := get_tree().get_first_node_in_group("titulo_nivel")
-	if ti != null and ti.get("activo"):
-		await ti.listo   # el cartel de nivel va primero
+	await _esperar_titulo()   # el cartel de nivel va primero
 	var tw_negro := create_tween()
 	tw_negro.tween_property(_negro, "color:a", 0.0, fundido_inicial)
 	_barras(true)
@@ -128,8 +141,9 @@ func _correr() -> void:
 	for p in _planos:
 		if p.devolver_control:
 			break
+		_adelanto = false
 		_arrancar_plano(p)
-		await _esperar(p.duracion)
+		await _esperar(p.duracion, not p.globo.is_empty())
 		if _saltar:
 			break
 	if _saltar:
@@ -139,6 +153,17 @@ func _correr() -> void:
 		if p.devolver_control and not _saltar and not p.globo.is_empty():
 			get_node("/root/Dialogo").mostrar(Array(p.globo), "Amuleto", p.globo_marcado)
 			break
+
+
+## Espera a que el cartel de nivel termine de mostrarse (`listo`) sin dar control al jugador detrás del
+## negro. Nunca queda colgada: si el cartel desaparece sin avisar, o pasa `seg_maximos`, la intro sigue igual.
+func _esperar_titulo() -> void:
+	var ti := get_tree().get_first_node_in_group("titulo_nivel")
+	if ti == null or not ti.get("activo"):
+		return
+	ti.listo.connect(func() -> void: _titulo_listo = true)
+	while not _titulo_listo and _t < seg_maximos and is_instance_valid(ti) and ti.get("activo"):   # saltear no corta el cartel: la intro espera y termina al toque
+		await get_tree().process_frame
 
 
 func _arrancar_plano(p: PlanoIntro) -> void:
@@ -161,11 +186,11 @@ func _arrancar_plano(p: PlanoIntro) -> void:
 		_jugador.set("cinematica_dir", velocidad_caminata)
 	if not p.globo.is_empty():
 		if p.retraso_globo > 0.0:
-			get_tree().create_timer(p.retraso_globo).timeout.connect(_decir.bind(p))
+			get_tree().create_timer(p.retraso_globo, false).timeout.connect(_decir.bind(p))
 		else:
 			_decir(p)
 	if p.pulso:
-		get_tree().create_timer(p.pulso_en).timeout.connect(_pulso)
+		get_tree().create_timer(p.pulso_en, false).timeout.connect(_pulso)
 
 
 func _decir(p: PlanoIntro) -> void:
@@ -181,6 +206,8 @@ func _pulso() -> void:
 	create_tween().tween_property(_flash, "color:a", 0.0, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	if _cam.has_method("shake"):
 		_cam.call("shake", 6.0, 0.35)
+	if lanzar_en_pulso != null and lanzar_en_pulso.has_method("lanzar"):
+		lanzar_en_pulso.call("lanzar")
 	if sonido_pulso != null:
 		var ap := AudioStreamPlayer.new()
 		ap.stream = sonido_pulso
@@ -206,11 +233,21 @@ func _mostrar_cartela(texto: String, duracion: float) -> void:
 	_tw_cartela.tween_property(_cartela, "modulate:a", 0.0, 0.4)
 
 
-func _esperar(seg: float) -> void:
+## Espera `seg`; si el plano tiene globos y el jugador los adelantó, termina en cuanto acaba la charla
+## (así no queda esperando con la cámara de cine cuando ya no hay nada que leer).
+func _esperar(seg: float, con_globos := false) -> void:
+	var dlg := get_node_or_null("/root/Dialogo")
+	var hablando := false
 	var t := 0.0
 	while t < seg and not _saltar:
 		await get_tree().process_frame
-		t += get_process_delta_time()
+		if not get_tree().paused:   # en pausa el tiempo del plano no corre (los tweens tampoco)
+			t += get_process_delta_time()
+		if con_globos and dlg != null:
+			if dlg.hay_narrativa():
+				hablando = true
+			elif hablando and _adelanto:
+				return
 
 
 ## Devuelve el control, retira las barras y apaga la luz lejana. La cámara sale de modo
@@ -232,6 +269,9 @@ func _entregar_control() -> void:
 	_jugador.set("cinematica_activa", false)
 	if _hud != null:
 		_hud.visible = _hud_visible
+	var dlg := get_node_or_null("/root/Dialogo")
+	if dlg != null:
+		dlg.lista_ocultar(false, 0.8)
 	_cartela.modulate.a = 0.0
 	_barra_skip.visible = false
 	_barras(false)
@@ -241,6 +281,15 @@ func _entregar_control() -> void:
 	terminada.emit()
 	await get_tree().create_timer(0.9).timeout
 	_capa.queue_free()
+
+
+## Si la escena se descarga a mitad de la intro (menú, cambio de nivel), no deja nada bloqueado.
+func _exit_tree() -> void:
+	if _activa and is_instance_valid(_jugador):
+		_jugador.set("cinematica_activa", false)
+		_jugador.set("cinematica_dir", 0.0)
+	if _activa and is_instance_valid(_hud):
+		_hud.visible = _hud_visible
 
 
 func _barras(entrar: bool) -> void:

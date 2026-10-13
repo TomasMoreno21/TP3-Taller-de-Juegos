@@ -16,6 +16,11 @@ extends CanvasGroup
 @export var margen_jugador := Vector2(520, 340)  ## zona alrededor del jugador que se mantiene despejada (aclara antes de tapar)
 @export var velocidad_fundido := 4.0         ## qué tan rápido se aclara / vuelve
 @export var distancia_activa := 3200.0       ## px: más lejos de la cámara no se procesa
+## Agrupa los polígonos de cada "Hoja" (árbol, rama, pasto) en una sola malla: ~675 nodos menos en el nivel 1.
+## Se aplica solo a las siluetas simples (polígonos lisos); las demás no se tocan. APAGADO por defecto: en
+## capturas difiere en ~70 px (puntas de 1 px, porque la malla no se ajusta a la grilla de píxeles como Polygon2D).
+## Prueba: tests/diag_primer_plano_horneado.gd (HORNEAR=0|1).
+@export var hornear_poligonos := false
 
 var _ancla := Vector2.ZERO
 var _alfa := 0.88
@@ -25,7 +30,7 @@ var _rect_local := Rect2()
 func _ready() -> void:
 	_ancla = global_position
 	if not Engine.is_editor_hint():
-		_calcular_rect.call_deferred()
+		_preparar.call_deferred()
 
 
 func _process(delta: float) -> void:
@@ -41,6 +46,65 @@ func _process(delta: float) -> void:
 	var tapa := _tapa_algo()
 	_alfa = move_toward(_alfa, alfa_tapando if tapa else alfa_base, delta * velocidad_fundido)
 	self_modulate.a = _alfa
+
+
+func _preparar() -> void:
+	_calcular_rect()   # antes de hornear: usa los Polygon2D originales
+	if hornear_poligonos:
+		for h in find_children("Hoja", "Node2D", true, false):
+			_hornear_hoja(h as Node2D)
+
+
+## Dibuja las mallas horneadas de una Hoja (un solo nodo en vez de un Polygon2D por pieza).
+class _MallaHoja extends Node2D:
+	var mallas: Array[ArrayMesh] = []
+
+	func _draw() -> void:
+		for m in mallas:
+			draw_mesh(m, null)
+
+
+## Reemplaza los Polygon2D de la Hoja por una malla con colores por vértice (mismo orden de dibujo y
+## misma triangulación que usa Polygon2D). Si algún hijo no es un polígono liso, la Hoja queda como está.
+func _hornear_hoja(hoja: Node2D) -> void:
+	var polis: Array[Polygon2D] = []
+	for c in hoja.get_children():
+		var p := c as Polygon2D
+		if p == null or not _poligono_liso(p):
+			return
+		polis.append(p)
+	if polis.is_empty():
+		return
+	var puntos := PackedVector2Array()
+	var colores := PackedColorArray()
+	for p in polis:
+		var pts := p.polygon
+		var tri := Geometry2D.triangulate_polygon(pts)
+		if tri.is_empty():
+			continue   # Polygon2D tampoco lo dibuja
+		var xf := p.transform
+		for idx in tri:
+			puntos.append(xf * (pts[idx] + p.offset))
+			colores.append(p.color)
+	if puntos.is_empty():
+		return
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = puntos
+	arrays[Mesh.ARRAY_COLOR] = colores
+	var malla := ArrayMesh.new()
+	malla.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var nodo := _MallaHoja.new()
+	nodo.name = "Malla"
+	nodo.mallas.append(malla)
+	for p in polis:
+		hoja.remove_child(p)
+		p.queue_free()
+	hoja.add_child(nodo)
+
+
+func _poligono_liso(p: Polygon2D) -> bool:
+	return p.visible and p.texture == null and p.vertex_colors.is_empty() and p.polygons.is_empty() 		and p.bones.is_empty() and not p.antialiased and not p.invert_enabled and p.material == null 		and p.modulate == Color.WHITE and p.self_modulate == Color.WHITE and p.z_index == 0 		and not p.use_parent_material and p.light_mask == 1 and p.get_child_count() == 0 		and not p.show_behind_parent and not p.top_level and p.polygon.size() >= 3
 
 
 ## Rectángulo (local) que ocupan los polígonos hijos, para detectar si tapan.

@@ -43,7 +43,7 @@ func _initialize() -> void:
 	puerta.solo_por_losa = true
 	nivel.add_child(puerta)
 	var losa: Area2D = (load("res://scenes/losa_peso.tscn") as PackedScene).instantiate()
-	losa.global_position = Vector2(-20000, -20000)
+	losa.global_position = Vector2(900, 400)   # dentro de los límites de la cámara (el jugador queda confinado a ellos) y en el aire de la entrada
 	nivel.add_child(losa)
 	var rutas: Array[NodePath] = [losa.get_path_to(puerta)]
 	losa.objetivos = rutas
