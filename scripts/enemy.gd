@@ -6,6 +6,8 @@ const GRAVITY := 980.0
 const MAX_FALL_SPEED := 950.0
 
 @export var tipo: String = "cultista"
+## De dónde nace el proyectil: px relativos al origen del nodo (la x se espeja según el lado que mira).
+@export var proyectil_origen := Vector2(25.0, -160.0)
 @export var enemy_data: Enemigo
 @export var ola_asignada: int = 0          # a qué ola pertenece (enemigo manual del Encounter)
 const TELEGRAFIA := preload("res://scripts/telegrafia_enemigo.gd")
@@ -779,7 +781,7 @@ func _disparar(player: Node2D) -> void:
 	if audio_d != null:
 		audio_d.play_sfx(sonido_disparo, volumen_sfx_db, 0.08)
 	var proj: Area2D = preload("res://scenes/projectile.tscn").instantiate()
-	proj.global_position = global_position + Vector2(_dir * 25.0, -10.0)
+	proj.global_position = global_position + Vector2(_dir * proyectil_origen.x, proyectil_origen.y)
 	proj.set("direction", dir)
 	proj.set("speed", enemy_data.proyectil_speed)
 	proj.set("damage", enemy_data.attack_damage)

@@ -1,0 +1,28 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" uid="uid://enbnbn7xp15x" path="res://Sprites/Jugador y Transformaciones/pj ojo1.png" id="1_ojo1"]
+[ext_resource type="Texture2D" uid="uid://xmges8kl2s6p" path="res://Sprites/Jugador y Transformaciones/pj ojo2.png" id="2_ojo2"]
+[ext_resource type="Texture2D" uid="uid://80utlf376tct" path="res://Sprites/Jugador y Transformaciones/pj ojo3.png" id="3_ojo3"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_ojo1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_ojo2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_ojo3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_ojo2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("1_ojo1")
+}],
+"loop": 0,
+"name": &"parpadeo",
+"speed": 34.0
+}]

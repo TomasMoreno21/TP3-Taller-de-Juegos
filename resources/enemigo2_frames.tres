@@ -1,6 +1,18 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://ucfekjr1adaf"]
 
 [ext_resource type="Texture2D" uid="uid://cdm52qmr4qnjp" path="res://Sprites/Enemigos/enemigo flaco1.png" id="1_flaco"]
+[ext_resource type="Texture2D" uid="uid://6l4mxlb680en" path="res://Sprites/Enemigos/ataq ene FLACO1.png" id="1_atq1"]
+[ext_resource type="Texture2D" uid="uid://dgvnwe6u7q3a1" path="res://Sprites/Enemigos/ataq ene FLACO2.png" id="2_atq2"]
+[ext_resource type="Texture2D" uid="uid://dimcl8g4ise3l" path="res://Sprites/Enemigos/ataq ene FLACO3.png" id="3_atq3"]
+[ext_resource type="Texture2D" uid="uid://c13dvb1gduf2f" path="res://Sprites/Enemigos/ataq ene FLACO4.png" id="4_atq4"]
+[ext_resource type="Texture2D" uid="uid://dnplvqhn24ddo" path="res://Sprites/Enemigos/ataq ene FLACO5.png" id="5_atq5"]
+[ext_resource type="Texture2D" uid="uid://bjxw8ifmpin45" path="res://Sprites/Enemigos/ataq ene FLACO6.png" id="6_atq6"]
+[ext_resource type="Texture2D" uid="uid://d4by2reshgsk7" path="res://Sprites/Enemigos/ataq ene FLACO7.png" id="7_atq7"]
+[ext_resource type="Texture2D" uid="uid://ddo83fwqil8ji" path="res://Sprites/Enemigos/ataq ene FLACO8.png" id="8_atq8"]
+[ext_resource type="Texture2D" uid="uid://coybj4dlvkxwo" path="res://Sprites/Enemigos/ataq ene FLACO9.png" id="9_atq9"]
+[ext_resource type="Texture2D" uid="uid://1f5olrp41cj0" path="res://Sprites/Enemigos/afk FLACO1.png" id="1_akfl1"]
+[ext_resource type="Texture2D" uid="uid://cbg677odpi71f" path="res://Sprites/Enemigos/afk FLACO2.png" id="2_akfl2"]
+[ext_resource type="Texture2D" uid="uid://c548187nbuj0o" path="res://Sprites/Enemigos/afk FLACO3.png" id="3_akfl3"]
 
 [resource]
 animations = [{
@@ -14,15 +26,48 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_flaco")
+"texture": ExtResource("1_atq1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_atq2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_atq3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_atq4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_atq5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_atq6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_atq7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_atq8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_atq9")
 }],
 "loop": 0,
 "name": &"attack2",
-"speed": 10.0
+"speed": 16.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_flaco")
+"texture": ExtResource("1_akfl1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_akfl2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_akfl3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_akfl2")
 }],
 "loop": 1,
 "name": &"idle",

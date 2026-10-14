@@ -15,6 +15,12 @@
 [ext_resource type="Texture2D" uid="uid://bg81r5wdamg08" path="res://Sprites/Enemigos/ataq ene GORDO8.png" id="9_atq8"]
 [ext_resource type="Texture2D" uid="uid://bju2aa2xit0i0" path="res://Sprites/Enemigos/ataq ene GORDO9.png" id="10_atq9"]
 [ext_resource type="Texture2D" uid="uid://cgvm8pucc8h0" path="res://Sprites/Enemigos/ataq ene GORDO10.png" id="11_atq10"]
+[ext_resource type="Texture2D" uid="uid://cog03u6oahhdr" path="res://Sprites/Enemigos/cam GORDO1.png" id="1_cam1"]
+[ext_resource type="Texture2D" uid="uid://cqoi06k8gc21d" path="res://Sprites/Enemigos/cam GORDO2.png" id="2_cam2"]
+[ext_resource type="Texture2D" uid="uid://d0gnmsibklutd" path="res://Sprites/Enemigos/cam GORDO3.png" id="3_cam3"]
+[ext_resource type="Texture2D" uid="uid://drt4g60scpmsg" path="res://Sprites/Enemigos/cam GORDO4.png" id="4_cam4"]
+[ext_resource type="Texture2D" uid="uid://bmn1se4at8aui" path="res://Sprites/Enemigos/cam GORDO5.png" id="5_cam5"]
+[ext_resource type="Texture2D" uid="uid://cja03viwjy323" path="res://Sprites/Enemigos/cam GORDO6.png" id="6_cam6"]
 
 [resource]
 animations = [{
@@ -85,7 +91,22 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_gordo")
+"texture": ExtResource("1_cam1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_cam2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_cam3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_cam4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_cam5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_cam6")
 }],
 "loop": 1,
 "name": &"run",
