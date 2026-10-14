@@ -12,6 +12,8 @@ var _tilt := 0.0
 var _lookahead_actual := 0.0
 var _zoom_velocidad := 1.0
 var _framing_scale := 1.0
+var _escala_arena := 1.0   # multiplicador persistente de la arena (p. ej. la sala del jefe que crece)
+var _escala_tween: Tween
 var _arena_tween: Tween
 var _modo_tween: Tween
 var _descenso_t := 0.0
@@ -130,7 +132,7 @@ func _process(delta: float) -> void:
 	if _modo == "cine":
 		return   # la intro de nivel mueve posición y zoom por tween
 	# Zoom por velocidad (1) + punch + encuadre de arena
-	var objetivo := _zoom_objetivo * _punch_scale * _zoom_velocidad * _framing_scale
+	var objetivo := _zoom_objetivo * _punch_scale * _zoom_velocidad * _framing_scale * _escala_arena
 	if zoom.distance_to(objetivo) > 0.0001:
 		zoom = zoom.lerp(objetivo, minf(suavizado_zoom * delta, 1.0))
 	else:
@@ -317,6 +319,22 @@ func modo_arena(centro: Vector2) -> void:
 
 ## Cámara libre para cinemáticas: deja de seguir al jugador y no toca zoom ni posición
 ## (quien la llama los mueve). Se sale con modo_normal().
+## Cambia el centro de la cámara fija sin salto (la cámara llega por su lerp).
+func mover_arena(centro: Vector2) -> void:
+	_fija_pos = centro
+
+
+## Multiplica el zoom de la arena (< 1 = se aleja). dur 0 = al instante.
+func escala_arena(escala: float, dur: float = 1.0) -> void:
+	if _escala_tween != null and _escala_tween.is_valid():
+		_escala_tween.kill()
+	if dur <= 0.0:
+		_escala_arena = escala
+		return
+	_escala_tween = create_tween()
+	_escala_tween.tween_property(self, "_escala_arena", escala, dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+
+
 func modo_cine() -> void:
 	if _modo_tween != null and _modo_tween.is_valid():
 		_modo_tween.kill()
@@ -331,6 +349,8 @@ func modo_normal(instantaneo: bool = false) -> void:
 		_modo_tween.kill()
 	_modo = "seguir"
 	modo_cambio.emit("seguir")
+	if _escala_arena != 1.0:
+		escala_arena(1.0, 0.0 if instantaneo else 0.8)   # fuera de la arena vuelve el zoom normal
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	if player != null:
 		var dest := player.global_position + desplazamiento

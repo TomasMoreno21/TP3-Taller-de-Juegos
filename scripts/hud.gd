@@ -166,6 +166,9 @@ func _conectar_boss() -> void:
 	var boss := get_tree().get_first_node_in_group("boss")
 	if boss == null or not ("salud_cambio" in boss):
 		return
+	if boss.get("mostrar_barra_hud") == false:
+		boss_bar.visible = false   # la vida de este jefe se lee en su cuerpo
+		return
 	_boss = boss
 	boss.salud_cambio.connect(_on_boss_salud)
 	boss.fase_cambio.connect(_on_boss_fase)
