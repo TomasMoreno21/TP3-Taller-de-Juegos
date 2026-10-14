@@ -21,6 +21,7 @@ const LANZA_SCENE := preload("res://scenes/lanza_estrella.tscn")
 const ORBE_VIDA_SCENE := preload("res://scenes/pickup_vida.tscn")
 const ATAQUE_SCENE := preload("res://scenes/ataque_jefe.tscn")
 const OJO_SCENE := preload("res://scenes/ojo_verde.tscn")
+const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 
 enum Fase { UNO, DOS, TRES }
 
@@ -99,6 +100,20 @@ enum Fase { UNO, DOS, TRES }
 @export var duracion_agrandar := 1.5
 @export var subida_plataformas := 420.0     ## px desde abajo con que aparecen las plataformas
 
+@export_group("F2: interludio (la Estrella se hunde y manda enemigos)")
+@export var oleada1_cultistas := 3
+@export var oleada2_cultistas := 2
+@export var oleada2_arqueros := 2
+@export var pausa_entre_oleadas := 1.5
+@export var margen_spawn := 150.0           ## px desde el borde visible donde entran los enemigos
+@export var intervalo_barrido_interludio := 5.0   ## luz que cruza la sala de un costado al otro
+@export var intervalo_lanza_pozo := 3.5
+@export var dano_lanza_pozo := 15
+@export var aviso_lanza_pozo := 0.8
+@export var tiempo_hundirse := 1.2
+@export var tiempo_resurgir := 1.4
+@export var profundidad_escondida := 500.0  ## px bajo el piso donde queda el cuerpo escondido
+
 @export_group("Apariencia")
 @export var nombre_jefe := "EL ARZOBISPO"   ## nombre en las barras de cine ("" = solo barras)
 @export var intro_cine := true
@@ -129,6 +144,10 @@ var _altura_reposo := 550.0 # reposo actual (sube en la F2)
 var _techo_y0 := 0.0
 var _plat_y0: Array = []
 var _tw_sala: Tween
+var _invocados: Array = []
+var _invocados_vivos := 0
+var _lanza_pozo_t := 0.0
+var _barrido_lado := -1
 var _tw_cuerpo: Tween
 var _tw_ojo: Tween
 var _tw_flash: Tween
@@ -203,6 +222,9 @@ func preparar_ola() -> void:
 	_sembrar()
 	_restaurar_piso()
 	_restaurar_sala()
+	_limpiar_invocados()
+	cuerpo.visible = true
+	cuerpo.rotation = 0.0
 	nudo.restaurar()
 	_hurtbox_on(false)
 	_poner_ojo(0.0)
@@ -353,6 +375,15 @@ func _physics_process(delta: float) -> void:
 		if _rayo_t <= 0.0:
 			_disparar_rayo()
 			_rayo_t = intervalo_rayo_f1 if fase == Fase.UNO else intervalo_rayo_f2
+	if _estado == "interludio":
+		_barrido_t -= delta
+		if _barrido_t <= 0.0:
+			_lanzar_barrido_lateral()
+			_barrido_t = intervalo_barrido_interludio
+		_lanza_pozo_t -= delta
+		if _lanza_pozo_t <= 0.0:
+			_lanzar_lanza_pozo()
+			_lanza_pozo_t = intervalo_lanza_pozo
 	if _estado == "torretas":
 		_barrido_t -= delta
 		if _barrido_t <= 0.0:
@@ -590,7 +621,19 @@ func _transicion_fase(gen: int) -> void:
 	_ciclo = 0
 	if fase == Fase.DOS:
 		await _romper_piso()
+		if not _sigue(gen):
+			return
+		await _hundirse()
+		if not _sigue(gen):
+			return
 		await _agrandar_sala()
+		if not _sigue(gen):
+			return
+		await _interludio(gen)
+		if not _sigue(gen):
+			return
+		await _resurgir()
+		return
 	await _esperar(2.0)
 	if not _sigue(gen):
 		return
@@ -761,11 +804,9 @@ func _agrandar_sala() -> void:
 		cam.mover_arena(global_position + centro_camara_f2)
 	for pl in plataformas_raiz.get_children():
 		_poner_plataforma(pl, true)
+	cuerpo.scale = Vector2.ONE * escala_jefe_f2   # escondido en el foso: crece sin verse
 	if headless:
 		techo.position.y = _techo_y0 - subida_techo
-		cuerpo.scale = Vector2.ONE * escala_jefe_f2
-		cuerpo.position.y = -_altura_reposo
-		_ajustar_tallo()
 		for i in plataformas_raiz.get_child_count():
 			(plataformas_raiz.get_child(i) as Node2D).position.y = _plat_y0[i]
 		return
@@ -776,9 +817,6 @@ func _agrandar_sala() -> void:
 		_tw_sala.kill()
 	_tw_sala = create_tween().set_parallel(true)
 	_tw_sala.tween_property(techo, "position:y", _techo_y0 - subida_techo, dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-	_tw_sala.tween_property(cuerpo, "scale", Vector2.ONE * escala_jefe_f2, dur).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_tw_sala.tween_property(cuerpo, "position:y", -_altura_reposo, dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-	_tw_sala.tween_method(func(_v: float) -> void: _ajustar_tallo(), 0.0, 1.0, dur)
 	for i in plataformas_raiz.get_child_count():
 		var pl := plataformas_raiz.get_child(i) as Node2D
 		pl.position.y = _plat_y0[i] + subida_plataformas
@@ -788,6 +826,156 @@ func _agrandar_sala() -> void:
 	await _tw_sala.finished
 	if gen != _gen:
 		return
+
+
+## La Estrella se hunde por el foso con su tallo y desaparece.
+func _hundirse() -> void:
+	_poner_ojo(0.0)
+	_rugido(8.0)
+	if DisplayServer.get_name() == "headless":
+		cuerpo.position.y = profundidad_escondida
+		cuerpo.visible = false
+		_ajustar_tallo()
+		return
+	JuiceFx.escombros(get_tree(), global_position + Vector2(0, -20), Color(0.42, 0.3, 0.55), 16, 1.2)
+	if _tw_cuerpo != null and _tw_cuerpo.is_valid():
+		_tw_cuerpo.kill()
+	_tw_cuerpo = create_tween().set_parallel(true)
+	_tw_cuerpo.tween_property(cuerpo, "position:y", profundidad_escondida, tiempo_hundirse).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	_tw_cuerpo.tween_property(cuerpo, "rotation", 0.0, tiempo_hundirse)
+	_tw_cuerpo.tween_method(func(_v: float) -> void: _ajustar_tallo(), 0.0, 1.0, tiempo_hundirse)
+	await _tw_cuerpo.finished
+	cuerpo.visible = false
+	_ajustar_tallo()
+
+
+## Vuelve a subir por el foso, ya agrandada, y ruge: empieza el ciclo de la F2.
+func _resurgir() -> void:
+	_limpiar_lanzas()
+	cuerpo.position.y = profundidad_escondida
+	cuerpo.rotation = 0.0
+	cuerpo.visible = true
+	_rugido(10.0)
+	if DisplayServer.get_name() != "headless":
+		JuiceFx.escombros(get_tree(), global_position + Vector2(0, -20), Color(0.42, 0.3, 0.55), 18, 1.3)
+	await _mover_cuerpo(_altura_reposo, 0.0, tiempo_resurgir, true)
+	_rugido(12.0)
+
+
+## Mientras está escondida: 2 oleadas de enemigos comunes + barridos laterales y lanzas desde el pozo.
+func _interludio(gen: int) -> void:
+	_estado = "interludio"
+	_barrido_t = 2.0
+	_lanza_pozo_t = 2.8
+	await _oleada(gen, oleada1_cultistas, 0)
+	if not _sigue(gen):
+		return
+	await _esperar(pausa_entre_oleadas)
+	if not _sigue(gen):
+		return
+	await _oleada(gen, oleada2_cultistas, oleada2_arqueros)
+	_limpiar_lanzas()
+
+
+func _oleada(gen: int, cultistas: int, arqueros: int) -> void:
+	var tipos: Array = []
+	for _i in cultistas:
+		tipos.append("cultista")
+	for _i in arqueros:
+		tipos.append("arquero")
+	_invocados_vivos = tipos.size()
+	for i in tipos.size():
+		_invocar(tipos[i], i)
+	while _sigue(gen) and _invocados_vivos > 0:
+		_revisar_limbo()
+		await _esperar(0.2)
+
+
+## Entra por un costado (alternando), en el borde visible menos `margen_spawn`, lejos del foso.
+func _invocar(tipo: String, i: int) -> void:
+	var e = ENEMY_SCENE.instantiate()
+	e.set("tipo", tipo)
+	e.set("spawn_telegrafiado", true)
+	var lado := -1.0 if i % 2 == 0 else 1.0
+	var fila := floori(i / 2.0)
+	var x := global_position.x + lado * (_mitad_vista() - margen_spawn - fila * 140.0)
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	destino.add_child(e)
+	e.global_position = Vector2(x, global_position.y - 150.0)
+	if e.has_method("activar"):
+		e.activar()
+	if e.has_signal("died"):
+		e.died.connect(_on_invocado_muerto.bind(e))
+	_invocados.append(e)
+
+
+func _on_invocado_muerto(e: Node) -> void:
+	if e.has_meta("contado"):
+		return
+	e.set_meta("contado", true)
+	_invocados_vivos = maxi(_invocados_vivos - 1, 0)
+
+
+## Anti soft-lock: un invocado que quedó fuera de la sala cuenta como muerto.
+func _revisar_limbo() -> void:
+	for e in _invocados:
+		if is_instance_valid(e) and not e.has_meta("contado") and (e as Node2D).global_position.y > global_position.y + 400.0:
+			if e.has_method("matar_por_caida"):
+				e.matar_por_caida()
+			_on_invocado_muerto(e)
+
+
+func _limpiar_invocados() -> void:
+	for e in _invocados:
+		if is_instance_valid(e):
+			e.queue_free()
+	_invocados.clear()
+	_invocados_vivos = 0
+
+
+## Media vista horizontal de la cámara (la sala llega hasta ahí: las paredes siguen el borde).
+func _mitad_vista() -> float:
+	var cam := get_viewport().get_camera_2d()
+	var z := cam.zoom.x if cam != null else 1.0
+	return get_viewport().get_visible_rect().size.x * 0.5 / maxf(z, 0.01)
+
+
+## Luz que nace en una pared y cruza la sala; alterna el lado y la altura (baja = saltar, alta = pasar por debajo).
+func _lanzar_barrido_lateral() -> void:
+	_barrido_alto = not _barrido_alto
+	var desde := barrido_alto_desde if _barrido_alto else 0.0
+	var hasta := barrido_alto_hasta if _barrido_alto else barrido_bajo_alto
+	var mitad := _mitad_vista()
+	var lado := _barrido_lado
+	_barrido_lado = -_barrido_lado
+	var a = ATAQUE_SCENE.instantiate()
+	a.dano = dano_barrido
+	a.velocidad = velocidad_barrido
+	a.dir = -lado
+	a.tamano = Vector2(ancho_barrido, hasta - desde)
+	a.color = nucleo.color.lightened(0.35)
+	a.aviso = aviso_barrido
+	a.recorrido_max = mitad * 2.0
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	destino.add_child(a)
+	a.global_position = Vector2(global_position.x + lado * (mitad - ancho_barrido * 0.5), global_position.y - (desde + hasta) * 0.5)
+
+
+## Una punta sale del fondo del foso hacia el cuerpo del jugador (aviso con línea y marca).
+func _lanzar_lanza_pozo() -> void:
+	var p := _obtener_player()
+	if p == null:
+		return
+	var l = LANZA_SCENE.instantiate()
+	l.desde = global_position + Vector2(0, 40)
+	l.hasta = Vector2(p.global_position.x, global_position.y - 80.0)
+	l.dano = dano_lanza_pozo
+	l.aviso = aviso_lanza_pozo
+	l.ancho = ancho_lanza
+	l.empuje = empuje_lanza
+	l.color = nucleo.color.lightened(0.2)
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	destino.add_child(l)
 
 
 ## Vuelve la sala de la F1 al instante (reinicio de la pelea).
@@ -832,6 +1020,7 @@ func _ajustar_tallo() -> void:
 	if tallo != null and _altura_ojo > 0.0:
 		tallo.scale.y = -cuerpo.position.y / _altura_ojo
 		tallo.scale.x = cuerpo.scale.x
+		tallo.visible = cuerpo.visible and cuerpo.position.y < -10.0
 
 
 func _mirar_jugador(delta: float) -> void:
@@ -890,6 +1079,7 @@ func _morir() -> void:
 	_hurtbox_on(false)
 	_limpiar_lanzas()
 	_limpiar_ojos()
+	_limpiar_invocados()
 	for pt in _puntas:
 		pt.romper()
 	_rugido(14.0)

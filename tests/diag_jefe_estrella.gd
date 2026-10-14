@@ -136,8 +136,49 @@ func _init() -> void:
 	_check(boss.health == 396, "El daño se frena en el umbral de la F2 (vida %d)" % boss.health)
 	_check(boss._puntas_rotas == 2 and boss._puntas_sanas().size() == 6, "Con 204 de daño caen 2 puntas (rotas %d)" % boss._puntas_rotas)
 
-	# --- F2: orbe, piso roto, tandas de torretas ---
+	# --- Interludio de la F2: la Estrella se hunde, 2 oleadas, barridos laterales y lanzas del pozo ---
+	await _esperar_estado(boss, "interludio", 900)
+	_check(boss._estado == "interludio" and not boss.cuerpo.visible, "Al entrar a la F2 la Estrella se hunde y desaparece")
+	var hp_i: int = boss.health
+	boss.golpe_ojo(50, 1, false)
+	_check(boss.health == hp_i, "Escondida no recibe daño")
+	await _wait_frames(60)
+	var ola1 := _vivos(boss)
+	_check(ola1.size() == 3 and ola1.all(func(e) -> bool: return e.tipo == "cultista"), "Oleada 1: 3 cultistas (%d)" % ola1.size())
+	_check(ola1.all(func(e) -> bool: return absf(e.global_position.x - boss.global_position.x) > 400.0), "Los enemigos entran lejos del foso")
+	var barr_l = null
+	var lanza_p = null
+	for _i in 400:
+		for n in get_nodes_in_group("ataque_jefe"):
+			if n.get_script().resource_path == "res://scripts/ataque_jefe.gd" and barr_l == null:
+				barr_l = n
+			elif n.get("rayo") == false and lanza_p == null:
+				lanza_p = n
+		if barr_l != null and lanza_p != null:
+			break
+		await physics_frame
+	_check(barr_l != null and absf(barr_l.global_position.x - boss.global_position.x) > boss._mitad_vista() * 0.8, "La luz nace en un costado de la sala")
+	_check(barr_l != null and barr_l.dir == (1 if barr_l.global_position.x < boss.global_position.x else -1), "La luz cruza hacia el otro costado")
+	_check(lanza_p != null and lanza_p.desde.y > boss.global_position.y, "Una lanza sale desde el pozo")
+	var caido = ola1[0]
+	caido.global_position = boss.global_position + Vector2(0, 20)
+	await _wait_frames(10)
+	_check(caido.health <= 0, "Un enemigo que cae al foso muere")
+	for e in _vivos(boss):
+		e.take_damage(9999, 0.0, 1, false)
+	for _i in 400:
+		if _vivos(boss).size() == 4:
+			break
+		await physics_frame
+	await _wait_frames(60)
+	var ola2 := _vivos(boss)
+	_check(ola2.size() == 4 and ola2.filter(func(e) -> bool: return e.tipo == "arquero").size() == 2, "Oleada 2: 2 cultistas + 2 arqueros (%d)" % ola2.size())
+	for e in ola2:
+		e.take_damage(9999, 0.0, 1, false)
+
+	# --- F2: resurge agrandada, orbe, piso roto, tandas de torretas ---
 	await _esperar_estado(boss, "torretas", 900)
+	_check(boss.cuerpo.visible and absf(boss.cuerpo.position.y + boss.altura_ojo_f2) < 2.0, "La Estrella resurge a %.0f px" % -boss.cuerpo.position.y)
 	await _wait_frames(3)
 	_check(boss.fase == 1 and boss._estado == "torretas", "Pasa a la fase 2 con torretas (fase=%d)" % boss.fase)
 	_check(_hay_orbe_vida(), "Al cambiar de fase aparece un orbe de vida")
@@ -216,6 +257,7 @@ func _init() -> void:
 	_check(boss.health == 600 and boss.fase == 0 and not boss._activo, "Al reiniciar la arena la Estrella vuelve a cero")
 	_check(boss._puntas_rotas == 0 and boss._puntas.all(func(pt) -> bool: return pt.visible and not pt.rota and pt.dano == 0.0), "Al reiniciar vuelven las 8 puntas")
 	_check(boss._ojos().is_empty(), "Al reiniciar no quedan ojos")
+	_check(boss._invocados.is_empty() and boss.cuerpo.visible, "Al reiniciar no quedan enemigos invocados y la Estrella se ve")
 	_check(not boss.foso.activo and not boss.losa.get_node("Collision").disabled and boss.nudo.visible, "Al reiniciar el piso central vuelve")
 	_check(absf(boss.techo.position.y - boss._techo_y0) < 1.0 and absf(boss.cuerpo.scale.x - 1.0) < 0.01 and boss.plataformas_raiz.get_children().all(func(pl) -> bool: return not pl.visible), "Al reiniciar la sala vuelve a la F1")
 	_check(absf(scene.get_node("Camara")._escala_arena - 1.0) < 0.01, "Al reiniciar la cámara vuelve al zoom normal")
@@ -268,6 +310,10 @@ func _golpear(player: Node, accion: String, objetivo: Vector2, lado: int) -> voi
 	await physics_frame
 	Input.action_release(accion)
 	await _wait_frames(30)
+
+
+func _vivos(boss: Node) -> Array:
+	return boss._invocados.filter(func(e) -> bool: return is_instance_valid(e) and e.health > 0)
 
 
 func _rayos() -> Array:
