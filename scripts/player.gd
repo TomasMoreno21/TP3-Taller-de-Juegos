@@ -266,6 +266,22 @@ var _bloqueo_sin_cd := false
 ## en estas la capa "Ojos" queda visible (ojo abierto) y parpadea.
 @export var ojos_animaciones_lobo: PackedStringArray = ["lobo_idle", "lobo_run"]
 @export var ojos_frames_lobo: SpriteFrames = preload("res://resources/lobo_ojos.tres")   ## parpadeo del Lobo
+## Posición local (px) del ojo del PJ humano por frame del cuerpo (esquina superior izq. de la imagen del
+## ojo respecto al centro del sprite). El humano solo la usa en las animaciones sin el ojo dibujado.
+@export var ojos_humano: Dictionary = {
+	"run:0": Vector2(34.5, -73.5),
+	"run:1": Vector2(39.5, -70.0),
+	"run:2": Vector2(34.0, -72.5),
+	"run:3": Vector2(31.5, -72.0),
+	"run:4": Vector2(36.0, -73.0),
+	"run:5": Vector2(35.0, -72.5),
+	"idle:0": Vector2(34.5, -73.5),
+}
+@export var ojos_ajuste_humano := Vector2.ZERO   ## desplazamiento global (px) de la capa Ojos para el PJ humano
+## Animaciones del PJ humano cuyo arte ya NO trae el ojo dibujado (el resto sí lo trae):
+## en estas la capa "Ojos" queda visible (ojo abierto) y parpadea.
+@export var ojos_animaciones_humano: PackedStringArray = ["run", "idle"]
+@export var ojos_frames_humano: SpriteFrames = preload("res://resources/pj_ojos.tres")   ## parpadeo del PJ humano
 @export_group("")
 var _was_blocking := false
 var _was_on_floor := false
@@ -3191,6 +3207,8 @@ func _ajuste_frame() -> Vector2:
 ## el ojo dibujado, SpriteFrames del parpadeo y ajuste global. `pos` = null si la forma no usa la capa.
 func _ojos_cfg() -> Dictionary:
 	match current_form:
+		Form.HUMAN:
+			return {"pos": ojos_humano, "anim": ojos_animaciones_humano, "frames": ojos_frames_humano, "ajuste": ojos_ajuste_humano}
 		Form.OSO:
 			return {"pos": ojos_oso, "anim": ojos_animaciones, "frames": _ojos_frames_oso, "ajuste": ojos_ajuste}
 		Form.LOBO:
