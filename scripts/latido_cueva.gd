@@ -15,6 +15,7 @@ var _int := 0.02
 var _t := 0.0
 var _inicial := true
 var _jugador_cache: Node2D
+var _pulso := 0.0
 
 
 ## Intensidad del latido actual (la usan efectos que acompañan la tensión, como las motas violetas).
@@ -22,7 +23,13 @@ func intensidad_actual() -> float:
 	return _int
 
 
+## Forma del latido ahora mismo (0 en reposo, ~1 en el pico del "pum"). Las venas de la pared (vena_latido.gd) la usan.
+func pulso_actual() -> float:
+	return _pulso
+
+
 func _ready() -> void:
+	add_to_group("latido_cueva")
 	_osc = get_node_or_null(oscuridad) as CanvasModulate
 	for z in get_children():
 		if z.has_method("contiene"):
@@ -50,4 +57,5 @@ func _process(delta: float) -> void:
 	var f := fposmod(_t, 1.0)
 	# doble latido: "pum-pum"
 	var p := exp(-pow(f * 9.0, 2.0)) + exp(-pow((f - 1.0) * 9.0, 2.0)) + 0.6 * exp(-pow((f - 0.22) * 9.0, 2.0))
+	_pulso = p
 	_osc.color = _color * (1.0 + _int * p)

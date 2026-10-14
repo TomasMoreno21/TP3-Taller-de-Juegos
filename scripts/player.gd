@@ -429,7 +429,6 @@ const FORMAS := [
 
 
 func _ready() -> void:
-	pisoton.connect(func(_pos: Vector2) -> void: _juice_oso_suelo(900.0))
 	if DisplayServer.get_name() != "headless":
 		JuiceFx.precalentar.call_deferred(get_tree())
 	add_to_group("player")
@@ -1608,8 +1607,10 @@ func _aletear(data: Forma) -> void:
 	_picada = false
 
 
+## Empujón horizontal del 2.º salto: solo suma, nunca frena (si ya ibas más rápido en ese sentido, se conserva).
 func apply_zip(impulso: float) -> void:
-	velocity.x = facing * absf(impulso)
+	var actual := velocity.x * float(facing)
+	velocity.x = facing * maxf(absf(impulso), actual)
 
 
 ## Eco espectral: silueta del momento actual que se desvanece (lunge del Lobo, picada, pisotón).
@@ -1963,6 +1964,8 @@ func _mostrar_tip_ahora(clave: String, texto: String) -> void:
 
 ## Sin enemigos cerca, sin daño reciente y sin estar atacando o bloqueando: buen momento para hablarle.
 func en_calma() -> bool:
+	if not is_inside_tree():
+		return false
 	if Time.get_ticks_msec() - _ultimo_dano_ms < 4000 or _attacking or blocking or not is_on_floor():
 		return false
 	for e in get_tree().get_nodes_in_group("enemy"):
@@ -2543,8 +2546,6 @@ func _juice_oso_suelo(impacto: float) -> void:
 		return
 	_oso_grieta_ms = ahora
 	var k := clampf(impacto / 900.0, 0.5, 1.4)
-	JuiceFx.grietas_suelo(get_tree(), global_position + Vector2(0, 142.0), 520.0 * k)
-	JuiceFx.escombros(get_tree(), global_position + Vector2(0, 130.0), Color(0.42, 0.36, 0.3), int(8 * k), 0.7 * k)
 	var cam := get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("shake"):
 		cam.shake(16.0 * k, 0.28, Vector2(0, 1))

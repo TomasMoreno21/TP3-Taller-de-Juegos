@@ -280,7 +280,7 @@ func activar() -> void:
 func _elevar() -> void:
 	if _flotando:
 		return
-	global_position.y -= altura_flote
+	global_position.y -= _altura_con_techo()
 	if enemy_data != null and enemy_data.projectile:
 		enemy_data = enemy_data.duplicate()
 		enemy_data.shoot_range *= alcance_flotante_mult
@@ -295,6 +295,25 @@ func _elevar() -> void:
 		_aura.position = Vector2(0.0, pies + 8.0)
 		add_child(_aura)
 		_aura.show_behind_parent = true
+
+
+## Altura de flote que cabe bajo el techo: `altura_flote` recortada para que la cabeza (más el vaivén) quede
+## libre. El terreno enterrado no tiene colisión (solo una banda junto a los huecos), así que un flotante que
+## nace dentro de la roca la atraviesa. Mira el ancho del cuerpo con tres rayos.
+func _altura_con_techo() -> float:
+	if collide_shape == null or not (collide_shape.shape is RectangleShape2D):
+		return altura_flote
+	var tam: Vector2 = collide_shape.shape.size
+	var cabeza := collide_shape.position.y - tam.y * 0.5   # distancia (negativa) del origen al tope del cuerpo
+	var espacio := get_world_2d().direct_space_state
+	var libre := altura_flote
+	for fx in [-0.5, 0.0, 0.5]:
+		var desde := global_position + Vector2(collide_shape.position.x + tam.x * fx, cabeza + 2.0)
+		var q := PhysicsRayQueryParameters2D.create(desde, desde + Vector2(0.0, -(altura_flote + flote_amplitud + 80.0)), 1)
+		var hit := espacio.intersect_ray(q)
+		if not hit.is_empty():
+			libre = minf(libre, desde.y - float(hit.position.y) - flote_amplitud - 40.0)
+	return clampf(libre, 0.0, altura_flote)
 
 
 ## Velocidad vertical: el flotante sigue su vaivén en vez de caer.

@@ -35,7 +35,7 @@ func _initialize() -> void:
 	muro.registrar_golpe(10)
 	_chk(muro.golpes == 0, "muro: golpe flojo del Oso no cuenta")
 	for i in muro.golpes_para_romper:
-		muro.registrar_golpe(24)
+		player.set("_current_attack_type", "special"); muro.registrar_golpe(24)
 	_chk(muro.abierto and muro.collision_layer == 0, "muro: 3 golpes pesados del Oso lo rompen")
 
 	# Compuerta + losa.

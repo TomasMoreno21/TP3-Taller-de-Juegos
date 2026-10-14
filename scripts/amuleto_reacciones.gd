@@ -118,6 +118,8 @@ func _en_pelea() -> bool:
 
 
 func _hay_enemigos_cerca() -> bool:
+	if not is_inside_tree():
+		return false
 	for e in get_tree().get_nodes_in_group("enemy"):
 		if e is Node2D and is_instance_valid(e) and (e as Node2D).global_position.distance_to(_jugador.global_position) < radio_pelea:
 			return true

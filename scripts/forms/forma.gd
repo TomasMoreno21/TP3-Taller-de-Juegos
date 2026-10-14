@@ -152,7 +152,10 @@ func is_gliding(_player: CharacterBody2D) -> bool:
 func try_jump(player: CharacterBody2D) -> void:
 	if _jumps_usados >= jumps:
 		return
-	if player.has_method("squash_y"):
+	var en_aire := not player.is_on_floor()
+	if en_aire and player.has_method("stretch_y"):
+		player.stretch_y(0.12, 0.1)   # 2.º salto en el aire: sin agacharse, sigue el impulso
+	elif player.has_method("squash_y"):
 		player.squash_y(0.14, 0.08)
 	var vel_factor := clampf(absf(player.velocity.x) / maxf(speed, 1.0), 0.0, 1.0)
 	player.velocity.y = jump_velocity * (1.0 + 0.08 * vel_factor)

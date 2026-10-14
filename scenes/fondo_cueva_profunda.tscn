@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/capa_cueva.gd" id="1_capa"]
 
+[ext_resource type="Script" path="res://scripts/pulso_fondo.gd" id="2_pulso"]
+
 [node name="FondoCuevaProfunda" type="ParallaxBackground"]
 layer = -10
 
@@ -9,88 +11,107 @@ layer = -10
 motion_scale = Vector2(0.08, 1)
 script = ExtResource("1_capa")
 tipo = "sombra"
-color_a = Color(0.02, 0.05, 0.08, 1)
-color_b = Color(0.01, 0.02, 0.04, 1)
+color_a = Color(0.03, 0.032, 0.04, 1)
+color_b = Color(0.015, 0.016, 0.022, 1)
 semilla = 31
-ancho_total = 26000.0
-centro_x = 9500.0
+ancho_total = 31000.0
+centro_x = 6520.0
 y_techo = -1000.0
-y_fondo = 5400.0
-color_niebla = Color(0.1, 0.4, 0.46, 1)
+y_fondo = 7700.0
+color_niebla = Color(0.16, 0.17, 0.2, 1)
 niebla = 1.0
 
 [node name="Pared" type="ParallaxLayer" parent="."]
 motion_scale = Vector2(0.22, 1)
 script = ExtResource("1_capa")
 tipo = "pared"
-color_a = Color(0.05, 0.13, 0.17, 1)
-color_b = Color(0.15, 0.38, 0.44, 1)
+color_a = Color(0.11, 0.115, 0.135, 1)
+color_b = Color(0.27, 0.28, 0.32, 1)
 semilla = 37
-ancho_total = 26000.0
-centro_x = 9500.0
+ancho_total = 31000.0
+centro_x = 6520.0
 y_techo = -1000.0
-y_fondo = 5400.0
-color_niebla = Color(0.12, 0.42, 0.48, 1)
+y_fondo = 7700.0
+color_niebla = Color(0.2, 0.21, 0.25, 1)
 niebla = 0.7
 
 [node name="Estalactitas" type="ParallaxLayer" parent="."]
 motion_scale = Vector2(0.38, 1)
 script = ExtResource("1_capa")
 tipo = "estalactitas"
-color_a = Color(0.03, 0.07, 0.1, 1)
-color_b = Color(0.02, 0.05, 0.08, 1)
+color_a = Color(0.05, 0.052, 0.062, 1)
+color_b = Color(0.04, 0.042, 0.05, 1)
 densidad = 1.4
 semilla = 41
-ancho_total = 26000.0
-centro_x = 9500.0
+ancho_total = 31000.0
+centro_x = 6520.0
 y_techo = -1000.0
-y_fondo = 5400.0
-color_niebla = Color(0.1, 0.4, 0.46, 1)
+y_fondo = 7700.0
+color_niebla = Color(0.16, 0.17, 0.2, 1)
 niebla = 0.15
+
+[node name="Venas" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.5, 1)
+script = ExtResource("1_capa")
+tipo = "venas"
+color_b = Color(0.045, 0.047, 0.058, 1)
+color_acento = Color(0.7, 0.4, 0.62, 1)
+densidad = 0.55
+semilla = 71
+ancho_total = 31000.0
+centro_x = 6520.0
+y_techo = -1000.0
+y_fondo = 7700.0
+niebla = 0.0
+
+[node name="Pulso" type="Node" parent="Venas"]
+script = ExtResource("2_pulso")
+opacidad_base = 0.75
+fuerza = 0.25
 
 [node name="Pilares" type="ParallaxLayer" parent="."]
 motion_scale = Vector2(0.6, 1)
 script = ExtResource("1_capa")
 tipo = "pilares"
-color_a = Color(0.02, 0.06, 0.09, 1)
-color_b = Color(0.03, 0.08, 0.11, 1)
-y_base = 5100.0
+color_a = Color(0.04, 0.042, 0.05, 1)
+color_b = Color(0.045, 0.047, 0.056, 1)
+y_base = 7400.0
 densidad = 0.9
 semilla = 43
-ancho_total = 26000.0
-centro_x = 9500.0
+ancho_total = 31000.0
+centro_x = 6520.0
 y_techo = -1000.0
-y_fondo = 5400.0
-color_acento = Color(0.2, 0.9, 0.8, 1)
-color_niebla = Color(0.1, 0.38, 0.44, 1)
+y_fondo = 7700.0
+color_acento = Color(0.45, 0.5, 0.56, 1)
+color_niebla = Color(0.18, 0.19, 0.23, 1)
 niebla = 0.3
 
 [node name="Estalagmitas" type="ParallaxLayer" parent="."]
 motion_scale = Vector2(0.8, 1)
 script = ExtResource("1_capa")
 tipo = "estalagmitas"
-color_a = Color(0.015, 0.04, 0.065, 1)
-color_b = Color(0.02, 0.05, 0.075, 1)
-y_base = 5200.0
+color_a = Color(0.03, 0.032, 0.04, 1)
+color_b = Color(0.035, 0.037, 0.045, 1)
+y_base = 7500.0
 semilla = 47
-ancho_total = 26000.0
-centro_x = 9500.0
+ancho_total = 31000.0
+centro_x = 6520.0
 y_techo = -1000.0
-y_fondo = 5400.0
-color_niebla = Color(0.1, 0.36, 0.42, 1)
+y_fondo = 7700.0
+color_niebla = Color(0.16, 0.17, 0.2, 1)
 niebla = 0.15
 
 [node name="Agua" type="ParallaxLayer" parent="."]
 motion_scale = Vector2(1, 1)
 script = ExtResource("1_capa")
 tipo = "agua"
-color_a = Color(0.02, 0.06, 0.1, 1)
-color_b = Color(0.12, 0.5, 0.52, 1)
-y_base = 4900.0
+color_a = Color(0.04, 0.042, 0.05, 1)
+color_b = Color(0.16, 0.2, 0.27, 1)
+y_base = 7200.0
 semilla = 53
-ancho_total = 26000.0
-centro_x = 9500.0
+ancho_total = 31000.0
+centro_x = 6520.0
 y_techo = -1000.0
-y_fondo = 5400.0
-color_niebla = Color(0.1, 0.4, 0.46, 1)
+y_fondo = 7700.0
+color_niebla = Color(0.16, 0.17, 0.2, 1)
 niebla = 0.0

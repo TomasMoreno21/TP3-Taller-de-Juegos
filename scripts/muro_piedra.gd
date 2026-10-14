@@ -23,11 +23,12 @@ signal roto
 @export var dano_minimo := 24               ## golpes más flojos (ataque ligero) no cuentan
 @export var golpes_para_romper := 3
 @export var solo_por_losa := false          ## compuerta: los golpes no la rompen, solo abrir()
+@export var solo_especial := true           ## solo el ataque especial rompe el muro
 @export_group("Efectos")
 @export var derrumbe := false               ## al romperse sacude el nivel entero (polvo del techo)
 @export var shake_romper := 9.0
 @export var hitstop_romper := 0.06
-@export var tip_forma := "Solo el Oso puede romper esta piedra."
+@export var tip_forma := "Solo el ataque especial del Oso rompe esta piedra."
 @export var sonido_golpe: AudioStream = preload("res://assets/audio/sfx/gen/rompible_golpe.wav")
 @export var sonido_romper: AudioStream = preload("res://assets/audio/sfx/gen/rompible_romper.wav")
 @export var volumen_db := -6.0
@@ -70,10 +71,10 @@ func _draw() -> void:
 		draw_line(Vector2(x, y - fila), Vector2(x, y), color_junta, 3.0)
 		y += fila
 		i += 1
-	# Grietas según el daño recibido.
-	for g in golpes:
-		var gx := r.position.x + tam.x * (0.25 + 0.25 * g)
-		draw_polyline(PackedVector2Array([Vector2(gx, r.position.y + 20.0), Vector2(gx - 10.0, r.position.y + tam.y * 0.4), Vector2(gx + 8.0, r.position.y + tam.y * 0.7)]), Color(0, 0, 0, 0.55), 3.0)
+	# Daño acumulado: la piedra se oscurece y aparecen grietas grandes donde se golpeó.
+	var prog := float(golpes) / float(maxi(golpes_para_romper, 1))
+	if golpes > 0:
+		draw_rect(r, Color(0, 0, 0, 0.7 * prog))
 	draw_line(r.position, Vector2(r.position.x + tam.x, r.position.y), color_piedra.lightened(0.3), 4.0)
 
 
@@ -88,17 +89,24 @@ func registrar_golpe(dano: int) -> void:
 		if jugador.has_method("_tip_una_vez") and tip_forma != "":
 			jugador.call("_tip_una_vez", "muro_piedra", tip_forma)
 		return
+	if solo_especial and jugador != null and str(jugador.get("_current_attack_type")) != "special":
+		_sacudir(4.0)
+		return
 	if dano < dano_minimo:
 		_sacudir(4.0)
 		return
 	golpes += 1
 	_sonar(sonido_golpe)
-	Burst.emitir(self, _punto_impacto(jugador), color_piedra, 6 + golpes * 3, 0.8)
+	var pto := _punto_impacto(jugador)
+	Burst.emitir(self, pto, color_piedra, 6 + golpes * 3, 0.8)
 	queue_redraw()
 	if golpes >= golpes_para_romper:
 		abrir()
 	else:
-		_sacudir(6.0)
+		_sacudir(6.0 + 3.0 * golpes)
+		if DisplayServer.get_name() != "headless":
+			modulate = Color(2.2, 2.0, 1.8)
+			create_tween().tween_property(self, "modulate", Color.WHITE, 0.25)
 
 
 ## Rompe el muro sin comprobar forma ni daño (lo usa la losa de peso).

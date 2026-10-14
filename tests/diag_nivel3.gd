@@ -158,7 +158,7 @@ func _init() -> void:
 			var dx: float = dn.position.x
 			var dy: float = dn.position.y
 			var apoyo := false
-			if [9, 6, 14, 15, 19].has(int(dn.tipo)):   # colgantes: estalactita, rama, estandarte, cadenas, jaula
+			if [9, 6, 14, 15, 19, 22].has(int(dn.tipo)):   # colgantes: estalactita, rama, estandarte, cadenas, jaula, raíces
 				apoyo = _solido(dx, dy - 8.0) and not _solido(dx, dy + 8.0) and _solido(dx - 40.0, dy - 8.0) and _solido(dx + 40.0, dy - 8.0)
 			else:
 				apoyo = _solido(dx, dy + 8.0) and not _solido(dx, dy - 8.0) and _solido(dx - 40.0, dy + 8.0) and _solido(dx + 40.0, dy + 8.0)

@@ -10,7 +10,8 @@ signal alcanzada   ## el jugador llegó a la salida (los objetivos de lista del 
 @export var volumen_salida_db := -8.0
 @export_group("Salida por la oscuridad")
 @export var modo_oscuridad := false                    ## la cueva sigue y se oscurece: el jugador camina solo hasta desaparecer
-@export var largo_oscuridad := 380.0                   ## tramo del degradé (hacia la derecha)
+@export var hacia_izquierda := false                    ## el jugador entra desde la derecha: el degradé y el negro sólido se extienden hacia la izquierda
+@export var largo_oscuridad := 380.0                   ## tramo del degradé (en la dirección de entrada)
 @export var velocidad_entrada := 0.4                   ## 0.35 = paso tranquilo
 @export var espera_maxima := 5.0                       ## seguro por si el jugador se traba
 @export var color_oscuridad := Color(0, 0, 0)          ## tinte de la oscuridad (distinto por zona)
@@ -81,16 +82,21 @@ func _on_body_entered(_body: Node2D) -> void:
 
 func _entrar_oscuridad(jugador: Node) -> void:
 	jugador.set("cinematica_activa", true)
-	jugador.set("cinematica_dir", velocidad_entrada)
-	var x_fin := global_position.x + largo_oscuridad * 0.8
+	jugador.set("cinematica_dir", velocidad_entrada * _signo())
+	var x_fin := global_position.x + _signo() * largo_oscuridad * 0.8
 	var t := 0.0
-	while t < espera_maxima and (jugador as Node2D).global_position.x < x_fin:
+	while t < espera_maxima and (jugador as Node2D).global_position.x * _signo() < x_fin * _signo():
 		await get_tree().process_frame
 		t += get_process_delta_time()
 	var audio := get_node_or_null("/root/AudioManager")
 	if audio != null:
 		audio.play_sfx(sonido_salida, volumen_salida_db)
 	TransicionPantalla.de(get_tree()).cambiar_escena(siguiente_escena)
+
+
+## +1 si la oscuridad se extiende hacia la derecha, -1 hacia la izquierda.
+func _signo() -> float:
+	return -1.0 if hacia_izquierda else 1.0
 
 
 func _crear_velo() -> void:
@@ -112,8 +118,9 @@ func _process(delta: float) -> void:
 			if _jugador != null:
 				# Solo dentro del rectángulo de oscuridad (otros tramos del nivel pueden pasar por la misma x).
 				var d := _jugador.global_position - global_position
-				var dentro := d.y > -alto_oscuridad_arriba and d.y < alto_oscuridad_abajo and d.x < largo_oscuridad + ancho_oscuridad_solida
-				var k := clampf(d.x / (largo_oscuridad * 0.8), 0.0, 1.0) if dentro else 0.0
+				var dx := d.x * _signo()
+				var dentro := d.y > -alto_oscuridad_arriba and d.y < alto_oscuridad_abajo and dx < largo_oscuridad + ancho_oscuridad_solida
+				var k := clampf(dx / (largo_oscuridad * 0.8), 0.0, 1.0) if dentro else 0.0
 				_velo.color.a = smoothstep(0.15, 1.0, k)
 		return
 	_t += delta
@@ -180,8 +187,9 @@ func _crear_particulas() -> void:
 	add_child(c)
 
 
-## Degradé de transparente a negro hacia la derecha, y negro sólido después: el jugador se "apaga" al entrar.
+## Degradé de transparente a negro hacia la derecha (o la izquierda), y negro sólido después: el jugador se "apaga" al entrar.
 func _dibujar_oscuridad() -> void:
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2(_signo(), 1.0))
 	var arriba := alto_oscuridad_arriba
 	var abajo := alto_oscuridad_abajo
 	var c0 := Color(color_oscuridad, 0.0)

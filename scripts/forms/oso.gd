@@ -12,7 +12,7 @@ var _landing_tween: Tween
 
 func _init() -> void:
 	form_name = "Oso"
-	speed = 310.0
+	speed = 350.0
 	jump_velocity = -410.0
 	gravity_scale = 1.55
 	max_health = 100

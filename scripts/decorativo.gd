@@ -12,7 +12,7 @@ extends Node2D
 ## _generar_silueta_cueva / _generar_brillo.
 enum Tipo { ARBOL, SAUCE, ARBUSTO, PASTO, PIEDRA, TRONCO_FRENTE, RAMA_COLGANTE, PASTO_ALTO,
 	ESTALAGMITA, ESTALACTITA, CRISTAL, ANTORCHA, BRASERO, VELAS, ESTANDARTE, CADENAS, HUESOS,
-	CIRCULO, GLIFO, JAULA, ESTATUA }
+	CIRCULO, GLIFO, JAULA, ESTATUA, HONGOS, RAICES }
 
 const COLORES_CUEVA := {
 	Tipo.ESTALAGMITA: { "copa": Color(0.20, 0.20, 0.27) },
@@ -28,7 +28,11 @@ const COLORES_CUEVA := {
 	Tipo.GLIFO: { "copa": Color(0.72, 0.28, 0.84) },
 	Tipo.JAULA: { "copa": Color(0.24, 0.22, 0.25) },
 	Tipo.ESTATUA: { "copa": Color(0.32, 0.31, 0.42), "tronco": Color(0.2, 0.2, 0.28) },
+	Tipo.HONGOS: { "copa": Color(0.235, 0.24, 0.26), "tronco": Color(0.30, 0.31, 0.33) },   # siluetas grises (PaletaMundo); las esporas son el único color
+	Tipo.RAICES: { "copa": Color(0.27, 0.275, 0.30), "tronco": Color(0.36, 0.37, 0.40) },  # cuelgan del techo; los nódulos laten con el corazón (latido_cueva.gd)
 }
+const COLOR_NODULO := Color(0.65, 0.42, 1.0)
+const COLOR_ESPORA := Color(0.37, 0.83, 0.78)
 const COLOR_FUEGO := [Color(1.0, 0.42, 0.10), Color(1.0, 0.72, 0.26), Color(1.0, 0.94, 0.62)]
 const LUZ_RADIAL := preload("res://resources/luz_radial.tres")
 
@@ -96,6 +100,8 @@ var _sombra: Polygon2D
 var _brillo: Node2D
 var _llamas: Array[Node2D] = []
 var _halos: Array[Sprite2D] = []
+var _nodulos: Array[Node2D] = []   ## núcleos violeta de las raíces: laten con el corazón de la cueva
+var _latido: Node
 var _rx := 0.0                # ángulo de reacción (resorte)
 var _rv := 0.0
 var _jugador: Node2D
@@ -182,6 +188,20 @@ func _process(delta: float) -> void:
 		for h in _halos:
 			var base: float = h.get_meta("alpha")
 			h.modulate.a = base * (0.82 + 0.18 * sin(tp * 5.0) + 0.06 * sin(tp * 13.0))
+		if not _nodulos.is_empty():
+			_pulsar_nodulos(tp)
+
+
+## Los nódulos laten con el mismo pulso que el tinte de la cueva y las venas; sin latido (otros niveles) respiran solos.
+func _pulsar_nodulos(tp: float) -> void:
+	if not is_instance_valid(_latido):
+		_latido = get_tree().get_first_node_in_group("latido_cueva")
+	var a := 0.55 + 0.25 * sin(tp * 2.0)
+	if _latido != null:
+		var fuerza := clampf(float(_latido.intensidad_actual()) * 8.0, 0.4, 1.0)
+		a = clampf(0.4 + 0.6 * float(_latido.pulso_actual()) * fuerza, 0.0, 1.0)
+	for n in _nodulos:
+		n.modulate.a = a
 
 
 ## Colores, flip y escala sin redibujar.
@@ -205,6 +225,7 @@ func _rehacer() -> void:
 			old.queue_free()
 	_llamas.clear()
 	_halos.clear()
+	_nodulos.clear()
 	_brillo = null
 	_hoja = Node2D.new()
 	_hoja.name = "Hoja"
@@ -671,7 +692,131 @@ func _generar_silueta_cueva(t: int, v: int) -> Array[Polygon2D]:
 			salida += [_poligono([Vector2(-5.5, -64), Vector2(-4.5, -82), Vector2(0, -90), Vector2(4.5, -82), Vector2(5.5, -64)], Color(0.02, 0.02, 0.04))]
 			salida += [_poligono([Vector2(-15, -48), Vector2(15, -48), Vector2(12, -38), Vector2(-12, -38)], piedra.darkened(0.25))]
 			salida += [_poligono([Vector2(-18, -14), Vector2(-14.5, -14), Vector2(-10.5, -60), Vector2(-13, -60)], piedra.lightened(0.28))]
+		Tipo.HONGOS:
+			salida += _hongos(v, colores["copa"] * tinte, colores["tronco"])
+		Tipo.RAICES:
+			var d := _datos_raices(v)
+			var base_r: Color = colores["copa"] * tinte
+			var luz_r: Color = colores["tronco"]
+			for i in (d["raices"] as Array).size():
+				var pts: PackedVector2Array = d["raices"][i]
+				var ws: PackedFloat32Array = d["anchos"][i]
+				salida += [_tira(pts, ws, base_r)]
+				var ws_luz := PackedFloat32Array()
+				var pts_luz := PackedVector2Array()
+				for k in pts.size():
+					pts_luz.append(pts[k] + Vector2(-ws[k] * 0.45, 0))
+					ws_luz.append(ws[k] * 0.28)
+				salida += [_tira(pts_luz, ws_luz, luz_r)]
+			for rl in d["raicillas"]:
+				salida += [_tira(rl[0], rl[1], base_r)]
+			for hilo in d["hilos"]:
+				salida += [_tira(hilo, PackedFloat32Array([0.5, 0.35]), base_r.darkened(0.25))]
+			for nd in d["nodulos"]:
+				salida += [_poligono(_circulo(nd[0], nd[1], 12), base_r.lightened(0.05))]
+				salida += [_poligono(_circulo(nd[0] + Vector2(-nd[1] * 0.25, -nd[1] * 0.25), nd[1] * 0.45, 8), luz_r)]
 	return salida
+
+
+## Grupo de hongos en gris (sombrero, láminas, brillo y manchas) apoyado en y = 0.
+func _hongos(v: int, base: Color, luz: Color) -> Array[Polygon2D]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(Tipo.HONGOS * 1000 + v)
+	var out: Array[Polygon2D] = []
+	var n := 3 + v % 3
+	var sombra_c := base.darkened(0.3)
+	var x := -float(n - 1) * 0.5 * 15.0
+	for i in n:
+		var alto := rng.randf_range(12.0, 30.0) * (1.0 if i != n / 2 else 1.3)
+		var ancho := alto * rng.randf_range(0.55, 0.75)
+		var cx := x + rng.randf_range(-3.0, 3.0)
+		var comba := rng.randf_range(-3.0, 3.0)
+		var tallo := PackedVector2Array([
+			Vector2(cx - ancho * 0.22, 0), Vector2(cx - ancho * 0.14 + comba, -alto * 0.5),
+			Vector2(cx - ancho * 0.12 + comba * 0.5, -alto), Vector2(cx + ancho * 0.12 + comba * 0.5, -alto),
+			Vector2(cx + ancho * 0.16 + comba, -alto * 0.5), Vector2(cx + ancho * 0.24, 0)])
+		out.append(_poligono(tallo, base))
+		out.append(_poligono(PackedVector2Array([
+			Vector2(cx - ancho * 0.2, 0), Vector2(cx - ancho * 0.12 + comba, -alto * 0.5),
+			Vector2(cx - ancho * 0.1 + comba * 0.5, -alto), Vector2(cx - ancho * 0.02 + comba * 0.5, -alto),
+			Vector2(cx - ancho * 0.04 + comba, -alto * 0.5), Vector2(cx - ancho * 0.08, 0)]), luz))
+		var top := Vector2(cx + comba * 0.5, -alto)
+		var rx := ancho * rng.randf_range(1.0, 1.25)
+		var ry := rx * rng.randf_range(0.7, 0.95)
+		out.append(_poligono(_medio_circulo(top + Vector2(0, 1.0), rx, ry), base))
+		out.append(_poligono(PackedVector2Array([top + Vector2(-rx, 1.0), top + Vector2(rx, 1.0),
+			top + Vector2(rx * 0.7, 3.0), top + Vector2(-rx * 0.7, 3.0)]), sombra_c))
+		var brillo_pts := PackedVector2Array()
+		for k in 7:
+			var a := PI + PI * 0.52 * float(k) / 6.0 + 0.12
+			brillo_pts.append(top + Vector2(cos(a) * rx * 0.86, sin(a) * ry * 0.86))
+		for k in range(6, -1, -1):
+			var a2 := PI + PI * 0.52 * float(k) / 6.0 + 0.12
+			brillo_pts.append(top + Vector2(cos(a2) * rx * 0.62, sin(a2) * ry * 0.62))
+		out.append(_poligono(brillo_pts, luz))
+		for k in 2 + i % 2:
+			var a3 := rng.randf_range(PI * 1.2, PI * 1.85)
+			var rr := rng.randf_range(0.35, 0.7)
+			out.append(_poligono(_circulo(top + Vector2(cos(a3) * rx * rr, sin(a3) * ry * rr), maxf(alto * 0.06, 0.9), 6), luz))
+		x += rx * 0.95 + 6.0
+	return out
+
+
+## Geometría de las raíces (compartida por silueta y brillo para que coincidan): cuelgan desde (x, 0) hacia abajo.
+func _datos_raices(v: int) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(Tipo.RAICES * 1000 + v)
+	var raices: Array = []
+	var anchos: Array = []
+	var raicillas: Array = []
+	var hilos: Array = []
+	var nodulos: Array = []
+	var n := 3 + v % 2
+	for i in n:
+		var x0 := (float(i) - float(n - 1) * 0.5) * 18.0 + rng.randf_range(-4.0, 4.0)
+		var largo := rng.randf_range(45.0, 95.0) * (1.25 if i == n / 2 else 1.0)
+		var w0 := rng.randf_range(3.2, 5.2)
+		var amp := rng.randf_range(4.0, 10.0)
+		var fase := rng.randf() * TAU
+		var deriva := rng.randf_range(-8.0, 8.0)
+		var pts := PackedVector2Array()
+		var ws := PackedFloat32Array()
+		const PASOS := 10
+		for k in PASOS + 1:
+			var f := float(k) / PASOS
+			pts.append(Vector2(x0 + sin(f * 4.0 + fase) * amp * f + deriva * f, largo * f))
+			ws.append(lerpf(w0, 0.7, pow(f, 0.8)))
+		raices.append(pts)
+		anchos.append(ws)
+		for fr in [0.38, 0.66]:
+			if rng.randf() < 0.75:
+				var k := int(fr * PASOS)
+				var o := pts[k]
+				var lado := -1.0 if rng.randf() < 0.5 else 1.0
+				var l := rng.randf_range(10.0, 20.0)
+				raicillas.append([PackedVector2Array([o, o + Vector2(lado * l * 0.6, l * 0.35), o + Vector2(lado * l, l * 0.95)]), PackedFloat32Array([1.5, 1.0, 0.5])])
+		if rng.randf() < 0.85:
+			var kn := int(rng.randf_range(0.55, 1.0) * PASOS)
+			nodulos.append([pts[kn], rng.randf_range(3.6, 5.6)])
+	for i in 2 + v % 2:
+		var hx := rng.randf_range(-34.0, 34.0)
+		hilos.append(PackedVector2Array([Vector2(hx, 0), Vector2(hx + rng.randf_range(-3.0, 3.0), rng.randf_range(24.0, 60.0))]))
+	return {"raices": raices, "anchos": anchos, "raicillas": raicillas, "hilos": hilos, "nodulos": nodulos}
+
+
+## Tira de grosor variable a lo largo de una polilínea (raíces, hilos).
+func _tira(pts: PackedVector2Array, ancho: PackedFloat32Array, color: Color) -> Polygon2D:
+	var izq := PackedVector2Array()
+	var der := PackedVector2Array()
+	for k in pts.size():
+		var a := pts[maxi(k - 1, 0)]
+		var b := pts[mini(k + 1, pts.size() - 1)]
+		var nrm := (b - a).normalized().orthogonal()
+		var w := ancho[mini(k, ancho.size() - 1)]
+		izq.append(pts[k] + nrm * w)
+		der.append(pts[k] - nrm * w)
+	der.reverse()
+	return _poligono(izq + der, color)
 
 
 ## Calavera frontal simple (cráneo, mandíbula, cuencas y nariz).
@@ -764,6 +909,29 @@ func _generar_brillo(t: int, v: int) -> Array[Node2D]:
 			if v % 2 == 1:
 				for sx in [-2.6, 2.6]:
 					res += _halo(Vector2(sx, -77), 0.09, 0.9, Color(1.0, 0.18, 0.28))
+		Tipo.HONGOS:
+			var rng := RandomNumberGenerator.new()
+			rng.seed = hash(Tipo.HONGOS * 7000 + v)
+			for i in 5 + v % 3:
+				var e := Polygon2D.new()
+				e.polygon = _circulo(Vector2.ZERO, rng.randf_range(0.9, 1.5), 6)
+				e.position = Vector2(rng.randf_range(-34.0, 34.0), rng.randf_range(-48.0, -6.0))
+				e.color = Color(COLOR_ESPORA.r, COLOR_ESPORA.g, COLOR_ESPORA.b, 0.85)
+				res.append(e)
+			res += _halo(Vector2(0, -16), 0.3, 0.1, COLOR_ESPORA)
+		Tipo.RAICES:
+			var d := _datos_raices(v)
+			for nd in d["nodulos"]:
+				var nucleo := Polygon2D.new()
+				nucleo.polygon = _circulo(Vector2.ZERO, float(nd[1]) * 0.5, 10)
+				nucleo.position = nd[0]
+				nucleo.color = COLOR_NODULO
+				res.append(nucleo)
+				_nodulos.append(nucleo)
+				var h := _halo(nd[0], float(nd[1]) * 0.036, 0.24, COLOR_NODULO)
+				_halos.erase(h[0])   # este halo late con el corazón, no con el parpadeo de las llamas
+				_nodulos.append(h[0])
+				res += h
 	return res
 
 

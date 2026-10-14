@@ -8,7 +8,7 @@ extends ParallaxLayer
 ## Cada capa dibuja de forma CONTINUA en ancho_total/centro_x y alto
 ## (y_techo..y_fondo). Configurable desde el Inspector.
 
-@export_enum("sombra", "pared", "secta", "estalactitas", "pilares", "estalagmitas", "agua") var tipo := "sombra":
+@export_enum("sombra", "pared", "secta", "estalactitas", "pilares", "estalagmitas", "agua", "venas") var tipo := "sombra":
 	set(value):
 		tipo = value
 		queue_redraw()
@@ -150,6 +150,8 @@ func _dibujar_todo() -> void:
 			_dibujar_estalagmitas(x_min, x_max, ancho)
 		"agua":
 			_dibujar_agua(x_min, x_max, ancho)
+		"venas":
+			_dibujar_venas(x_min, x_max, ancho)
 	# El dibujo fija el RNG global con semillas fijas (para que la cueva sea siempre igual):
 	# se re-aleatoriza al terminar, si no todo el azar del juego (IA, luciérnagas, partículas) sería idéntico en cada partida.
 	randomize()
@@ -776,3 +778,36 @@ func _elipse(centro: Vector2, radios: Vector2, n: int) -> PackedVector2Array:
 		var a := TAU * float(i) / float(n)
 		pts.append(Vector2(centro.x + cos(a) * radios.x, centro.y + sin(a) * radios.y))
 	return pts
+
+
+## Venas colgantes: cordones orgánicos que bajan del techo, con bultos luminosos de `color_acento`.
+## Cuentan que la cueva "late" cerca del sello: más densas y brillantes que las estalactitas.
+func _dibujar_venas(x_min: float, x_max: float, ancho: float) -> void:
+	var base_y := y_techo + 520.0
+	var n := maxi(4, roundi(ancho / 520.0 * densidad))
+	for i in n:
+		seed(semilla * 19 + i * 29)
+		var x := _centro_familia(x_min, ancho, n, i)
+		var largo := randf_range(500.0, 1900.0)
+		_dibujar_vena(Vector2(x, base_y), largo, randf_range(16.0, 30.0), randf_range(-0.25, 0.25), 1.0)
+		if randf() < 0.55:
+			var y_r := base_y + largo * randf_range(0.25, 0.5)
+			_dibujar_vena(Vector2(x, y_r), largo * randf_range(0.3, 0.5), randf_range(8.0, 14.0), randf_range(0.5, 1.0) * (1.0 if randf() < 0.5 else -1.0), 0.8)
+
+
+func _dibujar_vena(origen: Vector2, largo: float, grosor: float, deriva: float, alfa: float) -> void:
+	var pts := PackedVector2Array()
+	var pasos := 9
+	var fase := randf() * TAU
+	for k in pasos + 1:
+		var t := float(k) / float(pasos)
+		pts.append(origen + Vector2(sin(t * 4.0 + fase) * 26.0 * t + deriva * largo * t * t, largo * t))
+	var oscuro := Color(color_b.r, color_b.g, color_b.b, alfa)
+	_d_polyline(pts, oscuro, grosor)
+	_d_polyline(pts, Color(oscuro.lightened(0.2).r, oscuro.lightened(0.2).g, oscuro.lightened(0.2).b, alfa * 0.5), grosor * 0.35)
+	_d_polyline(pts, Color(color_acento.r, color_acento.g, color_acento.b, 0.22 * alfa), maxf(grosor * 0.14, 2.0))
+	for k in range(3, pasos, 5):
+		var c := pts[k]
+		_d_circle(c, grosor * 1.6, Color(color_acento.r, color_acento.g, color_acento.b, 0.05 * alfa))
+		_d_circle(c, grosor * 1.0, Color(color_acento.r, color_acento.g, color_acento.b, 0.22 * alfa))
+		_d_circle(c, grosor * 0.45, Color(color_acento.lightened(0.4).r, color_acento.lightened(0.4).g, color_acento.lightened(0.4).b, 0.6 * alfa))

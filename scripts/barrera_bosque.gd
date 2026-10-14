@@ -3,6 +3,8 @@ extends Node2D
 signal abierta   ## al romperse el último cristal (los objetivos de lista se tachan con esto)
 
 @export var barrera_id: String = "barrera_1"
+@export var tam_barrera := Vector2(220, 677)       ## ancho x alto del muro de energía (el alto debe cubrir todo el hueco)
+@export var centro_barrera := Vector2(0, -178.5)   ## centro del muro respecto del pivote (se mueve para que apoye en suelo y techo)
 
 var _destruidos := 0
 var _total_cristales := 0
@@ -18,7 +20,24 @@ var _t := 0.0
 @onready var luz_barrera: PointLight2D = $Barrera/Visual/LuzBarrera
 
 
+func _ajustar_tamano() -> void:
+	var forma := RectangleShape2D.new()
+	forma.size = tam_barrera
+	barrera_collision.shape = forma
+	barrera_collision.position = centro_barrera
+	var m := tam_barrera * 0.5
+	barrera_poly.polygon = PackedVector2Array([Vector2(-m.x, -m.y), Vector2(m.x, -m.y), Vector2(m.x, m.y), Vector2(-m.x, m.y)])
+	barrera_poly.scale = Vector2.ONE
+	barrera_poly.position = centro_barrera
+	var fx := barrera_visual_root.get_node_or_null("Energia")
+	if fx != null:
+		fx.position = centro_barrera
+		fx.ancho = tam_barrera.x
+		fx.alto = tam_barrera.y
+
+
 func _ready() -> void:
+	_ajustar_tamano()
 	# Identifica la barrera como energía: el sónico la atraviesa (projectile.gd).
 	if barrera != null:
 		barrera.add_to_group("barrera_energia")

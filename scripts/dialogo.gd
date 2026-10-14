@@ -36,7 +36,7 @@ const LIMITE_TROZO := 44   ## un texto más largo se parte en globos cortos
 @export_group("Game feel del globo")
 @export var flotacion_px := 3.0          ## cuánto sube y baja el globo mientras está en pantalla
 @export var inercia_globo := 9.0         ## qué tan rápido alcanza al jugador (menor = más retraso y cola más estirada)
-@export var inclinacion_max := 0.05      ## rad: el globo se inclina hacia donde lo arrastra el movimiento
+@export var inclinacion_max := 0.0       ## rad: inclinación máx. del globo al moverse (0 = siempre recto)
 @export var pausa_coma := 0.10           ## s de pausa al escribir "," ";" ":"
 @export var pausa_frase := 0.22          ## s de pausa al escribir "." "!" "?" "…"
 @export var sacudida_alerta := 3.0       ## temblor de cámara al aparecer un globo de ALERTA (0 = sin)
@@ -273,13 +273,13 @@ func _siguiente() -> void:
 ## ALERTA y GRITO llegan con más golpe y un temblor de cámara corto.
 func _entrada_globo(tono_i: int, marcado: bool) -> void:
 	var fuerte := tono_i >= 1 or marcado
-	var pico := Vector2(1.08, 1.2) if fuerte else Vector2(0.96, 1.1)
+	var pico := Vector2.ONE * (1.06 if fuerte else 1.03)   # crece parejo (sin estirarse a lo alto): el globo queda siempre recto
 	var final := Vector2.ONE * lerpf(1.0, 0.78, _chico)
 	globo.scale = Vector2(0.3, 0.3)
 	_tw_globo = create_tween().set_parallel(true)
 	_tw_globo.tween_property(globo, "modulate:a", 1.0, 0.09)
 	_tw_globo.tween_property(globo, "scale", pico, 0.1).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	_tw_globo.chain().tween_property(globo, "scale", final, 0.38).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_tw_globo.chain().tween_property(globo, "scale", final, 0.16).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	var fuerza := sacudida_grito if tono_i == 2 else (sacudida_alerta if tono_i == 1 else 0.0)
 	var cam := get_viewport().get_camera_2d()
 	if fuerza > 0.0 and cam != null and cam.has_method("shake"):
@@ -476,6 +476,8 @@ func _charla_reciente() -> bool:
 
 
 func _es_calma() -> bool:
+	if not is_inside_tree():
+		return false
 	if not is_instance_valid(_jugador):
 		_jugador = get_tree().get_first_node_in_group("player") as Node2D
 	if not is_instance_valid(_jugador):
@@ -514,6 +516,8 @@ func _on_dano(_cant: int) -> void:
 
 
 func _actualizar_peligro(delta: float) -> void:
+	if not is_inside_tree():
+		return
 	_peligro_t -= delta
 	if _peligro_t <= 0.0:
 		_peligro_t = 0.25
