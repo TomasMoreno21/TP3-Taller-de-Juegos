@@ -18,7 +18,7 @@ enum Form { HUMAN, LOBO, OSO, MURCIELAGO }
 const GRAVITY := 980.0
 const MAX_FALL_SPEED := 950.0
 const GLIDE_FALL_MULTIPLIER := 0.22
-const PLANEO_COSTO_S := 2.0   # energía/s que cuesta planear con el Murciélago
+const PLANEO_COSTO_S := 2.5   # energía/s que cuesta planear con el Murciélago
 const COYOTE_TIME := 0.14  # base; overridden per form in _init()
 const JUMP_BUFFER_TIME := 0.18  # base; overridden per form in _init()
 const JUMP_CUT_MULTIPLIER := 0.42  # base; overridden per form in _init()
@@ -95,6 +95,10 @@ const HITSTOP_COMBO := 0.11
 @export var rampa_distancia := 80.0         # px de recorrido sobre los que se ajusta la recta (una escalera de peldaños se vuelve rampa recta)
 @export var suavizado_escalon := 6.0       # rapidez con que el sprite se asienta cuando estás quieto o en el aire (0 = sin suavizar)
 @export var suavizado_escalon_max := 24.0   # px: desniveles mayores no se suavizan (teletransportes, caídas)
+@export var inclinar_en_pendiente := true     # el sprite se inclina con el ángulo del piso (subidas y bajadas)
+@export_range(0.0, 1.0) var pendiente_inclinacion := 0.5   # fracción del ángulo real del piso que se inclina (1 = apoyado en la rampa, 0 = sin inclinar)
+@export_range(5.0, 45.0) var pendiente_max_grados := 16.0  # tope de inclinación
+@export var rampa_hundimiento := 6.0   # px que el sprite se hunde al pisar una rampa suave (rampas_suaves.gd), para que no flote sobre los bloques
 @export var transicion_salida_ataque := 0.12  # s que se disuelve la última pose del golpe al volver a idle/correr (0 = corte seco)
 @export var piernas_vel_min := 0.15         # piso de la velocidad de las piernas al arrancar/frenar (antes 0.35: patinaban)
 @export var reaccion_dano_en_ataque := true # recibir daño en pleno golpe corta el avance del ataque y el retroceso solo mueve el sprite en X
@@ -292,6 +296,12 @@ var _suave_s := 0.0        # altura suavizada del suelo (mundo)
 var _suave_hist_x: Array[float] = []   # muestras recientes (x, y) del cuerpo en el suelo para ajustar la recta
 var _suave_hist_y: Array[float] = []
 var _suave_entero := 0.0   # parte entera de _suave_y ya aplicada a visual.position.y
+var _pend_media := 0.0     # pendiente media del piso reciente (dy/dx, y hacia abajo), de la recta ajustada en _suavizar_desnivel
+var _pend_valida := false  # hay recta ajustada este frame (si no, la inclinación sale de la normal del piso)
+var _hundido_rampa := 0.0  # hundimiento actual del sprite sobre una rampa (px, suavizado)
+var _sobre_rampa := false   # el último contacto con el piso fue una rampa suave
+var _rot_suelo_vis := 0.0  # parte de visual.rotation debida a la pendiente (rad)
+var _pend_off := Vector2.ZERO   # compensación de offset para girar el sprite alrededor de los pies y no de su centro
 var _mat_suave: ShaderMaterial   # absorbe la fracción de píxel de _suave_y
 var _fall_impact := 0.0
 var _esc_off := Vector2.ZERO      # desvío de escala del resorte (0 = forma normal)
@@ -459,7 +469,7 @@ func _ready() -> void:
 	_mat_suave = ShaderMaterial.new()
 	_mat_suave.shader = preload("res://resources/suave_vertical.gdshader")
 	visual.material = _mat_suave
-	floor_snap_length = 8.0
+	floor_snap_length = 16.0
 	floor_stop_on_slope = false
 	floor_max_angle = deg_to_rad(45.0)
 	wall_min_slide_angle = deg_to_rad(15.0)
@@ -1849,6 +1859,14 @@ func _transformar(nueva: int, forzar: bool = false) -> bool:
 	var prev_patas_off: bool = patas_shape.disabled
 	_aplicar_colision(data_nueva)
 	var bloqueado := test_move(global_transform, Vector2.ZERO)
+	var empuje := Vector2.ZERO
+	if bloqueado:
+		# Los píxeles del terreno no siempre dejan lugar justo: se busca un corrimiento chico (arriba o a los lados)
+		# donde la forma nueva quepa; solo se rechaza si de verdad no hay espacio cerca.
+		empuje = _empuje_para_caber()
+		bloqueado = empuje == Vector2.INF
+		if bloqueado:
+			empuje = Vector2.ZERO
 	(collision_shape.shape as RectangleShape2D).size = prev_size
 	collision_shape.position = prev_pos
 	(patas_shape.shape as RectangleShape2D).size = prev_patas_size
@@ -1860,6 +1878,8 @@ func _transformar(nueva: int, forzar: bool = false) -> bool:
 		return false
 	forms[current_form].reset_form_state()
 	current_form = nueva
+	if empuje != Vector2.ZERO:
+		global_position += empuje
 	if nueva != Form.HUMAN:
 		_ultima_forma = nueva
 	forma_seleccionada = nueva
@@ -2025,10 +2045,12 @@ func _suavizar_desnivel(delta: float) -> void:
 		_suave_s = y   # teletransporte / caída larga: no hay nada que suavizar
 		_suave_hist_x.clear()
 		_suave_hist_y.clear()
+	_pend_valida = false
 	if suavizado_escalon <= 0.0 or _trepando or not is_on_floor():
 		# En el aire o trepando no hay terreno que suavizar: se sincroniza rápido con el cuerpo.
 		_suave_hist_x.clear()
 		_suave_hist_y.clear()
+		_pend_media = 0.0
 		_suave_s = lerpf(_suave_s, y, 1.0 - exp(-30.0 * delta)) if suavizado_escalon > 0.0 else y
 	else:
 		var u := absf(x - _suave_x_prev)
@@ -2061,10 +2083,24 @@ func _suavizar_desnivel(delta: float) -> void:
 				sxy += (_suave_hist_x[i] - mx) * (_suave_hist_y[i] - my)
 			if sxx > 1.0:
 				objetivo = my + sxy / sxx * (x - mx)
+				_pend_media = sxy / sxx
+				_pend_valida = true
 		# Pequeña inercia en distancia para que al entrar/salir muestras de la ventana no haya tirones.
 		_suave_s = lerpf(_suave_s, objetivo, 1.0 - exp(-u / maxf(escalon_distancia, 1.0))) if u > 0.25 else lerpf(_suave_s, y, 1.0 - exp(-suavizado_escalon * delta))
 	_suave_x_prev = x
-	_suave_y = clampf(_suave_s - y, -suavizado_escalon_max, suavizado_escalon_max)
+	var hundir := 0.0
+	if rampa_hundimiento > 0.0 and is_on_floor() and not _trepando:
+		for i in get_slide_collision_count():
+			var col := get_slide_collision(i)
+			if col.get_normal().y < -0.5:   # contacto con el piso
+				var piso := col.get_collider() as Node
+				_sobre_rampa = piso != null and piso.is_in_group("rampa_suave")
+		if _sobre_rampa:
+			hundir = rampa_hundimiento
+	else:
+		_sobre_rampa = false
+	_hundido_rampa = lerpf(_hundido_rampa, hundir, 1.0 - exp(-10.0 * delta))
+	_suave_y = clampf(_suave_s - y + _hundido_rampa, -suavizado_escalon_max, suavizado_escalon_max)
 	if absf(_suave_y) < 0.01:
 		_suave_y = 0.0
 	# El motor dibuja los nodos en píxeles enteros: la parte entera va a la posición y la
@@ -2082,6 +2118,16 @@ func _visual_base_y() -> float:
 	if current_form >= 0 and current_form < forms.size():
 		lift = forms[current_form].flight_lift
 	return collision_shape.position.y + 7.5 - lift + _suave_entero
+
+
+## Con la colisión de la forma nueva ya aplicada y chocando: busca el corrimiento más corto (hasta 128 px) arriba
+## o a los lados donde no choque. Vector2.INF si no hay ninguno.
+func _empuje_para_caber() -> Vector2:
+	for r in range(4, 132, 4):
+		for off in [Vector2(0, -r), Vector2(-r, -r * 0.5), Vector2(r, -r * 0.5), Vector2(-r, 0), Vector2(r, 0)]:
+			if not test_move(global_transform.translated(off), Vector2.ZERO):
+				return off
+	return Vector2.INF
 
 
 ## Collider del cuerpo (apoyado en el piso o, si la forma flota, `patas_alto` px más arriba) y, en ese caso,
@@ -2384,7 +2430,21 @@ func _update_animacion() -> void:
 		visual.offset.x = sin(Time.get_ticks_msec() * 0.06) * cansancio * (1.0 if current_form != Form.HUMAN else 0.0) + aj.x
 	else:
 		visual.offset.x = aj.x
-	visual.rotation = lerpf(visual.rotation, target_rot + _pose_rot, minf(10.0 * dt, 1.0))
+	# Pendiente: el sprite se apoya en el ángulo del piso (girando alrededor de los pies, ver _pend_off).
+	var rot_suelo := 0.0
+	if inclinar_en_pendiente and is_on_floor() and not _trepando:
+		var nrm := get_floor_normal()
+		var ang_piso := atan(_pend_media) if _pend_valida else atan2(nrm.x, -nrm.y)
+		if absf(ang_piso) > deg_to_rad(3.0):
+			rot_suelo = clampf(ang_piso, -deg_to_rad(pendiente_max_grados), deg_to_rad(pendiente_max_grados)) * pendiente_inclinacion * data.pendiente_mult
+	var paso_rot := minf(10.0 * dt, 1.0)
+	_rot_suelo_vis = lerpf(_rot_suelo_vis, rot_suelo, paso_rot)
+	visual.rotation = lerpf(visual.rotation, target_rot + _pose_rot + rot_suelo, paso_rot)
+	var pies_px: float = float(collision_shape.shape.size.y) * 0.5 - 7.5 + pies_hundidos
+	var sx := visual.scale.x if absf(visual.scale.x) > 0.01 else 1.0
+	var sy := visual.scale.y if absf(visual.scale.y) > 0.01 else 1.0
+	_pend_off = Vector2(pies_px * sin(_rot_suelo_vis) / sx, -pies_px * (1.0 - cos(_rot_suelo_vis)) / sy)
+	visual.offset.x += _pend_off.x
 	# Polvo al correr (Oso más espaciado y pesado).
 	if polvo_correr_intervalo > 0.0 and is_on_floor() and not _attacking and absf(velocity.x) > data.speed * 0.6:
 		_polvo_paso_t -= dt
@@ -3177,7 +3237,7 @@ func _anclar_pies() -> void:
 	var aj := _ajuste_frame()
 	if not anclar_pies or visual == null or visual.sprite_frames == null:
 		if visual != null:
-			visual.offset.y = aj.y
+			visual.offset.y = aj.y + _pend_off.y
 		return
 	var sf := visual.sprite_frames
 	if not sf.has_animation(visual.animation):
@@ -3188,7 +3248,7 @@ func _anclar_pies() -> void:
 	var s := maxf(absf(_base_sprite_scale.y), 0.01)
 	var col_alto: float = collision_shape.shape.size.y
 	var falta := col_alto * 0.5 - 7.5 + pies_hundidos
-	visual.offset.y = falta / s - (tex.get_height() * 0.5 - Pies.relleno_inferior(tex)) + aj.y
+	visual.offset.y = falta / s - (tex.get_height() * 0.5 - Pies.relleno_inferior(tex)) + aj.y + _pend_off.y
 
 
 func _ajuste_frame() -> Vector2:

@@ -671,6 +671,11 @@ func _dibujar_estalactita(x: float, base_w: float, h: float, base_y: float, alfa
 		Vector2(x, base_y + h),
 		Vector2(x + base_w * 0.14, base_y + h * 0.8), Vector2(x + base_w * 0.28, base_y + h * 0.55),
 		Vector2(x + base_w * 0.4 + j, base_y + h * 0.28), Vector2(x + base_w * 0.5, base_y)]), col)
+	# Cara en sombra (mitad derecha): da volumen sin sumar ruido.
+	_d_colored_polygon(PackedVector2Array([
+		Vector2(x, base_y), Vector2(x + base_w * 0.5, base_y), Vector2(x + base_w * 0.4 + j, base_y + h * 0.28),
+		Vector2(x + base_w * 0.28, base_y + h * 0.55), Vector2(x + base_w * 0.14, base_y + h * 0.8), Vector2(x, base_y + h)]),
+		Color(color_b.darkened(0.3).r, color_b.darkened(0.3).g, color_b.darkened(0.3).b, alfa * 0.45))
 	# Vena central + luz de borde en la punta (rim light inferior).
 	_d_polyline(PackedVector2Array([
 		Vector2(x, base_y + h * 0.15), Vector2(x - base_w * 0.05, base_y + h * 0.6), Vector2(x, base_y + h * 0.92)]),
@@ -689,6 +694,11 @@ func _dibujar_estalagmita_at(x: float, base: float, h: float, piso_y: float, alf
 		Vector2(x - base * 0.14, piso_y - h * 0.7), Vector2(x, piso_y - h),
 		Vector2(x + base * 0.14, piso_y - h * 0.7), Vector2(x + base * 0.34, piso_y - h * 0.35),
 		Vector2(x + base * 0.5, piso_y)]), col)
+	# Cara en sombra (mitad derecha).
+	_d_colored_polygon(PackedVector2Array([
+		Vector2(x, piso_y), Vector2(x + base * 0.5, piso_y), Vector2(x + base * 0.34, piso_y - h * 0.35),
+		Vector2(x + base * 0.14, piso_y - h * 0.7), Vector2(x, piso_y - h)]),
+		Color(color_b.darkened(0.3).r, color_b.darkened(0.3).g, color_b.darkened(0.3).b, alfa * 0.45))
 	# Luz de borde en la punta (rim light superior).
 	_d_polyline(PackedVector2Array([
 		Vector2(x - base * 0.3, piso_y - h * 0.4), Vector2(x, piso_y - h),

@@ -24,11 +24,16 @@ func _init() -> void:
 	special_knockback = 220.0
 	special_cost = 4.0
 	color = Color(0.58, 0.64, 0.75)
-	collider_size = Vector2(360, 160)
+	# Cuerpo ancho sobre patas angostas: en una pendiente un collider plano de 360 px solo toca por una punta y el
+	# lobo quedaba flotando; con las patas centrales (patas_ancho) apoya como el Humano. Altura total igual (120 + 40).
+	collider_size = Vector2(360, 120)
+	patas_alto = 40.0
+	patas_ancho = 150.0
+	pendiente_mult = 1.4
 	# Las patas de los PNG del lobo caen unos px por debajo de la base del collider;
 	# flight_lift eleva el sprite (todas las anims: idle/AFK, run, attack) a la misma
 	# altura, dejando al lobo siempre por encima del piso. Ajustable en el Inspector.
-	flight_lift = 8.0
+	flight_lift = -32.0   # = 8 (las patas del PNG caen unos px bajo la base) - patas_alto: el sprite sigue apoyado en el piso, no en el cuerpo elevado
 	camera_lookahead_mult = 1.1
 	lean_angulo = 4.5
 	salto_rot_grados = 7.0   # inclinación leve al subir/caer

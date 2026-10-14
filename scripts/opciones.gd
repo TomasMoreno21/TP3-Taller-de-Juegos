@@ -6,6 +6,8 @@ extends Node
 const RUTA := "user://opciones.cfg"
 const BUS_MUSICA := &"Musica"
 const BUS_SFX := &"SFX"
+## Ganancia general de todo el juego (dB sobre Master). Un limitador en Master evita que los picos distorsionen.
+const GANANCIA_MASTER_DB := 1.5
 
 signal cambiado
 
@@ -50,7 +52,21 @@ func fijar_pantalla_completa(activa: bool) -> void:
 	_guardar()
 
 
+func _aplicar_ganancia_master() -> void:
+	var m := AudioServer.get_bus_index(&"Master")
+	if m < 0:
+		return
+	AudioServer.set_bus_volume_db(m, GANANCIA_MASTER_DB)
+	for k in AudioServer.get_bus_effect_count(m):
+		if AudioServer.get_bus_effect(m, k) is AudioEffectLimiter:
+			return
+	var lim := AudioEffectLimiter.new()
+	lim.ceiling_db = -0.5
+	AudioServer.add_bus_effect(m, lim)
+
+
 func _aplicar_audio() -> void:
+	_aplicar_ganancia_master()
 	_volumen_bus(BUS_MUSICA, volumen_musica)
 	_volumen_bus(BUS_SFX, volumen_sfx)
 	cambiado.emit()

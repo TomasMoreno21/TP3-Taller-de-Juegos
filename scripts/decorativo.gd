@@ -576,16 +576,36 @@ func _generar_silueta_cueva(t: int, v: int) -> Array[Polygon2D]:
 	var tinte := 1.0 + 0.12 * float((v - 1) % 4) - 0.06
 	match t:
 		Tipo.ESTALAGMITA:
+			# Silueta algo irregular, dos caras (luz a la izquierda, sombra a la derecha), filo de luz y una hermana chica con piedritas.
 			var h := 34.0 + float((v - 1) % 5) * 9.0
 			var w := 11.0 + float((v - 1) % 3) * 3.0
-			salida += [_poligono([Vector2(-w, 0), Vector2(-w * 0.6, -h * 0.55), Vector2(-w * 0.12, -h), Vector2(w * 0.3, -h * 0.62), Vector2(w, 0)], colores["copa"] * tinte)]
-			salida += [_poligono([Vector2(w * 0.6, 0), Vector2(w * 1.5, -h * 0.4), Vector2(w * 2.2, 0)], colores["copa"] * (tinte * 0.85))]
-			salida += [_poligono([Vector2(-w * 0.1, 0), Vector2(-w * 0.1, -h * 0.9), Vector2(w * 0.3, -h * 0.6), Vector2(w * 0.5, 0)], (colores["copa"] as Color).lightened(0.12) * tinte)]
+			var jx := w * 0.12 * float(((v - 1) % 3) - 1)   # la punta se corre un poco
+			var base: Color = colores["copa"] * tinte
+			salida += [_poligono([Vector2(-w, 0), Vector2(-w * 0.82, -h * 0.28), Vector2(-w * 0.55, -h * 0.55), Vector2(-w * 0.2, -h * 0.85),
+				Vector2(jx, -h), Vector2(jx + w * 0.06, -h * 0.5), Vector2(w * 0.06, 0)], base.lightened(0.07))]
+			salida += [_poligono([Vector2(w * 0.06, 0), Vector2(jx + w * 0.06, -h * 0.5), Vector2(jx, -h), Vector2(w * 0.3, -h * 0.7),
+				Vector2(w * 0.62, -h * 0.4), Vector2(w * 0.85, -h * 0.15), Vector2(w, 0)], base.darkened(0.2))]
+			salida += [_poligono([Vector2(-w * 0.82, -h * 0.28), Vector2(-w * 0.55, -h * 0.55), Vector2(-w * 0.2, -h * 0.85), Vector2(jx, -h),
+				Vector2(jx - w * 0.1, -h * 0.82), Vector2(-w * 0.36, -h * 0.58), Vector2(-w * 0.62, -h * 0.3)], base.lightened(0.26))]
+			salida += [_poligono([Vector2(w * 0.7, 0), Vector2(w * 1.25, -h * 0.34), Vector2(w * 1.5, -h * 0.4), Vector2(w * 2.2, 0)], base.darkened(0.12))]
+			salida += [_poligono([Vector2(w * 1.25, -h * 0.34), Vector2(w * 1.5, -h * 0.4), Vector2(w * 1.75, -h * 0.12), Vector2(w * 1.3, 0)], base.darkened(0.3))]
+			salida += [_poligono([Vector2(-w * 1.5, 0), Vector2(-w * 1.15, -3.5), Vector2(-w * 0.9, 0)], base.darkened(0.15))]
+			salida += [_poligono([Vector2(w * 2.3, 0), Vector2(w * 2.6, -3.0), Vector2(w * 2.85, 0)], base.darkened(0.2))]
 		Tipo.ESTALACTITA:
+			# Costra ancha en la unión con el techo, dos caras, filo de luz y gota brillante en la punta.
 			var h := 40.0 + float((v - 1) % 5) * 12.0
 			var w := 12.0 + float((v - 1) % 3) * 3.0
-			salida += [_poligono([Vector2(-w, 0), Vector2(-w * 0.55, h * 0.5), Vector2(w * 0.05, h), Vector2(w * 0.5, h * 0.55), Vector2(w, 0)], colores["copa"] * tinte)]
-			salida += [_poligono([Vector2(-w * 2.0, 0), Vector2(-w * 1.4, h * 0.35), Vector2(-w * 0.9, 0)], colores["copa"] * (tinte * 0.85))]
+			var jx := w * 0.1 * float(((v - 1) % 3) - 1)
+			var base: Color = colores["copa"] * tinte
+			salida += [_poligono([Vector2(-w * 1.5, -3), Vector2(w * 1.5, -3), Vector2(w * 1.15, 7), Vector2(-w * 1.15, 7)], base.darkened(0.2))]
+			salida += [_poligono([Vector2(-w, 0), Vector2(-w * 0.8, h * 0.3), Vector2(-w * 0.5, h * 0.6), Vector2(-w * 0.15, h * 0.88),
+				Vector2(jx, h), Vector2(jx + w * 0.05, h * 0.45), Vector2(w * 0.05, 0)], base.lightened(0.07))]
+			salida += [_poligono([Vector2(w * 0.05, 0), Vector2(jx + w * 0.05, h * 0.45), Vector2(jx, h), Vector2(w * 0.25, h * 0.72),
+				Vector2(w * 0.55, h * 0.45), Vector2(w * 0.85, h * 0.18), Vector2(w, 0)], base.darkened(0.2))]
+			salida += [_poligono([Vector2(-w * 0.8, h * 0.3), Vector2(-w * 0.5, h * 0.6), Vector2(-w * 0.15, h * 0.88), Vector2(jx, h),
+				Vector2(jx - w * 0.12, h * 0.74), Vector2(-w * 0.36, h * 0.5), Vector2(-w * 0.62, h * 0.26)], base.lightened(0.26))]
+			salida += [_poligono([Vector2(jx - 1.1, h - 0.5), Vector2(jx + 1.1, h - 0.5), Vector2(jx, h + 3.0)], base.lightened(0.5))]
+			salida += [_poligono([Vector2(-w * 2.0, -2), Vector2(-w * 1.45, h * 0.32), Vector2(-w * 1.05, h * 0.2), Vector2(-w * 0.9, -2)], base.darkened(0.14))]
 		Tipo.CRISTAL:
 			var c: Color = colores["copa"]
 			var n := 3 + (v - 1) % 2

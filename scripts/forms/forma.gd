@@ -60,6 +60,7 @@ var _jumps_usados := 0
 @export var patas_alto: float = 0.0          # px que el cuerpo (collider) flota sobre el piso; lo sostiene un collider angosto ("Patas") debajo
 @export var patas_ancho: float = 30.0         # ancho de ese collider de apoyo
 @export var flight_lift: float = 0.0         # px que flota el sprite sobre su base (volar/planeo)
+@export var pendiente_mult: float = 1.0      # cuánto se inclina el sprite en pendientes respecto del valor base del jugador (cuerpos largos: más)
 @export var flotar_amplitud: float = 0.0       # px que sube y baja el sprite en reposo (formas que vuelan; 0 = sin vaivén)
 @export var flotar_amplitud_mov: float = 0.0   # idem al moverse (más amplio)
 @export var flotar_frecuencia: float = 0.0     # Hz del vaivén (0 = desactivado)

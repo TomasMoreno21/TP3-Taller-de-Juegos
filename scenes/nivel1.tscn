@@ -55,6 +55,7 @@
 [ext_resource type="Script" uid="uid://b3hesueuc6bsr" path="res://scripts/rayo_luz.gd" id="rayo_luz"]
 [ext_resource type="Script" uid="uid://cuy7f37ej2tqw" path="res://scripts/streaming_zonas.gd" id="streaming_zonas"]
 [ext_resource type="Script" uid="uid://b2knw64qxpag6" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
+[ext_resource type="Script" path="res://scripts/rampas_suaves.gd" id="rampas_suaves"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte"]
 shader = ExtResource("45_tinte")
@@ -128,6 +129,9 @@ capas_loop_volumen_db = Array[float]([0.0, -22.0, -4.0])
 capas_silencio_mult = Array[float]([0.4, 1.0, 0.4])
 acentos = Array[AudioStream]([ExtResource("22_amb_buho"), ExtResource("23_amb_lobo")])
 acento_volumen_db = -2.0
+
+[node name="RampasSuaves" type="Node2D" parent="."]
+script = ExtResource("rampas_suaves")
 
 [node name="Player" parent="." unique_id=1763988589 instance=ExtResource("1_player")]
 position = Vector2(-717, 802)

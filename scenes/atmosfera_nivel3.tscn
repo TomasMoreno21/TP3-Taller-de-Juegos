@@ -8,6 +8,13 @@
 [ext_resource type="PackedScene" path="res://scenes/niebla_cueva.tscn" id="10_niebla"]
 [ext_resource type="Script" path="res://scripts/luz_latido.gd" id="12_luz"]
 [ext_resource type="Texture2D" path="res://resources/luz_radial.tres" id="11_luz"]
+[ext_resource type="Script" path="res://scripts/latido_sonoro.gd" id="20_lsono"]
+[ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel3/latido_pum1.wav" id="21_pum1"]
+[ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel3/latido_pum2.wav" id="22_pum2"]
+[ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel3/cueva_pulso_loop.wav" id="23_pulso"]
+[ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel3/canto_lejano.wav" id="24_canto"]
+[ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel3/piedra_cruje.wav" id="25_cruje"]
+[ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel2/cueva_gota_lejana.wav" id="26_gota"]
 
 [sub_resource type="Gradient" id="Gradient_motas"]
 offsets = PackedFloat32Array(0, 0.5, 1)
@@ -34,11 +41,18 @@ blend_mode = 1
 script = ExtResource("1_amb")
 capas_loop = Array[AudioStream]([ExtResource("3_hueco")])
 capas_loop_volumen_db = Array[float]([-7.0])
-acentos = Array[AudioStream]([ExtResource("4_rumor")])
+acentos = Array[AudioStream]([ExtResource("4_rumor"), ExtResource("24_canto"), ExtResource("25_cruje"), ExtResource("26_gota")])
 acento_intervalo_min = 10.0
 acento_intervalo_max = 24.0
 acento_volumen_db = -3.0
 bus_ambiente = &"AmbienteCueva"
+
+[node name="LatidoSonoro" type="Node" parent="."]
+script = ExtResource("20_lsono")
+latido = NodePath("../../Latido")
+pum_fuerte = ExtResource("21_pum1")
+pum_suave = ExtResource("22_pum2")
+capa_grave = ExtResource("23_pulso")
 
 [node name="MotasVioleta" type="CPUParticles2D" parent="."]
 z_index = 3

@@ -11,43 +11,43 @@ layer = -10
 motion_scale = Vector2(0.08, 1)
 script = ExtResource("1_capa")
 tipo = "sombra"
-color_a = Color(0.03, 0.032, 0.04, 1)
-color_b = Color(0.015, 0.016, 0.022, 1)
+color_a = Color(0.120, 0.125, 0.145, 1)
+color_b = Color(0.080, 0.085, 0.100, 1)
 semilla = 31
 ancho_total = 31000.0
 centro_x = 6520.0
 y_techo = -1000.0
 y_fondo = 7700.0
-color_niebla = Color(0.16, 0.17, 0.2, 1)
+color_niebla = Color(0.260, 0.280, 0.320, 1)
 niebla = 1.0
 
 [node name="Pared" type="ParallaxLayer" parent="."]
 motion_scale = Vector2(0.22, 1)
 script = ExtResource("1_capa")
 tipo = "pared"
-color_a = Color(0.11, 0.115, 0.135, 1)
-color_b = Color(0.27, 0.28, 0.32, 1)
+color_a = Color(0.170, 0.180, 0.210, 1)
+color_b = Color(0.360, 0.380, 0.430, 1)
 semilla = 37
 ancho_total = 31000.0
 centro_x = 6520.0
 y_techo = -1000.0
 y_fondo = 7700.0
-color_niebla = Color(0.2, 0.21, 0.25, 1)
+color_niebla = Color(0.300, 0.320, 0.370, 1)
 niebla = 0.7
 
 [node name="Estalactitas" type="ParallaxLayer" parent="."]
 motion_scale = Vector2(0.38, 1)
 script = ExtResource("1_capa")
 tipo = "estalactitas"
-color_a = Color(0.05, 0.052, 0.062, 1)
-color_b = Color(0.04, 0.042, 0.05, 1)
+color_a = Color(0.090, 0.095, 0.110, 1)
+color_b = Color(0.075, 0.080, 0.095, 1)
 densidad = 1.4
 semilla = 41
 ancho_total = 31000.0
 centro_x = 6520.0
 y_techo = -1000.0
 y_fondo = 7700.0
-color_niebla = Color(0.16, 0.17, 0.2, 1)
+color_niebla = Color(0.260, 0.280, 0.320, 1)
 niebla = 0.15
 
 [node name="Venas" type="ParallaxLayer" parent="."]
@@ -73,8 +73,8 @@ fuerza = 0.25
 motion_scale = Vector2(0.6, 1)
 script = ExtResource("1_capa")
 tipo = "pilares"
-color_a = Color(0.04, 0.042, 0.05, 1)
-color_b = Color(0.045, 0.047, 0.056, 1)
+color_a = Color(0.090, 0.095, 0.110, 1)
+color_b = Color(0.100, 0.105, 0.120, 1)
 y_base = 7400.0
 densidad = 0.9
 semilla = 43
@@ -83,22 +83,22 @@ centro_x = 6520.0
 y_techo = -1000.0
 y_fondo = 7700.0
 color_acento = Color(0.45, 0.5, 0.56, 1)
-color_niebla = Color(0.18, 0.19, 0.23, 1)
+color_niebla = Color(0.180, 0.190, 0.230, 1)
 niebla = 0.3
 
 [node name="Estalagmitas" type="ParallaxLayer" parent="."]
 motion_scale = Vector2(0.8, 1)
 script = ExtResource("1_capa")
 tipo = "estalagmitas"
-color_a = Color(0.03, 0.032, 0.04, 1)
-color_b = Color(0.035, 0.037, 0.045, 1)
+color_a = Color(0.080, 0.085, 0.100, 1)
+color_b = Color(0.090, 0.095, 0.110, 1)
 y_base = 7500.0
 semilla = 47
 ancho_total = 31000.0
 centro_x = 6520.0
 y_techo = -1000.0
 y_fondo = 7700.0
-color_niebla = Color(0.16, 0.17, 0.2, 1)
+color_niebla = Color(0.260, 0.280, 0.320, 1)
 niebla = 0.15
 
 [node name="Agua" type="ParallaxLayer" parent="."]

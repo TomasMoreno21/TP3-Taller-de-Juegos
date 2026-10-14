@@ -56,6 +56,7 @@
 [ext_resource type="Script" uid="uid://cuy7f37ej2tqw" path="res://scripts/streaming_zonas.gd" id="streaming_zonas"]
 [ext_resource type="Script" uid="uid://b2knw64qxpag6" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
 [ext_resource type="Script" uid="uid://cdwkgnab3s3bd" path="res://scripts/zona_sonido.gd" id="zsonido"]
+[ext_resource type="Script" path="res://scripts/rampas_suaves.gd" id="rampas_suaves"]
 
 [sub_resource type="Resource" id="Resource_h4t55"]
 script = ExtResource("17_roi11")
@@ -561,6 +562,9 @@ position = Vector2(-2179, 5378)
 
 [node name="CheckpointCueva3" parent="." unique_id=981577202 instance=ExtResource("ck_1")]
 position = Vector2(-5411, 6884)
+
+[node name="RampasSuaves" type="Node2D" parent="."]
+script = ExtResource("rampas_suaves")
 
 [node name="Player" parent="." unique_id=780925585 instance=ExtResource("2_player")]
 position = Vector2(-3680, -61)
@@ -2826,18 +2830,21 @@ escala = 0.84
 flip_h = true
 viento = false
 
-[node name="Enemy" parent="." unique_id=1140113013 instance=ExtResource("12_wnw5i")]
-position = Vector2(-4260, 5570)
+[node name="Enemy4" parent="Encounter4" unique_id=1140113013 instance=ExtResource("12_wnw5i")]
+position = Vector2(-309, 223)
 ola_asignada = 2
 spawn_telegrafiado = true
+limite_caida = 9500.0
 
-[node name="Enemy2" parent="." unique_id=1571979864 instance=ExtResource("12_wnw5i")]
-position = Vector2(-3407, 5103)
+[node name="Enemy5" parent="Encounter4" unique_id=1571979864 instance=ExtResource("12_wnw5i")]
+position = Vector2(544, -244)
 tipo = "arquero"
 ola_asignada = 2
 spawn_telegrafiado = true
+limite_caida = 9500.0
 
-[node name="Enemy3" parent="." unique_id=1961518210 instance=ExtResource("12_wnw5i")]
-position = Vector2(-3129, 5576)
+[node name="Enemy6" parent="Encounter4" unique_id=1961518210 instance=ExtResource("12_wnw5i")]
+position = Vector2(822, 229)
 ola_asignada = 2
 spawn_telegrafiado = true
+limite_caida = 9500.0
