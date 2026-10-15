@@ -67,6 +67,10 @@ func _init() -> void:
 	# Cámara: límites dentro del terreno; el fondo cubre toda la altura que ve.
 	if camara != null and tilemap != null:
 		var rect: Rect2i = tilemap.get_used_rect()
+		var prof := tilemap.get_node_or_null("Profundo") as TileMapLayer   # roca profunda en bloques de 4x4 celdas
+		if prof != null:
+			var rp := prof.get_used_rect()
+			rect = rect.merge(Rect2i(rp.position * 4, rp.size * 4))
 		var ok: bool = camara.limit_left >= rect.position.x * 16 and camara.limit_top >= rect.position.y * 16 \
 			and camara.limit_right <= rect.end.x * 16 and camara.limit_bottom <= rect.end.y * 16
 		_check(ok, "Nivel3: límites de cámara dentro del terreno (%d,%d)-(%d,%d)" % [camara.limit_left, camara.limit_top, camara.limit_right, camara.limit_bottom])

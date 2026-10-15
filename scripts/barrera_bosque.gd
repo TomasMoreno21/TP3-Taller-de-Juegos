@@ -6,6 +6,11 @@ signal abierta   ## al romperse el último cristal (los objetivos de lista se ta
 @export var tam_barrera := Vector2(220, 677)       ## ancho x alto del muro de energía (el alto debe cubrir todo el hueco)
 @export var centro_barrera := Vector2(0, -178.5)   ## centro del muro respecto del pivote (se mueve para que apoye en suelo y techo)
 
+## Reparte los cristales en vertical a lo largo de todo el muro (en el orden de los hijos), en vez de usar su posición.
+@export var distribuir_cristales_vertical := false
+## true = los cristales solo se rompen con el proyectil sónico (no con golpes cuerpo a cuerpo).
+@export var cristales_solo_proyectil := false
+
 var _destruidos := 0
 var _total_cristales := 0
 var _abierta := false
@@ -38,6 +43,13 @@ func _ajustar_tamano() -> void:
 
 func _ready() -> void:
 	_ajustar_tamano()
+	var cris := _cristales()
+	for i in cris.size():
+		if cristales_solo_proyectil:
+			cris[i].set("solo_proyectil", true)
+		if distribuir_cristales_vertical:
+			var c: Node2D = cris[i]
+			c.position = Vector2(centro_barrera.x, centro_barrera.y - tam_barrera.y * 0.5 + tam_barrera.y * (float(i) + 0.5) / float(cris.size()))
 	# Identifica la barrera como energía: el sónico la atraviesa (projectile.gd).
 	if barrera != null:
 		barrera.add_to_group("barrera_energia")

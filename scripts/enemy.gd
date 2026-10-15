@@ -45,7 +45,8 @@ const TELEGRAFIA := preload("res://scripts/telegrafia_enemigo.gd")
 }
 @export var frames_impacto := {"attack1": 3, "attack2": 2}   # frame de cada animación de ataque en el que cae el tajo (se sincroniza con el daño)
 @export var stun_anim := "idle"               # animación que sigue viva durante el stun ("" = la que corresponda al movimiento)
-@export var max_atacantes_melee := 2          # cuántos cuerpo a cuerpo pueden estar atacando a la vez (los demás esperan)
+@export var alcance_vertical_melee := 320.0     # diferencia de altura (px) máxima para pegar cuerpo a cuerpo; más allá está en otro piso
+@export var max_atacantes_melee := 2         # cuántos cuerpo a cuerpo pueden estar atacando a la vez (los demás esperan)
 @export var flash_aviso := Color(1.25, 1.2, 1.2)  # leve brillo al iniciar un ataque (aviso de lectura)
 @export_group("Anticipación del ataque")
 @export var ant_retroceso := 9.0      # px que se echa atrás antes de pegar
@@ -326,8 +327,43 @@ func _vel_y(delta: float) -> float:
 
 
 func _colision(on: bool) -> void:
+	if on:
+		_apartar_del_jugador()
 	if collide_shape != null:
 		collide_shape.set_deferred("disabled", not on)
+
+
+## Al materializarse no puede nacer encima del jugador: los dos cuerpos se empujan al separarse y el
+## jugador terminaba hundido en el piso. Si se solapan, el enemigo se corre al costado, lejos del jugador.
+func _apartar_del_jugador() -> void:
+	var player := _obtener_player() as Node2D
+	if player == null or collide_shape == null or not (collide_shape.shape is RectangleShape2D):
+		return
+	var s: Vector2 = (collide_shape.shape as RectangleShape2D).size
+	var yo := Rect2(collide_shape.global_position - s * 0.5, s)
+	var rp := Rect2()
+	var hay := false
+	for c in player.get_children():
+		var csc := c as CollisionShape2D
+		if csc == null or csc.disabled or not (csc.shape is RectangleShape2D):
+			continue
+		var sp: Vector2 = (csc.shape as RectangleShape2D).size
+		var r := Rect2(csc.global_position - sp * 0.5, sp)
+		rp = r if not hay else rp.merge(r)
+		hay = true
+	if not hay or not yo.grow(4.0).intersects(rp):
+		return
+	var signo := 1.0 if yo.get_center().x >= rp.get_center().x else -1.0
+	var dx := (s.x + rp.size.x) * 0.5 - absf(yo.get_center().x - rp.get_center().x) + 8.0
+	for lado in [signo, -signo]:
+		var mov := Vector2(lado * dx, 0.0)
+		var q := PhysicsShapeQueryParameters2D.new()   # (con la colisión apagada test_move no ve nada: se consulta el terreno a mano)
+		q.shape = collide_shape.shape
+		q.transform = collide_shape.global_transform.translated(mov)
+		q.collision_mask = 1
+		if get_world_2d().direct_space_state.intersect_shape(q, 1).is_empty():
+			global_position += mov
+			return
 
 
 func _mostrar_circulo_ritual() -> void:
@@ -648,6 +684,9 @@ func _obtener_player() -> Node2D:
 
 
 func _gap_x(player: Node2D) -> float:
+	# Otro piso: no hay alcance cuerpo a cuerpo (antes pegaba a través de la roca a quien pasaba justo debajo).
+	if absf(player.global_position.y - global_position.y) > alcance_vertical_melee:
+		return 99999.0
 	var medio_enemigo := 0.0
 	if collide_shape != null and collide_shape.shape is RectangleShape2D:
 		medio_enemigo = (collide_shape.shape as RectangleShape2D).size.x * 0.5
@@ -775,13 +814,15 @@ func _ataque_melee(player: Node2D) -> void:
 
 func _disparar(player: Node2D) -> void:
 	_reproducir_animacion_ataque("attack2")
-	var to_player: Vector2 = player.global_position - global_position
+	# Apunta al centro del cuerpo del jugador (su origen queda a la altura de la cabeza).
+	var origen := global_position + Vector2(_dir * proyectil_origen.x, proyectil_origen.y)
+	var to_player: Vector2 = preload("res://scripts/projectile.gd").centro_objetivo(player) - origen
 	var dir: Vector2 = to_player.normalized() if to_player.length_squared() > 0.01 else Vector2(_dir, 0.0)
 	var audio_d := get_node_or_null("/root/AudioManager")
 	if audio_d != null:
 		audio_d.play_sfx(sonido_disparo, volumen_sfx_db, 0.08)
 	var proj: Area2D = preload("res://scenes/projectile.tscn").instantiate()
-	proj.global_position = global_position + Vector2(_dir * proyectil_origen.x, proyectil_origen.y)
+	proj.global_position = origen
 	proj.set("direction", dir)
 	proj.set("speed", enemy_data.proyectil_speed)
 	proj.set("damage", enemy_data.attack_damage)

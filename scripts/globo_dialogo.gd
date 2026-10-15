@@ -9,6 +9,8 @@ enum Tono { NORMAL, ALERTA, GRITO, SUSURRO }
 
 const PAPEL := Color(0.97, 0.95, 0.89)
 const TINTA := Color(0.05, 0.05, 0.06)
+const COLA_MIN := 22.0   ## largo mínimo de la cola (px)
+const COLA_MAX := 240.0  ## largo máximo de la cola (px)
 
 var tono: Tono = Tono.NORMAL
 var cola_a := Vector2.ZERO   ## punto (coordenadas locales) al que apunta la cola
@@ -168,10 +170,19 @@ func _draw() -> void:
 		var u := clampf((base_x - rx) / rx, -0.9, 0.9)
 		base_x = rx + u * rx
 		base_y = ry + ry * 0.9 * sqrt(1.0 - u * u)
-	var con_cola := cola_a.y > base_y + 6.0
+	# La cola siempre se dibuja con una forma estable: nunca más corta que `COLA_MIN`, ni más larga que `COLA_MAX`,
+	# y siempre hacia abajo (ángulo limitado), aunque el hablante quede al costado o arriba del globo.
+	var base := Vector2(base_x, base_y)
+	var dir := cola_a - base
+	dir.y = maxf(dir.y, COLA_MIN)
+	dir.x = clampf(dir.x, -dir.y * 1.8, dir.y * 1.8)
+	if dir.length() > COLA_MAX:
+		dir = dir.normalized() * COLA_MAX
+	var punta := base + dir
+	var con_cola := true
 	var lados: Array = []
 	if con_cola:
-		lados = _lados_cola(Vector2(base_x, base_y), cola_a, ancho_base)
+		lados = _lados_cola(base, punta, ancho_base)
 	# sombra (cuerpo y cola)
 	var sombra := PackedVector2Array()
 	for p in cuerpo:

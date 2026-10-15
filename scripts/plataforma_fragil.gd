@@ -187,15 +187,22 @@ func _rect_propio() -> Rect2:
 ## el rect COMPLETO del collider daba falsos positivos (player 190x318 / oso
 ## 470x324 vs plataformas finas) y la rompía apoyándose en su lateral.
 func _pisa_plataforma(body: Node2D) -> bool:
-	var b := _rect_body(body)
-	if b == Rect2():
-		return false
 	var a := _rect_propio()
 	var tope := a.position.y
-	var pies := b.position.y + b.size.y
-	if pies < tope - 8.0 or pies > tope + 6.0:
-		return false
-	return a.position.x < b.end.x and b.position.x < a.end.x
+	# Formas con patas (Lobo, Murciélago): el cuerpo flota y lo que toca el piso es el collider de las patas,
+	# así que se prueban todos los colliders activos del jugador, no solo el primero.
+	for child in body.get_children():
+		var csc := child as CollisionShape2D
+		if csc == null or csc.disabled or not (csc.shape is RectangleShape2D):
+			continue
+		var s: Vector2 = csc.shape.size
+		var b := Rect2(body.global_position + csc.position - s * 0.5, s)
+		var pies := b.position.y + b.size.y
+		if pies < tope - 8.0 or pies > tope + 6.0:
+			continue
+		if a.position.x < b.end.x and b.position.x < a.end.x:
+			return true
+	return false
 
 
 ## Rect global del collider del body (patrón de pinchos).

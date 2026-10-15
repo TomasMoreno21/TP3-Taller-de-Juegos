@@ -309,6 +309,20 @@
 			"[alerta]Usá todo lo que aprendiste."
 		]
 	},
+	"n3_cultista": {
+		"hablante": "Cultista",
+		"lineas": [
+			"[susurro]Shh... no grites. Soy de ellos, pero no por mucho tiempo.",
+			"[susurro]Yo no quiero este ritual. No con niños de por medio.",
+			"[susurro]Seguí, estás a tiempo. Y no le digas a nadie que me viste."
+		],
+		"lineas_despues": [
+			"Tené cuidado, podría ser una trampa.",
+			"[humano]No importa, voy a ir a rescatar a mi hijo.",
+			"......",
+			"Está bien, pero tené cuidado."
+		]
+	},
 	"n4_intro": {
 		"hablante": "Amuleto",
 		"modo": "Automatico",
@@ -452,34 +466,6 @@
 		"una_vez": true,
 		"lineas": [
 			"Foso ancho: el Lobo salta más lejos."
-		]
-	},
-	"reaccion_puas": {
-		"hablante": "Amuleto",
-		"lineas": [
-			"Cuidado con las púas.",
-			"Las púas no perdonan, Humano."
-		]
-	},
-	"reaccion_racha": {
-		"hablante": "Amuleto",
-		"lineas": [
-			"Bien peleado.",
-			"Así pelea un guardián."
-		]
-	},
-	"reaccion_quieto": {
-		"hablante": "Amuleto",
-		"lineas": [
-			"No te detengas. Tu hijo nos espera.",
-			"El tiempo apremia, Humano."
-		]
-	},
-	"reaccion_muertes": {
-		"hablante": "Amuleto",
-		"lineas": [
-			"Quizás otra forma te sirva.",
-			"Respirá. Probemos de nuevo."
 		]
 	},
 	"n3_salto": {
@@ -660,6 +646,16 @@
 		"lineas": [
 			"[susurro]Eso estuvo cerca.",
 			"Las lianas bajan hacia lo más profundo."
+		]
+	},
+	"n3_aviso_continuar": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.5,
+		"una_vez": true,
+		"lineas": [
+			"Ahora sí podremos llegar al corazón de esta cueva.",
+			"Volvamos a la sala principal para romper esos muros."
 		]
 	}
 }

@@ -3,6 +3,8 @@ extends Node
 ## vetas y estratos queden fijos en el mundo y continuos entre tiles. Se corre después de la cámara.
 
 @export var tilemap: NodePath = ^"../TileMap"
+@export var capa_profunda: NodePath = ^"../TileMap/Profundo"   ## capa de bloques (celdas más grandes) que reemplaza la roca profunda; cuenta como roca para el campo
+@export var celdas_por_bloque := 4                    ## lado de cada bloque de la capa profunda, en celdas del terreno
 @export var profundidad := true                      ## genera el campo de distancia al aire para el degradado de profundidad
 @export var prof_max_tiles := 40                     ## tiles de distancia que cubre el degradado (más allá = igual de oscuro)
 
@@ -53,6 +55,15 @@ func _generar_campo() -> void:
 	d.resize(w * h)
 	for c in capa.get_used_cells():
 		d[(c.y - r.position.y) * w + (c.x - r.position.x)] = 1000.0
+	var prof := get_node_or_null(capa_profunda) as TileMapLayer
+	if prof != null:
+		for b in prof.get_used_cells():
+			for dy in celdas_por_bloque:
+				for dx in celdas_por_bloque:
+					var c := b * celdas_por_bloque + Vector2i(dx, dy)
+					var i := (c.y - r.position.y) * w + (c.x - r.position.x)
+					if i >= 0 and i < w * h:
+						d[i] = 1000.0
 	var diag := 1.4142
 	for y in range(1, h - 1):
 		for x in range(1, w - 1):

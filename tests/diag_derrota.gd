@@ -13,7 +13,7 @@ func _check(cond: bool, msg: String) -> void:
 
 func _init() -> void:
 	# --- Caso 1: muerte por daño ---
-	var nivel: Node = load("res://scenes/main.tscn").instantiate()
+	var nivel: Node = load("res://scenes/nivel1.tscn").instantiate()
 	root.add_child(nivel)
 	current_scene = nivel
 	await process_frame

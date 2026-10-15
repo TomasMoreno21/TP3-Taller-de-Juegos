@@ -7,6 +7,9 @@ const PISOTON_KNOCKBACK := 300.0
 const LANDING_IMPACT_MIN := 500.0
 const LANDING_IMPACT_SHAKE := 900.0
 
+## Multiplicador de recuperación del pisotón (especial), aparte del resto de golpes: más bajo = encadena más rápido (romper paredes sin esperar).
+@export var especial_mult_recuperacion := 0.6
+
 var _landing_tween: Tween
 
 
@@ -58,6 +61,12 @@ func _init() -> void:
 	combos = [
 		{"nombre": "Garra", "secuencia": ["light", "heavy"], "dano": 70, "knockback": 360.0, "tamano": Vector2(288, 186), "rango": 198.0},
 	]
+
+
+func mult_recuperacion_para(tipo: String, step: int) -> float:
+	if tipo == "special":
+		return especial_mult_recuperacion
+	return super(tipo, step)
 
 
 func perform_heavy(player: CharacterBody2D, step: int) -> void:

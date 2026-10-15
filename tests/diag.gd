@@ -9,7 +9,7 @@ func _init() -> void:
 			count = InputMap.action_get_events(action).size()
 		print("[DIAG] action=%s exists=%s events=%d" % [action, has, count])
 
-	var scene = load("res://scenes/main.tscn").instantiate()
+	var scene = load("res://scenes/nivel1.tscn").instantiate()
 	root.add_child(scene)
 	await process_frame
 	await process_frame

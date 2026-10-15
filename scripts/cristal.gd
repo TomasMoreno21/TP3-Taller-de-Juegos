@@ -12,6 +12,11 @@ signal cristal_destruido
 @export var golpes_para_romper := 3
 @export var solo_murcielago := true
 
+## true = los golpes cuerpo a cuerpo no lo dañan, solo el proyectil sónico (lo marca la barrera o el Inspector).
+@export var solo_proyectil := false
+
+## Lo enciende projectile.gd justo antes de llamar a take_damage (igual que en los enemigos flotantes).
+var golpe_proyectil := false
 var _roto := false
 var _golpes := 0
 var _base_y := 0.0
@@ -79,7 +84,11 @@ func _diamante_poligono(ax: float, ay: float) -> PackedVector2Array:
 
 
 func take_damage(_cant: int, _kb: float = 0.0, _dir: int = 1, _critico: bool = false) -> void:
+	var por_proyectil := golpe_proyectil
+	golpe_proyectil = false
 	if _roto:
+		return
+	if solo_proyectil and not por_proyectil:
 		return
 	var player := get_tree().get_first_node_in_group("player")
 	if player == null or (solo_murcielago and int(player.get("current_form")) != Jugador.Form.MURCIELAGO):

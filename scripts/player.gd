@@ -40,8 +40,8 @@ const ENERGIA_KILL := 20.0
 const ENERGIA_PICKUP := 12.0   # un orbe azul da "un poquito" de energía (antes 30)
 const ENERGIA_RESPAWN := 50.0
 const RECOVERY_LIGHT := 0.28
-const RECOVERY_HEAVY := 0.52
-const RECOVERY_SPECIAL := 0.92
+const RECOVERY_HEAVY := 0.44
+const RECOVERY_SPECIAL := 0.78
 const RECOVERY_COMBO := 1.05
 const MELEE_STICKY_REACH := 240.0
 const MELEE_STICKY_PIVOT := 28.0
@@ -158,6 +158,8 @@ const VIDA_MAX := 100
 var forms: Array[Forma] = []
 var current_form: int = Form.HUMAN
 var forma_seleccionada: int = Form.HUMAN
+## Orden en que la rueda de selección recorre las formas (índices de `Form`): Humano, Lobo, Murciélago, Oso.
+@export var orden_rueda: Array[int] = [0, 1, 3, 2]
 var health: int = 100
 var energia: float = ENERGIA_MAX
 var god_mode := false
@@ -348,6 +350,7 @@ var _vine_buffer_timer: float = 0.0
 var _vine_particulas_timer: float = 0.0
 var _vine_dir_hold_t: float = 0.0
 var _salto_enredadera: bool = false
+var _liana_salto_libre: bool = false   # tras saltar de una liana no se re-agarra solo por mantener botón/stick: pide una pulsación nueva (o tocar piso)
 const VINE_COYOTE_TIME := 0.15
 const VINE_BUFFER_TIME := 0.15
 const TREPAR_ACCEL := 4200.0
@@ -1752,34 +1755,44 @@ func _handle_seleccion_forma() -> void:
 
 
 func _retroceder_seleccion() -> bool:
-	var candidata := forma_seleccionada - 1
-	for _i in range(forms.size()):
-		candidata = posmod(candidata, forms.size())
-		if _progresion().forma_desbloqueada(candidata) and not _forma_en_cooldown(candidata):
-			if candidata != forma_seleccionada:
-				forma_seleccionada = candidata
-				forma_selectada_cambiada.emit(candidata)
-				return true
-			return false
-		candidata -= 1
-	return false
+	return _mover_seleccion(-1)
 
 
 func _forma_en_cooldown(idx: int) -> bool:
 	return _cooldown_formas.has(idx) and _cooldown_formas[idx] > 0.0
 
 func _avanzar_seleccion() -> bool:
-	var candidata := forma_seleccionada + 1
-	for _i in range(forms.size()):
-		candidata = posmod(candidata, forms.size())
+	return _mover_seleccion(1)
+
+
+## Mueve la preselección `paso` lugares por `orden_rueda`, saltando formas bloqueadas o en cooldown.
+func _mover_seleccion(paso: int) -> bool:
+	var orden := _orden_rueda()
+	var pos := orden.find(forma_seleccionada)
+	for _i in range(orden.size()):
+		pos = posmod(pos + paso, orden.size())
+		var candidata: int = orden[pos]
 		if _progresion().forma_desbloqueada(candidata) and not _forma_en_cooldown(candidata):
 			if candidata != forma_seleccionada:
 				forma_seleccionada = candidata
 				forma_selectada_cambiada.emit(candidata)
 				return true
 			return false
-		candidata += 1
 	return false
+
+
+## `orden_rueda` si es válido (una vez cada forma); si no, el orden de los índices.
+func _orden_rueda() -> Array:
+	var n := forms.size()
+	var ok := orden_rueda.size() == n
+	for i in range(n):
+		ok = ok and orden_rueda.has(i)
+	if ok:
+		return orden_rueda
+	var def: Array = []
+	for i in range(n):
+		def.append(i)
+	return def
 
 
 func _handle_formas_cruceta() -> void:
@@ -1915,6 +1928,7 @@ func _transformar(nueva: int, forzar: bool = false) -> bool:
 			onda_area(data.onda_transformacion_radio, data.onda_transformacion_dano, data.onda_transformacion_knockback, false)
 	_invuln_timer = maxf(_invuln_timer, invuln_transformacion)
 	_invuln_sin_parpadeo = true
+	visual.visible = true   # si la transformación cae en la fase "apagada" del parpadeo de daño, el sprite no debe quedar oculto hasta que termine la invulnerabilidad
 	var audio_mgr_t := get_node_or_null("/root/AudioManager")
 	if audio_mgr_t != null:
 		audio_mgr_t.play_sfx(sonido_transformacion, volumen_transformacion_db)
@@ -2972,6 +2986,8 @@ func _buscar_enemigo_homing(rango: float) -> Node2D:
 			continue
 		if "health" in n and n.health <= 0:
 			continue
+		if not preload("res://scripts/projectile.gd").linea_libre(self, global_position + Vector2(0.0, -60.0), preload("res://scripts/projectile.gd").centro_objetivo(n)):
+			continue   # otro piso o detrás de la roca: no se le apunta (el disparo se iba hacia abajo, a través del terreno)
 		var d := global_position.distance_to(n.global_position)
 		if n.get("flotante") == true:
 			d *= 0.35   # prioridad a los voladores
@@ -3093,6 +3109,7 @@ func _handle_enredadera(delta: float) -> void:
 			_sfx(sonido_liana_soltar, volumen_liana_db, 0.1)
 			_salir_enredadera()
 			_salto_enredadera = true
+			_liana_salto_libre = true
 			var jump_mult := 1.1 if dir_y < 0 or vy_prev < -40.0 else 1.0
 			velocity.y = forms[current_form].jump_velocity * jump_mult + vy_prev * 0.25
 			velocity.x = facing * 200.0
@@ -3158,9 +3175,13 @@ func _handle_enredadera(delta: float) -> void:
 		return
 	if _trepado_cooldown > 0.0:
 		return
+	if is_on_floor():
+		_liana_salto_libre = false
 	var quiere_trepar: bool = Input.is_action_pressed("move_up") or Input.is_action_pressed("move_down")
 	if not is_on_floor():
 		quiere_trepar = quiere_trepar or Input.is_action_pressed("jump") or _vine_buffer_timer > 0.0
+	if _liana_salto_libre:
+		quiere_trepar = _vine_buffer_timer > 0.0   # solo una pulsación nueva (el buffer dura 0.15 s)
 	if not quiere_trepar:
 		return
 	for e in get_tree().get_nodes_in_group("enredadera"):
@@ -3178,6 +3199,7 @@ func _handle_enredadera(delta: float) -> void:
 			is_overlap = absf(global_position.x - area.global_position.x) < ancho2 * 0.5 + 48.0 and global_position.y > top2 - 48.0 and global_position.y < bot2 + 48.0
 		if is_overlap and current_form == _forma_requerida_enredadera(area):
 			_trepando = true
+			_liana_salto_libre = false
 			_enredadera_actual = area
 			_gravity_override = 0.0
 			velocity.y = 0.0

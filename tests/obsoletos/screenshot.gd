@@ -2,7 +2,7 @@ extends SceneTree
 
 
 func _init() -> void:
-	var scene = load("res://scenes/main.tscn").instantiate()
+	var scene = load("res://scenes/nivel1.tscn").instantiate()
 	root.add_child(scene)
 	for i in range(45):
 		await process_frame

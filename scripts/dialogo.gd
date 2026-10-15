@@ -67,6 +67,10 @@ var _t := 0.0
 var _gema_pos := Vector2.ZERO
 var _gema_a := 0.0
 var _jugador: Node2D
+## Hablante externo (p. ej. el cultista del nivel 3): si `nombre_ancla` habla, el globo sale de `ancla_hablante`.
+var ancla_hablante: Node2D
+var nombre_ancla := ""
+var altura_ancla := 330.0
 var _tw_globo: Tween
 var _tw_gema: Tween
 
@@ -150,8 +154,9 @@ func texto_actual() -> String:
 	return _texto_actual
 
 
-func mostrar(lineas: Array, hablante: String = "Amuleto", marcado: bool = false) -> void:
-	if not marcado and (not _es_calma() or _charla_reciente()):
+## `inmediato`: habla ya con el globo normal, sin esperar a un momento de calma (eventos que lo piden).
+func mostrar(lineas: Array, hablante: String = "Amuleto", marcado: bool = false, inmediato: bool = false) -> void:
+	if not marcado and not inmediato and (not _es_calma() or _charla_reciente()):
 		_en_espera.append({"narr": true, "lineas": lineas, "hablante": hablante, "t": _t})
 		return
 	_quitar_tips()
@@ -435,6 +440,13 @@ func _colocar() -> void:
 		pos.x = clampf(pos.x, 24.0, maxf(vp.x - tam.x - 24.0, 24.0))
 		pos.y = clampf(pos.y, 24.0, maxf(vp.y - tam.y - 24.0, 24.0))
 		punta = cabeza
+	elif is_instance_valid(ancla_hablante) and str(_item.get("hablante", "")) == nombre_ancla:
+		var cabeza_a := get_viewport().get_canvas_transform() * (ancla_hablante.global_position + Vector2(0, -altura_ancla))
+		var a_la_derecha := is_instance_valid(_jugador) and _jugador.global_position.x < ancla_hablante.global_position.x
+		pos = cabeza_a + Vector2(-tam.x * (0.12 if a_la_derecha else 0.88), -tam.y - 52.0)
+		pos.x = clampf(pos.x, 24.0, maxf(vp.x - tam.x - 24.0, 24.0))
+		pos.y = clampf(pos.y, 24.0, maxf(vp.y - tam.y - 24.0, 24.0))
+		punta = cabeza_a
 	pos = _evitar_hud(pos, tam, vp)
 	if _fase != Fase.SALIENDO:
 		var dt := get_process_delta_time()

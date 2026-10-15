@@ -52,6 +52,8 @@ extends Node2D
 @export var volumen_aviso_db := -2.0
 @export var volumen_impacto_db := 4.0
 @export var volumen_piedra_db := -8.0
+## Multiplica el tono de las piedras que caen y chocan: más bajo = más grave y pesado (1 = tono original).
+@export_range(0.3, 1.2, 0.05) var tono_graves := 0.6
 
 @export_group("Final")
 @export var final_fuerza := 2.0                     ## múltiplo de `fuerza_shake` del último retumbo al terminar
@@ -308,14 +310,14 @@ func sonar_impacto(pos: Vector2, grande: bool) -> void:
 	var atenuar := -clampf(lejos / 220.0, 0.0, 12.0)
 	if grande:
 		_oscurecer(oscurecer_impacto * clampf(1.2 - lejos / 900.0, 0.0, 1.0))
-		_sfx(sonido_impacto, volumen_impacto_db + atenuar, 0.08, randf_range(0.78, 0.95))
-		_sfx(sonido_retumbo, volumen_impacto_db - 4.0 + atenuar, 0.05, randf_range(0.6, 0.75))   # capa grave que le da peso
+		_sfx(sonido_impacto, volumen_impacto_db + 2.0 + atenuar, 0.08, randf_range(0.78, 0.95) * tono_graves)
+		_sfx(sonido_retumbo, volumen_impacto_db - 2.0 + atenuar, 0.05, randf_range(0.6, 0.75) * minf(tono_graves * 1.4, 1.0))   # capa grave que le da peso
 		return
 	var ahora := Time.get_ticks_msec()
 	if ahora - _t_ult_piedra < 70:
 		return
 	_t_ult_piedra = ahora
-	_sfx(sonido_piedra, volumen_piedra_db + atenuar, 0.15, randf_range(0.8, 1.2))
+	_sfx(sonido_piedra, volumen_piedra_db + 3.0 + atenuar, 0.1, randf_range(0.8, 1.1) * tono_graves)   # grave suena más flojo: se sube un poco
 
 
 ## Oscurece la pantalla un instante (el velo decae solo); nunca baja un oscurecimiento mayor en curso.
@@ -326,7 +328,7 @@ func _oscurecer(cantidad: float) -> void:
 ## Una roca cayó cerca del jugador sin tocarlo: sacudida extra, polvo y un sonido seco ("casi me da").
 func casi_golpe(pos: Vector2, fuerza: float) -> void:
 	_sacudir(fuerza, 0.3)
-	_sfx(sonido_piedra, volumen_piedra_db + 8.0, 0.1, randf_range(0.7, 0.9))
+	_sfx(sonido_piedra, volumen_piedra_db + 11.0, 0.1, randf_range(0.7, 0.9) * tono_graves)
 	if is_instance_valid(_jugador):
 		Burst.emitir(self, _jugador.global_position + Vector2(0.0, -60.0), color_escombro.lightened(0.3), 12, 1.1)
 	_oscurecer(oscurecer_impacto * 0.6)
@@ -349,7 +351,7 @@ func _aviso_oleada() -> void:
 ## sacudida se apagan solos en `final_fade` s. (No hace daño: es solo despedida.)
 func _final() -> void:
 	_sacudir(fuerza_shake * final_fuerza, 0.9)
-	_sfx(sonido_impacto, volumen_impacto_db + 2.0, 0.0, 0.7)
+	_sfx(sonido_impacto, volumen_impacto_db + 4.0, 0.0, 0.7 * tono_graves)
 	_retumbo_vivo = false
 	_oscurecer(oscurecer_oleada * 1.4)   # el último golpe del derrumbe
 	if _sombra != null:

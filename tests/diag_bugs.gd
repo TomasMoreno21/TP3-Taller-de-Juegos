@@ -136,18 +136,14 @@ func _jugador() -> void:
 	proj.set("direction", Vector2(0.05, 1).normalized())
 	var dir_esperada := 1 if proj.direction.x >= 0.0 else -1
 	_check(dir_esperada == 1, "un disparo casi vertical da dirección ±1")
-	# --- Orbe de vida: con vida llena no se consume.
+	# --- Orbe de vida: se recoge siempre, también con la vida llena.
 	p.set("health", 100)
 	var orbe: Area2D = (load("res://scenes/pickup_vida.tscn") as PackedScene).instantiate()
 	nivel.add_child(orbe)
 	orbe.global_position = p.global_position + Vector2(0, 40)
 	for i in 20:
 		await physics_frame
-	_check(is_instance_valid(orbe) and not orbe.is_queued_for_deletion(), "con vida llena el orbe no se gasta")
-	p.set("health", 50)
-	for i in 20:
-		await physics_frame
-	_check(not is_instance_valid(orbe) or orbe.is_queued_for_deletion(), "herido, el orbe se recoge aunque ya estuviera encima")
+	_check(not is_instance_valid(orbe) or orbe.is_queued_for_deletion(), "con vida llena el orbe se recoge igual")
 	# --- Pinchos: con el jugador muerto no siguen dañando.
 	var pin: Area2D = (load("res://scenes/pinchos.tscn") as PackedScene).instantiate()
 	nivel.add_child(pin)

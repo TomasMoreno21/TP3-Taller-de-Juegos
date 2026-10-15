@@ -6,7 +6,7 @@
 [ext_resource type="Script" uid="uid://c20i4wytflcth" path="res://scripts/setup_progresion_nivel.gd" id="4_setup"]
 [ext_resource type="PackedScene" uid="uid://x0o25yeqfgsm" path="res://scenes/encounter.tscn" id="5_enc"]
 [ext_resource type="Script" uid="uid://bwvbj2bycs3nq" path="res://scripts/nivel_jefe.gd" id="6_niveljefe"]
-[ext_resource type="PackedScene" path="res://scenes/jefe_estrella.tscn" id="7_jefe"]
+[ext_resource type="PackedScene" uid="uid://dvs265rqva45a" path="res://scenes/jefe_estrella.tscn" id="7_jefe"]
 [ext_resource type="PackedScene" uid="uid://dkyk8avpptlls" path="res://scenes/hud.tscn" id="8_hud"]
 [ext_resource type="PackedScene" path="res://scenes/pause.tscn" id="9_pause"]
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="10_levelup"]
@@ -52,7 +52,7 @@ position = Vector2(4600, 1100)
 color = Color(0.2, 0.18, 0.27, 1)
 polygon = PackedVector2Array(-4600, -100, 300, -100, 300, 100, -4600, 100)
 
-[node name="PisoVisualDer" type="Polygon2D" parent="Piso" unique_id=1267478027]
+[node name="PisoVisualDer" type="Polygon2D" parent="Piso" unique_id=1983532723]
 color = Color(0.2, 0.18, 0.27, 1)
 polygon = PackedVector2Array(900, -100, 4600, -100, 4600, 100, 900, 100)
 
@@ -60,7 +60,7 @@ polygon = PackedVector2Array(900, -100, 4600, -100, 4600, 100, 900, 100)
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-4600, -100, 300, -100, 300, -84, -4600, -84)
 
-[node name="LineaSuperiorDer" type="Polygon2D" parent="Piso" unique_id=1102247631]
+[node name="LineaSuperiorDer" type="Polygon2D" parent="Piso" unique_id=632991067]
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(900, -100, 4600, -100, 4600, -84, 900, -84)
 
@@ -68,7 +68,7 @@ polygon = PackedVector2Array(900, -100, 4600, -100, 4600, -84, 900, -84)
 position = Vector2(-2150, 1)
 shape = SubResource("RectangleShape2D_piso")
 
-[node name="PisoCollisionDer" type="CollisionShape2D" parent="Piso" unique_id=577318166]
+[node name="PisoCollisionDer" type="CollisionShape2D" parent="Piso" unique_id=1302475963]
 position = Vector2(2750, 1)
 shape = SubResource("RectangleShape2D_piso_der")
 
