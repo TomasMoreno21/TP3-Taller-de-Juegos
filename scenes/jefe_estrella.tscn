@@ -1,303 +1,310 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dvs265rqva45a"]
 
-[ext_resource type="Script" path="res://scripts/jefe_estrella.gd" id="1_jefe"]
-[ext_resource type="Script" path="res://scripts/ojo_central.gd" id="2_ojo"]
-[ext_resource type="Script" path="res://scripts/ojo_central_hurtbox.gd" id="3_hurt"]
-[ext_resource type="Script" path="res://scripts/nudo_tallo.gd" id="4_nudo"]
-[ext_resource type="Script" path="res://scripts/foso_pinchos.gd" id="6_foso"]
-[ext_resource type="Script" path="res://scripts/punta_estrella.gd" id="7_punta"]
-[ext_resource type="SpriteFrames" path="res://resources/jefe_cabeza.tres" id="9_cabeza"]
+[ext_resource type="Script" uid="uid://w7i86v4rtbhb" path="res://scripts/jefe_estrella.gd" id="1_jefe"]
+[ext_resource type="Script" uid="uid://ixc1fa8yjnqs" path="res://scripts/ojo_central.gd" id="2_ojo"]
+[ext_resource type="Script" uid="uid://cojle8ul78tor" path="res://scripts/ojo_central_hurtbox.gd" id="3_hurt"]
+[ext_resource type="Script" uid="uid://bk4dtjsfxsakv" path="res://scripts/nudo_tallo.gd" id="4_nudo"]
+[ext_resource type="Script" uid="uid://cpfnyo8nhg55f" path="res://scripts/foso_pinchos.gd" id="6_foso"]
+[ext_resource type="Script" uid="uid://cf3puu6nxah0m" path="res://scripts/punta_estrella.gd" id="7_punta"]
+[ext_resource type="SpriteFrames" uid="uid://ciwis7isgjaqb" path="res://resources/jefe_cabeza.tres" id="9_cabeza"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hurt"]
 radius = 100.0
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_nudo"]
-size = Vector2(170, 210)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fondo"]
+size = Vector2(600, 40)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_losa"]
 size = Vector2(600, 200)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_fondo"]
-size = Vector2(600, 40)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nudo"]
+size = Vector2(170, 210)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_techo"]
-size = Vector2(3200, 520)
+size = Vector2(7393, 520)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_plat"]
 size = Vector2(260, 30)
 
-[node name="JefeEstrella" type="Node2D"]
+[node name="JefeEstrella" type="Node2D" unique_id=815498528]
 z_index = -2
 script = ExtResource("1_jefe")
 
-[node name="Tallo" type="Polygon2D" parent="."]
+[node name="Tallo" type="Polygon2D" parent="." unique_id=237821083]
 color = Color(0.5, 0.14, 0.44, 1)
 polygon = PackedVector2Array(-40, 90, -34, 0, -22, -180, -16, -400, -12, -550, 12, -550, 16, -400, 22, -180, 34, 0, 40, 90)
 
-[node name="Cuerpo" type="Node2D" parent="."]
+[node name="Cuerpo" type="Node2D" parent="." unique_id=1990633470]
 position = Vector2(0, -550)
 
-[node name="Cabeza" type="AnimatedSprite2D" parent="Cuerpo"]
+[node name="Cabeza" type="AnimatedSprite2D" parent="Cuerpo" unique_id=84560798]
 texture_filter = 1
+position = Vector2(-251, -131)
 sprite_frames = ExtResource("9_cabeza")
 animation = &"cabeza"
 autoplay = "cabeza"
+frame = 1
+frame_progress = 0.66666675
 speed_scale = 2.2
 centered = false
 offset = Vector2(-200, -320)
 
-[node name="Estrella" type="Node2D" parent="Cuerpo"]
+[node name="Estrella" type="Node2D" parent="Cuerpo" unique_id=2141618593]
 
-[node name="Nucleo" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Nucleo" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=976441217]
 visible = false
 color = Color(0.85, 0.25, 0.75, 1)
 polygon = PackedVector2Array(54, -129, 129, -54, 129, 54, 54, 129, -54, 129, -129, 54, -129, -54, -54, -129)
 
-[node name="Punta1" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta1" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=1823802349]
 color = Color(0.85, 0.25, 0.75, 1)
 polygon = PackedVector2Array(-54, -129, 0, -310, 54, -129)
 script = ExtResource("7_punta")
 
-[node name="Punta2" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta2" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=822154608]
 color = Color(0.85, 0.25, 0.75, 1)
 polygon = PackedVector2Array(54, -129, 219, -219, 129, -54)
 script = ExtResource("7_punta")
 
-[node name="Punta3" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta3" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=847343327]
 color = Color(0.85, 0.25, 0.75, 1)
 polygon = PackedVector2Array(129, -54, 310, 0, 129, 54)
 script = ExtResource("7_punta")
 
-[node name="Punta4" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta4" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=1245625692]
 color = Color(0.85, 0.25, 0.75, 1)
 polygon = PackedVector2Array(129, 54, 219, 219, 54, 129)
 script = ExtResource("7_punta")
 
-[node name="Punta5" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta5" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=292464817]
 color = Color(0.85, 0.25, 0.75, 1)
 polygon = PackedVector2Array(54, 129, 0, 310, -54, 129)
 script = ExtResource("7_punta")
 
-[node name="Punta6" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta6" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=205568782]
 color = Color(0.85, 0.25, 0.75, 1)
 polygon = PackedVector2Array(-54, 129, -219, 219, -129, 54)
 script = ExtResource("7_punta")
 
-[node name="Punta7" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta7" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=1620046950]
 color = Color(0.85, 0.25, 0.75, 1)
 polygon = PackedVector2Array(-129, 54, -310, 0, -129, -54)
 script = ExtResource("7_punta")
 
-[node name="Punta8" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta8" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=398373913]
 color = Color(0.85, 0.25, 0.75, 1)
 polygon = PackedVector2Array(-129, -54, -219, -219, -54, -129)
 script = ExtResource("7_punta")
 
-[node name="Ojo" type="Node2D" parent="Cuerpo"]
+[node name="Ojo" type="Node2D" parent="Cuerpo" unique_id=2074995646]
 script = ExtResource("2_ojo")
 
-[node name="Hurtbox" type="StaticBody2D" parent="Cuerpo"]
+[node name="Hurtbox" type="StaticBody2D" parent="Cuerpo" unique_id=1567898200]
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("3_hurt")
 
-[node name="Collision" type="CollisionShape2D" parent="Cuerpo/Hurtbox"]
+[node name="Collision" type="CollisionShape2D" parent="Cuerpo/Hurtbox" unique_id=660511265]
 shape = SubResource("CircleShape2D_hurt")
 disabled = true
 
-[node name="FondoFoso" type="StaticBody2D" parent="."]
+[node name="FondoFoso" type="StaticBody2D" parent="." unique_id=723950658]
 
-[node name="Collision" type="CollisionShape2D" parent="FondoFoso"]
+[node name="Collision" type="CollisionShape2D" parent="FondoFoso" unique_id=441298113]
 position = Vector2(0, 80)
 shape = SubResource("RectangleShape2D_fondo")
 
-[node name="Foso" type="Node2D" parent="."]
+[node name="Foso" type="Node2D" parent="." unique_id=913524863]
 script = ExtResource("6_foso")
 
-[node name="LosaCentral" type="StaticBody2D" parent="."]
+[node name="LosaCentral" type="StaticBody2D" parent="." unique_id=567625182]
 
-[node name="Collision" type="CollisionShape2D" parent="LosaCentral"]
+[node name="Collision" type="CollisionShape2D" parent="LosaCentral" unique_id=2018772081]
 position = Vector2(0, 100)
 shape = SubResource("RectangleShape2D_losa")
 
-[node name="Visual" type="Polygon2D" parent="LosaCentral"]
+[node name="Visual" type="Polygon2D" parent="LosaCentral" unique_id=616896970]
 color = Color(0.2, 0.18, 0.27, 1)
 polygon = PackedVector2Array(-300, 0, 300, 0, 300, 200, -300, 200)
 
-[node name="Linea" type="Polygon2D" parent="LosaCentral"]
+[node name="Linea" type="Polygon2D" parent="LosaCentral" unique_id=1358340158]
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-300, 0, 300, 0, 300, 16, -300, 16)
 
-[node name="Nudo" type="StaticBody2D" parent="."]
+[node name="Nudo" type="StaticBody2D" parent="." unique_id=131997924]
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("4_nudo")
 
-[node name="Collision" type="CollisionShape2D" parent="Nudo"]
+[node name="Collision" type="CollisionShape2D" parent="Nudo" unique_id=909922304]
 position = Vector2(0, -105)
 shape = SubResource("RectangleShape2D_nudo")
 disabled = true
 
-[node name="TechoArena" type="StaticBody2D" parent="."]
+[node name="TechoArena" type="StaticBody2D" parent="." unique_id=1443221073]
 position = Vector2(0, -1200)
 
-[node name="TechoVisual" type="Polygon2D" parent="TechoArena"]
+[node name="TechoVisual" type="Polygon2D" parent="TechoArena" unique_id=1440783865]
+position = Vector2(-2094.4998, -93)
+scale = Vector2(2.3090627, 1)
 color = Color(0.2, 0.18, 0.27, 1)
 polygon = PackedVector2Array(-1600, -260, 1600, -260, 1600, 260, -1600, 260)
 
-[node name="TechoLinea" type="Polygon2D" parent="TechoArena"]
+[node name="TechoLinea" type="Polygon2D" parent="TechoArena" unique_id=165790839]
+position = Vector2(0, -93)
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-1600, 244, 1600, 244, 1600, 260, -1600, 260)
 
-[node name="Collision" type="CollisionShape2D" parent="TechoArena"]
+[node name="Collision" type="CollisionShape2D" parent="TechoArena" unique_id=1774534391]
+position = Vector2(-2096.5, -93)
 shape = SubResource("RectangleShape2D_techo")
 
-[node name="PlataformasF2" type="Node2D" parent="."]
+[node name="PlataformasF2" type="Node2D" parent="." unique_id=1323560123]
 
-[node name="Plataforma1" type="StaticBody2D" parent="PlataformasF2"]
+[node name="Plataforma1" type="StaticBody2D" parent="PlataformasF2" unique_id=775338297]
 position = Vector2(-1000, -250)
 
-[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma1"]
+[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma1" unique_id=1961038723]
 position = Vector2(0, 15)
 shape = SubResource("RectangleShape2D_plat")
 one_way_collision = true
 
-[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma1"]
+[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma1" unique_id=325597973]
 color = Color(0.2, 0.18, 0.27, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 118, 30, -118, 30)
 
-[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma1"]
+[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma1" unique_id=701650798]
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
 
-[node name="Plataforma2" type="StaticBody2D" parent="PlataformasF2"]
+[node name="Plataforma2" type="StaticBody2D" parent="PlataformasF2" unique_id=28518161]
 position = Vector2(1000, -250)
 
-[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma2"]
+[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma2" unique_id=1796630039]
 position = Vector2(0, 15)
 shape = SubResource("RectangleShape2D_plat")
 one_way_collision = true
 
-[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma2"]
+[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma2" unique_id=1682816025]
 color = Color(0.2, 0.18, 0.27, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 118, 30, -118, 30)
 
-[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma2"]
+[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma2" unique_id=1931780502]
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
 
-[node name="Plataforma3" type="StaticBody2D" parent="PlataformasF2"]
+[node name="Plataforma3" type="StaticBody2D" parent="PlataformasF2" unique_id=401160871]
 position = Vector2(-650, -380)
 
-[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma3"]
+[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma3" unique_id=467458288]
 position = Vector2(0, 15)
 shape = SubResource("RectangleShape2D_plat")
 one_way_collision = true
 
-[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma3"]
+[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma3" unique_id=1917809955]
 color = Color(0.2, 0.18, 0.27, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 118, 30, -118, 30)
 
-[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma3"]
+[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma3" unique_id=1373211466]
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
 
-[node name="Plataforma4" type="StaticBody2D" parent="PlataformasF2"]
+[node name="Plataforma4" type="StaticBody2D" parent="PlataformasF2" unique_id=534324767]
 position = Vector2(650, -380)
 
-[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma4"]
+[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma4" unique_id=854076729]
 position = Vector2(0, 15)
 shape = SubResource("RectangleShape2D_plat")
 one_way_collision = true
 
-[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma4"]
+[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma4" unique_id=978057792]
 color = Color(0.2, 0.18, 0.27, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 118, 30, -118, 30)
 
-[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma4"]
+[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma4" unique_id=1727764253]
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
 
-[node name="Ojos" type="Node2D" parent="."]
+[node name="Ojos" type="Node2D" parent="." unique_id=1588931262]
 
-[node name="PuntosOjos" type="Node2D" parent="."]
+[node name="PuntosOjos" type="Node2D" parent="." unique_id=282036340]
 
-[node name="Punto1" type="Marker2D" parent="PuntosOjos"]
+[node name="Punto1" type="Marker2D" parent="PuntosOjos" unique_id=294438267]
 position = Vector2(-700, -150)
 
-[node name="Punto2" type="Marker2D" parent="PuntosOjos"]
+[node name="Punto2" type="Marker2D" parent="PuntosOjos" unique_id=1836450268]
 position = Vector2(680, -150)
 
-[node name="Punto3" type="Marker2D" parent="PuntosOjos"]
+[node name="Punto3" type="Marker2D" parent="PuntosOjos" unique_id=820293344]
 position = Vector2(-330, -180)
 
-[node name="Punto4" type="Marker2D" parent="PuntosOjos"]
+[node name="Punto4" type="Marker2D" parent="PuntosOjos" unique_id=1140953136]
 position = Vector2(330, -180)
 
-[node name="Punto5" type="Marker2D" parent="PuntosOjos"]
+[node name="Punto5" type="Marker2D" parent="PuntosOjos" unique_id=637009458]
 position = Vector2(520, -330)
 
-[node name="Punto6" type="Marker2D" parent="PuntosOjos"]
+[node name="Punto6" type="Marker2D" parent="PuntosOjos" unique_id=310117726]
 position = Vector2(-560, -330)
 
-[node name="Punto7" type="Marker2D" parent="PuntosOjos"]
+[node name="Punto7" type="Marker2D" parent="PuntosOjos" unique_id=1369210537]
 position = Vector2(-430, -500)
 
-[node name="Punto8" type="Marker2D" parent="PuntosOjos"]
+[node name="Punto8" type="Marker2D" parent="PuntosOjos" unique_id=1435287026]
 position = Vector2(430, -500)
 
-[node name="Punto9" type="Marker2D" parent="PuntosOjos"]
+[node name="Punto9" type="Marker2D" parent="PuntosOjos" unique_id=1292026820]
 position = Vector2(760, -720)
 
-[node name="Punto10" type="Marker2D" parent="PuntosOjos"]
+[node name="Punto10" type="Marker2D" parent="PuntosOjos" unique_id=353944312]
 position = Vector2(-780, -720)
 
-[node name="Punto11" type="Marker2D" parent="PuntosOjos"]
+[node name="Punto11" type="Marker2D" parent="PuntosOjos" unique_id=569890497]
 position = Vector2(-860, -430)
 
-[node name="Punto12" type="Marker2D" parent="PuntosOjos"]
+[node name="Punto12" type="Marker2D" parent="PuntosOjos" unique_id=2143522009]
 position = Vector2(860, -430)
 
-[node name="Punto13" type="Marker2D" parent="PuntosOjos"]
+[node name="Punto13" type="Marker2D" parent="PuntosOjos" unique_id=1480561651]
 position = Vector2(-560, -880)
 
-[node name="Punto14" type="Marker2D" parent="PuntosOjos"]
+[node name="Punto14" type="Marker2D" parent="PuntosOjos" unique_id=1599693616]
 position = Vector2(560, -880)
 
-[node name="PuntosOjosF2" type="Node2D" parent="."]
+[node name="PuntosOjosF2" type="Node2D" parent="." unique_id=398620381]
 
-[node name="Punto1" type="Marker2D" parent="PuntosOjosF2"]
+[node name="Punto1" type="Marker2D" parent="PuntosOjosF2" unique_id=1301263797]
 position = Vector2(-1100, -150)
 
-[node name="Punto2" type="Marker2D" parent="PuntosOjosF2"]
+[node name="Punto2" type="Marker2D" parent="PuntosOjosF2" unique_id=1075936025]
 position = Vector2(1100, -150)
 
-[node name="Punto3" type="Marker2D" parent="PuntosOjosF2"]
+[node name="Punto3" type="Marker2D" parent="PuntosOjosF2" unique_id=1162702631]
 position = Vector2(-480, -150)
 
-[node name="Punto4" type="Marker2D" parent="PuntosOjosF2"]
+[node name="Punto4" type="Marker2D" parent="PuntosOjosF2" unique_id=932104241]
 position = Vector2(480, -150)
 
-[node name="Punto5" type="Marker2D" parent="PuntosOjosF2"]
+[node name="Punto5" type="Marker2D" parent="PuntosOjosF2" unique_id=1539767000]
 position = Vector2(-850, -480)
 
-[node name="Punto6" type="Marker2D" parent="PuntosOjosF2"]
+[node name="Punto6" type="Marker2D" parent="PuntosOjosF2" unique_id=378178014]
 position = Vector2(850, -480)
 
-[node name="Punto7" type="Marker2D" parent="PuntosOjosF2"]
+[node name="Punto7" type="Marker2D" parent="PuntosOjosF2" unique_id=263658266]
 position = Vector2(-1150, -700)
 
-[node name="Punto8" type="Marker2D" parent="PuntosOjosF2"]
+[node name="Punto8" type="Marker2D" parent="PuntosOjosF2" unique_id=1105492680]
 position = Vector2(1150, -700)
 
-[node name="Punto9" type="Marker2D" parent="PuntosOjosF2"]
+[node name="Punto9" type="Marker2D" parent="PuntosOjosF2" unique_id=1059420695]
 position = Vector2(-520, -900)
 
-[node name="Punto10" type="Marker2D" parent="PuntosOjosF2"]
+[node name="Punto10" type="Marker2D" parent="PuntosOjosF2" unique_id=537802824]
 position = Vector2(520, -900)
 
-[node name="Punto11" type="Marker2D" parent="PuntosOjosF2"]
+[node name="Punto11" type="Marker2D" parent="PuntosOjosF2" unique_id=886059624]
 position = Vector2(-900, -1080)
 
-[node name="Punto12" type="Marker2D" parent="PuntosOjosF2"]
+[node name="Punto12" type="Marker2D" parent="PuntosOjosF2" unique_id=1242723717]
 position = Vector2(900, -1080)

@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" format=3]
+[gd_resource type="SpriteFrames" format=3 uid="uid://ciwis7isgjaqb"]
 
 [ext_resource type="Texture2D" uid="uid://cwxtutvq6rgi8" path="res://Sprites/Enemigos/jefe_cabeza1.png" id="1_c1"]
 [ext_resource type="Texture2D" uid="uid://dqdjub2vn7t81" path="res://Sprites/Enemigos/jefe_cabeza2.png" id="2_c2"]
