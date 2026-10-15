@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/nudo_tallo.gd" id="4_nudo"]
 [ext_resource type="Script" path="res://scripts/foso_pinchos.gd" id="6_foso"]
 [ext_resource type="Script" path="res://scripts/punta_estrella.gd" id="7_punta"]
+[ext_resource type="SpriteFrames" path="res://resources/jefe_cabeza.tres" id="9_cabeza"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hurt"]
 radius = 100.0
@@ -36,9 +37,19 @@ polygon = PackedVector2Array(-40, 90, -34, 0, -22, -180, -16, -400, -12, -550, 1
 [node name="Cuerpo" type="Node2D" parent="."]
 position = Vector2(0, -550)
 
+[node name="Cabeza" type="AnimatedSprite2D" parent="Cuerpo"]
+texture_filter = 1
+sprite_frames = ExtResource("9_cabeza")
+animation = &"cabeza"
+autoplay = "cabeza"
+speed_scale = 2.2
+centered = false
+offset = Vector2(-200, -320)
+
 [node name="Estrella" type="Node2D" parent="Cuerpo"]
 
 [node name="Nucleo" type="Polygon2D" parent="Cuerpo/Estrella"]
+visible = false
 color = Color(0.85, 0.25, 0.75, 1)
 polygon = PackedVector2Array(54, -129, 129, -54, 129, 54, 54, 129, -54, 129, -129, 54, -129, -54, -54, -129)
 
