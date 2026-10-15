@@ -103,7 +103,7 @@ tile_map_data = PackedByteArray("AAB+/zYAAAAAAAAAAAB+/zcAAAAAAAAAAAB+/zgAAAAAAAA
 script = ExtResource("rampas_suaves")
 
 [node name="Player" parent="." unique_id=1350486831 instance=ExtResource("player")]
-position = Vector2(-4868, 2150)
+position = Vector2(512, 639)
 
 [node name="CultistaArrepentido" parent="." unique_id=33952286 instance=ExtResource("cultista_arr")]
 position = Vector2(11491, 3918)
@@ -305,7 +305,7 @@ color_junta = Color(0.08, 0.13, 0.17, 1)
 golpes_para_romper = 4
 
 [node name="PickupL3" parent="." unique_id=289367239 instance=ExtResource("pick")]
-position = Vector2(-5757, 2931)
+position = Vector2(-5772, 3048)
 
 [node name="PickupL4" parent="." unique_id=921542687 instance=ExtResource("pick")]
 position = Vector2(-3277, 3392)
@@ -1795,74 +1795,60 @@ position = Vector2(19604, 1839)
 dialogo_id = "n3_aviso_continuar"
 
 [node name="Encounter D" parent="." unique_id=227226385 instance=ExtResource("enc")]
-position = Vector2(-5590, 2989)
+position = Vector2(-5590, 2848)
 
 [node name="Enemy" parent="Encounter D" unique_id=1611572748 instance=ExtResource("enemy")]
-position = Vector2(836, 298)
+position = Vector2(797, 450)
 tipo = "arquero"
 ola_asignada = 2
 spawn_telegrafiado = true
 
 [node name="Enemy2" parent="Encounter D" unique_id=178226588 instance=ExtResource("enemy")]
-position = Vector2(-753, -209)
+position = Vector2(-787, -96)
 tipo = "arquero"
 spawn_telegrafiado = true
 
 [node name="Enemy3" parent="Encounter D" unique_id=1359157451 instance=ExtResource("enemy")]
-position = Vector2(-501, -51)
+position = Vector2(-535, 62)
 tipo = "arquero"
 ola_asignada = 1
 spawn_telegrafiado = true
 flotante = true
 
 [node name="Enemy4" parent="Encounter D" unique_id=1259026306 instance=ExtResource("enemy")]
-position = Vector2(277, -506)
+position = Vector2(292, -398)
 tipo = "arquero"
 ola_asignada = 1
 spawn_telegrafiado = true
 
 [node name="Enemy5" parent="Encounter D" unique_id=787318044 instance=ExtResource("enemy")]
-position = Vector2(279, -514)
+position = Vector2(294, -406)
 ola_asignada = 3
 spawn_telegrafiado = true
 
 [node name="Enemy6" parent="Encounter D" unique_id=613044478 instance=ExtResource("enemy")]
-position = Vector2(657, 296)
+position = Vector2(618, 448)
 ola_asignada = 3
 spawn_telegrafiado = true
 
 [node name="Enemy7" parent="Encounter D" unique_id=2010091941 instance=ExtResource("enemy")]
-position = Vector2(-300, 70)
+position = Vector2(-315, 187)
 ola_asignada = 1
 spawn_telegrafiado = true
 
 [node name="Enemy8" parent="Encounter D" unique_id=54810130 instance=ExtResource("enemy")]
-position = Vector2(150, 195)
+position = Vector2(341, 356)
 ola_asignada = 2
 spawn_telegrafiado = true
 
 [node name="Enemy9" parent="Encounter D" unique_id=168136276 instance=ExtResource("enemy")]
-position = Vector2(-100, 120)
+position = Vector2(-115, 237)
 tipo = "arquero"
 ola_asignada = 2
 spawn_telegrafiado = true
 flotante = true
 
 [node name="Enemy10" parent="Encounter D" unique_id=723166253 instance=ExtResource("enemy")]
-position = Vector2(-250, 80)
+position = Vector2(-265, 197)
 ola_asignada = 3
 spawn_telegrafiado = true
-
-[node name="Enemy11" parent="Encounter D" unique_id=286077560 instance=ExtResource("enemy")]
-position = Vector2(200, 205)
-tipo = "arquero"
-ola_asignada = 3
-spawn_telegrafiado = true
-flotante = true
-
-[node name="Enemy12" parent="Encounter D" unique_id=1825322331 instance=ExtResource("enemy")]
-position = Vector2(-350, 60)
-tipo = "arquero"
-ola_asignada = 3
-spawn_telegrafiado = true
-flotante = true
