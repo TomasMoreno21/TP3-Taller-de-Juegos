@@ -20,6 +20,7 @@ extends Node2D
 @export var dano := 10
 @export var distancia_borde := 140.0       ## px fuera del foso donde reaparece el jugador
 @export var alto_jugador := 143.0          ## origen del jugador sobre sus pies
+@export var pies_enemigo := 29.0           ## los pies del enemigo están este tanto por debajo de su origen
 @export var color_fondo := Color(0.05, 0.03, 0.07)
 @export var color_pincho := Color(0.75, 0.3, 0.68)
 @export var activo := false:
@@ -36,6 +37,7 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if Engine.is_editor_hint() or not activo:
 		return
+	_empalar_enemigos()
 	var p := get_tree().get_first_node_in_group("player") as Node2D
 	if p == null or p.get("_derrota_activa"):
 		return
@@ -43,6 +45,18 @@ func _physics_process(_delta: float) -> void:
 	var pies := local.y + alto_jugador
 	if absf(local.x) <= ancho * 0.5 and pies >= profundidad - alto_pinchos:
 		_pinchar(p, local.x)
+
+
+## Los enemigos que caen al foso mueren (si no, quedan atrapados y la oleada no termina).
+func _empalar_enemigos() -> void:
+	for e in get_tree().get_nodes_in_group("enemy"):
+		if not (e is Node2D) or not e.has_method("take_damage"):
+			continue
+		if "health" in e and int(e.health) <= 0:
+			continue
+		var local := to_local((e as Node2D).global_position)
+		if absf(local.x) <= ancho * 0.5 and local.y + pies_enemigo >= profundidad - alto_pinchos:
+			e.take_damage(9999, 0.0, 1, true)
 
 
 func _pinchar(p: Node2D, x_local: float) -> void:

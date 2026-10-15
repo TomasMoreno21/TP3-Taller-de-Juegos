@@ -1,19 +1,13 @@
 @tool
 extends StaticBody2D
-## Ojo verde flotante de la sala del jefe final. Cerrado no se puede golpear (el golpe y el
-## sónico lo atraviesan); abierto se cierra con un golpe y le da energía al jugador.
-## F1: es una "llave" (el jefe abre los de `ciclo_llave` == ciclo actual).
-## F2: es una "torreta" (`ciclo_torreta`): avisa (pupila roja) y dispara al jugador; acorazado
-## solo lo cierra el Oso. Lo dibuja `_draw` (se ve en el editor); todo editable en el Inspector.
+## Ojo verde de la sala del jefe final. La Estrella lo crea por tandas en un punto (`PuntosOjos`):
+## aparece, se abre y se cierra con un golpe (da energía) y después se desvanece.
+## El sónico NO lo cierra (rebota): hay que pegarle cuerpo a cuerpo.
+## Acorazado (F2): solo lo cierra el golpe fuerte del Oso. El rayo lo programa la Estrella:
+## `avisar()` enciende la pupila antes de disparar. Lo dibuja `_draw` (se ve en el editor).
 
 signal cerrado
-signal disparo(proyectil: Node)
 
-const PROYECTIL_SCENE := preload("res://scenes/projectile.tscn")
-
-@export var ciclo_llave := -1               ## ciclo de la F1 en que este ojo es llave (-1 = nunca)
-@export var ciclo_torreta := -1             ## ciclo de la F2 en que este ojo es torreta (-1 = nunca)
-@export var acorazado_torreta := false      ## como torreta, solo el golpe fuerte del Oso lo cierra
 @export var color_coraza := Color(0.55, 0.55, 0.6)
 @export var radio := 42.0:
 	set(v):
@@ -31,28 +25,28 @@ const PROYECTIL_SCENE := preload("res://scenes/projectile.tscn")
 	set(v):
 		color_parpado = v
 		queue_redraw()
+@export var color_aviso := Color(1.0, 0.3, 0.2)        ## pupila antes del rayo
 @export var color_fondo := Color(0.06, 0.08, 0.06)
 @export var flote_amplitud := 6.0
 @export var flote_velocidad := 1.6
+@export var duracion_aparecer := 0.3
+@export var duracion_desaparecer := 0.35
 @export var sonido_cerrar: AudioStream = preload("res://assets/audio/sfx/gen/rompible_golpe.wav")
 @export var volumen_db := -6.0
 
 var energia := 12.0          # la fija el jefe al abrirlo
 var abierto := false
-var torreta := false         # modo F2: dispara
 var acorazado := false
-var intervalo_disparo := 3.0
-var aviso_disparo := 0.5
-var dano_disparo := 8
-var velocidad_disparo := 420.0
 var dano_minimo_coraza := 24
-var _disparo_t := 0.0
+var golpe_proyectil := false   # lo marca el proyectil del jugador antes de take_damage
 var _aviso_t := 0.0
+var _aviso_dur := 0.0
 var _apertura := 0.0         # 0 = cerrado, 1 = abierto (anima el dibujo)
 var _t := 0.0
 var _base_y := 0.0
 var _mirada := Vector2.ZERO
 var _tw: Tween
+var _saliendo := false
 
 
 func _ready() -> void:
@@ -63,7 +57,6 @@ func _ready() -> void:
 		_apertura = 1.0   # en el editor se ve abierto para ubicarlo
 		return
 	add_to_group("ojo_verde")
-	add_to_group("cristal")   # el sónico del Murciélago lo persigue y atraviesa el chequeo de terreno
 	collision_layer = 2
 	collision_mask = 0
 	_poner_colision(false)
@@ -83,6 +76,8 @@ func _process(delta: float) -> void:
 		return
 	_t += delta * flote_velocidad
 	position.y = _base_y + sin(_t) * flote_amplitud
+	if _aviso_t > 0.0:
+		_aviso_t = maxf(_aviso_t - delta, 0.0)
 	if abierto:
 		var p := get_tree().get_first_node_in_group("player") as Node2D
 		if p != null:
@@ -90,66 +85,64 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
-func _physics_process(delta: float) -> void:
-	if Engine.is_editor_hint() or not abierto or not torreta:
-		return
-	if _aviso_t > 0.0:
-		_aviso_t -= delta
-		if _aviso_t <= 0.0:
-			_disparar()
-			_disparo_t = intervalo_disparo
-		return
-	_disparo_t -= delta
-	if _disparo_t <= 0.0:
-		_aviso_t = maxf(aviso_disparo, 0.01)
-
-
-func abrir(energia_al_cerrar: float) -> void:
-	torreta = false
-	acorazado = false
-	_abrir_comun(energia_al_cerrar)
-
-
-## Modo torreta (F2): `retraso` escalona el primer disparo entre ojos.
-func abrir_torreta(energia_al_cerrar: float, retraso: float) -> void:
-	torreta = true
-	acorazado = acorazado_torreta
-	_disparo_t = retraso
-	_aviso_t = 0.0
-	_abrir_comun(energia_al_cerrar)
-
-
-func _abrir_comun(energia_al_cerrar: float) -> void:
+## Aparece (crece desde nada) y se abre tras `retraso` s. Golpeable recién al abrirse.
+func aparecer(energia_al_cerrar: float, con_coraza: bool, retraso: float) -> void:
 	energia = energia_al_cerrar
+	acorazado = con_coraza
+	if DisplayServer.get_name() == "headless":
+		scale = Vector2.ONE
+		_abrir()
+		return
+	scale = Vector2.ZERO
+	_tw = create_tween()
+	_tw.tween_interval(maxf(retraso, 0.0))
+	_tw.tween_property(self, "scale", Vector2.ONE, duracion_aparecer).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_tw.tween_callback(_abrir)
+
+
+func _abrir() -> void:
+	if _saliendo:
+		return
 	abierto = true
 	_poner_colision(true)
 	var p := get_tree().get_first_node_in_group("player")
 	if p is PhysicsBody2D:
 		(p as PhysicsBody2D).add_collision_exception_with(self)   # flota en el aire: no frena al jugador
-	_animar(1.0)
+	if DisplayServer.get_name() == "headless":
+		_apertura = 1.0
+		return
+	var tw := create_tween()
+	tw.tween_property(self, "_apertura", 1.0, 0.3)
 
 
-## Cierra sin premiar (reinicio de la pelea).
-func cerrar_silencioso() -> void:
+## La pupila se enciende `seg` s: el rayo sale de este ojo.
+func avisar(seg: float) -> void:
+	_aviso_t = seg
+	_aviso_dur = maxf(seg, 0.01)
+
+
+## Se cierra y se desvanece sin premiar (reinicio, fin de tanda o muerte del jefe).
+func desaparecer() -> void:
 	abierto = false
-	torreta = false
 	_aviso_t = 0.0
 	_poner_colision(false)
-	_animar(0.0)
+	_salir()
 
 
 func take_damage(_cantidad: int, _kb: float = 0.0, _dir: int = 1, _critico: bool = false) -> void:
 	if not abierto:
+		return
+	if golpe_proyectil:
+		golpe_proyectil = false
+		_rebotar()   # el sónico no lo cierra
 		return
 	var p := get_tree().get_first_node_in_group("player")
 	if acorazado and (p == null or int(p.get("current_form")) != 2 or _cantidad < dano_minimo_coraza):
 		_rebotar()
 		return
 	abierto = false
-	torreta = false
 	_aviso_t = 0.0
 	_poner_colision(false)
-	_animar(0.0)
 	if p != null and p.has_method("on_enemy_killed") and energia > 0.0:
 		p.on_enemy_killed(energia)
 	Burst.emitir(self, global_position, color_contorno, 12, 1.0)
@@ -157,22 +150,23 @@ func take_damage(_cantidad: int, _kb: float = 0.0, _dir: int = 1, _critico: bool
 	if audio != null and sonido_cerrar != null:
 		audio.play_sfx(sonido_cerrar, volumen_db, 0.1)
 	cerrado.emit()
+	_salir()
 
 
-func _disparar() -> void:
-	var p := get_tree().get_first_node_in_group("player") as Node2D
-	if p == null:
+## Cierra el párpado, se achica y se libera.
+func _salir() -> void:
+	if _saliendo:
 		return
-	var proj := PROYECTIL_SCENE.instantiate()
-	# enemy_shot antes de add_child: el proyectil arma su máscara en _ready.
-	proj.set("direction", (p.global_position - global_position).normalized())
-	proj.set("speed", velocidad_disparo)
-	proj.set("damage", dano_disparo)
-	proj.set("enemy_shot", true)
-	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
-	destino.add_child(proj)
-	proj.global_position = global_position
-	disparo.emit(proj)
+	_saliendo = true
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
+	if DisplayServer.get_name() == "headless":
+		queue_free()
+		return
+	_tw = create_tween()
+	_tw.tween_property(self, "_apertura", 0.0, 0.15)
+	_tw.tween_property(self, "scale", Vector2.ZERO, duracion_desaparecer).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	_tw.tween_callback(queue_free)
 
 
 ## Golpe que no atraviesa la coraza: sacudida y chispa gris.
@@ -194,16 +188,6 @@ func _poner_colision(on: bool) -> void:
 		cs.set_deferred("disabled", not on)
 
 
-func _animar(objetivo: float) -> void:
-	if _tw != null and _tw.is_valid():
-		_tw.kill()
-	if DisplayServer.get_name() == "headless":
-		_apertura = objetivo
-		return
-	_tw = create_tween()
-	_tw.tween_property(self, "_apertura", objetivo, 0.18 if objetivo < 0.5 else 0.3)
-
-
 func _draw() -> void:
 	var w := radio * 1.35
 	var h := radio * 0.62 * maxf(_apertura, 0.06)
@@ -217,7 +201,10 @@ func _draw() -> void:
 		var r_iris := minf(radio * 0.42, h * 0.95)
 		var col_iris := color_iris
 		if _aviso_t > 0.0:
-			col_iris = Color(1.0, 0.3, 0.2)   # aviso de disparo: la pupila se enciende
+			# Aviso del rayo: la pupila se enciende y crece hasta el disparo.
+			var k := 1.0 - _aviso_t / _aviso_dur
+			col_iris = color_aviso
+			r_iris *= 1.0 + 0.35 * k
 		draw_circle(_mirada, r_iris, col_iris)
 		draw_circle(_mirada, r_iris * 0.45, color_fondo)
 	almendra.append(almendra[0])

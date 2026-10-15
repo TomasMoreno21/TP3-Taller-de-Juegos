@@ -4,8 +4,8 @@
 [ext_resource type="Script" path="res://scripts/ojo_central.gd" id="2_ojo"]
 [ext_resource type="Script" path="res://scripts/ojo_central_hurtbox.gd" id="3_hurt"]
 [ext_resource type="Script" path="res://scripts/nudo_tallo.gd" id="4_nudo"]
-[ext_resource type="PackedScene" path="res://scenes/ojo_verde.tscn" id="5_verde"]
 [ext_resource type="Script" path="res://scripts/foso_pinchos.gd" id="6_foso"]
+[ext_resource type="Script" path="res://scripts/punta_estrella.gd" id="7_punta"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hurt"]
 radius = 100.0
@@ -19,6 +19,12 @@ size = Vector2(600, 200)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fondo"]
 size = Vector2(600, 40)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_techo"]
+size = Vector2(3200, 520)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_plat"]
+size = Vector2(260, 30)
+
 [node name="JefeEstrella" type="Node2D"]
 z_index = -2
 script = ExtResource("1_jefe")
@@ -30,9 +36,51 @@ polygon = PackedVector2Array(-40, 90, -34, 0, -22, -180, -16, -400, -12, -550, 1
 [node name="Cuerpo" type="Node2D" parent="."]
 position = Vector2(0, -550)
 
-[node name="Estrella" type="Polygon2D" parent="Cuerpo"]
+[node name="Estrella" type="Node2D" parent="Cuerpo"]
+
+[node name="Nucleo" type="Polygon2D" parent="Cuerpo/Estrella"]
 color = Color(0.85, 0.25, 0.75, 1)
-polygon = PackedVector2Array(0, -310, 54, -129, 219, -219, 129, -54, 310, 0, 129, 54, 219, 219, 54, 129, 0, 310, -54, 129, -219, 219, -129, 54, -310, 0, -129, -54, -219, -219, -54, -129)
+polygon = PackedVector2Array(54, -129, 129, -54, 129, 54, 54, 129, -54, 129, -129, 54, -129, -54, -54, -129)
+
+[node name="Punta1" type="Polygon2D" parent="Cuerpo/Estrella"]
+color = Color(0.85, 0.25, 0.75, 1)
+polygon = PackedVector2Array(-54, -129, 0, -310, 54, -129)
+script = ExtResource("7_punta")
+
+[node name="Punta2" type="Polygon2D" parent="Cuerpo/Estrella"]
+color = Color(0.85, 0.25, 0.75, 1)
+polygon = PackedVector2Array(54, -129, 219, -219, 129, -54)
+script = ExtResource("7_punta")
+
+[node name="Punta3" type="Polygon2D" parent="Cuerpo/Estrella"]
+color = Color(0.85, 0.25, 0.75, 1)
+polygon = PackedVector2Array(129, -54, 310, 0, 129, 54)
+script = ExtResource("7_punta")
+
+[node name="Punta4" type="Polygon2D" parent="Cuerpo/Estrella"]
+color = Color(0.85, 0.25, 0.75, 1)
+polygon = PackedVector2Array(129, 54, 219, 219, 54, 129)
+script = ExtResource("7_punta")
+
+[node name="Punta5" type="Polygon2D" parent="Cuerpo/Estrella"]
+color = Color(0.85, 0.25, 0.75, 1)
+polygon = PackedVector2Array(54, 129, 0, 310, -54, 129)
+script = ExtResource("7_punta")
+
+[node name="Punta6" type="Polygon2D" parent="Cuerpo/Estrella"]
+color = Color(0.85, 0.25, 0.75, 1)
+polygon = PackedVector2Array(-54, 129, -219, 219, -129, 54)
+script = ExtResource("7_punta")
+
+[node name="Punta7" type="Polygon2D" parent="Cuerpo/Estrella"]
+color = Color(0.85, 0.25, 0.75, 1)
+polygon = PackedVector2Array(-129, 54, -310, 0, -129, -54)
+script = ExtResource("7_punta")
+
+[node name="Punta8" type="Polygon2D" parent="Cuerpo/Estrella"]
+color = Color(0.85, 0.25, 0.75, 1)
+polygon = PackedVector2Array(-129, -54, -219, -219, -54, -129)
+script = ExtResource("7_punta")
 
 [node name="Ojo" type="Node2D" parent="Cuerpo"]
 script = ExtResource("2_ojo")
@@ -79,58 +127,166 @@ position = Vector2(0, -105)
 shape = SubResource("RectangleShape2D_nudo")
 disabled = true
 
+[node name="TechoArena" type="StaticBody2D" parent="."]
+position = Vector2(0, -1200)
+
+[node name="TechoVisual" type="Polygon2D" parent="TechoArena"]
+color = Color(0.2, 0.18, 0.27, 1)
+polygon = PackedVector2Array(-1600, -260, 1600, -260, 1600, 260, -1600, 260)
+
+[node name="TechoLinea" type="Polygon2D" parent="TechoArena"]
+color = Color(0.42, 0.3, 0.55, 1)
+polygon = PackedVector2Array(-1600, 244, 1600, 244, 1600, 260, -1600, 260)
+
+[node name="Collision" type="CollisionShape2D" parent="TechoArena"]
+shape = SubResource("RectangleShape2D_techo")
+
+[node name="PlataformasF2" type="Node2D" parent="."]
+
+[node name="Plataforma1" type="StaticBody2D" parent="PlataformasF2"]
+position = Vector2(-1000, -250)
+
+[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma1"]
+position = Vector2(0, 15)
+shape = SubResource("RectangleShape2D_plat")
+one_way_collision = true
+
+[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma1"]
+color = Color(0.2, 0.18, 0.27, 1)
+polygon = PackedVector2Array(-130, 0, 130, 0, 118, 30, -118, 30)
+
+[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma1"]
+color = Color(0.42, 0.3, 0.55, 1)
+polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
+
+[node name="Plataforma2" type="StaticBody2D" parent="PlataformasF2"]
+position = Vector2(1000, -250)
+
+[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma2"]
+position = Vector2(0, 15)
+shape = SubResource("RectangleShape2D_plat")
+one_way_collision = true
+
+[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma2"]
+color = Color(0.2, 0.18, 0.27, 1)
+polygon = PackedVector2Array(-130, 0, 130, 0, 118, 30, -118, 30)
+
+[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma2"]
+color = Color(0.42, 0.3, 0.55, 1)
+polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
+
+[node name="Plataforma3" type="StaticBody2D" parent="PlataformasF2"]
+position = Vector2(-650, -380)
+
+[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma3"]
+position = Vector2(0, 15)
+shape = SubResource("RectangleShape2D_plat")
+one_way_collision = true
+
+[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma3"]
+color = Color(0.2, 0.18, 0.27, 1)
+polygon = PackedVector2Array(-130, 0, 130, 0, 118, 30, -118, 30)
+
+[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma3"]
+color = Color(0.42, 0.3, 0.55, 1)
+polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
+
+[node name="Plataforma4" type="StaticBody2D" parent="PlataformasF2"]
+position = Vector2(650, -380)
+
+[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma4"]
+position = Vector2(0, 15)
+shape = SubResource("RectangleShape2D_plat")
+one_way_collision = true
+
+[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma4"]
+color = Color(0.2, 0.18, 0.27, 1)
+polygon = PackedVector2Array(-130, 0, 130, 0, 118, 30, -118, 30)
+
+[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma4"]
+color = Color(0.42, 0.3, 0.55, 1)
+polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
+
 [node name="Ojos" type="Node2D" parent="."]
 
-[node name="Llave1A" parent="Ojos" instance=ExtResource("5_verde")]
+[node name="PuntosOjos" type="Node2D" parent="."]
+
+[node name="Punto1" type="Marker2D" parent="PuntosOjos"]
 position = Vector2(-700, -150)
-ciclo_llave = 0
-ciclo_torreta = 0
-acorazado_torreta = true
 
-[node name="Llave2A" parent="Ojos" instance=ExtResource("5_verde")]
-position = Vector2(520, -330)
-ciclo_llave = 0
-ciclo_torreta = 1
-
-[node name="Llave3A" parent="Ojos" instance=ExtResource("5_verde")]
-position = Vector2(-430, -500)
-ciclo_llave = 0
-ciclo_torreta = 1
-
-[node name="Llave4A" parent="Ojos" instance=ExtResource("5_verde")]
-position = Vector2(760, -720)
-ciclo_llave = 0
-ciclo_torreta = 0
-
-[node name="Llave1B" parent="Ojos" instance=ExtResource("5_verde")]
+[node name="Punto2" type="Marker2D" parent="PuntosOjos"]
 position = Vector2(680, -150)
-ciclo_llave = 1
-ciclo_torreta = 1
-acorazado_torreta = true
 
-[node name="Llave2B" parent="Ojos" instance=ExtResource("5_verde")]
+[node name="Punto3" type="Marker2D" parent="PuntosOjos"]
+position = Vector2(-330, -180)
+
+[node name="Punto4" type="Marker2D" parent="PuntosOjos"]
+position = Vector2(330, -180)
+
+[node name="Punto5" type="Marker2D" parent="PuntosOjos"]
+position = Vector2(520, -330)
+
+[node name="Punto6" type="Marker2D" parent="PuntosOjos"]
 position = Vector2(-560, -330)
-ciclo_llave = 1
-ciclo_torreta = 0
 
-[node name="Llave3B" parent="Ojos" instance=ExtResource("5_verde")]
+[node name="Punto7" type="Marker2D" parent="PuntosOjos"]
+position = Vector2(-430, -500)
+
+[node name="Punto8" type="Marker2D" parent="PuntosOjos"]
 position = Vector2(430, -500)
-ciclo_llave = 1
-ciclo_torreta = 0
 
-[node name="Llave4B" parent="Ojos" instance=ExtResource("5_verde")]
+[node name="Punto9" type="Marker2D" parent="PuntosOjos"]
+position = Vector2(760, -720)
+
+[node name="Punto10" type="Marker2D" parent="PuntosOjos"]
 position = Vector2(-780, -720)
-ciclo_llave = 1
-ciclo_torreta = 1
 
-[node name="Dormido1" parent="Ojos" instance=ExtResource("5_verde")]
-position = Vector2(-900, -430)
+[node name="Punto11" type="Marker2D" parent="PuntosOjos"]
+position = Vector2(-860, -430)
 
-[node name="Dormido2" parent="Ojos" instance=ExtResource("5_verde")]
-position = Vector2(900, -430)
+[node name="Punto12" type="Marker2D" parent="PuntosOjos"]
+position = Vector2(860, -430)
 
-[node name="Dormido3" parent="Ojos" instance=ExtResource("5_verde")]
+[node name="Punto13" type="Marker2D" parent="PuntosOjos"]
 position = Vector2(-560, -880)
 
-[node name="Dormido4" parent="Ojos" instance=ExtResource("5_verde")]
+[node name="Punto14" type="Marker2D" parent="PuntosOjos"]
 position = Vector2(560, -880)
+
+[node name="PuntosOjosF2" type="Node2D" parent="."]
+
+[node name="Punto1" type="Marker2D" parent="PuntosOjosF2"]
+position = Vector2(-1100, -150)
+
+[node name="Punto2" type="Marker2D" parent="PuntosOjosF2"]
+position = Vector2(1100, -150)
+
+[node name="Punto3" type="Marker2D" parent="PuntosOjosF2"]
+position = Vector2(-480, -150)
+
+[node name="Punto4" type="Marker2D" parent="PuntosOjosF2"]
+position = Vector2(480, -150)
+
+[node name="Punto5" type="Marker2D" parent="PuntosOjosF2"]
+position = Vector2(-850, -480)
+
+[node name="Punto6" type="Marker2D" parent="PuntosOjosF2"]
+position = Vector2(850, -480)
+
+[node name="Punto7" type="Marker2D" parent="PuntosOjosF2"]
+position = Vector2(-1150, -700)
+
+[node name="Punto8" type="Marker2D" parent="PuntosOjosF2"]
+position = Vector2(1150, -700)
+
+[node name="Punto9" type="Marker2D" parent="PuntosOjosF2"]
+position = Vector2(-520, -900)
+
+[node name="Punto10" type="Marker2D" parent="PuntosOjosF2"]
+position = Vector2(520, -900)
+
+[node name="Punto11" type="Marker2D" parent="PuntosOjosF2"]
+position = Vector2(-900, -1080)
+
+[node name="Punto12" type="Marker2D" parent="PuntosOjosF2"]
+position = Vector2(900, -1080)

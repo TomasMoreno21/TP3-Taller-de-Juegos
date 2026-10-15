@@ -2,7 +2,13 @@ extends Area2D
 ## Lanza de la Estrella: una de sus puntas se estira hasta el piso. Primero AVISO (la punta
 ## brilla, línea fina y marca en el piso, sin daño), después GOLPE corto (daña una sola vez)
 ## y se retrae. La configura jefe_estrella.gd antes de add_child (como el proyectil).
+## Modo `rayo`: rayo recto de un ojo verde (rectángulo, sin marca en el piso). Si el ojo
+## `fuente` se cierra durante el aviso, el rayo se cancela. Un parry del jugador emite `devuelto`.
 
+signal devuelto(pos: Vector2)
+
+var rayo := false
+var fuente: Node = null          # ojo que dispara (modo rayo)
 var desde := Vector2.ZERO        # punta de la estrella (global)
 var hasta := Vector2.ZERO        # punto del piso (global)
 var dano := 15
@@ -53,10 +59,12 @@ func _ready() -> void:
 	_marca.color = Color(color.r, color.g, color.b, 0.5)
 	_marca.top_level = true
 	_marca.global_position = hasta
+	_marca.visible = not rayo
 	add_child(_marca)
 	# La lanza: triángulo largo que crece desde la punta.
 	_punta = Polygon2D.new()
-	_punta.polygon = PackedVector2Array([Vector2(0, -ancho * 0.5), Vector2(_largo, 0), Vector2(0, ancho * 0.5)])
+	_punta.polygon = PackedVector2Array([Vector2(0, -ancho * 0.5), Vector2(_largo, -ancho * 0.5), Vector2(_largo, ancho * 0.5), Vector2(0, ancho * 0.5)]) if rayo \
+		else PackedVector2Array([Vector2(0, -ancho * 0.5), Vector2(_largo, 0), Vector2(0, ancho * 0.5)])
 	_punta.color = color
 	_punta.scale = Vector2(0.0, 1.0)
 	add_child(_punta)
@@ -64,6 +72,9 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_t += delta
+	if _t < aviso and rayo and fuente != null and (not is_instance_valid(fuente) or not fuente.get("abierto")):
+		queue_free()   # cerraron el ojo durante el aviso: el rayo no sale
+		return
 	if _t < aviso:
 		var f := 14.0 + 26.0 * (_t / maxf(aviso, 0.01))
 		var a := 0.5 + 0.5 * sin(_t * f)
@@ -86,7 +97,7 @@ func _physics_process(delta: float) -> void:
 			for b in get_overlapping_bodies():
 				if b.is_in_group("player") and b.has_method("take_damage"):
 					_golpeo = true   # un solo golpe por lanza
-					b.take_damage(dano, empuje, 1 if b.global_position.x >= hasta.x else -1)
+					_golpear(b)
 					break
 		return
 	monitoring = false
@@ -95,6 +106,19 @@ func _physics_process(delta: float) -> void:
 	_marca.color.a = maxf(0.5 * (1.0 - r), 0.0)
 	if r >= 1.0:
 		queue_free()
+
+
+## Daña al jugador; el empuje se aleja del origen (así la guardia/parry de frente funciona).
+func _golpear(b: Node2D) -> void:
+	var hubo_parry := [false]
+	var al_parry := func() -> void: hubo_parry[0] = true
+	if b.has_signal("parry_exitoso"):
+		b.parry_exitoso.connect(al_parry)
+	b.take_damage(dano, empuje, 1 if b.global_position.x >= desde.x else -1)
+	if b.has_signal("parry_exitoso") and b.parry_exitoso.is_connected(al_parry):
+		b.parry_exitoso.disconnect(al_parry)
+	if hubo_parry[0]:
+		devuelto.emit(b.global_position)
 
 
 func _circulo(radio: float) -> PackedVector2Array:

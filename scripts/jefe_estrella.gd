@@ -1,12 +1,15 @@
 extends Node2D
 ## Jefe final: la Estrella (el Arzobispo, líder del culto, transformado). Fija en el fondo, unida al piso por
 ## un tallo; NO daña por contacto. El origen del nodo es el piso de la arena, en la base del tallo.
-## F1 (ciclo): llaves (ojos verdes a distintas alturas) → el ojo central se abre arriba y el Oso
-## rompe el nudo del tallo → la Estrella se inclina y el ojo baja: ventana de castigo.
+## La vida NO va en el HUD: se lee en el cuerpo (8 puntas que se agrietan y caen, 1 cada 75).
+## Ojos verdes: aparecen por tandas de 3-4 en `PuntosOjos` (franjas de altura = forma que piden);
+## de los abiertos, uno al azar avisa y dispara un rayo (nunca dos a la vez). Parry del rayo = -30.
+## F1 (ciclo): tandas de llaves → el ojo central se abre arriba y el Oso rompe el nudo del tallo →
+## la Estrella se inclina y el ojo baja: ventana de castigo.
 ## F2 (ciclo): al entrar, el piso central se rompe (foso con pinchos: Lobo/Murciélago lo cruzan).
-## Torretas (ojos verdes que disparan; una acorazada = Oso) + barridos de luz desde el ojo →
-## el ojo se eleva fuera del alcance del salto: ventana aérea (Murciélago). El parry del Humano
-## devuelve los disparos al ojo central. Por ahora la F3 repite el ciclo de la F2.
+## Tandas de torretas (una acorazada = Oso, a los dos lados del foso) + barridos de luz desde el
+## ojo → el ojo se eleva fuera del alcance del salto: ventana aérea (Murciélago).
+## Por ahora la F3 repite el ciclo de la F2.
 ## Se integra al Encounter igual que un enemigo manual (preparar_ola / activar / died / health).
 
 signal salud_cambio(hp: int, max_hp: int)
@@ -17,6 +20,8 @@ signal died
 const LANZA_SCENE := preload("res://scenes/lanza_estrella.tscn")
 const ORBE_VIDA_SCENE := preload("res://scenes/pickup_vida.tscn")
 const ATAQUE_SCENE := preload("res://scenes/ataque_jefe.tscn")
+const OJO_SCENE := preload("res://scenes/ojo_verde.tscn")
+const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 
 enum Fase { UNO, DOS, TRES }
 
@@ -27,6 +32,30 @@ enum Fase { UNO, DOS, TRES }
 @export_range(0.0, 1.0, 0.01) var umbral_fase3 := 0.33
 @export var curacion_fin_fase := 25         ## orbe de vida al cambiar de fase
 @export var distancia_orbe := 520.0         ## px del centro (del lado del jugador) donde aparece el orbe
+@export var mostrar_barra_hud := false      ## la vida se lee en las puntas del cuerpo, no en el HUD
+@export var orden_puntas: Array[int] = [0, 4, 2, 6, 1, 5, 3, 7]   ## en qué orden se rompen las puntas (0 = arriba)
+
+@export_group("Ojos verdes (tandas)")
+@export var ojos_por_tanda_min := 3
+@export var ojos_por_tanda_max := 4
+@export var tandas_por_ciclo := 2
+@export var escalonado_aparicion := 0.25    ## s entre la aparición de un ojo y el siguiente de la tanda
+@export var franja_media := 220.0           ## altura (px) desde la que un punto es "medio" (no lo alcanza el Oso)
+@export var franja_alta := 420.0            ## desde aquí "alto": Lobo con doble salto o Murciélago
+@export var franja_muy_alta := 620.0        ## desde aquí "muy alto": solo Murciélago
+@export var lado_foso := 300.0              ## |x| mínimo de las torretas (a los costados del foso)
+@export var semilla := 0                    ## 0 = al azar; fija = tandas repetibles (tests)
+
+@export_group("Rayo de los ojos")
+@export var dano_rayo := 10
+@export var aviso_rayo := 0.7
+@export var ancho_rayo := 36.0
+@export var largo_rayo := 2600.0
+@export var intervalo_rayo_f1 := 2.4        ## convive con la lanza
+@export var intervalo_rayo_f2 := 1.6
+@export var primer_rayo := 1.5              ## s desde que abre la primera tanda
+@export var color_rayo := Color(0.55, 1.0, 0.45)
+@export var dano_reflejo := 30              ## rayo devuelto con parry: daño al ojo central
 
 @export_group("F1: llaves, nudo y castigo")
 @export var energia_por_ojo := 12.0         ## energía que da cerrar un ojo verde
@@ -46,18 +75,10 @@ enum Fase { UNO, DOS, TRES }
 @export var empuje_lanza := 260.0
 
 @export_group("F2: torretas, barrido y ventana aérea")
-@export var dano_torreta := 8
-@export var intervalo_torreta := 3.0        ## s entre disparos de cada torreta
-@export var aviso_torreta := 0.5            ## s con la pupila roja antes de disparar
-@export var velocidad_torreta := 420.0
-@export var escalonado_torreta := 0.8       ## s entre el primer disparo de una torreta y la siguiente
 @export var dano_minimo_coraza := 24        ## golpe mínimo del Oso para cerrar la torreta acorazada
 @export var ventana_aerea := 4.0            ## s que el ojo queda elevado y golpeable
-@export var altura_ojo_aerea := 680.0       ## px sobre el piso: fuera del doble salto del Lobo (~540)
+@export var altura_ojo_aerea := 1100.0      ## px sobre el piso: fuera del Lobo desde la plataforma más alta (380 + 354 + 185)
 @export var tiempo_elevarse := 0.7
-@export var dano_reflejo := 30              ## disparo devuelto con parry que llega al ojo central
-@export var radio_reflejo := 120.0
-@export var velocidad_reflejo := 900.0
 @export var dano_barrido := 12
 @export var aviso_barrido := 0.9
 @export var velocidad_barrido := 650.0
@@ -68,6 +89,30 @@ enum Fase { UNO, DOS, TRES }
 @export var barrido_alto_desde := 170.0     ## franja alta: Lobo (160) y Murciélago (133) pasan por debajo
 @export var barrido_alto_hasta := 420.0
 @export var aviso_derrumbe := 1.2           ## s de temblor antes de que el piso central se rompa
+@export var recorrido_barrido := 1500.0     ## px que viaja cada barrido desde el ojo
+
+@export_group("F2: sala más grande")
+@export var escala_arena_f2 := 0.8          ## multiplica el zoom de la forma (< 1 = la cámara se aleja)
+@export var centro_camara_f2 := Vector2(0, -665)   ## centro de la cámara en la F2, relativo al origen (piso)
+@export var subida_techo := 390.0           ## px que sube el techo de raíces
+@export var escala_jefe_f2 := 1.3
+@export var altura_ojo_f2 := 650.0          ## altura de reposo del ojo en la F2
+@export var duracion_agrandar := 1.5
+@export var subida_plataformas := 420.0     ## px desde abajo con que aparecen las plataformas
+
+@export_group("F2: interludio (la Estrella se hunde y manda enemigos)")
+@export var oleada1_cultistas := 3
+@export var oleada2_cultistas := 2
+@export var oleada2_arqueros := 2
+@export var pausa_entre_oleadas := 1.5
+@export var margen_spawn := 150.0           ## px desde el borde visible donde entran los enemigos
+@export var intervalo_barrido_interludio := 5.0   ## luz que cruza la sala de un costado al otro
+@export var intervalo_lanza_pozo := 3.5
+@export var dano_lanza_pozo := 15
+@export var aviso_lanza_pozo := 0.8
+@export var tiempo_hundirse := 1.2
+@export var tiempo_resurgir := 1.4
+@export var profundidad_escondida := 500.0  ## px bajo el piso donde queda el cuerpo escondido
 
 @export_group("Apariencia")
 @export var nombre_jefe := "EL ARZOBISPO"   ## nombre en las barras de cine ("" = solo barras)
@@ -95,21 +140,39 @@ var _lanza_t := 0.0
 var _ventana_t := 0.0
 var _fase_pendiente := false
 var _altura_ojo := 550.0    # altura de reposo del ojo (posición de Cuerpo en la escena)
+var _altura_reposo := 550.0 # reposo actual (sube en la F2)
+var _techo_y0 := 0.0
+var _plat_y0: Array = []
+var _tw_sala: Tween
+var _invocados: Array = []
+var _invocados_vivos := 0
+var _lanza_pozo_t := 0.0
+var _barrido_lado := -1
 var _tw_cuerpo: Tween
 var _tw_ojo: Tween
 var _tw_flash: Tween
 var _tw_losa: Tween
 var _barrido_t := 0.0
 var _barrido_alto := false
-var _disparos: Array = []
+var _rng := RandomNumberGenerator.new()
+var _ojos_vivos: Array = []   # ojos de la tanda actual (los cerrados se liberan solos)
+var _rayo_t := 0.0
+var _ultimo_tirador: Node = null
+var _puntas: Array = []        # punta_estrella.gd, en orden Punta1..8
+var _puntas_rotas := 0
 
 @onready var tallo: Polygon2D = $Tallo
 @onready var cuerpo: Node2D = $Cuerpo
-@onready var estrella: Polygon2D = $Cuerpo/Estrella
+@onready var estrella: Node2D = $Cuerpo/Estrella
+@onready var nucleo: Polygon2D = $Cuerpo/Estrella/Nucleo
 @onready var ojo = $Cuerpo/Ojo   # ojo_central.gd
 @onready var hurtbox = $Cuerpo/Hurtbox   # ojo_central_hurtbox.gd
 @onready var nudo = $Nudo   # nudo_tallo.gd
-@onready var ojos_raiz: Node2D = $Ojos
+@onready var ojos_raiz: Node2D = $Ojos            # contenedor de los ojos creados
+@onready var puntos_raiz: Node2D = $PuntosOjos     # Marker2D: dónde pueden aparecer
+@onready var puntos_f2: Node2D = $PuntosOjosF2     # idem en la sala grande de la F2 (vacío = usa PuntosOjos)
+@onready var techo: StaticBody2D = $TechoArena
+@onready var plataformas_raiz: Node2D = $PlataformasF2
 @onready var losa: StaticBody2D = $LosaCentral
 @onready var foso = $Foso   # foso_pinchos.gd
 
@@ -120,15 +183,21 @@ func _ready() -> void:
 	enemy_data = Enemigo.new()
 	enemy_data.max_health = vida_max
 	_altura_ojo = -cuerpo.position.y
+	_altura_reposo = _altura_ojo
+	_techo_y0 = techo.position.y
+	for pl in plataformas_raiz.get_children():
+		_plat_y0.append((pl as Node2D).position.y)
+	_restaurar_sala()
 	hurtbox.jefe = self
 	hurtbox.collision_layer = 2
 	hurtbox.collision_mask = 0
 	_hurtbox_on(false)
-	estrella.color = color_fase1
+	for n in estrella.get_children():
+		if n.has_method("romper"):
+			_puntas.append(n)
+	_pintar(color_fase1)
 	nudo.roto.connect(_on_nudo_roto)
-	for o in _ojos():
-		o.cerrado.connect(_on_llave_cerrada)
-		o.disparo.connect(_on_disparo_torreta)
+	_sembrar()
 
 
 # --- API del Encounter (misma firma que enemy.gd) ---
@@ -143,13 +212,19 @@ func preparar_ola() -> void:
 	health = vida_max
 	fase = Fase.UNO
 	_ciclo = 0
-	estrella.color = color_fase1
+	_pintar(color_fase1)
 	_limpiar_lanzas()
-	for o in _ojos():
-		o.cerrar_silencioso()
+	_limpiar_ojos()
 	_llaves_vivas = 0
-	_disparos.clear()
+	_puntas_rotas = 0
+	for pt in _puntas:
+		pt.restaurar()
+	_sembrar()
 	_restaurar_piso()
+	_restaurar_sala()
+	_limpiar_invocados()
+	cuerpo.visible = true
+	cuerpo.rotation = 0.0
 	nudo.restaurar()
 	_hurtbox_on(false)
 	_poner_ojo(0.0)
@@ -197,13 +272,17 @@ func _ciclo_f1(gen: int) -> void:
 	# 1) Llaves: hay que cerrar los ojos verdes de este ciclo.
 	_estado = "llaves"
 	_lanza_t = intervalo_lanza * 0.6
-	var llaves := _llaves_del_ciclo()
-	_llaves_vivas = llaves.size()
-	for o in llaves:
-		o.abrir(energia_por_ojo)
-	while _sigue(gen) and _llaves_vivas > 0:
-		await _esperar(0.1)
+	_rayo_t = primer_rayo
+	for _t in tandas_por_ciclo:
+		await _tanda(gen, false)
+		if not _sigue(gen) or _fase_pendiente:
+			break
+	_limpiar_ojos()
 	if not _sigue(gen):
+		return
+	if _fase_pendiente:   # los parrys la llevaron al umbral
+		_limpiar_lanzas()
+		await _transicion_fase(gen)
 		return
 	# 2) El ojo se abre arriba (fuera de alcance) y el nudo del tallo se puede romper (Oso).
 	_estado = "nudo"
@@ -244,21 +323,12 @@ func _ciclo_f2(gen: int) -> void:
 	# 1) Torretas: hay que cerrarlas (una de cada lado del foso; la acorazada pide al Oso).
 	_estado = "torretas"
 	_barrido_t = primer_barrido
-	var torres := _torretas_del_ciclo()
-	_llaves_vivas = torres.size()
-	for i in torres.size():
-		var o = torres[i]
-		o.intervalo_disparo = intervalo_torreta
-		o.aviso_disparo = aviso_torreta
-		o.dano_disparo = dano_torreta
-		o.velocidad_disparo = velocidad_torreta
-		o.dano_minimo_coraza = dano_minimo_coraza
-		o.abrir_torreta(energia_por_ojo, 1.0 + escalonado_torreta * i)
-	while _sigue(gen) and _llaves_vivas > 0 and not _fase_pendiente:
-		await _esperar(0.1)
-	for o in torres:
-		if o.abierto:
-			o.cerrar_silencioso()
+	_rayo_t = primer_rayo
+	for _t in tandas_por_ciclo:
+		await _tanda(gen, true)
+		if not _sigue(gen) or _fase_pendiente:
+			break
+	_limpiar_ojos()
 	if not _sigue(gen):
 		return
 	if _fase_pendiente:   # los parrys la llevaron al umbral
@@ -281,7 +351,7 @@ func _ciclo_f2(gen: int) -> void:
 	if not _sigue(gen):
 		return
 	_poner_ojo(0.0)
-	await _mover_cuerpo(_altura_ojo, 0.0, tiempo_elevarse)
+	await _mover_cuerpo(_altura_reposo, 0.0, tiempo_elevarse)
 	if _fase_pendiente:
 		await _transicion_fase(gen)
 		return
@@ -300,7 +370,20 @@ func _physics_process(delta: float) -> void:
 	if _estado != "castigo" and _estado != "ventana_aerea":
 		estrella.rotation += giro_velocidad * delta
 	_mirar_jugador(delta)
-	_revisar_reflejos()
+	if _estado == "llaves" or _estado == "torretas":
+		_rayo_t -= delta
+		if _rayo_t <= 0.0:
+			_disparar_rayo()
+			_rayo_t = intervalo_rayo_f1 if fase == Fase.UNO else intervalo_rayo_f2
+	if _estado == "interludio":
+		_barrido_t -= delta
+		if _barrido_t <= 0.0:
+			_lanzar_barrido_lateral()
+			_barrido_t = intervalo_barrido_interludio
+		_lanza_pozo_t -= delta
+		if _lanza_pozo_t <= 0.0:
+			_lanzar_lanza_pozo()
+			_lanza_pozo_t = intervalo_lanza_pozo
 	if _estado == "torretas":
 		_barrido_t -= delta
 		if _barrido_t <= 0.0:
@@ -313,34 +396,144 @@ func _physics_process(delta: float) -> void:
 			_lanza_t = intervalo_lanza if _estado == "llaves" else intervalo_lanza_nudo
 
 
-# --- Llaves (ojos verdes) ---
+# --- Ojos verdes por tandas ---
 
+func _sembrar() -> void:
+	if semilla != 0:
+		_rng.seed = semilla
+	else:
+		_rng.randomize()
+
+
+## Ojos de la tanda actual que siguen abiertos.
 func _ojos() -> Array:
-	var lista := []
-	if ojos_raiz == null:
-		return lista
+	return _ojos_vivos.filter(func(o) -> bool: return is_instance_valid(o) and not o.is_queued_for_deletion())
+
+
+## Abre una tanda y espera a que la cierren. `torretas`: una acorazada y ojos a los dos lados del foso.
+func _tanda(gen: int, torretas: bool) -> void:
+	var puntos := _elegir_puntos(torretas)
+	_ojos_vivos.clear()
+	_llaves_vivas = puntos.size()
+	for i in puntos.size():
+		var o = OJO_SCENE.instantiate()
+		o.position = puntos[i]
+		o.dano_minimo_coraza = dano_minimo_coraza
+		ojos_raiz.add_child(o)
+		o.cerrado.connect(_on_llave_cerrada)
+		o.aparecer(energia_por_ojo, torretas and i == 0, escalonado_aparicion * i)
+		_ojos_vivos.append(o)
+	while _sigue(gen) and _llaves_vivas > 0 and not _fase_pendiente:
+		await _esperar(0.1)
+
+
+func _franja(punto: Vector2) -> int:
+	var h := -punto.y
+	if h >= franja_muy_alta:
+		return 3
+	if h >= franja_alta:
+		return 2
+	if h >= franja_media:
+		return 1
+	return 0
+
+
+## Puntos de la tanda (posición local). Llaves: uno bajo, uno medio y uno alto/muy alto (+1 al azar).
+## Torretas: el primero es bajo (acorazado) y hay ojos a los dos lados del foso.
+func _elegir_puntos(torretas: bool) -> Array:
+	var libres: Array = []
+	var raiz := puntos_f2 if fase != Fase.UNO and puntos_f2 != null and puntos_f2.get_child_count() > 0 else puntos_raiz
+	for m in raiz.get_children():
+		if m is Node2D and (not torretas or absf((m as Node2D).position.x) > lado_foso):
+			libres.append((m as Node2D).position)
+	var n := mini(_rng.randi_range(ojos_por_tanda_min, ojos_por_tanda_max), libres.size())
+	var elegidos: Array = []
+	var requisitos: Array = []
+	if torretas:
+		requisitos = [func(p: Vector2) -> bool: return _franja(p) == 0]
+	else:
+		requisitos = [
+			func(p: Vector2) -> bool: return _franja(p) == 0,
+			func(p: Vector2) -> bool: return _franja(p) == 1,
+			func(p: Vector2) -> bool: return _franja(p) >= 2]
+	for req in requisitos:
+		_sacar(libres, elegidos, req)
+	if torretas and not elegidos.is_empty():
+		var lado: float = signf(elegidos[0].x)
+		_sacar(libres, elegidos, func(p: Vector2) -> bool: return signf(p.x) != lado)
+	while elegidos.size() < n and not libres.is_empty():
+		_sacar(libres, elegidos, func(_p: Vector2) -> bool: return true)
+	return elegidos
+
+
+## Pasa de `libres` a `elegidos` un punto al azar que cumpla `req` (si no hay, cualquiera).
+func _sacar(libres: Array, elegidos: Array, req: Callable) -> void:
+	if libres.is_empty():
+		return
+	var aptos := libres.filter(req)
+	if aptos.is_empty():
+		aptos = libres
+	var p: Vector2 = aptos[_rng.randi() % aptos.size()]
+	libres.erase(p)
+	elegidos.append(p)
+
+
+func _limpiar_ojos() -> void:
 	for o in ojos_raiz.get_children():
-		if o.has_method("abrir"):
-			lista.append(o)
-	return lista
+		if o.has_method("desaparecer"):
+			o.desaparecer()
+	_ojos_vivos.clear()
 
 
-## Los ojos con `ciclo_llave` == ciclo actual (los ciclos se repiten en rueda).
-func _llaves_del_ciclo() -> Array:
-	var ciclos: Array[int] = []
-	for o in _ojos():
-		var c := int(o.get("ciclo_llave"))
-		if c >= 0 and not ciclos.has(c):
-			ciclos.append(c)
-	var lista := []
-	if ciclos.is_empty():
-		return lista
-	ciclos.sort()
-	var actual := ciclos[_ciclo % ciclos.size()]
-	for o in _ojos():
-		if int(o.get("ciclo_llave")) == actual:
-			lista.append(o)
-	return lista
+## Un ojo abierto al azar (distinto del anterior) avisa y dispara un rayo recto al jugador.
+func _disparar_rayo() -> void:
+	var p := _obtener_player()
+	if p == null:
+		return
+	var candidatos := _ojos().filter(func(o) -> bool: return o.abierto)
+	if candidatos.size() > 1:
+		candidatos.erase(_ultimo_tirador)
+	if candidatos.is_empty():
+		return
+	var o = candidatos[_rng.randi() % candidatos.size()]
+	_ultimo_tirador = o
+	o.avisar(aviso_rayo)
+	var desde: Vector2 = o.global_position
+	var r = LANZA_SCENE.instantiate()
+	r.rayo = true
+	r.fuente = o
+	r.desde = desde
+	r.hasta = desde + (p.global_position - desde).normalized() * largo_rayo
+	r.dano = dano_rayo
+	r.aviso = aviso_rayo
+	r.activo = 0.15
+	r.retraer = 0.2
+	r.ancho = ancho_rayo
+	r.empuje = 180.0
+	r.color = color_rayo
+	r.devuelto.connect(_on_rayo_devuelto)
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	destino.add_child(r)
+
+
+## Parry del rayo: vuelve del jugador al ojo central y le hace daño (aun fuera de la ventana).
+func _on_rayo_devuelto(pos: Vector2) -> void:
+	if _muerto or not _activo:
+		return
+	_recibir_dano(dano_reflejo)
+	_rugido(5.0)
+	if DisplayServer.get_name() == "headless":
+		return
+	var linea := Line2D.new()
+	linea.points = PackedVector2Array([pos, ojo.global_position])
+	linea.width = ancho_rayo * 0.6
+	linea.default_color = Color(0.85, 0.95, 1.0)
+	linea.z_index = 6
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	destino.add_child(linea)
+	var tw := linea.create_tween()
+	tw.tween_property(linea, "modulate:a", 0.0, 0.3)
+	tw.tween_callback(linea.queue_free)
 
 
 func _on_llave_cerrada() -> void:
@@ -368,6 +561,7 @@ func _recibir_dano(cantidad: int) -> void:
 	var piso := _vida_piso_fase()
 	health = maxi(health - cantidad, piso)
 	salud_cambio.emit(health, vida_max)
+	_actualizar_puntas()
 	_flash()
 	if health <= 0:
 		_morir()
@@ -377,6 +571,29 @@ func _recibir_dano(cantidad: int) -> void:
 		_fase_pendiente = true
 		if _estado == "castigo" or _estado == "ventana_aerea":
 			_estado = "fin_castigo"
+
+
+## La vida en el cuerpo: cada `vida_max / 8` perdida rompe una punta; la siguiente se agrieta.
+func _actualizar_puntas() -> void:
+	if _puntas.is_empty():
+		return
+	var por_punta := float(vida_max) / float(_puntas.size())
+	var perdida := float(vida_max - health)
+	var rotas := mini(floori(perdida / por_punta + 0.0001), _puntas.size())
+	for i in _puntas.size():
+		var idx: int = orden_puntas[i] if i < orden_puntas.size() else i
+		if idx < 0 or idx >= _puntas.size():
+			continue
+		var pt = _puntas[idx]
+		if i < rotas:
+			pt.romper()
+		elif i == rotas:
+			pt.dano = clampf((perdida - rotas * por_punta) / por_punta, 0.0, 1.0)
+	_puntas_rotas = rotas
+
+
+func _puntas_sanas() -> Array:
+	return _puntas.filter(func(pt) -> bool: return not pt.rota)
 
 
 ## Vida mínima de la fase actual: el daño de una ventana no saltea fases.
@@ -395,7 +612,7 @@ func _transicion_fase(gen: int) -> void:
 	fase = mini(fase + 1, Fase.TRES)
 	fase_cambio.emit(fase)
 	var col := _color_fase()
-	estrella.color = col
+	_pintar(col)
 	_rugido(10.0)
 	if DisplayServer.get_name() != "headless":
 		JefeCine.grieta(get_tree(), col)
@@ -404,6 +621,19 @@ func _transicion_fase(gen: int) -> void:
 	_ciclo = 0
 	if fase == Fase.DOS:
 		await _romper_piso()
+		if not _sigue(gen):
+			return
+		await _hundirse()
+		if not _sigue(gen):
+			return
+		await _agrandar_sala()
+		if not _sigue(gen):
+			return
+		await _interludio(gen)
+		if not _sigue(gen):
+			return
+		await _resurgir()
+		return
 	await _esperar(2.0)
 	if not _sigue(gen):
 		return
@@ -442,9 +672,8 @@ func _lanzar_lanza() -> void:
 	var mejor := Vector2.ZERO
 	var mejor_d := INF
 	var centro := cuerpo.global_position
-	var pts := estrella.polygon
-	for i in range(0, pts.size(), 2):
-		var punta := estrella.to_global(pts[i])
+	for pt in _puntas_sanas():
+		var punta: Vector2 = pt.to_global(pt.vertice())
 		if punta.y < centro.y - 40.0:
 			continue
 		var d := absf(punta.x - objetivo.x)
@@ -460,7 +689,7 @@ func _lanzar_lanza() -> void:
 	l.aviso = aviso_lanza
 	l.ancho = ancho_lanza
 	l.empuje = empuje_lanza
-	l.color = estrella.color.lightened(0.2)
+	l.color = nucleo.color.lightened(0.2)
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	destino.add_child(l)
 
@@ -489,7 +718,7 @@ func _poner_cuerpo(inclinada: bool, instantaneo: bool = false) -> void:
 		var cam := get_viewport().get_camera_2d()
 		if cam != null and cam.has_method("shake"):
 			cam.shake(9.0, 0.3)
-	var altura := altura_ojo_castigo if inclinada else _altura_ojo
+	var altura := altura_ojo_castigo if inclinada else _altura_reposo
 	var rot := inclinacion_castigo if inclinada else 0.0
 	await _mover_cuerpo(altura, rot, 0.0 if instantaneo else tiempo_inclinarse, inclinada)
 
@@ -511,58 +740,7 @@ func _mover_cuerpo(altura: float, rot: float, dur: float, rebote: bool = false) 
 	await _tw_cuerpo.finished
 
 
-# --- F2: torretas, barrido, reflejos y piso roto ---
-
-## Los ojos con `ciclo_torreta` == ciclo actual (en rueda, como las llaves).
-func _torretas_del_ciclo() -> Array:
-	var ciclos: Array[int] = []
-	for o in _ojos():
-		var c := int(o.get("ciclo_torreta"))
-		if c >= 0 and not ciclos.has(c):
-			ciclos.append(c)
-	var lista := []
-	if ciclos.is_empty():
-		return lista
-	ciclos.sort()
-	var actual := ciclos[_ciclo % ciclos.size()]
-	for o in _ojos():
-		if int(o.get("ciclo_torreta")) == actual:
-			lista.append(o)
-	return lista
-
-
-func _on_disparo_torreta(proyectil: Node) -> void:
-	_disparos.append(proyectil)
-
-
-## Un disparo de torreta devuelto con parry vuela guiado al ojo central y le pega (fuera de ventana).
-func _revisar_reflejos() -> void:
-	var i := _disparos.size() - 1
-	while i >= 0:
-		var d: Variant = _disparos[i]   # Variant: un proyectil liberado no rompe la asignación
-		if not is_instance_valid(d) or d.is_queued_for_deletion():
-			_disparos.remove_at(i)
-		elif not d.enemy_shot:
-			var objetivo: Vector2 = ojo.global_position
-			if not d.has_meta("al_ojo"):
-				d.set_meta("al_ojo", true)
-				d.set("homing", false)
-				d.set("speed", velocidad_reflejo)
-				d.set("_life", 3.0)
-			d.direction = (objetivo - d.global_position).normalized()
-			if d.global_position.distance_to(objetivo) <= radio_reflejo:
-				_disparos.remove_at(i)
-				d.queue_free()
-				_golpe_reflejo()
-		i -= 1
-
-
-func _golpe_reflejo() -> void:
-	if _muerto or not _activo or fase == Fase.UNO:
-		return
-	_recibir_dano(dano_reflejo)
-	_rugido(5.0)
-
+# --- F2: barrido y piso roto ---
 
 ## Barrido de luz desde el ojo hacia los dos lados. Alterna franja baja (saltar) y alta (pasar por debajo).
 func _lanzar_barrido() -> void:
@@ -576,9 +754,9 @@ func _lanzar_barrido() -> void:
 		a.velocidad = velocidad_barrido
 		a.dir = d
 		a.tamano = Vector2(ancho_barrido, hasta - desde)
-		a.color = estrella.color.lightened(0.35)
+		a.color = nucleo.color.lightened(0.35)
 		a.aviso = aviso_barrido
-		a.recorrido_max = 1300.0
+		a.recorrido_max = recorrido_barrido
 		destino.add_child(a)
 		a.global_position = global_position + Vector2(d * ancho_barrido * 0.5, -(desde + hasta) * 0.5)
 
@@ -614,6 +792,217 @@ func _romper_piso() -> void:
 	_tw_losa.tween_property(losa, "modulate:a", 0.0, 0.5)
 
 
+## Entrada a la F2: el techo sube, la cámara se aleja, la Estrella crece y salen las plataformas.
+func _agrandar_sala() -> void:
+	var gen := _gen
+	_altura_reposo = altura_ojo_f2
+	var cam := get_viewport().get_camera_2d()
+	var headless := DisplayServer.get_name() == "headless"
+	var dur := 0.0 if headless else duracion_agrandar
+	if cam != null and cam.has_method("escala_arena"):
+		cam.escala_arena(escala_arena_f2, dur)
+		cam.mover_arena(global_position + centro_camara_f2)
+	for pl in plataformas_raiz.get_children():
+		_poner_plataforma(pl, true)
+	cuerpo.scale = Vector2.ONE * escala_jefe_f2   # escondido en el foso: crece sin verse
+	if headless:
+		techo.position.y = _techo_y0 - subida_techo
+		for i in plataformas_raiz.get_child_count():
+			(plataformas_raiz.get_child(i) as Node2D).position.y = _plat_y0[i]
+		return
+	if cam != null and cam.has_method("shake"):
+		cam.shake(6.0, dur)
+	JuiceFx.escombros(get_tree(), techo.global_position + Vector2(0, 260), Color(0.42, 0.3, 0.55), 20, 1.2)
+	if _tw_sala != null and _tw_sala.is_valid():
+		_tw_sala.kill()
+	_tw_sala = create_tween().set_parallel(true)
+	_tw_sala.tween_property(techo, "position:y", _techo_y0 - subida_techo, dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	for i in plataformas_raiz.get_child_count():
+		var pl := plataformas_raiz.get_child(i) as Node2D
+		pl.position.y = _plat_y0[i] + subida_plataformas
+		pl.modulate.a = 0.0
+		_tw_sala.tween_property(pl, "position:y", _plat_y0[i], dur).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		_tw_sala.tween_property(pl, "modulate:a", 1.0, dur * 0.5)
+	await _tw_sala.finished
+	if gen != _gen:
+		return
+
+
+## La Estrella se hunde por el foso con su tallo y desaparece.
+func _hundirse() -> void:
+	_poner_ojo(0.0)
+	_rugido(8.0)
+	if DisplayServer.get_name() == "headless":
+		cuerpo.position.y = profundidad_escondida
+		cuerpo.visible = false
+		_ajustar_tallo()
+		return
+	JuiceFx.escombros(get_tree(), global_position + Vector2(0, -20), Color(0.42, 0.3, 0.55), 16, 1.2)
+	if _tw_cuerpo != null and _tw_cuerpo.is_valid():
+		_tw_cuerpo.kill()
+	_tw_cuerpo = create_tween().set_parallel(true)
+	_tw_cuerpo.tween_property(cuerpo, "position:y", profundidad_escondida, tiempo_hundirse).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	_tw_cuerpo.tween_property(cuerpo, "rotation", 0.0, tiempo_hundirse)
+	_tw_cuerpo.tween_method(func(_v: float) -> void: _ajustar_tallo(), 0.0, 1.0, tiempo_hundirse)
+	await _tw_cuerpo.finished
+	cuerpo.visible = false
+	_ajustar_tallo()
+
+
+## Vuelve a subir por el foso, ya agrandada, y ruge: empieza el ciclo de la F2.
+func _resurgir() -> void:
+	_limpiar_lanzas()
+	cuerpo.position.y = profundidad_escondida
+	cuerpo.rotation = 0.0
+	cuerpo.visible = true
+	_rugido(10.0)
+	if DisplayServer.get_name() != "headless":
+		JuiceFx.escombros(get_tree(), global_position + Vector2(0, -20), Color(0.42, 0.3, 0.55), 18, 1.3)
+	await _mover_cuerpo(_altura_reposo, 0.0, tiempo_resurgir, true)
+	_rugido(12.0)
+
+
+## Mientras está escondida: 2 oleadas de enemigos comunes + barridos laterales y lanzas desde el pozo.
+func _interludio(gen: int) -> void:
+	_estado = "interludio"
+	_barrido_t = 2.0
+	_lanza_pozo_t = 2.8
+	await _oleada(gen, oleada1_cultistas, 0)
+	if not _sigue(gen):
+		return
+	await _esperar(pausa_entre_oleadas)
+	if not _sigue(gen):
+		return
+	await _oleada(gen, oleada2_cultistas, oleada2_arqueros)
+	_limpiar_lanzas()
+
+
+func _oleada(gen: int, cultistas: int, arqueros: int) -> void:
+	var tipos: Array = []
+	for _i in cultistas:
+		tipos.append("cultista")
+	for _i in arqueros:
+		tipos.append("arquero")
+	_invocados_vivos = tipos.size()
+	for i in tipos.size():
+		_invocar(tipos[i], i)
+	while _sigue(gen) and _invocados_vivos > 0:
+		_revisar_limbo()
+		await _esperar(0.2)
+
+
+## Entra por un costado (alternando), en el borde visible menos `margen_spawn`, lejos del foso.
+func _invocar(tipo: String, i: int) -> void:
+	var e = ENEMY_SCENE.instantiate()
+	e.set("tipo", tipo)
+	e.set("spawn_telegrafiado", true)
+	var lado := -1.0 if i % 2 == 0 else 1.0
+	var fila := floori(i / 2.0)
+	var x := global_position.x + lado * (_mitad_vista() - margen_spawn - fila * 140.0)
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	destino.add_child(e)
+	e.global_position = Vector2(x, global_position.y - 150.0)
+	if e.has_method("activar"):
+		e.activar()
+	if e.has_signal("died"):
+		e.died.connect(_on_invocado_muerto.bind(e))
+	_invocados.append(e)
+
+
+func _on_invocado_muerto(e: Node) -> void:
+	if e.has_meta("contado"):
+		return
+	e.set_meta("contado", true)
+	_invocados_vivos = maxi(_invocados_vivos - 1, 0)
+
+
+## Anti soft-lock: un invocado que quedó fuera de la sala cuenta como muerto.
+func _revisar_limbo() -> void:
+	for e in _invocados:
+		if is_instance_valid(e) and not e.has_meta("contado") and (e as Node2D).global_position.y > global_position.y + 400.0:
+			if e.has_method("matar_por_caida"):
+				e.matar_por_caida()
+			_on_invocado_muerto(e)
+
+
+func _limpiar_invocados() -> void:
+	for e in _invocados:
+		if is_instance_valid(e):
+			e.queue_free()
+	_invocados.clear()
+	_invocados_vivos = 0
+
+
+## Media vista horizontal de la cámara (la sala llega hasta ahí: las paredes siguen el borde).
+func _mitad_vista() -> float:
+	var cam := get_viewport().get_camera_2d()
+	var z := cam.zoom.x if cam != null else 1.0
+	return get_viewport().get_visible_rect().size.x * 0.5 / maxf(z, 0.01)
+
+
+## Luz que nace en una pared y cruza la sala; alterna el lado y la altura (baja = saltar, alta = pasar por debajo).
+func _lanzar_barrido_lateral() -> void:
+	_barrido_alto = not _barrido_alto
+	var desde := barrido_alto_desde if _barrido_alto else 0.0
+	var hasta := barrido_alto_hasta if _barrido_alto else barrido_bajo_alto
+	var mitad := _mitad_vista()
+	var lado := _barrido_lado
+	_barrido_lado = -_barrido_lado
+	var a = ATAQUE_SCENE.instantiate()
+	a.dano = dano_barrido
+	a.velocidad = velocidad_barrido
+	a.dir = -lado
+	a.tamano = Vector2(ancho_barrido, hasta - desde)
+	a.color = nucleo.color.lightened(0.35)
+	a.aviso = aviso_barrido
+	a.recorrido_max = mitad * 2.0
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	destino.add_child(a)
+	a.global_position = Vector2(global_position.x + lado * (mitad - ancho_barrido * 0.5), global_position.y - (desde + hasta) * 0.5)
+
+
+## Una punta sale del fondo del foso hacia el cuerpo del jugador (aviso con línea y marca).
+func _lanzar_lanza_pozo() -> void:
+	var p := _obtener_player()
+	if p == null:
+		return
+	var l = LANZA_SCENE.instantiate()
+	l.desde = global_position + Vector2(0, 40)
+	l.hasta = Vector2(p.global_position.x, global_position.y - 80.0)
+	l.dano = dano_lanza_pozo
+	l.aviso = aviso_lanza_pozo
+	l.ancho = ancho_lanza
+	l.empuje = empuje_lanza
+	l.color = nucleo.color.lightened(0.2)
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	destino.add_child(l)
+
+
+## Vuelve la sala de la F1 al instante (reinicio de la pelea).
+func _restaurar_sala() -> void:
+	if _tw_sala != null and _tw_sala.is_valid():
+		_tw_sala.kill()
+	_altura_reposo = _altura_ojo
+	techo.position.y = _techo_y0
+	cuerpo.scale = Vector2.ONE
+	for i in plataformas_raiz.get_child_count():
+		var pl := plataformas_raiz.get_child(i) as Node2D
+		if i < _plat_y0.size():
+			pl.position.y = _plat_y0[i]
+		_poner_plataforma(pl, false)
+	var cam := get_viewport().get_camera_2d() if is_inside_tree() else null
+	if cam != null and cam.has_method("escala_arena"):
+		cam.escala_arena(1.0, 0.0)
+
+
+func _poner_plataforma(pl: Node, on: bool) -> void:
+	(pl as CanvasItem).visible = on
+	(pl as CanvasItem).modulate.a = 1.0
+	var cs := pl.get_node_or_null("Collision") as CollisionShape2D
+	if cs != null:
+		cs.set_deferred("disabled", not on)
+
+
 func _restaurar_piso() -> void:
 	if _tw_losa != null and _tw_losa.is_valid():
 		_tw_losa.kill()
@@ -630,6 +1019,8 @@ func _restaurar_piso() -> void:
 func _ajustar_tallo() -> void:
 	if tallo != null and _altura_ojo > 0.0:
 		tallo.scale.y = -cuerpo.position.y / _altura_ojo
+		tallo.scale.x = cuerpo.scale.x
+		tallo.visible = cuerpo.visible and cuerpo.position.y < -10.0
 
 
 func _mirar_jugador(delta: float) -> void:
@@ -649,6 +1040,12 @@ func _hurtbox_on(on: bool) -> void:
 		var p := _obtener_player()
 		if p is PhysicsBody2D:
 			(p as PhysicsBody2D).add_collision_exception_with(hurtbox)
+
+
+func _pintar(col: Color) -> void:
+	nucleo.color = col
+	for pt in _puntas:
+		pt.color = col
 
 
 func _flash() -> void:
@@ -681,8 +1078,10 @@ func _morir() -> void:
 	_estado = "inactivo"
 	_hurtbox_on(false)
 	_limpiar_lanzas()
-	for o in _ojos():
-		o.cerrar_silencioso()
+	_limpiar_ojos()
+	_limpiar_invocados()
+	for pt in _puntas:
+		pt.romper()
 	_rugido(14.0)
 	if DisplayServer.get_name() != "headless":
 		_slowmo(muerte_slowmo, muerte_slowmo_escala)
