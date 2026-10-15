@@ -279,6 +279,12 @@ func _pop_fragmentos() -> void:
 
 
 ## Aviso arriba al centro para otros sistemas (checkpoint, arenas...).
+## Sugerencia de forma (la usa el jefe): el ícono de la forma late al lado del dial.
+func sugerir_forma(idx: int, seg: float = 6.0) -> void:
+	if dial != null and dial.has_method("sugerir_forma"):
+		dial.sugerir_forma(idx, seg)
+
+
 func mostrar_aviso(texto: String) -> void:
 	_aviso(texto)
 
@@ -351,7 +357,7 @@ func _en_reposo() -> bool:
 
 
 func _auto_ocultar(delta: float) -> void:
-	if not auto_ocultar or _player == null or not _en_reposo():
+	if not auto_ocultar or _player == null or not _en_reposo() or (dial != null and dial.get("_sugerencia") != null):
 		_t_reposo = 0.0
 	else:
 		_t_reposo += delta

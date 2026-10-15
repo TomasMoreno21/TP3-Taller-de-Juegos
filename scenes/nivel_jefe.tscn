@@ -52,7 +52,7 @@ position = Vector2(4600, 1100)
 color = Color(0.2, 0.18, 0.27, 1)
 polygon = PackedVector2Array(-4600, -100, 300, -100, 300, 100, -4600, 100)
 
-[node name="PisoVisualDer" type="Polygon2D" parent="Piso"]
+[node name="PisoVisualDer" type="Polygon2D" parent="Piso" unique_id=1267478027]
 color = Color(0.2, 0.18, 0.27, 1)
 polygon = PackedVector2Array(900, -100, 4600, -100, 4600, 100, 900, 100)
 
@@ -60,7 +60,7 @@ polygon = PackedVector2Array(900, -100, 4600, -100, 4600, 100, 900, 100)
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-4600, -100, 300, -100, 300, -84, -4600, -84)
 
-[node name="LineaSuperiorDer" type="Polygon2D" parent="Piso"]
+[node name="LineaSuperiorDer" type="Polygon2D" parent="Piso" unique_id=1102247631]
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(900, -100, 4600, -100, 4600, -84, 900, -84)
 
@@ -68,7 +68,7 @@ polygon = PackedVector2Array(900, -100, 4600, -100, 4600, -84, 900, -84)
 position = Vector2(-2150, 1)
 shape = SubResource("RectangleShape2D_piso")
 
-[node name="PisoCollisionDer" type="CollisionShape2D" parent="Piso"]
+[node name="PisoCollisionDer" type="CollisionShape2D" parent="Piso" unique_id=577318166]
 position = Vector2(2750, 1)
 shape = SubResource("RectangleShape2D_piso_der")
 

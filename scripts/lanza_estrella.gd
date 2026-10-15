@@ -9,6 +9,7 @@ signal devuelto(pos: Vector2)
 
 var rayo := false
 var fuente: Node = null          # ojo que dispara (modo rayo)
+var ancho_aviso := 6.0           # grosor de la línea de aviso (el rayo grueso usa una franja ancha)
 var desde := Vector2.ZERO        # punta de la estrella (global)
 var hasta := Vector2.ZERO        # punto del piso (global)
 var dano := 15
@@ -47,7 +48,7 @@ func _ready() -> void:
 	# Aviso: línea fina por donde va a pasar, brillo en la punta y marca en el piso.
 	_linea = Line2D.new()
 	_linea.points = PackedVector2Array([Vector2.ZERO, Vector2(_largo, 0)])
-	_linea.width = 6.0
+	_linea.width = ancho_aviso
 	_linea.default_color = Color(color.r, color.g, color.b, 0.3)
 	add_child(_linea)
 	_brillo = Polygon2D.new()
@@ -96,6 +97,8 @@ func _physics_process(delta: float) -> void:
 		if not _golpeo:
 			for b in get_overlapping_bodies():
 				if b.is_in_group("player") and b.has_method("take_damage"):
+					if float(b.get("_invuln_timer") if b.get("_invuln_timer") != null else 0.0) > 0.0:
+						continue   # invulnerable ahora: el golpe no se gasta, sigue intentando mientras esté activo
 					_golpeo = true   # un solo golpe por lanza
 					_golpear(b)
 					break

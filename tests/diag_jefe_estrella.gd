@@ -1,7 +1,7 @@
 extends SceneTree
 ## Diag del jefe final (Estrella): vida en el cuerpo (puntas, sin barra del HUD), ojos por tandas
 ## (franjas de altura por forma), rayo de un solo ojo + parry, F1 (llaves → nudo del Oso → castigo),
-## F2 (foso, torretas con coraza, barrido, ventana aérea), tope de daño por fase, reinicio y muerte.
+## F2 (foso, torretas con coraza, rayo grueso, ventana aérea), tope de daño por fase, reinicio y muerte.
 ## Los golpes clave se dan con el melee real del jugador (contrato de 4 args, lección 14/09).
 
 var _failures := 0
@@ -136,7 +136,7 @@ func _init() -> void:
 	_check(boss.health == 396, "El daño se frena en el umbral de la F2 (vida %d)" % boss.health)
 	_check(boss._puntas_rotas == 2 and boss._puntas_sanas().size() == 6, "Con 204 de daño caen 2 puntas (rotas %d)" % boss._puntas_rotas)
 
-	# --- Interludio de la F2: la Estrella se hunde, 2 oleadas, barridos laterales y lanzas del pozo ---
+	# --- Interludio de la F2: la Estrella se hunde, 2 oleadas y lanzas del pozo (desde la 2) ---
 	await _esperar_estado(boss, "interludio", 900)
 	_check(boss._estado == "interludio" and not boss.cuerpo.visible, "Al entrar a la F2 la Estrella se hunde y desaparece")
 	var hp_i: int = boss.health
@@ -146,20 +146,15 @@ func _init() -> void:
 	var ola1 := _vivos(boss)
 	_check(ola1.size() == 3 and ola1.all(func(e) -> bool: return e.tipo == "cultista"), "Oleada 1: 3 cultistas (%d)" % ola1.size())
 	_check(ola1.all(func(e) -> bool: return absf(e.global_position.x - boss.global_position.x) > 400.0), "Los enemigos entran lejos del foso")
-	var barr_l = null
-	var lanza_p = null
-	for _i in 400:
-		for n in get_nodes_in_group("ataque_jefe"):
-			if n.get_script().resource_path == "res://scripts/ataque_jefe.gd" and barr_l == null:
-				barr_l = n
-			elif n.get("rayo") == false and lanza_p == null:
-				lanza_p = n
-		if barr_l != null and lanza_p != null:
+	_check(ola1.any(func(e) -> bool: return e.global_position.x < boss.global_position.x) and ola1.any(func(e) -> bool: return e.global_position.x > boss.global_position.x), "Los enemigos entran por los dos costados")
+	_check(boss.bordes_foso.collision_layer == 4 and boss.bordes_foso.get_children().all(func(c) -> bool: return not c.disabled), "Topes del pozo activos (solo enemigos, capa 3)")
+	var hubo_ataque := false
+	for _i in 300:
+		if not get_nodes_in_group("ataque_jefe").is_empty():
+			hubo_ataque = true
 			break
 		await physics_frame
-	_check(barr_l != null and absf(barr_l.global_position.x - boss.global_position.x) > boss._mitad_vista() * 0.8, "La luz nace en un costado de la sala")
-	_check(barr_l != null and barr_l.dir == (1 if barr_l.global_position.x < boss.global_position.x else -1), "La luz cruza hacia el otro costado")
-	_check(lanza_p != null and lanza_p.desde.y > boss.global_position.y, "Una lanza sale desde el pozo")
+	_check(not hubo_ataque, "Respiro: en la oleada 1 no hay luces ni lanzas")
 	var caido = ola1[0]
 	caido.global_position = boss.global_position + Vector2(0, 20)
 	await _wait_frames(10)
@@ -173,6 +168,15 @@ func _init() -> void:
 	await _wait_frames(60)
 	var ola2 := _vivos(boss)
 	_check(ola2.size() == 4 and ola2.filter(func(e) -> bool: return e.tipo == "arquero").size() == 2, "Oleada 2: 2 cultistas + 2 arqueros (%d)" % ola2.size())
+	var lanza_p = null
+	for _i in 500:
+		for n in get_nodes_in_group("ataque_jefe"):
+			if n.get("rayo") == false:
+				lanza_p = n
+		if lanza_p != null:
+			break
+		await physics_frame
+	_check(lanza_p != null and lanza_p.desde.y > boss.global_position.y, "En la oleada 2 sale una lanza desde el pozo")
 	for e in ola2:
 		e.take_damage(9999, 0.0, 1, false)
 
@@ -197,9 +201,16 @@ func _init() -> void:
 	for pl in plats:
 		plat_max = maxf(plat_max, -pl.position.y)
 	var alcance_lobo := plat_max + 354.0 + 185.0
+	var techo_alto: float = 940.0 + boss.subida_techo
+	_check(boss.altura_ojo_aerea + 310.0 * boss.escala_jefe_f2 < techo_alto - 20.0, "En la ventana aérea la Estrella entra completa bajo el techo (%.0f < %.0f)" % [boss.altura_ojo_aerea + 310.0 * boss.escala_jefe_f2, techo_alto])
+	var tope_vista: float = -(boss.centro_camara_f2.y - 540.0 / (0.93 * boss.escala_arena_f2))
+	_check(tope_vista > techo_alto, "La cámara muestra el techo de la sala grande (%.0f > %.0f)" % [tope_vista, techo_alto])
+	var alturas_plat: Array = plats.map(func(pl) -> float: return -pl.position.y)
+	alturas_plat.sort()
+	_check(alturas_plat[0] <= 354.0 and alturas_plat[-1] - alturas_plat[0] <= 354.0, "El Lobo llega a las plataformas (%s)" % str(alturas_plat))
 	_check(boss.altura_ojo_aerea - 100.0 * boss.escala_jefe_f2 > alcance_lobo, "La ventana aérea queda fuera del Lobo desde la plataforma más alta (%.0f > %.0f)" % [boss.altura_ojo_aerea - 100.0 * boss.escala_jefe_f2, alcance_lobo])
 	var torres: Array = boss._ojos()
-	_check(torres.size() >= 3 and torres.size() <= 4, "Tanda de 3-4 torretas (%d)" % torres.size())
+	_check(torres.size() == 3, "Primer ciclo de la F2: tanda de 3 torretas (%d)" % torres.size())
 	var corazas := torres.filter(func(o) -> bool: return o.acorazado)
 	_check(corazas.size() == 1 and boss._franja(corazas[0].position) == 0, "Una torreta baja acorazada")
 	_check(torres.any(func(o) -> bool: return o.position.x < -300.0) and torres.any(func(o) -> bool: return o.position.x > 300.0), "Torretas a los dos lados del foso")
@@ -218,13 +229,45 @@ func _init() -> void:
 	_check(absf(player.global_position.x - boss.global_position.x) > 300.0, "Caer al foso devuelve al jugador al borde")
 	player.god_mode = true
 
-	# Barrido de luz desde el ojo hacia los dos lados.
-	for _i in 300:
-		if _barridos().size() >= 2:
-			break
-		await physics_frame
-	var barr := _barridos()
-	_check(barr.size() == 2 and barr[0].dir != barr[1].dir, "El barrido sale del ojo hacia los dos lados")
+	# Transformarse no da invulnerabilidad (con 1-4 se encadenaba).
+	player._invuln_timer = 0.0
+	player.energia = 100.0
+	player._transformar(1, true)
+	_check(player._invuln_timer <= 0.0, "Transformarse no da invulnerabilidad (%.2f)" % player._invuln_timer)
+	player._transformar(0, true)
+	await _wait_frames(10)
+
+	# Rayo grueso del ojo: el ciclo 1 no lo tiene; abre el ojo, avisa con franja ancha y pega 35.
+	boss._rayo_t = 1000.0   # aislar de los rayos chicos
+	await _wait_frames(240)
+	_check(_rayos_gruesos().is_empty(), "En el primer ciclo de la F2 no hay rayo grueso")
+	_check(boss._rampa(boss.rampa_tandas, 0) == 1.0 and boss._rampa(boss.rampa_rayo, 0) == 3.0, "Rampa del ciclo 1: 1 tanda, rayo cada 3 s")
+	player.global_position = Vector2(boss.global_position.x - 900.0, piso_y - 143.0)
+	player.velocity = Vector2.ZERO
+	player.god_mode = false
+	player._invuln_timer = 0.0
+	player.curar(100)
+	var vida_g: int = player.health
+	boss._rayo_grueso()
+	await _wait_frames(30)
+	var gruesos := _rayos_gruesos()
+	_check(boss.ojo.apertura > 0.5, "El ojo se abre para el rayo grueso")
+	_check(gruesos.size() == 1 and gruesos[0].dano == 35 and gruesos[0].ancho_aviso >= 100.0, "Rayo grueso: 120 de ancho, aviso con franja ancha, 35 de daño")
+	await _wait_frames(90)
+	_check(player.health == vida_g - 35, "El rayo grueso pega 35 (%d -> %d)" % [vida_g, player.health])
+	# Golpe que toca al jugador invulnerable: no se gasta y pega cuando vuelve el daño (dentro de su ventana).
+	await _wait_frames(60)
+	player.curar(100)
+	player._invuln_timer = 0.0
+	var vida_i: int = player.health
+	boss._grueso_activo = false
+	boss._rayo_grueso()
+	player._invuln_timer = 1.42   # invulnerable al empezar el golpe (0.3 + 1.0 s), vulnerable a mitad
+	await _wait_frames(130)
+	_check(player.health == vida_i - 35, "Un golpe que toca invulnerable no se pierde (%d -> %d)" % [vida_i, player.health])
+	player.god_mode = true
+	player.curar(100)
+	boss._rayo_t = 2.0
 
 	# Coraza: el Humano rebota; el golpe fuerte del Oso la cierra.
 	var coraza = corazas[0]
@@ -250,6 +293,12 @@ func _init() -> void:
 	var hp_a: int = boss.health
 	boss.hurtbox.take_damage(20, 0.0, 1, false)
 	_check(boss.health == hp_a - 20, "En la ventana aérea el ojo recibe daño (%d -> %d)" % [hp_a, boss.health])
+	_check(hud.dial._sug_idx == 3 or player.current_form == 3, "El HUD sugiere el Murciélago en la ventana aérea")
+	while boss._estado == "ventana_aerea" and boss._ventana_t > boss.aviso_cierre:
+		await physics_frame
+	await _wait_frames(6)
+	_check(boss._estado != "ventana_aerea" or boss.ojo.apertura < 1.0 or absf(boss.cuerpo.position.x) > 0.0, "En el último segundo el ojo parpadea / la Estrella tiembla")
+	_check(boss._tips_dados.has("ojos") and boss._tips_dados.has("coraza") and boss._tips_dados.has("ventana"), "Los 3 tips del Amuleto salen una vez")
 
 	# --- Reinicio: vida, puntas, ojos y piso vuelven ---
 	encounter.reiniciar()
@@ -259,6 +308,7 @@ func _init() -> void:
 	_check(boss._ojos().is_empty(), "Al reiniciar no quedan ojos")
 	_check(boss._invocados.is_empty() and boss.cuerpo.visible, "Al reiniciar no quedan enemigos invocados y la Estrella se ve")
 	_check(not boss.foso.activo and not boss.losa.get_node("Collision").disabled and boss.nudo.visible, "Al reiniciar el piso central vuelve")
+	_check(boss.bordes_foso.get_children().all(func(c) -> bool: return c.disabled), "Al reiniciar los topes del pozo se apagan")
 	_check(absf(boss.techo.position.y - boss._techo_y0) < 1.0 and absf(boss.cuerpo.scale.x - 1.0) < 0.01 and boss.plataformas_raiz.get_children().all(func(pl) -> bool: return not pl.visible), "Al reiniciar la sala vuelve a la F1")
 	_check(absf(scene.get_node("Camara")._escala_arena - 1.0) < 0.01, "Al reiniciar la cámara vuelve al zoom normal")
 	player._transformar(0, true)
@@ -327,6 +377,10 @@ func _esperar_rayo(frames: int) -> Variant:
 			return r[0]
 		await physics_frame
 	return null
+
+
+func _rayos_gruesos() -> Array:
+	return get_nodes_in_group("ataque_jefe").filter(func(n) -> bool: return n.get("rayo") == true and float(n.ancho) >= 100.0 and not n.is_queued_for_deletion())
 
 
 func _barridos() -> Array:

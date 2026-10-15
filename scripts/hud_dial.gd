@@ -41,6 +41,9 @@ var _tw_fantasma: Tween
 var _tw_flash: Tween
 var _tw_pulso: Tween
 var _firma_dibujo: Array = []   ## estado con el que se dibujó por última vez: solo se redibuja si cambia algo
+var _sugerencia: Control = null   ## ícono de forma sugerida (jefe) que late al costado del dial
+var _sug_idx := -1
+var _tw_sug: Tween
 
 
 func _ready() -> void:
@@ -60,6 +63,8 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
+	if _sugerencia != null and forma_actual == _sug_idx:
+		quitar_sugerencia()   # ya la está usando
 	if _icono != null and (_tw_trans == null or not _tw_trans.is_running()):
 		_icono.modulate.a = 0.4 if cooldown > 0.0 else 1.0
 	# El dial solo cambia al gastar/ganar energía, cambiar de forma, en cooldown o en las animaciones: no hace falta
@@ -70,6 +75,47 @@ func _process(delta: float) -> void:
 	if firma != _firma_dibujo:
 		_firma_dibujo = firma.duplicate(true)
 		queue_redraw()
+
+
+## Sugiere una forma (lo usa el jefe): su ícono late abajo a la derecha del dial durante `seg` s
+## o hasta que el jugador se transforma en ella.
+func sugerir_forma(idx: int, seg: float = 6.0) -> void:
+	quitar_sugerencia()
+	if forma_actual == idx:
+		return
+	_sug_idx = idx
+	var lado := minf(size.x, size.y) * 0.5
+	_sugerencia = Control.new()
+	_sugerencia.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_sugerencia.size = Vector2(lado, lado)
+	_sugerencia.position = size * 0.78 - _sugerencia.size * 0.5
+	_sugerencia.pivot_offset = _sugerencia.size * 0.5
+	var disco := Polygon2D.new()
+	var pts := PackedVector2Array()
+	for i in 20:
+		var a := TAU * float(i) / 20.0
+		pts.append(_sugerencia.size * 0.5 + Vector2(cos(a), sin(a)) * lado * 0.5)
+	disco.polygon = pts
+	disco.color = _color_forma(idx)
+	_sugerencia.add_child(disco)
+	var ic := _crear_icono(idx)
+	ic.size = _sugerencia.size * 0.8
+	ic.position = _sugerencia.size * 0.1
+	_sugerencia.add_child(ic)
+	add_child(_sugerencia)
+	_tw_sug = create_tween().set_loops(maxi(int(seg / 0.6), 1))
+	_tw_sug.tween_property(_sugerencia, "scale", Vector2.ONE * 1.25, 0.3).set_trans(Tween.TRANS_SINE)
+	_tw_sug.tween_property(_sugerencia, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_SINE)
+	_tw_sug.finished.connect(quitar_sugerencia)
+
+
+func quitar_sugerencia() -> void:
+	if _tw_sug != null and _tw_sug.is_valid():
+		_tw_sug.kill()
+	if _sugerencia != null and is_instance_valid(_sugerencia):
+		_sugerencia.queue_free()
+	_sugerencia = null
+	_sug_idx = -1
 
 
 func _radio() -> float:

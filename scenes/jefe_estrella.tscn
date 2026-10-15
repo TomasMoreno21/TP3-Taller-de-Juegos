@@ -20,7 +20,10 @@ size = Vector2(600, 200)
 size = Vector2(600, 40)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_techo"]
-size = Vector2(3200, 520)
+size = Vector2(4000, 520)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_borde"]
+size = Vector2(20, 400)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_plat"]
 size = Vector2(260, 30)
@@ -100,6 +103,20 @@ disabled = true
 position = Vector2(0, 80)
 shape = SubResource("RectangleShape2D_fondo")
 
+[node name="BordesFoso" type="StaticBody2D" parent="."]
+collision_layer = 4
+collision_mask = 0
+
+[node name="Izq" type="CollisionShape2D" parent="BordesFoso"]
+position = Vector2(-310, -200)
+shape = SubResource("RectangleShape2D_borde")
+disabled = true
+
+[node name="Der" type="CollisionShape2D" parent="BordesFoso"]
+position = Vector2(310, -200)
+shape = SubResource("RectangleShape2D_borde")
+disabled = true
+
 [node name="Foso" type="Node2D" parent="."]
 script = ExtResource("6_foso")
 
@@ -132,11 +149,11 @@ position = Vector2(0, -1200)
 
 [node name="TechoVisual" type="Polygon2D" parent="TechoArena"]
 color = Color(0.2, 0.18, 0.27, 1)
-polygon = PackedVector2Array(-1600, -260, 1600, -260, 1600, 260, -1600, 260)
+polygon = PackedVector2Array(-2000, -260, 2000, -260, 2000, 260, -2000, 260)
 
 [node name="TechoLinea" type="Polygon2D" parent="TechoArena"]
 color = Color(0.42, 0.3, 0.55, 1)
-polygon = PackedVector2Array(-1600, 244, 1600, 244, 1600, 260, -1600, 260)
+polygon = PackedVector2Array(-2000, 244, 2000, 244, 2000, 260, -2000, 260)
 
 [node name="Collision" type="CollisionShape2D" parent="TechoArena"]
 shape = SubResource("RectangleShape2D_techo")
@@ -144,7 +161,7 @@ shape = SubResource("RectangleShape2D_techo")
 [node name="PlataformasF2" type="Node2D" parent="."]
 
 [node name="Plataforma1" type="StaticBody2D" parent="PlataformasF2"]
-position = Vector2(-1000, -250)
+position = Vector2(-1150, -200)
 
 [node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma1"]
 position = Vector2(0, 15)
@@ -160,7 +177,7 @@ color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
 
 [node name="Plataforma2" type="StaticBody2D" parent="PlataformasF2"]
-position = Vector2(1000, -250)
+position = Vector2(1150, -200)
 
 [node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma2"]
 position = Vector2(0, 15)
@@ -176,7 +193,7 @@ color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
 
 [node name="Plataforma3" type="StaticBody2D" parent="PlataformasF2"]
-position = Vector2(-650, -380)
+position = Vector2(-650, -420)
 
 [node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma3"]
 position = Vector2(0, 15)
@@ -192,7 +209,7 @@ color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
 
 [node name="Plataforma4" type="StaticBody2D" parent="PlataformasF2"]
-position = Vector2(650, -380)
+position = Vector2(650, -420)
 
 [node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma4"]
 position = Vector2(0, 15)

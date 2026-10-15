@@ -214,6 +214,11 @@ func _draw() -> void:
 		for i in 6:
 			var a := TAU * float(i) / 6.0
 			draw_circle(Vector2(cos(a), sin(a)) * w * 1.08, 6.0, color_coraza.lightened(0.3))
+		# Zarpa sobre la coraza: este ojo es del Oso.
+		var c := Vector2(0, -w * 1.08 - 26.0)
+		draw_circle(c + Vector2(0, 6), 11.0, color_coraza.lightened(0.45))
+		for dx in [-13.0, 0.0, 13.0]:
+			draw_circle(c + Vector2(dx, -10.0 - (3.0 if dx == 0.0 else 0.0)), 5.0, color_coraza.lightened(0.45))
 	# Párpado: trazo cian que atraviesa el ojo (como en el boceto); cerrado tapa todo.
 	var y_parpado := -h * 0.55 if _apertura > 0.5 else 0.0
 	draw_line(Vector2(-w * 1.15, y_parpado - 6.0), Vector2(w * 1.15, y_parpado + 4.0), color_parpado, 5.0, true)

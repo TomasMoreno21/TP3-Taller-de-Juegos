@@ -421,7 +421,7 @@ var _salto_aereo_limitado: bool = false
 ## Offsets de volumen (dB) para el golpe pesado y el especial, aplicados sobre volumen_golpe_db.
 @export var volumen_golpe_pesado_db := 0.0
 @export var volumen_special_db := 0.0
-@export var invuln_transformacion := 0.8
+@export var invuln_transformacion := 0.0   ## 0 = transformarse no protege (con las teclas 1-4 se podía encadenar)
 @export var transformacion_pop := 0.32          ## rebote del cuerpo (resorte) al transformarse (0 = sin)
 @export var transformacion_anillo := 230.0       ## radio del aro de onda al transformarse (0 = sin)
 @export var golpe_rapido_tras_transformar := 1.0 ## s tras transformarte en que el primer ataque conecta sin retardo (0 = off)
