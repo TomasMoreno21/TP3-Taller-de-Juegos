@@ -27,7 +27,7 @@ const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 @export var separacion_pared := 60.0  # holgura fuera de arena_medio_ancho (si no es borde de pantalla)
 
 # Encuadre al entrar: zoom-out suave (escala < 1) para leer el escenario y vuelta.
-@export var camara_offset_y := -120.0   ## px que sube la cámara fija de la arena (negativo = más arriba)
+@export var camara_offset_y := -170.0   ## px que sube la cámara fija de la arena (negativo = más arriba)
 @export var zoom_encuadre_arena := 0.96
 @export var zoom_encuadre_duracion := 0.7
 

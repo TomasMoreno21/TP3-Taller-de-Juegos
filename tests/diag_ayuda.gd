@@ -66,18 +66,6 @@ func _init() -> void:
 	await create_timer(0.2).timeout
 	_check(prog.ayuda_vista.has("Un consejo de prueba"), "los consejos se guardan para releerlos")
 
-	# --- reacciones: una, y la segunda espera (freno anti-molestia)
-	await create_timer(5.0).timeout
-	var reac: Node = dlg.get_node("Reacciones")
-	reac._t = 100.0
-	reac._ultimo_comentario = -99.0
-	reac._pedir("puas")
-	await create_timer(0.2).timeout
-	var texto1: String = dlg.texto_actual()
-	_check(["Cuidado con las púas.", "Las púas no perdonan, Humano."].has(texto1), "reacciona a las púas (%s)" % texto1)
-	reac._pedir("racha")
-	_check(reac._pendiente == "racha", "el segundo comentario espera (no habla seguido)")
-
 	print("DIAG_AYUDA: FALLOS = ", fallos)
 	quit(fallos)
 

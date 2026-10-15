@@ -65,10 +65,10 @@ func _init() -> void:
 	_check(_progresion().forma_desbloqueada(1) == true, "Nivel 2: Lobo desbloqueado")
 	_progresion().add_fragmentos(20)
 	_check(int(_progresion().nivel) == 3, "28 fragmentos suben a nivel 3")
-	_progresion().add_fragmentos(10)
-	_check(int(_progresion().nivel) == 4, "38 fragmentos suben a nivel 4")
-	_progresion().add_fragmentos(26)
-	_check(int(_progresion().nivel) == 5 and _progresion().es_nivel_maximo(), "64 fragmentos suben a nivel 5 (máximo)")
+	_progresion().add_fragmentos(6)
+	_check(int(_progresion().nivel) == 4, "34 fragmentos suben a nivel 4")
+	_progresion().add_fragmentos(14)
+	_check(int(_progresion().nivel) == 5 and _progresion().es_nivel_maximo(), "48 fragmentos suben a nivel 5 (máximo)")
 	_progresion().add_fragmentos(30)
 	_check(int(_progresion().nivel) == 5, "más fragmentos no pasan del nivel máximo")
 	_check(_progresion().forma_desbloqueada(3) == true, "Nivel 4: Murciélago desbloqueado")
@@ -366,7 +366,7 @@ func _init() -> void:
 
 	# --- LevelUp: sin forma con combo pendiente, la mejora espera a la próxima forma desbloqueada ---
 	_progresion().formas_forzadas = [0, 1]
-	_progresion().add_fragmentos(10)   # 38 en total: nivel 4, pero Humano y Lobo ya están completos
+	_progresion().add_fragmentos(6)   # 34 en total: nivel 4, pero Humano y Lobo ya están completos
 	await process_frame
 	_check(lvl.get("panel").visible == false and int(_progresion().mejoras_diferidas) == 1, "LevelUp: sin formas con combo pendiente la mejora queda diferida")
 	_progresion().desbloquear_forma(2)

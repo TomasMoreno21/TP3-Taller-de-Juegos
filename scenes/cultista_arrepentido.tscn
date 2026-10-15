@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://cvjbsavhvweco"]
+
+[ext_resource type="Script" uid="uid://1tftl411ohvl" path="res://scripts/cultista_arrepentido.gd" id="1_cult"]
+[ext_resource type="SpriteFrames" uid="uid://bkfv821bksv2h" path="res://resources/enemigo1_frames.tres" id="2_frames"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_zona"]
+size = Vector2(1290, 600)
+
+[node name="CultistaArrepentido" type="Area2D" unique_id=976881334]
+collision_layer = 0
+collision_mask = 4
+script = ExtResource("1_cult")
+
+[node name="Zona" type="CollisionShape2D" parent="." unique_id=2052641481]
+position = Vector2(295, -250)
+shape = SubResource("RectangleShape2D_zona")
+
+[node name="Animado" type="AnimatedSprite2D" parent="." unique_id=1379547917]
+sprite_frames = ExtResource("2_frames")
+animation = &"idle"
+autoplay = "idle"

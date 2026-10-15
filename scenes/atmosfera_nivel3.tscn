@@ -15,6 +15,12 @@
 [ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel3/canto_lejano.wav" id="24_canto"]
 [ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel3/piedra_cruje.wav" id="25_cruje"]
 [ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel2/cueva_gota_lejana.wav" id="26_gota"]
+[ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel2/cueva_goteo_loop.wav" id="27_goteo"]
+[ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel3/polvo_cae.wav" id="28_polvo"]
+[ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel3/piedritas.wav" id="29_piedritas"]
+[ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel3/cristal_resuena.wav" id="30_cristal"]
+[ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel3/aliento_cueva.wav" id="31_aliento"]
+[ext_resource type="AudioStream" path="res://assets/audio/ambiente_nivel3/gota_eco.wav" id="32_gota_eco"]
 
 [sub_resource type="Gradient" id="Gradient_motas"]
 offsets = PackedFloat32Array(0, 0.5, 1)
@@ -39,12 +45,17 @@ blend_mode = 1
 
 [node name="AmbienteSonoro" type="Node" parent="."]
 script = ExtResource("1_amb")
-capas_loop = Array[AudioStream]([ExtResource("3_hueco")])
-capas_loop_volumen_db = Array[float]([-7.0])
+capas_loop = Array[AudioStream]([ExtResource("3_hueco"), ExtResource("27_goteo")])
+capas_loop_volumen_db = Array[float]([-7.0, -22.0])
 acentos = Array[AudioStream]([ExtResource("4_rumor"), ExtResource("24_canto"), ExtResource("25_cruje"), ExtResource("26_gota")])
 acento_intervalo_min = 10.0
 acento_intervalo_max = 24.0
 acento_volumen_db = -3.0
+acento_pitch_var = 0.06
+acentos_suaves = Array[AudioStream]([ExtResource("28_polvo"), ExtResource("29_piedritas"), ExtResource("30_cristal"), ExtResource("31_aliento"), ExtResource("32_gota_eco")])
+suave_intervalo_min = 7.0
+suave_intervalo_max = 16.0
+suave_volumen_db = -13.0
 bus_ambiente = &"AmbienteCueva"
 
 [node name="LatidoSonoro" type="Node" parent="."]
@@ -99,49 +110,49 @@ y_cueva = -100000.0
 
 [node name="Niebla1" parent="Nieblas" instance=ExtResource("10_niebla")]
 modulate = Color(0.85, 0.6, 1.0, 0.9)
-position = Vector2(900, 610)
+position = Vector2(1540, 482)
 amount = 18
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla2" parent="Nieblas" instance=ExtResource("10_niebla")]
 modulate = Color(0.85, 0.6, 1.0, 0.9)
-position = Vector2(10376, 1288)
+position = Vector2(10184, 1096)
 amount = 18
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla3" parent="Nieblas" instance=ExtResource("10_niebla")]
 modulate = Color(0.85, 0.6, 1.0, 0.9)
-position = Vector2(12700, 1666)
+position = Vector2(12956, 1410)
 amount = 18
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla4" parent="Nieblas" instance=ExtResource("10_niebla")]
 modulate = Color(0.85, 0.6, 1.0, 0.9)
-position = Vector2(13254, 3572)
+position = Vector2(13894, 3572)
 amount = 18
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla5" parent="Nieblas" instance=ExtResource("10_niebla")]
 modulate = Color(0.85, 0.6, 1.0, 0.9)
-position = Vector2(12100, 3922)
+position = Vector2(11460, 3922)
 amount = 18
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla6" parent="Nieblas" instance=ExtResource("10_niebla")]
 modulate = Color(0.85, 0.6, 1.0, 0.9)
-position = Vector2(5150, 4210)
+position = Vector2(5790, 4018)
 amount = 18
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla7" parent="Nieblas" instance=ExtResource("10_niebla")]
 modulate = Color(0.85, 0.6, 1.0, 0.9)
-position = Vector2(-3304, 2003)
+position = Vector2(-3944, 1875)
 amount = 18
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla8" parent="Nieblas" instance=ExtResource("10_niebla")]
 modulate = Color(0.85, 0.6, 1.0, 0.9)
-position = Vector2(8054, 2544)
+position = Vector2(8310, 2416)
 amount = 18
 emission_rect_extents = Vector2(900, 90)
 
@@ -159,7 +170,7 @@ emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla11" parent="Nieblas" instance=ExtResource("10_niebla")]
 modulate = Color(0.85, 0.6, 1.0, 0.7)
-position = Vector2(17588, 655)
+position = Vector2(18228, 15)
 amount = 11
 emission_rect_extents = Vector2(520, 80)
 
@@ -171,7 +182,7 @@ emission_rect_extents = Vector2(520, 80)
 
 [node name="Niebla13" parent="Nieblas" instance=ExtResource("10_niebla")]
 modulate = Color(0.6, 0.75, 1.0, 0.7)
-position = Vector2(-6572, 3807)
+position = Vector2(-6636, 3999)
 amount = 11
 emission_rect_extents = Vector2(520, 80)
 
@@ -183,7 +194,7 @@ emission_rect_extents = Vector2(520, 80)
 
 [node name="Niebla15" parent="Nieblas" instance=ExtResource("10_niebla")]
 modulate = Color(0.7, 0.9, 0.95, 0.7)
-position = Vector2(3028, 2303)
+position = Vector2(2836, 2495)
 amount = 11
 emission_rect_extents = Vector2(520, 80)
 
@@ -207,7 +218,7 @@ emission_rect_extents = Vector2(520, 80)
 
 [node name="Niebla19" parent="Nieblas" instance=ExtResource("10_niebla")]
 modulate = Color(0.7, 0.9, 0.95, 0.7)
-position = Vector2(11348, 5967)
+position = Vector2(11156, 6095)
 amount = 11
 emission_rect_extents = Vector2(520, 80)
 

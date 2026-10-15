@@ -35,8 +35,8 @@ var _combo_base_pos: Vector2
 
 @export var vineta_umbral := 0.3  # fracción de vida (0-1) a partir de la cual aparece la viñeta
 @export var vineta_pulso_velocidad := 2.4
-@export var vineta_alpha_min := 0.35
-@export var vineta_alpha_max := 0.9
+@export var vineta_alpha_min := 0.12   # entre latidos casi no se ve (menos invasiva)
+@export var vineta_alpha_max := 0.55   # el golpe del latido: tensión sin tapar la pantalla
 @export var vineta_fade_dur := 0.4
 @onready var boss_bar: MarginContainer = $BossBar
 @onready var boss_fill: ProgressBar = $BossBar/Panel/Col/Envoltura/Fill
@@ -98,7 +98,7 @@ func _process(delta: float) -> void:
 		else:
 			var vel := vineta_pulso_velocidad * (1.0 + _vineta_severidad)
 			onda = (sin(Time.get_ticks_msec() * 0.001 * vel) + 1.0) * 0.5
-		vineta_vida.modulate.a = lerpf(vineta_alpha_min, vineta_alpha_max, onda) * lerpf(0.5, 1.0, _vineta_severidad)
+		vineta_vida.modulate.a = lerpf(vineta_alpha_min, vineta_alpha_max, onda) * lerpf(0.45, 1.0, _vineta_severidad)
 
 func _ready() -> void:
 	visible = true
@@ -285,40 +285,18 @@ func _on_nivel(_nuevo: int) -> void:
 	_actualizar_dial()
 
 
-func _on_combo(_form_index: int, combo_nombre: String) -> void:
-	_aviso("¡%s desbloqueado!" % combo_nombre)
+## Sin cartel arriba al subir de nivel, elegir un combo ni desbloquear una forma: ya lo cuentan la
+## pantalla de mejora (levelup.gd) y la cinemática del tótem (unlock_forma.gd).
+func _on_combo(_form_index: int, _combo_nombre: String) -> void:
+	pass
 
 
-func _on_nivel_subio(nuevo_nivel: int) -> void:
-	_aviso("¡NIVEL %d ALCANZADO!" % nuevo_nivel)
-	var form_nombre := _forma_nueva(nuevo_nivel)
-	if form_nombre != "":
-		_aviso("¡%s DESBLOQUEADO!" % form_nombre)
+func _on_nivel_subio(_nuevo_nivel: int) -> void:
+	pass
 
 
-func _forma_nueva(nuevo_nivel: int) -> String:
-	var form_idx := nuevo_nivel - 1
-	if form_idx <= 0:
-		return ""
-	var prog: Node = get_node("/root/Progresion")
-	if prog != null and not prog.forma_desbloqueada(form_idx):
-		return ""
-	var player := get_tree().get_first_node_in_group("player")
-	if player != null and player.forms.size() > form_idx:
-		return str(player.forms[form_idx].form_name)
-	return ""
-
-
-func _on_forma_desbloqueada(form_index: int) -> void:
-	_aviso("¡%s DESBLOQUEADO!" % _nombre_forma(form_index))
+func _on_forma_desbloqueada(_form_index: int) -> void:
 	_actualizar_dial()
-
-
-func _nombre_forma(form_index: int) -> String:
-	var player := get_tree().get_first_node_in_group("player")
-	if player != null and player.forms.size() > form_index:
-		return str(player.forms[form_index].form_name)
-	return ""
 
 
 func _on_form_changed(form_name: String) -> void:
@@ -335,6 +313,7 @@ func _actualizar_dial() -> void:
 	for f in _player.forms:
 		cols.append(f.color)
 	dial.set_formas(cols)
+	dial.orden = _player._orden_rueda()
 	dial.forma_actual = _player.current_form
 	dial.fijar_seleccion(_player.forma_seleccionada, false)
 	dial.set_energia(_player.energia, _player.ENERGIA_MAX)

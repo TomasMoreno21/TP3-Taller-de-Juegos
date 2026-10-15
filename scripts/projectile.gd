@@ -199,6 +199,8 @@ func _buscar_enemigo_cercano() -> Node2D:
 	for n in get_tree().get_nodes_in_group("enemy"):
 		if not _activo_y_vivo(n):
 			continue
+		if not linea_libre(self, global_position, centro_objetivo(n)):
+			continue   # detrás de la roca / otro piso: no se le persigue
 		var d := global_position.distance_to(n.global_position)
 		if n.get("flotante") == true:
 			d *= 0.35   # prioridad a los voladores
@@ -255,6 +257,28 @@ func _on_body_entered(body: Node2D) -> void:
 				tw.tween_property(v, "modulate", Color(1, 1, 1), 0.12)
 		_impacto(1.0)
 		queue_free()
+
+
+## True si entre `desde` y `hasta` no hay terreno (las barreras y cristales de energía no cuentan).
+## El teledirigido solo persigue a lo que ve: antes viraba hacia enemigos de otro piso, a través de la roca.
+static func linea_libre(ref: Node2D, desde: Vector2, hasta: Vector2) -> bool:
+	var espacio := ref.get_world_2d().direct_space_state
+	if espacio == null:
+		return true
+	var origen := desde
+	for _i in 12:
+		var q := PhysicsRayQueryParameters2D.create(origen, hasta)
+		q.collide_with_areas = false
+		q.collision_mask = TERRAIN_LAYER
+		var hit := espacio.intersect_ray(q)
+		if hit.is_empty():
+			return true
+		var col: Object = hit["collider"]
+		if col is Node and ((col as Node).is_in_group("cristal") or (col as Node).is_in_group("barrera_energia")):
+			origen = (hit["position"] as Vector2) + (hasta - desde).normalized() * 4.0
+			continue
+		return false
+	return false
 
 
 ## Centro del collider del objetivo (el medio del sprite). `global_position` de un enemigo son sus pies.

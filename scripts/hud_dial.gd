@@ -25,6 +25,7 @@ const ICONO_ESCENA := preload("res://scenes/form_icon.tscn")
 var energia := 100.0
 var energia_max := 100.0
 var forma_actual := 0
+var orden: Array = []   ## orden de la rueda (índices de forma); vacío = por índice
 var forma_sel := 0
 var cooldown := 0.0
 var colores: Array[Color] = [Color(0.8, 0.85, 0.9), Color(0.6, 0.6, 0.65), Color(0.7, 0.5, 0.35), Color(0.5, 0.4, 0.7)]
@@ -122,6 +123,8 @@ func fijar_seleccion(idx: int, animar := true) -> void:
 		return
 	var n := maxi(colores.size(), 2)
 	var d := posmod(idx - forma_sel, n)
+	if orden.size() == colores.size() and orden.has(idx) and orden.has(forma_sel):
+		d = posmod(orden.find(idx) - orden.find(forma_sel), n)
 	var dir := 1.0 if d <= n / 2 else -1.0
 	forma_sel = idx
 	if _recorte == null:

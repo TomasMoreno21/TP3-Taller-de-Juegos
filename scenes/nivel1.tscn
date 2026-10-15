@@ -56,6 +56,7 @@
 [ext_resource type="Script" uid="uid://cuy7f37ej2tqw" path="res://scripts/streaming_zonas.gd" id="streaming_zonas"]
 [ext_resource type="Script" uid="uid://b2knw64qxpag6" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
 [ext_resource type="Script" path="res://scripts/rampas_suaves.gd" id="rampas_suaves"]
+[ext_resource type="PackedScene" path="res://scenes/eco_hijo.tscn" id="eco_hijo_1"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte"]
 shader = ExtResource("45_tinte")
@@ -1641,6 +1642,9 @@ position = Vector2(32148, 4994)
 siguiente_escena = "res://scenes/nivel2.tscn"
 modo_oscuridad = true
 color_oscuridad = Color(0.01, 0.03, 0.04, 1)
+
+[node name="EcoHijo" parent="." instance=ExtResource("eco_hijo_1")]
+position = Vector2(31200, 4800)
 
 [node name="Hud" parent="." unique_id=643194512 instance=ExtResource("12_hud")]
 visible = false

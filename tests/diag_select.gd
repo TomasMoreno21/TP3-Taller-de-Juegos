@@ -38,8 +38,8 @@ func _init() -> void:
 	await physics_frame
 	await physics_frame
 	Input.action_release("form_next")
-	_check(player.forma_seleccionada == 3,
-		"Q preselecciona la forma anterior (desde Humano: Murciélago). Es: " + str(player.forma_seleccionada))
+	_check(player.forma_seleccionada == 2,
+		"Q preselecciona la forma anterior (desde Humano: Oso). Es: " + str(player.forma_seleccionada))
 
 	_write_formas(player)
 
@@ -48,8 +48,8 @@ func _init() -> void:
 	await physics_frame
 	Input.action_release("transform")
 	await _esperar_transform()
-	_check(player.current_form == 3,
-		"T confirma y transforma a la preseleccionada (Murciélago). Es: " + str(player.current_form))
+	_check(player.current_form == 2,
+		"T confirma y transforma a la preseleccionada (Oso). Es: " + str(player.current_form))
 
 	# T de nuevo ya transformado en la forma preseleccionada = revertir a Humano al toque
 	Input.action_press("transform")
@@ -79,21 +79,21 @@ func _init() -> void:
 	await physics_frame
 	Input.action_release("transform")
 	await _esperar_transform()
-	_check(player.current_form == 2,
-		"T transforma directo de Lobo a Oso. Es: " + str(player.current_form))
+	_check(player.current_form == 3,
+		"T transforma directo de Oso a Murciélago. Es: " + str(player.current_form))
 
 	# RT/E cicla SOLO la preselección; RB confirma y transforma
 	Input.action_press("forma_swap")
 	await physics_frame
 	await physics_frame
 	Input.action_release("forma_swap")
-	_check(player.current_form == 2 and player.forma_seleccionada == 3,
-		"RT preselecciona Murciélago sin transformar. Es: %d/%d" % [player.current_form, player.forma_seleccionada])
+	_check(player.current_form == 3 and player.forma_seleccionada == 2,
+		"RT preselecciona Oso sin transformar. Es: %d/%d" % [player.current_form, player.forma_seleccionada])
 	Input.action_press("forma_swap")
 	await physics_frame
 	await physics_frame
 	Input.action_release("forma_swap")
-	_check(player.current_form == 2 and player.forma_seleccionada == 0,
+	_check(player.current_form == 3 and player.forma_seleccionada == 0,
 		"RT cicla la preselección a Humano sin transformar. Es: %d/%d" % [player.current_form, player.forma_seleccionada])
 	Input.action_press("transform")
 	await physics_frame
@@ -102,13 +102,13 @@ func _init() -> void:
 	_check(player.current_form == 0 and player.forma_seleccionada == 0,
 		"RB confirma la preselección y transforma a Humano. Es: %d/%d" % [player.current_form, player.forma_seleccionada])
 
-	# LT retrocede la preselección (desde Humano envuelve a Murciélago)
+	# LT retrocede la preselección (desde Humano envuelve a Oso)
 	Input.action_press("forma_prev")
 	await physics_frame
 	await physics_frame
 	Input.action_release("forma_prev")
-	_check(player.current_form == 0 and player.forma_seleccionada == 3,
-		"LT retrocede la preselección a Murciélago sin transformar. Es: %d/%d" % [player.current_form, player.forma_seleccionada])
+	_check(player.current_form == 0 and player.forma_seleccionada == 2,
+		"LT retrocede la preselección a Oso sin transformar. Es: %d/%d" % [player.current_form, player.forma_seleccionada])
 
 	print("DIAG SELECT: " + ("OK" if _failures == 0 else "FALLOS = " + str(_failures)))
 	if _failures == 0:

@@ -16,6 +16,9 @@ const MAX_INCREMENTAL := 5000
 
 ## Espesor (en celdas) de la banda que conserva colisión junto a los huecos.
 @export_range(1, 4) var banda_colision := 2
+## Capa hija con la roca profunda en bloques grandes (sin colisión): cuenta como terreno enterrado al hornear.
+@export var capa_profunda: NodePath = ^"Profundo"
+@export var celdas_por_bloque := 4
 @export_tool_button("Hornear colisión", "Bake") var _boton_hornear := hornear_colision
 
 
@@ -64,6 +67,13 @@ func _enterrada(c: Vector2i, solidas: Dictionary) -> bool:
 	for dy in range(-r, r + 1):
 		for dx in range(-r, r + 1):
 			var v := c + Vector2i(dx, dy)
-			if not (solidas.has(v) if not solidas.is_empty() else _es_solida(v)):
+			if not ((solidas.has(v) if not solidas.is_empty() else _es_solida(v)) or _en_profunda(v)):
 				return false
 	return true
+
+
+func _en_profunda(c: Vector2i) -> bool:
+	var p := get_node_or_null(capa_profunda) as TileMapLayer
+	if p == null:
+		return false
+	return p.get_cell_source_id(Vector2i(floori(float(c.x) / celdas_por_bloque), floori(float(c.y) / celdas_por_bloque))) != -1
