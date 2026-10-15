@@ -291,6 +291,7 @@ var _bloqueo_sin_cd := false
 @export_group("")
 var _was_blocking := false
 var _was_on_floor := false
+var _rng_salto := RandomNumberGenerator.new()   ## pose de salto elegida al azar (RNG propio: el global se re-semilla al generar niveles)
 var _suave_y := 0.0   # desfase visual (px) que absorbe el brinco del cuerpo en un desnivel y decae a 0
 var _suave_x_prev := 0.0   # x del cuerpo en el frame anterior
 
@@ -461,6 +462,7 @@ func _ready() -> void:
 	if DisplayServer.get_name() != "headless":
 		JuiceFx.precalentar.call_deferred(get_tree())
 	add_to_group("player")
+	_rng_salto.randomize()
 	for forma in FORMAS:
 		forms.append(forma)
 	health = VIDA_MAX
@@ -2388,8 +2390,13 @@ func _update_animacion() -> void:
 		anim = "idle"
 	if idle_aire:
 		anim = visual.animation
+	# Salto del PJ humano: pose pintada (el ojo ya viene dibujado), distinta al azar en cada salto.
+	if current_form == Form.HUMAN and en_aire and visual.sprite_frames.has_animation("salto"):
+		anim = "salto"
 	if visual.animation != anim:
 		visual.play(anim)
+		if anim == "salto":
+			visual.frame = _rng_salto.randi_range(0, visual.sprite_frames.get_frame_count("salto") - 1)
 	var dt_s := get_physics_process_delta_time()
 	var escala_obj := 0.0
 	if anim == "lobo_attack":

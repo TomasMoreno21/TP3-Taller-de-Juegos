@@ -14,6 +14,9 @@ radius = 100.0
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fondo"]
 size = Vector2(600, 40)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_borde"]
+size = Vector2(20, 400)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_losa"]
 size = Vector2(600, 200)
 
@@ -22,9 +25,6 @@ size = Vector2(170, 210)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_techo"]
 size = Vector2(7393, 520)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_borde"]
-size = Vector2(20, 400)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_plat"]
 size = Vector2(260, 30)
@@ -42,7 +42,7 @@ position = Vector2(0, -550)
 
 [node name="Cabeza" type="AnimatedSprite2D" parent="Cuerpo" unique_id=84560798]
 texture_filter = 1
-position = Vector2(-251, -131)
+position = Vector2(-256, -160)
 sprite_frames = ExtResource("9_cabeza")
 animation = &"cabeza"
 autoplay = "cabeza"
@@ -117,16 +117,16 @@ disabled = true
 position = Vector2(0, 80)
 shape = SubResource("RectangleShape2D_fondo")
 
-[node name="BordesFoso" type="StaticBody2D" parent="."]
+[node name="BordesFoso" type="StaticBody2D" parent="." unique_id=1220808286]
 collision_layer = 4
 collision_mask = 0
 
-[node name="Izq" type="CollisionShape2D" parent="BordesFoso"]
+[node name="Izq" type="CollisionShape2D" parent="BordesFoso" unique_id=446842283]
 position = Vector2(-310, -200)
 shape = SubResource("RectangleShape2D_borde")
 disabled = true
 
-[node name="Der" type="CollisionShape2D" parent="BordesFoso"]
+[node name="Der" type="CollisionShape2D" parent="BordesFoso" unique_id=229728004]
 position = Vector2(310, -200)
 shape = SubResource("RectangleShape2D_borde")
 disabled = true
@@ -162,18 +162,18 @@ disabled = true
 position = Vector2(0, -1200)
 
 [node name="TechoVisual" type="Polygon2D" parent="TechoArena" unique_id=1440783865]
-position = Vector2(-2094.4998, -93)
+position = Vector2(-2096, -150)
 scale = Vector2(2.3090627, 1)
 color = Color(0.2, 0.18, 0.27, 1)
 polygon = PackedVector2Array(-2000, -260, 2000, -260, 2000, 260, -2000, 260)
 
 [node name="TechoLinea" type="Polygon2D" parent="TechoArena" unique_id=165790839]
-position = Vector2(0, -93)
+position = Vector2(0, -146)
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-2000, 244, 2000, 244, 2000, 260, -2000, 260)
 
 [node name="Collision" type="CollisionShape2D" parent="TechoArena" unique_id=1774534391]
-position = Vector2(-2096.5, -93)
+position = Vector2(-2093, -146)
 shape = SubResource("RectangleShape2D_techo")
 
 [node name="PlataformasF2" type="Node2D" parent="." unique_id=1323560123]
