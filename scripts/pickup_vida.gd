@@ -73,9 +73,6 @@ func _process(delta: float) -> void:
 	if luz != null:
 		luz.energy = _energia_luz * brillo
 	_atraer(delta)
-	# Si el jugador ya lo tocaba con la vida llena y después se lastima, se recoge igual (body_entered no se repite).
-	for b in get_overlapping_bodies():
-		_on_body_entered(b)
 
 
 const _N_CABEZA := 9
@@ -137,9 +134,6 @@ func _atraer(delta: float) -> void:
 	var p := _jugador
 	if p == null:
 		return
-	if p.has_method("puede_curarse") and not p.puede_curarse():
-		_iman_vel = 0.0
-		return   # vida llena: el imán no lo arrastra
 	var d := (p.global_position + Vector2(0, -60)) - global_position
 	var dist := d.length()
 	if dist < iman_radio and dist > 1.0:
@@ -152,9 +146,7 @@ func _atraer(delta: float) -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if _recogido or not body.has_method("curar"):
 		return
-	# Con la vida llena el orbe se queda esperando (no se gasta ni avisa "Vida +N" sin curar nada).
-	if body.has_method("puede_curarse") and not body.puede_curarse():
-		return
+	# Se recoge siempre, aunque la vida esté llena.
 	_recogido = true
 	body.curar(curacion)
 	Burst.emitir(self, global_position, color_burst, 14)

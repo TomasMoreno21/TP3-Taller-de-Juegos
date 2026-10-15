@@ -97,7 +97,7 @@ centered = false
 position = Vector2(-2, -4.5)
 shape = SubResource("RectangleShape2D_body")
 
-[node name="Patas" type="CollisionShape2D" parent="."]
+[node name="Patas" type="CollisionShape2D" parent="." unique_id=1863790806]
 shape = SubResource("RectangleShape2D_patas")
 disabled = true
 

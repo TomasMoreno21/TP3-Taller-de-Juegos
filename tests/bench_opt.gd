@@ -10,7 +10,7 @@ var _scene: Node
 
 
 func _init() -> void:
-	_scene = load("res://scenes/main.tscn").instantiate()
+	_scene = load("res://scenes/nivel1.tscn").instantiate()
 	for d in _scene.get_children():
 		if d.name.begins_with("Dialog") or d is Node and "dialog" in str(d.name).to_lower():
 			d.queue_free()

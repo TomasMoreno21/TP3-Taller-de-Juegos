@@ -4,7 +4,7 @@ var _failures := 0
 
 
 func _init() -> void:
-	var scene = load("res://scenes/main.tscn").instantiate()
+	var scene = load("res://scenes/nivel1.tscn").instantiate()
 	_quitar_dialogos_automaticos(scene)
 	root.add_child(scene)
 	await process_frame

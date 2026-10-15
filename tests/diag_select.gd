@@ -4,7 +4,7 @@ var _failures := 0
 
 
 func _init() -> void:
-	var scene = load("res://scenes/main.tscn").instantiate()
+	var scene = load("res://scenes/nivel1.tscn").instantiate()
 	root.add_child(scene)
 	await process_frame
 	await process_frame
@@ -14,6 +14,7 @@ func _init() -> void:
 	# este diag prueba la mecánica de selección Q/T en sí, no el desbloqueo
 	# progresivo por nivel (eso ya lo cubre autotest.gd) -> todas las formas abiertas
 	prog.set_nivel(4)
+	prog.formas_forzadas = [0, 1, 2, 3]   # nivel1 fija su propia lista de formas
 
 	_check(player.current_form == 0 and player.forma_seleccionada == 0,
 		"Inicio: Humano seleccionado. Es: " + str(player.forma_seleccionada))

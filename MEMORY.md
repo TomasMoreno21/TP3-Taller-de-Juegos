@@ -100,6 +100,7 @@ Normas prácticas para el asistente:
 
 
 ## Notas / Lecciones Aprendidas
+- **(15/10) `scenes/main.tscn` ya no existe** (la borró el usuario): autotest y los diag_* cargan `scenes/nivel1.tscn`. Ojo: nivel1 fija su lista de formas (`Progresion.formas_forzadas`); los tests que necesitan todas las formas deben poner `prog.formas_forzadas = [0, 1, 2, 3]`.
 - **(14/10) Cultista arrepentido N3 + melee entre pisos:** `scenes/cultista_arrepentido.tscn` (+ `scripts/cultista_arrepentido.gd`, texto `n3_cultista`) es una cinemática tipo intro (barras, cámara, jugador congelado, camina `caminata_seg` y frena). El globo sale del cultista vía `Dialogo.ancla_hablante`. El daño que recibía el usuario venía de cultistas en el piso de arriba: `enemy.gd::_gap_x` solo medía X y pegaban a través de la roca; ahora devuelve 99999 si la diferencia de altura supera `alcance_vertical_melee` (320). Lección: al "recibo daño en esta zona" medir quién llama a `take_damage` (print_stack) antes de suponer.
 - **(13/10, jefe) Toda mecánica de jefe parte del jugador:** para cada idea, decir qué forma la resuelve y por qué las otras no, usando alcance, salto, caja de colisión, velocidad y energía de cada forma, y si entra en la sala. Además, cubrir siempre: consumibles, tiempos, cambio de fase, cambios del entorno y del jefe, cámara (zoom/movimiento) y si el jefe se mueve o queda fijo. (El usuario lo corrigió dos veces al planear.)
 

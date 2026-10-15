@@ -6,7 +6,7 @@ var _scene: Node
 
 
 func _init() -> void:
-	_scene = load("res://scenes/main.tscn").instantiate()
+	_scene = load("res://scenes/nivel1.tscn").instantiate()
 	_quitar_dialogos_automaticos(_scene)
 	root.add_child(_scene)
 	_scene.get_node("LevelUp").set("pausar_al_abrir", false)  # no congelar el árbol durante los tests

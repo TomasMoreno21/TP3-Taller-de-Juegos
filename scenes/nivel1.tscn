@@ -52,11 +52,10 @@
 [ext_resource type="Texture2D" uid="uid://bxbde5qhpdic2" path="res://resources/luz_radial.tres" id="luz_cueva"]
 [ext_resource type="PackedScene" path="res://scenes/niebla_cueva.tscn" id="niebla_cueva"]
 [ext_resource type="Script" uid="uid://bqt5b5pkkdnhb" path="res://scripts/polvo_cueva.gd" id="polvo_cueva"]
+[ext_resource type="Script" uid="uid://dxlbe600244ya" path="res://scripts/rampas_suaves.gd" id="rampas_suaves"]
 [ext_resource type="Script" uid="uid://b3hesueuc6bsr" path="res://scripts/rayo_luz.gd" id="rayo_luz"]
 [ext_resource type="Script" uid="uid://cuy7f37ej2tqw" path="res://scripts/streaming_zonas.gd" id="streaming_zonas"]
 [ext_resource type="Script" uid="uid://b2knw64qxpag6" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
-[ext_resource type="Script" path="res://scripts/rampas_suaves.gd" id="rampas_suaves"]
-[ext_resource type="PackedScene" path="res://scenes/eco_hijo.tscn" id="eco_hijo_1"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte"]
 shader = ExtResource("45_tinte")
@@ -78,6 +77,17 @@ shader_parameter/mezcla = 1.0
 shader_parameter/brillo = 1.0
 shader_parameter/base = 0.95
 shader_parameter/contraste = 2.0
+shader_parameter/campo_origen = Vector2(0, 0)
+shader_parameter/campo_tam = Vector2(16, 16)
+shader_parameter/campo_max = 640.0
+shader_parameter/prof_inicio = 0.0
+shader_parameter/prof_fin = 130.0
+shader_parameter/prof_oscuro = 0.06
+shader_parameter/prof_tinte = Color(0.6, 0.68, 1, 1)
+shader_parameter/prof_tinte_fuerza = 0.6
+shader_parameter/mundo_o = Vector2(0, 0)
+shader_parameter/mundo_x = Vector2(1920, 0)
+shader_parameter/mundo_y = Vector2(0, 1080)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
 size = Vector2(33001, 401)
@@ -131,7 +141,7 @@ capas_silencio_mult = Array[float]([0.4, 1.0, 0.4])
 acentos = Array[AudioStream]([ExtResource("22_amb_buho"), ExtResource("23_amb_lobo")])
 acento_volumen_db = -2.0
 
-[node name="RampasSuaves" type="Node2D" parent="."]
+[node name="RampasSuaves" type="Node2D" parent="." unique_id=1525676451]
 script = ExtResource("rampas_suaves")
 
 [node name="Player" parent="." unique_id=1763988589 instance=ExtResource("1_player")]
@@ -638,14 +648,12 @@ position = Vector2(30398, 5058)
 z_index = -2
 position = Vector2(2541, 983)
 cantidad = 90
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_24" parent="Pinchos/Bosque_1" unique_id=1199800681 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(4519, 431)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 enterrado = 10.0
@@ -656,7 +664,6 @@ enterrado = 10.0
 z_index = -2
 position = Vector2(11866, 981)
 cantidad = 90
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -664,7 +671,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(17315, 983)
 cantidad = 45
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -674,7 +680,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(27929, 992)
 cantidad = 45
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -682,7 +687,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(21103, 986)
 cantidad = 40
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -692,7 +696,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(31448, 2666)
 rotation = 0.068
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -700,14 +703,12 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(31286, 2658)
 rotation = 0.012
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_04" parent="Pinchos/Salida" unique_id=2100000157 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(31607, 2672)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -715,7 +716,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(32659, 2099)
 rotation = -1.497
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -723,7 +723,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(32501.002, 2361)
 rotation = -0.752
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -731,14 +730,12 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(32608, 2251.001)
 rotation = -0.998
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_01" parent="Pinchos/Salida" unique_id=1943849259 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(31121, 2658)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -746,7 +743,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(32371.998, 2458.001)
 rotation = -0.653
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -754,7 +750,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(32235.998, 2541.999)
 rotation = -0.48
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -762,7 +757,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(32083, 2603.001)
 rotation = -0.236
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -770,7 +764,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(31768.998, 2672)
 rotation = -0.162
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -778,7 +771,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(31927.002, 2638)
 rotation = -0.176
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -787,14 +779,12 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 [node name="Pinchos_48" parent="Pinchos/Subsuelo_A" unique_id=1401026647 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(19892, 3563)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_47" parent="Pinchos/Subsuelo_A" unique_id=1430683137 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(19729, 3563)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -802,7 +792,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(19562, 3550)
 rotation = 0.185
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -810,35 +799,30 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(19407, 3512.001)
 rotation = 0.28
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_44" parent="Pinchos/Subsuelo_A" unique_id=1507108102 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(19251, 3470)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_43" parent="Pinchos/Subsuelo_A" unique_id=1705170391 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(19077, 3470)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_42" parent="Pinchos/Subsuelo_A" unique_id=413067293 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(18906, 3470)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_41" parent="Pinchos/Subsuelo_A" unique_id=1594122680 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(18742, 3468)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -846,7 +830,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(18586, 3491)
 rotation = -0.177
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -854,7 +837,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(18429.002, 3512)
 rotation = -0.164
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -862,7 +844,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(18267, 3494)
 rotation = 0.578
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -870,7 +851,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(18120, 3440)
 rotation = 0.163
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -878,7 +858,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(14142, 5834)
 rotation = 0.045
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -886,7 +865,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(15560.001, 5963)
 rotation = 0.188
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -894,7 +872,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(15800.001, 5983)
 rotation = -0.033
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -902,7 +879,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(16039, 5984)
 rotation = 0.013
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -910,7 +886,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(15326.001, 5925)
 rotation = 0.11
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -918,7 +893,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(15085.001, 5899)
 rotation = 0.099
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -926,7 +900,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(14848, 5868)
 rotation = 0.142
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -934,7 +907,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(14382, 5831)
 rotation = -0.152
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -942,7 +914,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(14609, 5825)
 rotation = 0.163
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -950,7 +921,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(13902, 5829.001)
 rotation = 0.012
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -958,7 +928,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(13665, 5862)
 rotation = -0.273
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -966,7 +935,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(13196.001, 5981)
 rotation = 0.024
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -974,7 +942,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(13432.999, 5934)
 rotation = -0.326
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -982,7 +949,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(12952, 5962)
 rotation = 0.163
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -990,7 +956,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(12715, 5914)
 rotation = 0.229
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -998,7 +963,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(12481, 5866)
 rotation = 0.155
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1006,7 +970,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(12243, 5830)
 rotation = 0.163
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1014,7 +977,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(12004, 5781)
 rotation = 0.288
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1022,7 +984,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(11793.999, 5683.001)
 rotation = 0.521
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1030,7 +991,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(11603.001, 5544)
 rotation = 0.706
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1038,21 +998,18 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(11450, 5356)
 rotation = 1.041
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_36" parent="Pinchos/Subsuelo_A" unique_id=303296419 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(17959, 3423)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_35" parent="Pinchos/Subsuelo_A" unique_id=845237983 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(17797, 3422)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1060,7 +1017,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(17635, 3406)
 rotation = 0.32
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1068,7 +1024,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(17477, 3365)
 rotation = 0.142
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1076,21 +1031,18 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(17308, 3346)
 rotation = 0.192
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_31" parent="Pinchos/Subsuelo_A" unique_id=523369200 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(17147, 3328)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_30" parent="Pinchos/Subsuelo_A" unique_id=857578965 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(16985, 3327)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1098,7 +1050,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(16832, 3349.999)
 rotation = -0.331
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1106,21 +1057,18 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(16678, 3405)
 rotation = -0.299
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_27" parent="Pinchos/Subsuelo_A" unique_id=537631708 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(16517, 3422)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_26" parent="Pinchos/Subsuelo_A" unique_id=1758472817 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(16355, 3421)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1128,7 +1076,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(16192, 3415)
 rotation = 0.121
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1136,7 +1083,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(16034.001, 3381)
 rotation = 0.26
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1144,14 +1090,12 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(15877, 3334)
 rotation = 0.249
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_20" parent="Pinchos/Subsuelo_A" unique_id=257343022 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(15717, 3311)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1160,7 +1104,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 [node name="Pinchos_16" parent="Pinchos/Subsuelo_B" unique_id=1751848005 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(22575, 6069)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1168,14 +1111,12 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(22811, 6053.001)
 rotation = -0.083
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_18" parent="Pinchos/Subsuelo_B" unique_id=968517223 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(23049, 6044)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1183,7 +1124,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(23288, 6043.001)
 rotation = 0.049
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1191,21 +1131,18 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(22336, 6027.001)
 rotation = 0.301
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_20" parent="Pinchos/Subsuelo_B" unique_id=1877393077 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(23529, 6048)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_21" parent="Pinchos/Subsuelo_B" unique_id=1454553242 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(23771, 6049)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1213,7 +1150,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(24014, 6040)
 rotation = -0.105
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1221,14 +1157,12 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(24256, 6012.001)
 rotation = -0.087
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_24" parent="Pinchos/Subsuelo_B" unique_id=1068852466 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(24496, 6000)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1236,7 +1170,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(24980, 6005)
 rotation = 0.148
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1244,7 +1177,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(25220, 6033)
 rotation = 0.086
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1252,7 +1184,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(25465, 6013)
 rotation = -0.226
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1260,7 +1191,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(25694, 5948)
 rotation = -0.26
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1268,14 +1198,12 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(25920, 5905)
 rotation = -0.042
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_25" parent="Pinchos/Subsuelo_B" unique_id=239869342 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(24741, 5993)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1283,7 +1211,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(26158, 5906)
 rotation = 0.053
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1291,7 +1218,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(26394, 5932)
 rotation = 0.124
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1299,14 +1225,12 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(26639, 5933)
 rotation = -0.079
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_34" parent="Pinchos/Subsuelo_B" unique_id=680991927 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(26878, 5921)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1314,7 +1238,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(27123, 5903)
 rotation = -0.085
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1322,7 +1245,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(22031.002, 3153.002)
 rotation = -0.887
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1330,7 +1252,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(21927, 3282.999)
 rotation = -0.834
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1338,7 +1259,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(21813, 3402.999)
 rotation = -0.77
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1346,7 +1266,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(21674, 3495)
 rotation = -0.422
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1354,49 +1273,42 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(21514, 3547.001)
 rotation = -0.3
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_08" parent="Pinchos/Subsuelo_B" unique_id=317472230 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(21188, 3612)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_07" parent="Pinchos/Subsuelo_B" unique_id=472473174 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(21024, 3610)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_06" parent="Pinchos/Subsuelo_B" unique_id=263033557 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(20861, 3610)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_04" parent="Pinchos/Subsuelo_B" unique_id=72954652 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(20528, 3626)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_05" parent="Pinchos/Subsuelo_B" unique_id=8593048 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(20695, 3623)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_03" parent="Pinchos/Subsuelo_B" unique_id=1678362324 instance=ExtResource("17_pinchos")]
 z_index = -2
 position = Vector2(20363, 3629)
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1404,7 +1316,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(20197, 3631)
 rotation = 0.008
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1412,7 +1323,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(21352, 3584.999)
 rotation = -0.25
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1420,7 +1330,6 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 z_index = -2
 position = Vector2(20039.002, 3599.999)
 rotation = 0.496
-estilo = 0
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1643,9 +1552,6 @@ siguiente_escena = "res://scenes/nivel2.tscn"
 modo_oscuridad = true
 color_oscuridad = Color(0.01, 0.03, 0.04, 1)
 
-[node name="EcoHijo" parent="." instance=ExtResource("eco_hijo_1")]
-position = Vector2(31200, 4800)
-
 [node name="Hud" parent="." unique_id=643194512 instance=ExtResource("12_hud")]
 visible = false
 
@@ -1811,7 +1717,7 @@ semilla = 28
 position = Vector2(17240, 755)
 
 [node name="PickupRest" parent="." unique_id=328527154 instance=ExtResource("7_pick")]
-position = Vector2(14297, 4982)
+position = Vector2(14463, 4988)
 
 [node name="PlatPitMid" type="StaticBody2D" parent="." unique_id=788737332]
 position = Vector2(21146, 762)
@@ -1895,7 +1801,7 @@ semilla = 32
 position = Vector2(26711, 2407)
 
 [node name="Checkpoint4" parent="Checkpoint4" unique_id=1858692116 instance=ExtResource("27_46iir")]
-position = Vector2(-8066, 3384)
+position = Vector2(-8267, 3425)
 
 [node name="Enredadera" parent="." unique_id=1957323541 instance=ExtResource("16_enredadera")]
 position = Vector2(16230, 2149)
@@ -1919,7 +1825,7 @@ margen = 22.0
 ancho_cadena = 15.0
 
 [node name="PlataformaFragil3" parent="." unique_id=1774485046 instance=ExtResource("29_2n16c")]
-position = Vector2(14275, 5161)
+position = Vector2(14441, 5167)
 
 [node name="Collision" parent="PlataformaFragil3" index="0" unique_id=1058677889]
 position = Vector2(23, -43.999996)
@@ -1935,7 +1841,7 @@ margen = 22.0
 ancho_cadena = 15.0
 
 [node name="PlataformaFragil4" parent="." unique_id=591901021 instance=ExtResource("29_2n16c")]
-position = Vector2(13520, 5083)
+position = Vector2(13686, 5089)
 
 [node name="Collision" parent="PlataformaFragil4" index="0" unique_id=1058677889]
 position = Vector2(23, -43.999996)
@@ -1988,7 +1894,7 @@ ancho = 60.0
 alto = 3700.0
 
 [node name="Enredadera18" parent="." unique_id=178403607 instance=ExtResource("16_enredadera")]
-position = Vector2(15942, 4822)
+position = Vector2(16019, 4816)
 ancho = 60.0
 alto = 1600.0
 
@@ -2511,7 +2417,7 @@ texture_scale = 5.0
 z_index = -3
 
 [node name="Rayo1" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1525805174]
-modulate = Color(1, 1, 1, 0.67313635)
+modulate = Color(1, 1, 1, 0.8268717)
 material = SubResource("CanvasItemMaterial_n68a7")
 position = Vector2(15200, 4032)
 script = ExtResource("rayo_luz")
@@ -2523,7 +2429,7 @@ color = Color(0.5, 0.88, 0.95, 1)
 opacidad = 0.15
 
 [node name="Rayo2" type="Node2D" parent="EfectosCueva/Rayos" unique_id=781055913]
-modulate = Color(1, 1, 1, 0.74977183)
+modulate = Color(1, 1, 1, 0.77632797)
 material = SubResource("CanvasItemMaterial_75xtp")
 position = Vector2(22300, 4640)
 script = ExtResource("rayo_luz")
@@ -2535,7 +2441,7 @@ opacidad = 0.15
 semilla = 2
 
 [node name="Rayo3" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1436968058]
-modulate = Color(1, 1, 1, 0.83635545)
+modulate = Color(1, 1, 1, 0.8015821)
 material = SubResource("CanvasItemMaterial_8evbx")
 position = Vector2(28000, 3936)
 script = ExtResource("rayo_luz")
@@ -2548,7 +2454,7 @@ opacidad = 0.14
 semilla = 3
 
 [node name="Rayo4" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1382485448]
-modulate = Color(1, 1, 1, 0.8701629)
+modulate = Color(1, 1, 1, 0.8850864)
 material = SubResource("CanvasItemMaterial_se8yl")
 position = Vector2(20000, 1552)
 script = ExtResource("rayo_luz")
@@ -2561,7 +2467,7 @@ opacidad = 0.13
 semilla = 4
 
 [node name="Rayo5" type="Node2D" parent="EfectosCueva/Rayos" unique_id=267750525]
-modulate = Color(1, 1, 1, 0.8272162)
+modulate = Color(1, 1, 1, 0.96653575)
 material = SubResource("CanvasItemMaterial_w0qtn")
 position = Vector2(18874, 1680)
 script = ExtResource("rayo_luz")
@@ -2574,7 +2480,7 @@ opacidad = 0.13
 semilla = 5
 
 [node name="Rayo6" type="Node2D" parent="EfectosCueva/Rayos" unique_id=626391221]
-modulate = Color(1, 1, 1, 0.7398674)
+modulate = Color(1, 1, 1, 0.98709136)
 material = SubResource("CanvasItemMaterial_hgrc8")
 position = Vector2(24000, 2352)
 script = ExtResource("rayo_luz")
@@ -2587,7 +2493,7 @@ opacidad = 0.14
 semilla = 6
 
 [node name="Rayo7" type="Node2D" parent="EfectosCueva/Rayos" unique_id=493778764]
-modulate = Color(1, 1, 1, 0.67307216)
+modulate = Color(1, 1, 1, 0.93252975)
 material = SubResource("CanvasItemMaterial_6wpew")
 position = Vector2(26711, 1792)
 script = ExtResource("rayo_luz")
@@ -2599,9 +2505,9 @@ opacidad = 0.14
 semilla = 7
 
 [node name="Rayo8" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1329949578]
-modulate = Color(1, 1, 1, 0.67675346)
+modulate = Color(1, 1, 1, 0.8436726)
 material = SubResource("CanvasItemMaterial_j18m3")
-position = Vector2(13530, 5054)
+position = Vector2(13696, 5060)
 script = ExtResource("rayo_luz")
 alto = 780.0
 ancho_arriba = 50.0
