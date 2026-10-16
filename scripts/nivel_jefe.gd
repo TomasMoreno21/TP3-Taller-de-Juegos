@@ -17,7 +17,8 @@ func _on_boss_died() -> void:
 	if _victoria_mostrada:
 		return
 	_victoria_mostrada = true
-	await get_tree().create_timer(1.2).timeout
+	add_to_group("victoria")   # desde la muerte del jefe ya no se puede pausar (pause.gd)
+	await get_tree().create_timer(1.2, false).timeout   # si la pausa ya estaba abierta, espera a que se cierre
 	if get_tree().current_scene == null or not is_instance_valid(get_tree().current_scene):
 		return
 	var victoria: CanvasLayer = (load(SCENA_VICTORIA) as PackedScene).instantiate()

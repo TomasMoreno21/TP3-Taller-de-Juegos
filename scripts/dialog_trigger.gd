@@ -19,6 +19,9 @@ static var _cache_cargado := false
 @export var una_vez := true
 @export var marcado := false   ## escena importante: globo grande y un instante de cámara lenta
 @export var retraso := 0.6
+## Opcional: un Encounter (u otro nodo con señal `completado`). Si se asigna, el diálogo sale cuando esa señal se emite
+## (p. ej. al vencer una arena) y se ignoran `modo` y la zona.
+@export var al_completar: NodePath
 
 var _disparado := false
 
@@ -47,6 +50,13 @@ func _cargar_dialogo_por_id() -> void:
 
 func _ready() -> void:
 	_cargar_dialogo_por_id()
+	var fuente := get_node_or_null(al_completar)
+	if fuente != null and fuente.has_signal("completado"):
+		monitoring = false
+		fuente.completado.connect(func() -> void:
+			await get_tree().create_timer(retraso).timeout
+			_disparar())
+		return
 	if modo == "Automatico":
 		monitoring = false
 		await get_tree().create_timer(retraso).timeout

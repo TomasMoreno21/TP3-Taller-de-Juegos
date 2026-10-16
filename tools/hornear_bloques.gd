@@ -25,6 +25,7 @@ func _init() -> void:
 	root.add_child(nivel)
 	await process_frame
 	var capa: TileMapLayer = nivel.get_node("TileMap")
+	_quitar_tapadas(capa)
 	var tipos := _bloques_uniformes(capa)   # Dictionary: Vector2i(bloque) -> Vector2i(atlas)
 	var lista: Array = []
 	for b in tipos:
@@ -37,6 +38,23 @@ func _init() -> void:
 	else:
 		await _fase2(nivel, capa, tipos, lista, a[2], a[3])
 	quit()
+
+
+## Celdas enterradas (sin colisión) que ya tapa un bloque opaco de la capa Profundo: no se ven ni chocan, sobran.
+## (Las que tienen colisión se dejan: el horneado las conserva junto a bolsillos de aire sellados.)
+func _quitar_tapadas(capa: TileMapLayer) -> void:
+	var prof := capa.get_node_or_null("Profundo") as TileMapLayer
+	if prof == null:
+		return
+	var n := 0
+	for b in prof.get_used_cells():
+		for dy in BLOQUE:
+			for dx in BLOQUE:
+				var c: Vector2i = b * BLOQUE + Vector2i(dx, dy)
+				if capa.get_cell_source_id(c) != -1 and capa.get_cell_alternative_tile(c) == ALT_ENTERRADO:
+					capa.erase_cell(c)
+					n += 1
+	print("celdas tapadas por Profundo quitadas: %d" % n)
 
 
 ## Bloques alineados a la grilla de 4 donde las 16 celdas son el mismo tile enterrado.

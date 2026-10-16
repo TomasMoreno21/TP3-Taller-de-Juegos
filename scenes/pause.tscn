@@ -193,5 +193,5 @@ text = "SALIR"
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.68, 0.62, 1)
 theme_override_font_sizes/font_size = 20
-text = "↑ ↓ mover · A elegir · Start reanudar"
+text = "↑ ↓ mover · Enter / A elegir · Start reanudar"
 horizontal_alignment = 1

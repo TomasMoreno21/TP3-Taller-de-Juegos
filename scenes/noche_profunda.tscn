@@ -21,3 +21,4 @@ giro = 0.9
 
 [node name="HojasAmbiente" parent="." index="2"]
 amount = 10
+activa = false

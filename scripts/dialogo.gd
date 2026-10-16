@@ -21,6 +21,7 @@ const AJUSTES := "user://ajustes.cfg"
 const NOMBRES_AYUDA := ["Ninguna", "Ligera", "Completa"]
 
 const SEG_POR_CARACTER := 0.016
+const SONIDO_TECLA := preload("res://assets/audio/sfx/gen/dialogo_tecla.wav")
 const LIMITE_TROZO := 44   ## un texto más largo se parte en globos cortos
 
 @export var volumen_tipeo_db := -9.0     ## volumen del "blip" de cada letra al escribir
@@ -291,6 +292,33 @@ func _entrada_globo(tono_i: int, marcado: bool) -> void:
 		cam.call("shake", fuerza, 0.2)
 
 
+## Vacía todo al instante (cambio de escena, reinicio de partida): globo, cola, charlas en espera, ancla y lista de tareas.
+func limpiar() -> void:
+	_cola.clear()
+	_en_espera.clear()
+	_item = {}
+	_texto_actual = ""
+	ancla_hablante = null
+	if _tw_globo != null and _tw_globo.is_valid():
+		_tw_globo.kill()
+	_fase = Fase.LIBRE
+	globo.visible = false
+	gema.visible = false
+	visible = true   # (una cinemática cortada pudo dejar la capa oculta)
+	if lista != null and lista.has_method("vaciar"):
+		lista.vaciar()
+		lista.modulate.a = 1.0
+
+
+## El jugador de la escena actual, ya conectado a las señales que usa el diálogo (daño, golpes, parry, transformar).
+func _get_jugador() -> Node2D:
+	if not is_instance_valid(_jugador):
+		_jugador = get_tree().get_first_node_in_group("player") as Node2D
+		if _jugador != null:
+			_conectar_jugador(_jugador)
+	return _jugador
+
+
 ## Corta el globo actual al instante (cuando entra una narrativa encima de un tip).
 func _cortar_actual() -> void:
 	if _tw_globo != null and _tw_globo.is_valid():
@@ -335,6 +363,9 @@ func _ocultar_gema_luego() -> void:
 
 
 func _process(delta: float) -> void:
+	# Con el juego en pausa (menú, LevelUp, derrota) el globo no avanza ni suena; la victoria sí lo usa pausada.
+	if get_tree().paused and get_tree().get_first_node_in_group("victoria") == null:
+		return
 	_t += delta
 	_rastrear_acciones()
 	_revisar_espera(delta)
@@ -394,12 +425,12 @@ func _escribir(delta: float) -> void:
 ## (susurro grave y suave, alerta y grito agudos); un poco de variación para que no suene a máquina.
 func _blip(tono_i: int) -> void:
 	var audio := get_node_or_null("/root/AudioManager")
-	if audio == null or not ResourceLoader.exists("res://assets/audio/sfx/gen/dialogo_tecla.wav"):
+	if audio == null:
 		return
 	var base := tono_voz_humano if str(_item.get("hablante", "")) == "Humano" else tono_voz_amuleto
 	var por_tono: float = [1.0, 1.12, 1.28, 0.82][clampi(tono_i, 0, 3)]
 	var vol := volumen_tipeo_db + (-4.0 if tono_i == 3 else (2.0 if tono_i == 2 else 0.0))
-	audio.play_sfx(load("res://assets/audio/sfx/gen/dialogo_tecla.wav"), vol, 0.05, base * por_tono)
+	audio.play_sfx(SONIDO_TECLA, vol, 0.05, base * por_tono)
 
 
 ## Sigue al jugador: la gema flota detrás de su hombro y el globo va encima, dentro de la pantalla.
@@ -407,12 +438,9 @@ func _colocar() -> void:
 	var vp := get_viewport().get_visible_rect().size
 	var centro := Vector2(vp.x * 0.5, vp.y * 0.6)
 	var mirando := 1.0
-	if not is_instance_valid(_jugador):
-		_jugador = get_tree().get_first_node_in_group("player") as Node2D
-		if _jugador != null:
-			_conectar_jugador(_jugador)
+	_get_jugador()
 	if is_instance_valid(_jugador):
-		centro = get_viewport().get_canvas_transform() * _jugador.global_position
+		centro =get_viewport().get_canvas_transform() * _jugador.global_position
 		var f: Variant = _jugador.get("facing")
 		mirando = float(f) if f != null else 1.0
 	var objetivo := centro + Vector2(-mirando * 85.0, -215.0) + Vector2(0, sin(_t * 2.2) * 6.0)
@@ -490,14 +518,12 @@ func _charla_reciente() -> bool:
 func _es_calma() -> bool:
 	if not is_inside_tree():
 		return false
-	if not is_instance_valid(_jugador):
-		_jugador = get_tree().get_first_node_in_group("player") as Node2D
-	if not is_instance_valid(_jugador):
+	if _get_jugador() == null:
 		return true
 	if _t - _ultimo_dano < seg_calma_tras_dano:
 		return false
 	for e in get_tree().get_nodes_in_group("enemy"):
-		if e is Node2D and is_instance_valid(e) and (e as Node2D).global_position.distance_to(_jugador.global_position) < radio_peligro:
+		if e is Node2D and is_instance_valid(e) and e.get("_activo") != false and int(e.get("health") if e.get("health") != null else 1) > 0 and (e as Node2D).global_position.distance_to(_jugador.global_position) < radio_peligro:
 			return false
 	return true
 
@@ -521,6 +547,9 @@ func _revisar_espera(delta: float) -> void:
 					_en_espera.back()["t"] = w["t"]   # si volvió a esperar, conserva su antigüedad
 		elif _t - float(w["t"]) < seg_tip_vence:
 			mostrar_tip(w["lineas"], w["hablante"], bool(w["guardar"]))
+	# Si alguna charla venció sin mostrarse, quien la esperaba (tutoriales, cinemáticas) no debe quedar colgado.
+	if _fase == Fase.LIBRE and not hay_narrativa():
+		dialogo_terminado.emit()
 
 
 func _on_dano(_cant: int) -> void:
@@ -531,12 +560,13 @@ func _actualizar_peligro(delta: float) -> void:
 	if not is_inside_tree():
 		return
 	_peligro_t -= delta
+	_get_jugador()
 	if _peligro_t <= 0.0:
 		_peligro_t = 0.25
 		var cerca := _t - _ultimo_dano < seg_tras_dano
 		if not cerca and is_instance_valid(_jugador):
 			for e in get_tree().get_nodes_in_group("enemy"):
-				if e is Node2D and is_instance_valid(e) and (e as Node2D).global_position.distance_to(_jugador.global_position) < radio_peligro:
+				if e is Node2D and is_instance_valid(e) and e.get("_activo") != false and int(e.get("health") if e.get("health") != null else 1) > 0 and (e as Node2D).global_position.distance_to(_jugador.global_position) < radio_peligro:
 					cerca = true
 					break
 		_chico_objetivo = 1.0 if cerca else 0.0
@@ -601,7 +631,7 @@ func _on_ataque(tipo: String, _paso: Variant) -> void:
 
 
 func _rastrear_acciones() -> void:
-	if get_tree().paused:
+	if get_tree().paused or _get_jugador() == null:   # en el cómic/menú Espacio o A confirman: no cuentan como "saltar"
 		return
 	if absf(Input.get_axis("move_left", "move_right")) > 0.3:
 		_t_ultima_accion = _t

@@ -35,6 +35,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return   # en el editor no titila: si no, guardaba el modulate animado en la escena
 	_t += delta * velocidad_titileo
 	var s := 0.5 + 0.5 * sin(_t * TAU + float(semilla))
 	var s2 := 0.5 + 0.5 * sin(_t * TAU * 0.37 + float(semilla) * 2.3)

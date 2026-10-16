@@ -109,123 +109,111 @@ y_cueva = -100000.0
 [node name="Nieblas" type="Node2D" parent="."]
 
 [node name="Niebla1" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.85, 0.6, 1.0, 0.9)
+modulate = Color(0.85, 0.6, 1.0, 0.6)
 position = Vector2(1540, 482)
-amount = 18
+amount = 8
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla2" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.85, 0.6, 1.0, 0.9)
+modulate = Color(0.85, 0.6, 1.0, 0.6)
 position = Vector2(10184, 1096)
-amount = 18
+amount = 8
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla3" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.85, 0.6, 1.0, 0.9)
+modulate = Color(0.85, 0.6, 1.0, 0.6)
 position = Vector2(12956, 1410)
-amount = 18
+amount = 8
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla4" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.85, 0.6, 1.0, 0.9)
+modulate = Color(0.85, 0.6, 1.0, 0.6)
 position = Vector2(13894, 3572)
-amount = 18
+amount = 8
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla5" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.85, 0.6, 1.0, 0.9)
+modulate = Color(0.85, 0.6, 1.0, 0.6)
 position = Vector2(11460, 3922)
-amount = 18
+amount = 8
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla6" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.85, 0.6, 1.0, 0.9)
+modulate = Color(0.85, 0.6, 1.0, 0.6)
 position = Vector2(5790, 4018)
-amount = 18
+amount = 8
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla7" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.85, 0.6, 1.0, 0.9)
+modulate = Color(0.85, 0.6, 1.0, 0.6)
 position = Vector2(-3944, 1875)
-amount = 18
+amount = 8
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla8" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.85, 0.6, 1.0, 0.9)
+modulate = Color(0.85, 0.6, 1.0, 0.6)
 position = Vector2(8310, 2416)
-amount = 18
+amount = 8
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla9" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.85, 0.6, 1.0, 0.9)
+modulate = Color(0.85, 0.6, 1.0, 0.6)
 position = Vector2(331, 4776)
-amount = 18
+amount = 8
 emission_rect_extents = Vector2(900, 90)
 
 [node name="Niebla10" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.85, 0.6, 1.0, 0.9)
+modulate = Color(0.85, 0.6, 1.0, 0.6)
 position = Vector2(-792, 4801)
-amount = 18
+amount = 8
 emission_rect_extents = Vector2(900, 90)
 
-[node name="Niebla11" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.85, 0.6, 1.0, 0.7)
-position = Vector2(18228, 15)
-amount = 11
-emission_rect_extents = Vector2(520, 80)
-
 [node name="Niebla12" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.85, 0.6, 1.0, 0.7)
+modulate = Color(0.85, 0.6, 1.0, 0.5)
 position = Vector2(16948, 5967)
-amount = 11
+amount = 5
 emission_rect_extents = Vector2(520, 80)
 
 [node name="Niebla13" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.6, 0.75, 1.0, 0.7)
+modulate = Color(0.6, 0.75, 1.0, 0.5)
 position = Vector2(-6636, 3999)
-amount = 11
+amount = 5
 emission_rect_extents = Vector2(520, 80)
 
 [node name="Niebla14" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.7, 0.9, 0.95, 0.7)
+modulate = Color(0.7, 0.9, 0.95, 0.5)
 position = Vector2(9268, 5455)
-amount = 11
+amount = 5
 emission_rect_extents = Vector2(520, 80)
 
 [node name="Niebla15" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.7, 0.9, 0.95, 0.7)
+modulate = Color(0.7, 0.9, 0.95, 0.5)
 position = Vector2(2836, 2495)
-amount = 11
+amount = 5
 emission_rect_extents = Vector2(520, 80)
 
 [node name="Niebla16" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.7, 0.9, 0.95, 0.7)
+modulate = Color(0.7, 0.9, 0.95, 0.5)
 position = Vector2(14068, 5903)
-amount = 11
+amount = 5
 emission_rect_extents = Vector2(520, 80)
 
 [node name="Niebla17" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.85, 0.6, 1.0, 0.7)
+modulate = Color(0.85, 0.6, 1.0, 0.5)
 position = Vector2(15348, 2335)
-amount = 11
+amount = 5
 emission_rect_extents = Vector2(520, 80)
 
 [node name="Niebla18" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.7, 0.9, 0.95, 0.7)
+modulate = Color(0.7, 0.9, 0.95, 0.5)
 position = Vector2(7028, 5439)
-amount = 11
+amount = 5
 emission_rect_extents = Vector2(520, 80)
 
 [node name="Niebla19" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.7, 0.9, 0.95, 0.7)
+modulate = Color(0.7, 0.9, 0.95, 0.5)
 position = Vector2(11156, 6095)
-amount = 11
-emission_rect_extents = Vector2(520, 80)
-
-[node name="Niebla20" parent="Nieblas" instance=ExtResource("10_niebla")]
-modulate = Color(0.6, 0.75, 1.0, 0.7)
-position = Vector2(-2252, 111)
-amount = 11
+amount = 5
 emission_rect_extents = Vector2(520, 80)
 
 [node name="Luces" type="Node2D" parent="."]

@@ -246,6 +246,21 @@ func preparar_ola() -> void:
 	_activo = false
 	visual.visible = false
 	_colision(false)
+	# Si el encuentro se reinicia en pleno ritual/ataque, el enemigo no debe reactivarse solo ni seguir moviéndose.
+	_telegraph_timer = 0.0
+	_windup_timer = 0.0
+	_lunge_timer = 0.0
+	_windup_disparo = 0.0
+	_stun_timer = 0.0
+	_pausa_impacto_t = 0.0
+	_en_flinch = false
+	_attack_anim_timer = 0.0
+	velocity = Vector2.ZERO
+	_cancelar_aviso()
+	if is_instance_valid(_ritual):
+		_ritual.queue_free()
+	if is_instance_valid(_aura):
+		_aura.visible = false
 
 
 ## Apoya los pies del collider sobre el piso más cercano (corrección máx. 120 px):
@@ -269,6 +284,8 @@ func activar() -> void:
 	ajustar_al_suelo()
 	if flotante:
 		_elevar()
+		if is_instance_valid(_aura):
+			_aura.visible = true
 	if spawn_telegrafiado:
 		_telegraph_timer = maxf(ritual_duracion, 0.05)
 		_mostrar_circulo_ritual()
@@ -363,7 +380,11 @@ func _apartar_del_jugador() -> void:
 		q.collision_mask = 1
 		if get_world_2d().direct_space_state.intersect_shape(q, 1).is_empty():
 			global_position += mov
-			return
+			break
+	# Si no hubo lugar (o el jugador se mueve encima): se atraviesan hasta separarse en vez de empujarse.
+	var s2: Vector2 = (collide_shape.shape as RectangleShape2D).size
+	if Rect2(collide_shape.global_position - s2 * 0.5, s2).grow(4.0).intersects(rp) and player.has_method("eximir_solape"):
+		player.eximir_solape(self)
 
 
 func _mostrar_circulo_ritual() -> void:
@@ -518,8 +539,9 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 	_ultima_pos_valida = global_position
-	# Optimización: un enemigo en espera (encuentro sin disparar), apoyado y lejos de la cámara no hace nada visible.
-	if not _activo and _telegraph_timer <= 0.0 and is_on_floor():
+	# Optimización: un enemigo en espera (encuentro sin disparar) lejos del jugador no hace nada visible.
+	# (no se pide is_on_floor: con la colisión apagada nunca da true y el atajo no se usaba)
+	if not _activo and _telegraph_timer <= 0.0:
 		var p := _obtener_player()
 		if p != null and global_position.distance_squared_to(p.global_position) > 9000000.0:
 			return
@@ -545,9 +567,8 @@ func _physics_process(delta: float) -> void:
 			_colision(true)
 		return
 	if not _activo:
-		velocity.x = 0.0
+		velocity = Vector2.ZERO   # en espera no se mueve (ni cae): no hace falta move_and_slide
 		_update_animacion()
-		move_and_slide()
 		return
 	if _stun_timer > 0.0:
 		# Hitstun: el enemigo no persigue ni ataca; el knockback se frena solo.
@@ -568,8 +589,7 @@ func _physics_process(delta: float) -> void:
 			else:
 				velocity = Vector2.ZERO
 				_update_animacion()
-				move_and_slide()
-				return
+				return   # colgado en el impacto: sin move_and_slide (con velocidad 0 solo daba normales degeneradas contra el jugador)
 		velocity.x = move_toward(velocity.x, 0.0, 180.0 * delta)
 		_flote_t += delta * flote_velocidad
 		velocity.y = _vel_y(delta)
@@ -659,7 +679,8 @@ func _physics_process(delta: float) -> void:
 				_ataque_melee(player)
 				_attack_timer = enemy_data.attack_cooldown
 		else:
-			velocity.x = _dir * enemy_data.speed
+			# Jugador justo encima/debajo (otro piso): se queda quieto en vez de temblar de lado a lado.
+			velocity.x = 0.0 if absf(player.global_position.x - global_position.x) < 30.0 else _dir * enemy_data.speed
 
 	_update_animacion()
 	move_and_slide()
@@ -671,7 +692,9 @@ func _mirar_jugador() -> void:
 	var player := _obtener_player()
 	if player == null:
 		return
-	_dir = 1 if player.global_position.x > global_position.x else -1
+	var dx := player.global_position.x - global_position.x
+	if absf(dx) > 8.0:   # casi alineado (jugador en otro piso) no se da vuelta cada frame
+		_dir = 1 if dx > 0.0 else -1
 	if visual != null:
 		visual.scale.x = absf(visual.scale.x) * -_dir
 
@@ -822,6 +845,7 @@ func _disparar(player: Node2D) -> void:
 	if audio_d != null:
 		audio_d.play_sfx(sonido_disparo, volumen_sfx_db, 0.08)
 	var proj: Area2D = preload("res://scenes/projectile.tscn").instantiate()
+	proj.add_to_group("proyectil_enemigo")   # se limpian al reiniciar la arena (encounter.gd)
 	proj.global_position = origen
 	proj.set("direction", dir)
 	proj.set("speed", enemy_data.proyectil_speed)
@@ -1068,10 +1092,22 @@ func _morir() -> void:
 func _soltar_orbe_vida() -> void:
 	if randf() > 0.55:
 		return
+	_crear_orbe_vida.call_deferred(global_position)   # morir llega dentro de un callback de física: ni el Area2D ni el raycast pueden usarse en ese momento
+
+
+func _crear_orbe_vida(desde: Vector2) -> void:
 	var orbe: Area2D = preload("res://scenes/pickup_vida.tscn").instantiate()
-	orbe.global_position = global_position + Vector2(0, -orbe_vida_altura)
+	orbe.global_position = desde + Vector2(0, -orbe_vida_altura)
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	destino.add_child(orbe)
+	# Si muere en el aire (volador o arrojado) el orbe cae hasta quedar a la altura de alcance del jugador.
+	var hit := get_world_2d().direct_space_state.intersect_ray(PhysicsRayQueryParameters2D.create(desde, desde + Vector2(0.0, 2500.0), 1))
+	if hit.is_empty():
+		return
+	var y_piso: float = hit.position.y - orbe_vida_altura
+	if y_piso > orbe.global_position.y + 1.0:
+		var caida := clampf((y_piso - orbe.global_position.y) / 900.0, 0.25, 0.9)
+		orbe.create_tween().tween_property(orbe, "global_position:y", y_piso, caida).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 
 func _liberar_only() -> void:

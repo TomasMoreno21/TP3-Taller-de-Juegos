@@ -38,7 +38,16 @@ var _jugador: Node2D
 @onready var luz: PointLight2D = get_node_or_null("Luz")
 
 
+func _clave() -> String:
+	var escena := get_tree().current_scene
+	return "%s|%s" % [escena.scene_file_path if escena != null else "", str(get_path())]
+
+
 func _ready() -> void:
+	var prog := get_node_or_null("/root/Progresion")
+	if prog != null and prog.almas_recogidas.has(_clave()):
+		queue_free()   # ya recogida en esta partida: no se vuelve a contar
+		return
 	monitoring = true
 	collision_mask = 4
 	body_entered.connect(_on_body_entered)
@@ -151,10 +160,13 @@ func _recoger(body: Node2D) -> void:
 		return
 	_recogido = true
 	body.recoger_energia()
+	get_node("/root/Progresion").almas_recogidas[_clave()] = true
 	# El alma contribuye a subir de nivel (fragmentos → desbloqueo de combos).
-	get_node("/root/Progresion").add_fragmentos(1)
-	if da_subida_de_nivel:
-		get_node("/root/Progresion").forzar_subida()
+	var prog: Node = get_node("/root/Progresion")
+	var nivel_antes: int = prog.nivel
+	prog.add_fragmentos(1)
+	if da_subida_de_nivel and prog.nivel == nivel_antes:   # si el fragmento ya cruzó el umbral, no se fuerza una segunda subida
+		prog.forzar_subida()
 	_efecto_recoger()
 	queue_free()
 

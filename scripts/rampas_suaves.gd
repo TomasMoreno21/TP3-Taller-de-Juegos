@@ -33,6 +33,13 @@ func _ready() -> void:
 	_tam = float(capa.tile_set.tile_size.x)
 	for c in capa.get_used_cells():
 		_celdas[c] = true
+	# La roca profunda agrupada en bloques de 4x4 (capa Profundo) también es sólida: sin esto aparecían "pisos" falsos dentro de la roca.
+	var prof := capa.get_node_or_null("Profundo") as TileMapLayer
+	if prof != null:
+		for b in prof.get_used_cells():
+			for dy in 4:
+				for dx in 4:
+					_celdas[b * 4 + Vector2i(dx, dy)] = true
 	var cuerpo := StaticBody2D.new()
 	cuerpo.name = "Rampas"
 	cuerpo.add_to_group("rampa_suave")

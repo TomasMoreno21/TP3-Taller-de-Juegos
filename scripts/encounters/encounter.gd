@@ -113,6 +113,7 @@ func reiniciar() -> void:
 		return   # arena ya vencida: al reaparecer no se rearma (si no, al pasar se cerraba sin enemigos: destello y cámara)
 	estado = Estado.INACTIVE
 	_gen += 1   # invalida cualquier pausa entre olas que estuviera esperando
+	get_tree().call_group("proyectil_enemigo", "queue_free")   # un disparo en vuelo no debe seguir tras reaparecer
 	_ola_idx = -1
 	_vivos_ola = 0
 	# Los enemigos auto-spawneados de la ola en curso se descartan (al re-entrar se vuelven a generar);
@@ -148,6 +149,9 @@ func _agregar_manual(hijo: Node) -> void:
 	while _manuales.size() <= idx:
 		_manuales.append([])
 	_manuales[idx].append(hijo)
+	# Arenas muy abajo en el mapa: el límite de caída por defecto (6000) mataba a los enemigos al cargar el nivel.
+	if hijo is Node2D and hijo.get("limite_caida") != null:
+		hijo.set("limite_caida", maxf(float(hijo.get("limite_caida")), (hijo as Node2D).global_position.y + 1500.0))
 
 
 func _preparar_manuales() -> void:
@@ -259,6 +263,7 @@ func _spawnear_auto(ola: WaveOla, ola_idx: int, k0: int = 0) -> int:
 		e.set_meta("auto_spawn", true)
 		add_child(e)
 		e.global_position = _posicion_spawn(i, ola, total)
+		e.set("limite_caida", maxf(float(e.get("limite_caida")), e.global_position.y + 1500.0))   # (igual que en _agregar_manual)
 		_conectar_died(e, ola_idx)
 		_spawned.append(e)
 		_activar_en(e, float(k0 + i) * intervalo_spawn, ola_idx)

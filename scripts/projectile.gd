@@ -199,11 +199,13 @@ func _buscar_enemigo_cercano() -> Node2D:
 	for n in get_tree().get_nodes_in_group("enemy"):
 		if not _activo_y_vivo(n):
 			continue
-		if not linea_libre(self, global_position, centro_objetivo(n)):
-			continue   # detrás de la roca / otro piso: no se le persigue
 		var d := global_position.distance_to(n.global_position)
 		if n.get("flotante") == true:
 			d *= 0.35   # prioridad a los voladores
+		if d >= mejor_dist:
+			continue   # (antes del raycast: es lo caro)
+		if not linea_libre(self, global_position, centro_objetivo(n)):
+			continue   # detrás de la roca / otro piso: no se le persigue
 		if d < mejor_dist:
 			mejor_dist = d
 			mejor = n
@@ -214,6 +216,15 @@ func _buscar_enemigo_cercano() -> Node2D:
 			continue
 		var d := global_position.distance_to(n.global_position)
 		if d < mejor_dist:
+			mejor_dist = d
+			mejor = n
+	if mejor != null:
+		return mejor
+	for n in get_tree().get_nodes_in_group("ojo_verde"):
+		if not is_instance_valid(n):
+			continue
+		var d := global_position.distance_to(n.global_position)
+		if n.abierto and d < mejor_dist and linea_libre(self, global_position, n.global_position):
 			mejor_dist = d
 			mejor = n
 	return mejor
@@ -235,7 +246,7 @@ func _on_body_entered(body: Node2D) -> void:
 	# El sónico atraviesa las barreras de energía sin explotar contra ellas.
 	if body.is_in_group("barrera_energia"):
 		return
-	if enemy_shot and body.has_method("parry_activo") and body.parry_activo():
+	if enemy_shot and body.has_method("parry_proyectil") and body.parry_proyectil(direction.x):
 		_reflejar()
 		return
 	if body.has_method("take_damage"):

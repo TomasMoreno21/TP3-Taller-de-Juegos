@@ -30,6 +30,14 @@ func _ready() -> void:
 	visible = false
 
 
+## Borra todas las tareas al instante (cambio de escena).
+func vaciar() -> void:
+	_items.clear()
+	_idx_vista = -1
+	_cerrando = false
+	visible = false
+
+
 func hay_items() -> bool:
 	return not _items.is_empty() and not _cerrando
 

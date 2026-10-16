@@ -31,7 +31,7 @@ func _initialize() -> void:
 		player.call("_procesar_ataque", tipo, player.forms[2], false)
 		for i in 60:
 			await physics_frame
-		print(tipo, " en=", player.get("energia"), " t=", player.get("_current_attack_type"), " form=", player.get("current_form"), " pos=", player.global_position, " muro=", muro.global_position, " golpes=", muro.golpes if is_instance_valid(muro) else -1)
+		print(tipo, " en=", player.get("energia"), " t=", player.get("_current_attack_type"), " form=", player.get("current_form"), " pos=", player.global_position, " muro=", muro.global_position if is_instance_valid(muro) else Vector2.ZERO, " golpes=", muro.golpes if is_instance_valid(muro) else -1)
 	_chk(not is_instance_valid(muro) or muro.abierto or muro.golpes >= 3, "muro cae con 3 especiales")
 	print("FALLOS = ", fallos)
 	quit()

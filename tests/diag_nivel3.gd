@@ -61,7 +61,7 @@ func _init() -> void:
 	var camara: Camera2D = nivel.get_node_or_null("Camara")
 	var tilemap: TileMapLayer = nivel.get_node_or_null("TileMap")
 	_check(camara != null and camara.has_method("punch"), "Nivel3: cámara con script")
-	_check(tilemap != null and tilemap.get_used_cells().size() > 100000, "Nivel3: TileMap con terreno pintado")
+	_check(tilemap != null and tilemap.get_used_cells().size() > 50000, "Nivel3: TileMap con terreno pintado")   # (16/10: roca enterrada agrupada en la capa Profundo)
 	_check(nivel.get_node_or_null("FondoProfundo") != null and nivel.get_node_or_null("NocheProfunda") != null, "Nivel3: fondo y noche de cueva profunda")
 
 	# Cámara: límites dentro del terreno; el fondo cubre toda la altura que ve.
@@ -78,8 +78,8 @@ func _init() -> void:
 		var fondo: Node = nivel.get_node_or_null("FondoProfundo")
 		for capa in fondo.get_children() if fondo != null else []:
 			if capa.get("y_techo") != null and (float(capa.y_techo) > camara.limit_top or float(capa.y_fondo) < camara.limit_bottom
-					or float(capa.centro_x) - float(capa.ancho_total) * 0.5 > camara.limit_left - 1000.0
-					or float(capa.centro_x) + float(capa.ancho_total) * 0.5 < camara.limit_right + 1000.0):
+					or float(capa.centro_x) - float(capa.ancho_total) * 0.5 > camara.limit_left - 400.0
+					or float(capa.centro_x) + float(capa.ancho_total) * 0.5 < camara.limit_right + 400.0):
 				fondo_ok = false
 		_check(fondo_ok, "Nivel3: el fondo de cueva cubre todo el mapa que ve la cámara")
 

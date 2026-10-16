@@ -34,6 +34,7 @@ func _ready() -> void:
 	collision_layer = 0
 	collision_mask = 4
 	body_entered.connect(_on_body_entered)
+	add_to_group("reaparicion")
 
 
 func _on_body_entered(body: Node2D) -> void:
@@ -60,22 +61,22 @@ func _cinematica(jugador: Node2D) -> void:
 	jugador.set("cinematica_activa", true)
 	_construir_barras()
 	_mover_barras(true)
-	await get_tree().create_timer(pausa_antes).timeout
+	await get_tree().create_timer(pausa_antes, false).timeout
 	if dlg != null:
 		_pulso(fuerza_inicio, 1.0, piedras_inicio, 4.0, 9.0)
 		dlg.mostrar(Array(lineas_previas), "Amuleto", true)
 		await dlg.dialogo_terminado
 	_pulso(fuerza_temblor, 1.2, 5, 5.0, 12.0)
-	await get_tree().create_timer(0.6).timeout
+	await get_tree().create_timer(0.6, false).timeout
 	if dlg != null:
 		dlg.mostrar(Array(lineas_alerta), "Amuleto", true)
 		_pulso(fuerza_corre, 1.6, piedras_corre, 9.0, 24.0)
 		await dlg.dialogo_terminado
-	await get_tree().create_timer(pausa_despues).timeout
+	await get_tree().create_timer(pausa_despues, false).timeout
 	_mover_barras(false)
 	if is_instance_valid(jugador):
 		jugador.set("cinematica_activa", false)
-	await get_tree().create_timer(0.8).timeout
+	await get_tree().create_timer(0.8, false).timeout
 	if is_instance_valid(_capa):
 		_capa.queue_free()
 
@@ -119,3 +120,8 @@ func _mover_barras(entrar: bool) -> void:
 	tw.tween_property(_barra_sup, "offset_bottom", sup + alto_barra, 0.7)
 	tw.tween_property(_barra_inf, "offset_top", inf, 0.7)
 	tw.tween_property(_barra_inf, "offset_bottom", inf + alto_barra, 0.7)
+
+
+## Reaparición tras morir: el disparador se rearma (la cinemática no se repite: queda registrada en Progresion).
+func al_reaparecer() -> void:
+	_usado = false

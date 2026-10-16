@@ -24,6 +24,11 @@ var _player_cache: Node2D
 @export var suavizado := 6.0
 @export var desplazamiento := Vector2(0, -313)
 @export var suavizado_zoom := 5.0
+@export_group("Arena")
+@export var suavizado_arena := 10.0   ## velocidad con que la cámara se clava en el centro de la arena (más alto = más brusco)
+@export var golpe_entrada_arena := 1.05   ## zoom punch al entrar en modo pelea (1 = sin punch)
+@export var shake_entrada_arena := 7.0   ## sacudida al entrar en modo pelea (0 = sin shake)
+@export_group("")
 @export var lookahead := 0.32    # anticipación de cámara según velocidad horizontal
 @export var lookahead_umbral := 80.0    # velocidad (px/s) recién pasada la cual empieza el adelanto
 @export var lookahead_ataque := 140.0    # adelanto fijo (px) hacia el facing mientras se ataca
@@ -154,7 +159,7 @@ func _physics_process(delta: float) -> void:
 	if _modo == "cine":
 		return
 	if _modo == "fija":
-		global_position = global_position.lerp(_fija_pos, minf(suavizado * delta, 1.0))
+		global_position = global_position.lerp(_fija_pos, minf(suavizado_arena * delta, 1.0))
 		return
 
 	var player := _obtener_player()
@@ -309,11 +314,16 @@ func tilt(angulo: float) -> void:
 
 
 func modo_arena(centro: Vector2) -> void:
+	var _modo_previo_normal := _modo != "fija"
 	if _modo_tween != null and _modo_tween.is_valid():
 		_modo_tween.kill()   # el viaje de modo_normal no debe arrastrar la cámara fuera de la arena
 	_modo = "fija"
 	_fija_pos = centro
-	global_position = centro
+	_zoom_velocidad = 1.0   # en modo fija no se recalcula: si entrabas corriendo quedaba congelado toda la pelea
+	if _modo_previo_normal:
+		punch(golpe_entrada_arena)
+		if shake_entrada_arena > 0.0:
+			shake(shake_entrada_arena, 0.3)
 	modo_cambio.emit("arena")
 
 
@@ -349,7 +359,7 @@ func modo_normal(instantaneo: bool = false) -> void:
 		_modo_tween.kill()
 	_modo = "seguir"
 	modo_cambio.emit("seguir")
-	if _escala_arena != 1.0:
+	if _escala_arena != 1.0 or (_escala_tween != null and _escala_tween.is_valid()):
 		escala_arena(1.0, 0.0 if instantaneo else 0.8)   # fuera de la arena vuelve el zoom normal
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	if player != null:
@@ -359,6 +369,14 @@ func modo_normal(instantaneo: bool = false) -> void:
 			_lookahead_actual = 0.0
 			_look_offset = Vector2.ZERO
 			_suelo_y = INF
+			# Estado de la zona anterior (cae del piso, ladeo, shake): no debe arrastrarse al reaparecer.
+			_apex_look = 0.0
+			_piso_extra = 0.0
+			_offset_descenso = 0.0
+			_mirar_abajo_extra = 0.0
+			_shake_timer = 0.0
+			_tilt = 0.0
+			rotation = 0.0
 			reset_smoothing()
 			return
 		_modo_tween = create_tween()

@@ -8,6 +8,7 @@ extends Node2D
 @export var inicio: Node2D                          ## (opcional) arranca al pasar por la x de este nodo; vacío = lo dispara `iniciar()`
 @export var fin: Node2D                             ## y se corta al llegar a la x de este nodo (o a su y si `fin_por_altura`)
 @export var fin_por_altura := false                 ## cortar por altura: dura hasta llegar a la y de `fin`, en la dirección en que queda respecto del punto de arranque (bajadas por lianas: el final está abajo; trepadas: arriba)
+@export var recargar_energia := true                 ## al arrancar (también tras morir y volver a cruzar el disparador) la energía de transformación pasa a 100: sin forma no se pasa
 
 @export_group("Zona de derrumbe")
 @export var pausa_min := 0.8                        ## s entre oleadas de escombros
@@ -102,6 +103,7 @@ var _presion := 0.0                                 # 0..1: sube si el jugador s
 
 func _ready() -> void:
 	set_physics_process(true)
+	add_to_group("reaparicion")
 	# Retumbo de fondo: un reproductor propio que se repite mientras dura el derrumbe fuerte.
 	_retumbo = AudioStreamPlayer.new()
 	_retumbo.stream = sonido_retumbo
@@ -156,12 +158,22 @@ func _ready() -> void:
 	add_child(_polvo)
 
 
+## El jugador murió y reaparece en un checkpoint: el derrumbe se rearma y vuelve a arrancar al cruzar el disparador.
+func al_reaparecer() -> void:
+	_disparado = false
+	_y_arranque = INF
+	_activo = false
+	_t_amb = randf_range(ambiente_pausa_min, ambiente_pausa_max)
+
+
 ## Lo llama el `derrumbe_disparador`: el derrumbe fuerte arranca ya y dura hasta la x de `fin`.
 func iniciar() -> void:
 	_disparado = true
 	var j := get_tree().get_first_node_in_group("player") as Node2D
 	if j != null:
 		_y_arranque = j.global_position.y
+		if recargar_energia and j.has_method("recargar_energia"):
+			j.recargar_energia()
 
 
 ## Con `fin_por_altura`: ¿el jugador todavía no llegó a la y de `fin`? Si el final queda más abajo que el punto de
@@ -456,6 +468,8 @@ func _roca_dirigida() -> void:
 
 
 func _caer_roca_dirigida(d: Dictionary) -> void:
+	if not _activo:
+		return   # el derrumbe terminó o se rearmó (muerte) mientras la roca estaba en aviso
 	var e := _Escombro.new()
 	e.radio = 30.0
 	e.color = color_escombro.lightened(0.06)

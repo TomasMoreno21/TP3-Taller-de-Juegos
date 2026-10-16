@@ -60,7 +60,8 @@ func _polvo_techo(fuerza: float) -> void:
 	p.color = polvo_color
 	p.z_index = 4
 	p.global_position = Vector2(c.x, c.y - tam.y * 0.5)
-	get_tree().current_scene.add_child(p)
+	var padre: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()   # (en tests el nivel no es current_scene)
+	padre.add_child(p)
 	p.emitting = true
 	get_tree().create_timer(3.5).timeout.connect(p.queue_free)
 

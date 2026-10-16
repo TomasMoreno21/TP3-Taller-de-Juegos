@@ -50,7 +50,7 @@ func _initialize() -> void:
 	# --- Costo de energía del especial.
 	p.end_attack()
 	p.set("_special_cooldown", 0.0)
-	p.energia = 2.0
+	p.energia = 1.0   # el especial del Lobo cuesta 2 fuera de combate
 	var e0: float = p.energia
 	p._procesar_ataque("special", d, false)
 	_check(p.energia == e0, "sin energía suficiente el especial no sale ni gasta")
