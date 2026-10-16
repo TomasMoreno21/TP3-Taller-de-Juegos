@@ -249,7 +249,9 @@ func _cuerpo_en_zona(body: Node2D) -> bool:
 	if body.is_in_group("player"):
 		var ancho_h := s.x * hurtbox_ancho_jugador
 		var alto_h := s.y * hurtbox_alto_jugador
-		rect_body = Rect2(rect_body.get_center().x - ancho_h * 0.5, rect_body.end.y - alto_h, ancho_h, alto_h)
+		var pies_y := maxf(body.global_position.y + 142.5, rect_body.end.y)   # hasta los PIES: el lobo flota 40 px (patas_alto)
+		var tope_y := rect_body.end.y - alto_h
+		rect_body = Rect2(rect_body.get_center().x - ancho_h * 0.5, tope_y, ancho_h, pies_y - tope_y)
 	# La zona de daño es SOLO la porción superior del alto visible (fair: tocar
 	# el tallo/palo no mata). Está anclada a la PUNTA (cima del alto visible) y
 	# baja hacia la base, no al revés: el rect anterior cubría la base/tallo.

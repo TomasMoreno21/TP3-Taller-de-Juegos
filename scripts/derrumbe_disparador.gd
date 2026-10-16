@@ -34,6 +34,7 @@ func _ready() -> void:
 	collision_layer = 0
 	collision_mask = 4
 	body_entered.connect(_on_body_entered)
+	add_to_group("reaparicion")
 
 
 func _on_body_entered(body: Node2D) -> void:
@@ -119,3 +120,8 @@ func _mover_barras(entrar: bool) -> void:
 	tw.tween_property(_barra_sup, "offset_bottom", sup + alto_barra, 0.7)
 	tw.tween_property(_barra_inf, "offset_top", inf, 0.7)
 	tw.tween_property(_barra_inf, "offset_bottom", inf + alto_barra, 0.7)
+
+
+## Reaparición tras morir: el disparador se rearma (la cinemática no se repite: queda registrada en Progresion).
+func al_reaparecer() -> void:
+	_usado = false

@@ -37,6 +37,7 @@
 [ext_resource type="PackedScene" uid="uid://bhxju6lap2tcq" path="res://scenes/unlock_forma.tscn" id="unlock"]
 [ext_resource type="PackedScene" uid="uid://dih4mbupyhdag" path="res://scenes/enredadera.tscn" id="vine"]
 [ext_resource type="Script" uid="uid://d3nihovco06v7" path="res://scripts/zona_latido.gd" id="zona_latido"]
+[ext_resource type="Script" path="res://scripts/borde_miedo.gd" id="borde_miedo"]
 [ext_resource type="TileSet" path="res://resources/tileset_bloques_n3.tres" id="tileset_bloques_n3"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte3"]
@@ -749,6 +750,7 @@ activador = NodePath("../CheckpointZ7")
 [node name="Latido" type="Node" parent="." unique_id=241549247]
 script = ExtResource("latido")
 oscuridad = NodePath("../NocheProfunda/Oscuridad")
+muro_sello = NodePath("../MuroDerrumbe")
 
 [node name="Madriguera" type="Node2D" parent="Latido" unique_id=608997872]
 position = Vector2(-3504, 1805)
@@ -794,6 +796,12 @@ tamano = Vector2(3500, 1260)
 color_ambiente = Color(0.66, 0.76, 0.96, 1)
 frecuencia = 0.7
 intensidad = 0.04
+sacudida = 1.5
+sacudida_entrada = 8.0
+
+[node name="BordeMiedo" type="CanvasLayer" parent="." unique_id=1735002001]
+layer = 5
+script = ExtResource("borde_miedo")
 
 [node name="PinchosLatido" parent="." unique_id=1804001186 instance=ExtResource("pinchos")]
 z_index = -2
@@ -823,13 +831,13 @@ globo = PackedStringArray()
 
 [node name="Plano1" type="Marker2D" parent="IntroNivel" unique_id=1203958337]
 script = ExtResource("plano_script")
-duracion = 9.5
+duracion = 12.0
 zoom = 1.15
 seguir_jugador = true
-globo = PackedStringArray("[humano] Ya sé a lo que voy. ¿Cuánto falta?", "[alerta]Poco. El sello cede: el latido lo delata.", "[humano] Mi hijo no se queda esperando. Sigamos.", "[susurro]La piedra es dura: hará falta fuerza bruta.")
+globo = PackedStringArray("[susurro]¿Lo oís, Humano? No es mi corazón. Es el de la cueva, y late más fuerte con el miedo.", "[humano][susurro]Hoy iba a enseñarle a silbar como el búho... y ahora algo respira ahí abajo.", "[humano]Que se atragante. Voy a sacar a mi hijo de ahí. Abrime camino.")
 retraso_globo = 0.3
 pulso = true
-pulso_en = 8.45
+pulso_en = 11.0
 
 [node name="Plano2" type="Marker2D" parent="IntroNivel" unique_id=1657366455]
 script = ExtResource("plano_script")

@@ -12,6 +12,8 @@ extends Node2D
 @export var color_ambiente := Color(0.66, 0.84, 0.96)   ## tinte de la cueva en esta zona (multiplica el mundo)
 @export_range(0.05, 3.0, 0.05) var frecuencia := 0.5   ## latidos por segundo
 @export_range(0.0, 0.3, 0.005) var intensidad := 0.03   ## cuánto sube el brillo en cada latido
+@export_range(0.0, 8.0, 0.1) var sacudida := 0.0   ## shake de cámara en cada pum, aun sin miedo (px)
+@export_range(0.0, 20.0, 0.5) var sacudida_entrada := 0.0   ## "pum" grande con temblor al entrar a la zona
 
 
 func contiene(p: Vector2) -> bool:

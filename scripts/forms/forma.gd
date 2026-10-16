@@ -42,7 +42,8 @@ var _jumps_usados := 0
 @export var flap_impulso: float = 0.0            # aleteo en el aire: impulso hacia arriba (0 = no aletea)
 @export var flap_costo: float = 0.0              # energía por aleteo
 @export var salto_rot_grados: float = 0.0        # inclinación del cuerpo al subir/caer (0 = sin balanceo)
-@export var salto_estiramiento: float = 0.0      # estirado vertical al subir en el aire (0 = sin)
+@export var caida_rot_mult: float = 1.0         # multiplicador de la inclinación al caer (1 = igual que al subir)
+@export var salto_estiramiento: float = 0.0     # estirado vertical al subir en el aire (0 = sin)
 @export var caida_estiramiento: float = 0.0      # estirado vertical al caer (0 = sin)
 @export var apex_compacto: float = 0.0           # cuerpo compacto en el ápice del salto (0 = sin)
 @export var congelar_en_aire: bool = true        # en el aire el ciclo de piernas se detiene (no corre en el vacío)

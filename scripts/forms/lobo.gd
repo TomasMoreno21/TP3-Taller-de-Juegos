@@ -30,10 +30,10 @@ func _init() -> void:
 	patas_alto = 40.0
 	patas_ancho = 150.0
 	pendiente_mult = 1.4
-	# Las patas de los PNG del lobo caen unos px por debajo de la base del collider;
-	# flight_lift eleva el sprite (todas las anims: idle/AFK, run, attack) a la misma
-	# altura, dejando al lobo siempre por encima del piso. Ajustable en el Inspector.
-	flight_lift = -32.0   # = 8 (las patas del PNG caen unos px bajo la base) - patas_alto: el sprite sigue apoyado en el piso, no en el cuerpo elevado
+	# El cuerpo (collider) flota patas_alto px sobre el piso; _anclar_pies apoya la base del frame
+	# como si el collider llegara al piso, así que flight_lift baja el sprite esos px (= -patas_alto)
+	# y las patas del idle/run/ataque quedan sobre el piso. Ajustable en el Inspector.
+	flight_lift = -40.0   # = -patas_alto
 	camera_lookahead_mult = 1.1
 	lean_angulo = 4.5
 	salto_rot_grados = 7.0   # inclinación leve al subir/caer
