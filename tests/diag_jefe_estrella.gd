@@ -34,6 +34,8 @@ func _init() -> void:
 	_check(boss._puntas.size() == 7, "La Estrella tiene 7 puntas (las del dibujo de Micaela)")
 	var cab = boss.cabeza
 	_check(cab != null and not cab.visible, "El sprite de la cabeza queda oculto (es la fuente de frames)")
+	_check(boss.estrella.visible, "El dibujo de la cabeza (piezas de la Estrella) se ve")
+	_check(boss.ojo.position.length() < 2.0 and boss.get_node("Cuerpo/Hurtbox/Collision").position.length() < 2.0, "El ojo y su hurtbox quedan centrados en el núcleo del dibujo")
 	if cab != null:
 		cab.frame = 2
 		var tex2 = cab.sprite_frames.get_frame_texture(cab.animation, 2)

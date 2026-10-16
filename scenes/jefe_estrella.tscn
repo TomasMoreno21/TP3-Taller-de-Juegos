@@ -60,7 +60,6 @@ centered = false
 offset = Vector2(-200, -320)
 
 [node name="Estrella" type="Node2D" parent="Cuerpo" unique_id=2141618593]
-visible = false
 
 [node name="Nucleo" type="Polygon2D" parent="Cuerpo/Estrella"]
 texture = ExtResource("10_tex")
@@ -117,7 +116,6 @@ script = ExtResource("7_punta")
 vertice_local = Vector2(310, -217)
 
 [node name="Ojo" type="Node2D" parent="Cuerpo" unique_id=2074995646]
-position = Vector2(0, -129)
 script = ExtResource("2_ojo")
 textura_cerrado = ExtResource("10_ojo_cerrado")
 
@@ -127,7 +125,6 @@ collision_mask = 0
 script = ExtResource("3_hurt")
 
 [node name="Collision" type="CollisionShape2D" parent="Cuerpo/Hurtbox" unique_id=660511265]
-position = Vector2(0, -129)
 shape = SubResource("CircleShape2D_hurt")
 disabled = true
 
@@ -229,7 +226,7 @@ viento = false
 [node name="PlataformasF2" type="Node2D" parent="." unique_id=1323560123]
 
 [node name="Plataforma1" type="StaticBody2D" parent="PlataformasF2" unique_id=775338297]
-position = Vector2(-1150, -200)
+position = Vector2(-1150, -150)
 
 [node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma1" unique_id=1961038723]
 position = Vector2(0, 15)
@@ -259,7 +256,7 @@ piedra = true
 semilla = 31
 
 [node name="Plataforma2" type="StaticBody2D" parent="PlataformasF2" unique_id=28518161]
-position = Vector2(1150, -200)
+position = Vector2(1150, -150)
 
 [node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma2" unique_id=1796630039]
 position = Vector2(0, 15)
@@ -289,7 +286,7 @@ piedra = true
 semilla = 32
 
 [node name="Plataforma3" type="StaticBody2D" parent="PlataformasF2" unique_id=401160871]
-position = Vector2(-650, -420)
+position = Vector2(-650, -310)
 
 [node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma3" unique_id=467458288]
 position = Vector2(0, 15)
@@ -319,7 +316,7 @@ piedra = true
 semilla = 33
 
 [node name="Plataforma4" type="StaticBody2D" parent="PlataformasF2" unique_id=534324767]
-position = Vector2(650, -420)
+position = Vector2(650, -310)
 
 [node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma4" unique_id=854076729]
 position = Vector2(0, 15)
