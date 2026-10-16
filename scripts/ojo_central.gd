@@ -11,6 +11,18 @@ extends Node2D
 	set(v):
 		radio = v
 		queue_redraw()
+@export var textura_cerrado: Texture2D:
+	set(v):
+		textura_cerrado = v
+		queue_redraw()
+@export var cerrado_escala := Vector2.ONE:
+	set(v):
+		cerrado_escala = v
+		queue_redraw()
+@export var cerrado_offset := Vector2.ZERO:
+	set(v):
+		cerrado_offset = v
+		queue_redraw()
 @export var color_esclera := Color(0.85, 0.9, 1.0):
 	set(v):
 		color_esclera = v
@@ -33,6 +45,10 @@ var mirada := Vector2.ZERO   # la mueve el jefe (hacia el jugador)
 
 
 func _draw() -> void:
+	if apertura <= 0.02 and textura_cerrado != null:
+		var ts := textura_cerrado.get_size() * cerrado_escala
+		draw_texture_rect(textura_cerrado, Rect2(cerrado_offset - ts * 0.5, ts), false)
+		return
 	var w := radio * 1.45
 	var h := radio * 0.85
 	var almendra := _almendra(w, h)
