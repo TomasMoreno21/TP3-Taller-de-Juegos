@@ -29,6 +29,7 @@ enum Fase { ESPERA, TEMBLOR, CAYENDO, ROTA }
 
 var _fase: int = Fase.ESPERA
 var _jugador_cache: Node2D
+var _escala_visual := Vector2.ONE   # escala original de Visual (la rotura la agranda; restaurar() la devuelve)
 var _t := 0.0
 var _vel_caida := 0.0
 var _visual: Polygon2D
@@ -53,6 +54,7 @@ func _ready() -> void:
 	collision_layer = 1
 	_pos_inicial = position
 	_visual = get_node_or_null("Visual") as Polygon2D
+	_escala_visual = _visual.scale if _visual != null else Vector2.ONE
 	_shape = get_node_or_null("Collision") as CollisionShape2D
 	if _visual == null:
 		_visual = _crear_visual_fallback()
@@ -119,7 +121,7 @@ func _romper(sin_animacion := false) -> void:
 			_tween_rotura = create_tween()
 			_tween_rotura.set_parallel(true)
 			_tween_rotura.tween_property(_visual, "modulate:a", 0.0, 0.12)
-			_tween_rotura.tween_property(_visual, "scale", Vector2(1.3, 1.3), 0.12)
+			_tween_rotura.tween_property(_visual, "scale", _escala_visual * 1.3, 0.12)
 			_tween_rotura.chain().tween_callback(func() -> void: _visual.visible = false)
 		Ruptura.CAER:
 			# El collider queda activo: el jugador cae junto con la plataforma.
@@ -148,7 +150,7 @@ func restaurar() -> void:
 	position = _pos_inicial
 	_shape.set_deferred("disabled", false)
 	_visual.position.x = 0.0
-	_visual.scale = Vector2.ONE
+	_visual.scale = _escala_visual
 	_visual.visible = true
 	_visual.modulate.a = 0.0
 	_tween_vuelta = create_tween()

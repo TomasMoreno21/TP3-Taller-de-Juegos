@@ -380,7 +380,11 @@ func _apartar_del_jugador() -> void:
 		q.collision_mask = 1
 		if get_world_2d().direct_space_state.intersect_shape(q, 1).is_empty():
 			global_position += mov
-			return
+			break
+	# Si no hubo lugar (o el jugador se mueve encima): se atraviesan hasta separarse en vez de empujarse.
+	var s2: Vector2 = (collide_shape.shape as RectangleShape2D).size
+	if Rect2(collide_shape.global_position - s2 * 0.5, s2).grow(4.0).intersects(rp) and player.has_method("eximir_solape"):
+		player.eximir_solape(self)
 
 
 func _mostrar_circulo_ritual() -> void:

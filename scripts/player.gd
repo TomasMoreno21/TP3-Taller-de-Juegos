@@ -342,6 +342,7 @@ var _cooldown_formas: Dictionary = {}
 const COOLDOWN_AGOTADA := 2.0
 const COOLDOWN_TRANSFORM := 0.35   # anti-spam: el freno real son la energía mínima y el drenaje
 var _cooldown_transform := 0.0
+var _exentos_solape: Array = []   # enemigos que se atraviesan con el jugador mientras se solapan (evita empujones)
 var _special_cooldown := 0.0
 var _transform_buffer: float = 0.0
 const TRANSFORM_BUFFER_TIME := 0.25
@@ -509,7 +510,63 @@ func _limitar_a_camara() -> void:
 		velocity.y = maxf(velocity.y, 0.0)
 	global_position = Vector2(x, y)
 
+## Caja que ocupan hoy los colliders activos del jugador.
+func _rect_colliders() -> Rect2:
+	var rp := Rect2()
+	var hay := false
+	for c in get_children():
+		var csc := c as CollisionShape2D
+		if csc == null or csc.disabled or not (csc.shape is RectangleShape2D):
+			continue
+		var sp: Vector2 = (csc.shape as RectangleShape2D).size
+		var r := Rect2(csc.global_position - sp * 0.5, sp)
+		rp = r if not hay else rp.merge(r)
+		hay = true
+	return rp
+
+
+## Jugador y enemigo se atraviesan hasta separarse: si un cuerpo nace o crece encima del otro, el motor los
+## depenetraba a la fuerza (empujón, teletransporte o el jugador hundido en la roca).
+func eximir_solape(e: PhysicsBody2D) -> void:
+	if e == null or _exentos_solape.has(e):
+		return
+	_exentos_solape.append(e)
+	add_collision_exception_with(e)
+	e.add_collision_exception_with(self)
+
+
+func _eximir_solapados() -> void:
+	var rp := _rect_colliders()
+	if rp.size == Vector2.ZERO:
+		return
+	for e in get_tree().get_nodes_in_group("enemy"):
+		var cs = e.get("collide_shape")
+		if not (e is PhysicsBody2D) or not (cs is CollisionShape2D) or not (cs.shape is RectangleShape2D):
+			continue
+		var s: Vector2 = cs.shape.size
+		if Rect2(cs.global_position - s * 0.5, s).grow(4.0).intersects(rp):
+			eximir_solape(e)
+
+
+func _tick_solape() -> void:
+	if _exentos_solape.is_empty():
+		return
+	var rp := _rect_colliders().grow(8.0)
+	for e in _exentos_solape.duplicate():
+		var libre := not is_instance_valid(e)
+		if not libre:
+			var cs = e.get("collide_shape")
+			var s: Vector2 = cs.shape.size
+			libre = not Rect2(cs.global_position - s * 0.5, s).intersects(rp)
+		if libre:
+			_exentos_solape.erase(e)
+			if is_instance_valid(e):
+				remove_collision_exception_with(e)
+				e.remove_collision_exception_with(self)
+
+
 func _physics_process(delta: float) -> void:
+	_tick_solape()
 	var dialogo_bloquea := _dialogo_bloquea_input()
 	var quiere_bloquear := not dialogo_bloquea and current_form == Form.HUMAN and Input.is_action_pressed("block")   # solo el Humano bloquea y hace parry
 	if not quiere_bloquear:
@@ -1880,6 +1937,7 @@ func _transformar(nueva: int, forzar: bool = false) -> bool:
 	var prev_patas_size: Vector2 = (patas_shape.shape as RectangleShape2D).size
 	var prev_patas_off: bool = patas_shape.disabled
 	_aplicar_colision(data_nueva)
+	_eximir_solapados()   # los enemigos pegados no cuentan: se atraviesan hasta separarse, el chequeo mira solo el terreno
 	var bloqueado := test_move(global_transform, Vector2.ZERO)
 	var empuje := Vector2.ZERO
 	if bloqueado:
@@ -2364,7 +2422,7 @@ func _update_animacion() -> void:
 		var base_lean_g := clampf(velocity.x / maxf(data_glide.speed, 1.0), -1.0, 1.0) * deg_to_rad(data_glide.lean_angulo)
 		visual.skew = lerpf(visual.skew, base_lean_g, minf(8.0 * get_physics_process_delta_time(), 1.0))
 		var prog_rot := clampf(_murci_glide_t / 1.4, 0.0, 1.0)
-		var ang := lerpf(5.0, 16.0, prog_rot)
+		var ang := lerpf(5.0, data_glide.salto_rot_grados * data_glide.caida_rot_mult, prog_rot)   # picada creciente: mismo tope que la caída normal (~23°)
 		var ang_q := lerpf(3.0, 10.0, prog_rot)
 		var tg := Time.get_ticks_msec() / 1000.0
 		var balanceo := sin(tg * TAU * 0.7) * deg_to_rad(2.0)   # el cuerpo se mece mientras planea
@@ -2445,7 +2503,7 @@ func _update_animacion() -> void:
 			target_rot = deg_to_rad(-mag) * lado
 			_esc_reposo = Vector2(-data.salto_estiramiento * 0.5, data.salto_estiramiento)
 		elif velocity.y > 80.0:
-			target_rot = deg_to_rad(mag) * lado
+			target_rot = deg_to_rad(mag * data.caida_rot_mult) * lado
 			_esc_reposo = Vector2(-data.caida_estiramiento * 0.5, data.caida_estiramiento)
 		elif absf(velocity.y) < APEX_CORE_THRESHOLD and not _trepando:
 			_esc_reposo = Vector2(data.apex_compacto, -data.apex_compacto)
@@ -2933,6 +2991,7 @@ func reaparecer_en_checkpoint() -> void:
 	energia_changed.emit(energia)
 	# Las plataformas frágiles rotas vuelven a aparecer al reaparecer.
 	get_tree().call_group("plataforma_fragil", "restaurar_tras_muerte")
+	get_tree().call_group("reaparicion", "al_reaparecer")   # eventos que se rearman (derrumbe)
 
 
 ## Estados de acción que no deben sobrevivir a un cambio de forma ni a una reaparición.
@@ -2963,6 +3022,12 @@ func _restaurar_forma(nueva: int) -> void:
 
 func recoger_energia() -> void:
 	energia = minf(energia + ENERGIA_PICKUP, ENERGIA_MAX)
+	energia_changed.emit(energia)
+
+
+## Recarga la energía de transformación al máximo (eventos que exigen forma, como el derrumbe).
+func recargar_energia() -> void:
+	energia = ENERGIA_MAX
 	energia_changed.emit(energia)
 
 

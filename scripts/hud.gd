@@ -373,8 +373,9 @@ func _romper_racha(cantidad: int) -> void:
 	g.top_level = true
 	g.z_index = 20
 	add_child(g)
-	g.global_position = racha_valor.global_position
-	g.pivot_offset = g.get_minimum_size() * 0.5   # el Label aún no tiene tamaño: se usa el mínimo para escalar desde el centro
+	g.reset_size()
+	g.global_position = racha_valor.global_position + Vector2(racha_valor.size.x - g.size.x, 0.0)   # alineado a la derecha como el Valor (si no, saltaba a la izquierda)
+	g.pivot_offset = g.size * 0.5
 	var tw := g.create_tween().set_parallel(true)
 	tw.tween_property(g, "scale", Vector2.ONE * 1.5, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(g, "global_position:y", g.global_position.y + 34.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)

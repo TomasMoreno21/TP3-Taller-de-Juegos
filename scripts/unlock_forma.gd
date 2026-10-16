@@ -220,10 +220,13 @@ func _cinematica(jugador: Node2D, prog: Node) -> void:
 	if not is_inside_tree():
 		return
 	# Viaje al pecho del jugador, dejando chispas.
-	var destino := jugador.global_position + Vector2(0, 70)
+	var pecho := Vector2(0, -10)   # pecho: el origen del jugador está ~143 px sobre el piso, a la altura del torso
+	var destino := jugador.global_position + pecho
 	var origen := orbe.global_position
 	var viaje := orbe.create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 	viaje.tween_method(func(k: float) -> void:
+		if is_instance_valid(jugador):
+			destino = jugador.global_position + pecho   # sigue al jugador por si se mueve
 		var pos := origen.lerp(destino, k) + Vector2(0, -sin(k * PI) * 90.0)
 		orbe.global_position = pos
 		if randf() < 0.5:

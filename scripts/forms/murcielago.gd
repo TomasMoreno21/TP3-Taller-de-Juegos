@@ -32,7 +32,8 @@ func _init() -> void:
 	camera_lookahead_mult = 1.0
 	lean_angulo = 3.5
 	salto_rot_grados = 9.0   # inclinación al subir (hocico arriba) y al caer (hocico abajo)
-	flotar_amplitud = 5.0         # vaivén de vuelo en reposo
+	caida_rot_mult = 2.6          # al caer pica más: ~23° hocico abajo
+	flotar_amplitud = 5.0        # vaivén de vuelo en reposo
 	flotar_amplitud_mov = 10.0    # y más marcado al avanzar
 	flotar_frecuencia = 1.9
 	sprint_zoom_out = 0.04        # la cámara se abre un poco al ir rápido (sensación de velocidad al planear)

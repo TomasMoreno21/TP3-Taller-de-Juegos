@@ -183,7 +183,15 @@ func _arrancar_plano(p: PlanoIntro) -> void:
 	_mostrar_cartela(p.cartela, p.duracion)
 	if p.camina and _jugador.global_position.x < caminar_hasta_x:
 		_camina = true
-		_jugador.set("cinematica_dir", velocidad_caminata)
+		# Ritmo: el paseo cubre la distancia restante durante todos los planos que quedan (sin parar a mitad de charla).
+		var restante := 0.0
+		for q in _planos:
+			if q.devolver_control:
+				break
+			if _planos.find(q) >= _planos.find(p):
+				restante += q.duracion
+		var vel := (caminar_hasta_x - _jugador.global_position.x) / (600.0 * maxf(restante, 1.0)) * 0.9
+		_jugador.set("cinematica_dir", clampf(vel, 0.05, 1.0))
 	if not p.globo.is_empty():
 		if p.retraso_globo > 0.0:
 			get_tree().create_timer(p.retraso_globo, false).timeout.connect(_decir.bind(p))
@@ -235,19 +243,24 @@ func _mostrar_cartela(texto: String, duracion: float) -> void:
 
 ## Espera `seg`; si el plano tiene globos y el jugador los adelantó, termina en cuanto acaba la charla
 ## (así no queda esperando con la cámara de cine cuando ya no hay nada que leer).
+## Con globos, el plano dura hasta que la charla TERMINA (`seg` es el mínimo): el control nunca vuelve con el Amuleto aún hablando.
 func _esperar(seg: float, con_globos := false) -> void:
 	var dlg := get_node_or_null("/root/Dialogo")
 	var hablando := false
 	var t := 0.0
-	while t < seg and not _saltar:
+	while not _saltar:
 		await get_tree().process_frame
 		if not get_tree().paused:   # en pausa el tiempo del plano no corre (los tweens tampoco)
 			t += get_process_delta_time()
 		if con_globos and dlg != null:
 			if dlg.hay_narrativa():
 				hablando = true
-			elif hablando and _adelanto:
+			elif hablando:
 				return
+			elif t >= seg + 4.0:
+				return   # la charla nunca arrancó (descartada): no colgar la intro
+		elif t >= seg:
+			return
 
 
 ## Devuelve el control, retira las barras y apaga la luz lejana. La cámara sale de modo

@@ -1,5 +1,8 @@
 # MEMORY.md — Spirit Keeper (ex proyecto Guardabosques / Espíritus del Bosque)
 
+## Sesión 16/10 — Empujones por solape jugador/enemigo · SIN COMMIT
+- Causa: jugador (capa 4, máscara 1+2) y enemigo (capa 2, máscara 1+3) colisionan; si uno nace/crece encima del otro el motor depenetra a la fuerza. Además `_transformar` rechazaba la forma (p. ej. Oso) si había un enemigo pegado, porque `test_move` contaba al enemigo. Fix: `player.eximir_solape(e)` (excepción de colisión mutua hasta que dejan de solaparse, `_tick_solape`); `_transformar` exime a los solapados antes de `test_move`; `enemy._apartar_del_jugador` exime si no logra separarse. Test `tests/diag_solape.gd`. Sprite que desaparece: NO reproducido (hipótesis: jugador hundido tras roca por la depenetración).
+
 ## Sesión 14/10 — Proyectil enemigo al cuerpo + golpe fuerte/especial más rápidos · SIN COMMIT
 - `enemy.gd::_disparar`: apunta a `Projectile.centro_objetivo(player)` (centro del collider) desde el origen real del disparo; antes iba al origen del player (altura de la cabeza). Test `tests/diag_proyectil_enemigo.gd`.
 - `player.gd`: `RECOVERY_HEAVY` 0.52→0.44, `RECOVERY_SPECIAL` 0.92→0.78 (~15 %); la animación se reparte sola vía `_planificar_anim_ataque`. Daños intactos. `diag_sync_golpes` forma=1 (Lobo) attack/heavy falla igual con los valores viejos → ajeno (otras sesiones tocan player.gd/projectile.gd).
