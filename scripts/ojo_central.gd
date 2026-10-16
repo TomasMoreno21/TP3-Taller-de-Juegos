@@ -30,6 +30,8 @@ extends Node2D
 		queue_redraw()
 
 var mirada := Vector2.ZERO   # la mueve el jefe (hacia el jugador)
+var nino_escudo := 0.0       # 0..1: el cultista aprieta al niño contra el iris (escudo); lo agranda y lo ilumina
+@export var color_escudo := Color(0.55, 0.85, 1.0)
 
 
 func _draw() -> void:
@@ -45,7 +47,9 @@ func _draw() -> void:
 		draw_circle(c, r_iris, color_iris)
 		draw_circle(c, r_iris * 0.55, Color(0.03, 0.03, 0.08))
 		if mostrar_nino and apertura > 0.4:
-			_dibujar_nino(c, r_iris * 0.5)
+			if nino_escudo > 0.0:
+				draw_circle(c, r_iris * (0.9 + 0.5 * nino_escudo), Color(color_escudo.r, color_escudo.g, color_escudo.b, 0.35 * nino_escudo))
+			_dibujar_nino(c, r_iris * (0.5 + 0.9 * nino_escudo))
 	# Contorno con trazos (como el boceto).
 	var borde := almendra.duplicate()
 	borde.append(almendra[0])

@@ -32,6 +32,13 @@ extends Node2D
 
 func _ready() -> void:
 	visible = activo or Engine.is_editor_hint()
+	if Engine.is_editor_hint():
+		return
+	# Los pinchos hijos (pinchos.tscn, como en el resto de los niveles) son solo el dibujo:
+	# el daño y la vuelta al borde los maneja este foso (los pinchos comunes matan de un toque).
+	for c in get_children():
+		if c.has_method("_dibujar"):
+			c.set_physics_process(false)
 
 
 func _physics_process(_delta: float) -> void:
@@ -75,10 +82,3 @@ func _pinchar(p: Node2D, x_local: float) -> void:
 func _draw() -> void:
 	var w := ancho * 0.5
 	draw_rect(Rect2(Vector2(-w, 0), Vector2(ancho, profundidad + 200.0)), color_fondo)
-	var n := maxi(int(ancho / 40.0), 1)
-	var paso := ancho / float(n)
-	for i in n:
-		var x0 := -w + paso * i
-		draw_colored_polygon(PackedVector2Array([
-			Vector2(x0, profundidad), Vector2(x0 + paso * 0.5, profundidad - alto_pinchos),
-			Vector2(x0 + paso, profundidad)]), color_pincho)

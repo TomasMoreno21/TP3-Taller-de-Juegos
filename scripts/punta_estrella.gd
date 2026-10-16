@@ -10,6 +10,7 @@ extends Polygon2D
 		queue_redraw()
 @export var color_grieta := Color(1.0, 0.95, 0.85)
 @export var grosor_grieta := 4.0
+@export var vertice_local := Vector2.ZERO   ## punta real del dibujo (la cuña texturizada se extiende más allá); 0 = el vértice más lejano
 
 var rota := false
 var _pos_base := Vector2.ZERO
@@ -24,6 +25,8 @@ func _ready() -> void:
 
 ## Vértice más lejano del centro de la estrella (de donde salen las lanzas).
 func vertice() -> Vector2:
+	if vertice_local != Vector2.ZERO:
+		return vertice_local
 	var mejor := Vector2.ZERO
 	for p in polygon:
 		if p.length_squared() > mejor.length_squared():

@@ -40,7 +40,7 @@ signal terminada   ## la secuencia acabó (justo antes de cambiar de escena)
 @export var color_filete := Color(0.85, 0.72, 0.40)
 @export var largo_filete := 560.0
 @export_group("Después")
-@export_file("*.tscn") var escena_siguiente := "res://scenes/main_menu.tscn"   ## vacío = no cambiar de escena (tests)
+@export_file("*.tscn") var escena_siguiente := "res://scenes/creditos_final.tscn"   ## créditos del final; vacío = no cambiar de escena (tests)
 
 var _luz := 0.0            ## intensidad de la luz del hijo (0..1)
 var _t := 0.0

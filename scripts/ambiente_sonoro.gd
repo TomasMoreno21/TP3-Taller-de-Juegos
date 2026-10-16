@@ -22,6 +22,7 @@ extends Node
 @export_range(0.0, 0.3, 0.01) var suave_pitch_var := 0.08
 @export var suave_volumen_azar_db := 2.5   ## ±dB al azar por sonido
 @export var volumen_master_db := 0.0
+@export var solo_capas := false   ## true = sin acentos ni detalles (en combate de jefe: sin suspenso, solo el loop)
 @export var bus_ambiente := &"Musica"   ## bus de las capas y acentos (si no existe, usa Musica); ambiente_zonas.gd crea uno con eco por zona
 @export var silencio_db := 14.0   ## cuánto baja cada capa con el silencio al máximo
 @export var silencio_corta_acentos := 0.3   ## con silencio mayor a esto no suenan acentos (búho, aullido)
@@ -111,7 +112,7 @@ func _programar_acento() -> void:
 
 
 func _reproducir_acento() -> void:
-	if silencio_actual() > silencio_corta_acentos:
+	if solo_capas or silencio_actual() > silencio_corta_acentos:
 		_programar_acento()
 		return
 	_ultimo_acento = _elegir(acentos.size(), _ultimo_acento)
@@ -120,7 +121,7 @@ func _reproducir_acento() -> void:
 
 
 func _reproducir_suave() -> void:
-	if silencio_actual() <= silencio_corta_acentos:
+	if not solo_capas and silencio_actual() <= silencio_corta_acentos:
 		_ultimo_suave = _elegir(acentos_suaves.size(), _ultimo_suave)
 		_sonar(acentos_suaves[_ultimo_suave], suave_volumen_db + randf_range(-suave_volumen_azar_db, suave_volumen_azar_db), suave_pitch_var)
 	_timer_suave.start(randf_range(suave_intervalo_min, suave_intervalo_max))

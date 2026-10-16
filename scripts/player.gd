@@ -333,6 +333,8 @@ var _checkpoint_vida := VIDA_MAX
 var _checkpoint_energia := ENERGIA_MAX
 var _derrota_activa := false
 var cinematica_dir := 0.0         ## durante la intro: el jugador camina solo en esta dirección (0 = quieto; 0.35 = paso tranquilo)
+var ataque_contenido := false   ## el padre no ataca (el jefe usa al hijo de escudo): no inicia golpes nuevos
+var mult_energia_externo := 1.0   ## lo fija el jefe ("el amuleto arde"): multiplica drenaje y aleteo
 var cinematica_activa := false   ## intro de nivel en curso: sin control ni daño (lo maneja intro_nivel.gd)
 var _velo_muerte: CanvasLayer
 var _invuln_timer := 0.0
@@ -874,6 +876,9 @@ func _handle_attack(delta: float) -> void:
 			end_attack()
 			_lanzar_buffered(data, airborne)
 		return
+
+	if ataque_contenido:
+		return   # el padre se niega a golpear a su hijo
 
 	if Input.is_action_just_pressed("attack"):
 		_procesar_ataque("light", data, airborne)
@@ -1629,7 +1634,7 @@ func _factor_cansancio() -> float:
 ## Aleteo del Murciélago: impulso corto hacia arriba a cambio de energía.
 func _aletear(data: Forma) -> void:
 	_flap_cd = flap_cooldown
-	energia = maxf(energia - data.flap_costo, 0.0)
+	energia = maxf(energia - data.flap_costo * mult_energia_externo, 0.0)
 	energia_changed.emit(energia)
 	velocity.y = -data.flap_impulso
 	# Cada aleteo también empuja hacia adelante (impulso de velocidad en la dirección que se pulsa).
@@ -1738,7 +1743,7 @@ func _handle_energia(delta: float) -> void:
 		if not blocking:   # guardia activa: no regenera (si no, el drenaje se compensaría solo)
 			energia = minf(energia + ENERGIA_REGEN * delta, ENERGIA_MAX)
 	else:
-		var drain := ENERGIA_DRAIN * forms[current_form].drenaje_mult * (0.45 if not _en_combate() else 1.0)
+		var drain := ENERGIA_DRAIN * forms[current_form].drenaje_mult * (0.45 if not _en_combate() else 1.0) * mult_energia_externo
 		if not cinematica_activa:   # en cinemáticas (intros, tótems) la forma no gasta energía
 			energia -= drain * delta
 		if energia <= 0.0 and not cinematica_activa:

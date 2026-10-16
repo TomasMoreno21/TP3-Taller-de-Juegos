@@ -2,7 +2,6 @@
 
 [ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="2_cam"]
-[ext_resource type="PackedScene" uid="uid://ssvmlcpooygw" path="res://scenes/fondo_bosque.tscn" id="3_fondo"]
 [ext_resource type="Script" uid="uid://c20i4wytflcth" path="res://scripts/setup_progresion_nivel.gd" id="4_setup"]
 [ext_resource type="PackedScene" uid="uid://x0o25yeqfgsm" path="res://scenes/encounter.tscn" id="5_enc"]
 [ext_resource type="Script" uid="uid://bwvbj2bycs3nq" path="res://scripts/nivel_jefe.gd" id="6_niveljefe"]
@@ -12,6 +11,12 @@
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="10_levelup"]
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="12_dialog"]
 [ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="14_pick"]
+[ext_resource type="PackedScene" path="res://scenes/fondo_cueva_profunda.tscn" id="30_fondo"]
+[ext_resource type="PackedScene" path="res://scenes/noche_profunda.tscn" id="31_noche"]
+[ext_resource type="PackedScene" path="res://scenes/atmosfera_nivel3.tscn" id="32_atm"]
+[ext_resource type="Script" uid="uid://dotehvvuk7udf" path="res://scripts/latido_cueva.gd" id="33_latido"]
+[ext_resource type="Script" uid="uid://d3nihovco06v7" path="res://scripts/zona_latido.gd" id="34_zona"]
+[ext_resource type="PackedScene" uid="uid://skni1dec001" path="res://scenes/decorativo.tscn" id="36_deco"]
 [ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="ck_1"]
 [ext_resource type="Script" uid="uid://b2knw64qxpag6" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
 
@@ -20,6 +25,9 @@ size = Vector2(4900, 200)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso_der"]
 size = Vector2(3700, 200)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_techo_pasillo"]
+size = Vector2(3700, 760)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_jefe"]
 size = Vector2(1900, 1000)
@@ -42,26 +50,36 @@ script = ExtResource("4_setup")
 nivel_minimo = 4
 formas_forzadas = Array[int]([0, 1, 2, 3])
 
-[node name="FondoBosque" parent="." unique_id=794215151 instance=ExtResource("3_fondo")]
+[node name="FondoCuevaProfunda" parent="." unique_id=1247170179 instance=ExtResource("30_fondo")]
+
+[node name="NocheProfunda" parent="." unique_id=647659213 instance=ExtResource("31_noche")]
+
+[node name="LuciernagasAmbiente" parent="NocheProfunda" index="1"]
 visible = false
+cantidad = 0
+con_luz = 0
+
+[node name="HojasAmbiente" parent="NocheProfunda" index="2"]
+visible = false
+emitting = false
 
 [node name="Piso" type="StaticBody2D" parent="." unique_id=699220115]
 position = Vector2(4600, 1100)
 
 [node name="PisoVisual" type="Polygon2D" parent="Piso" unique_id=323803502]
-color = Color(0.2, 0.18, 0.27, 1)
+color = Color(0.1, 0.105, 0.11, 1)
 polygon = PackedVector2Array(-4600, -100, 300, -100, 300, 100, -4600, 100)
 
 [node name="PisoVisualDer" type="Polygon2D" parent="Piso" unique_id=1983532723]
-color = Color(0.2, 0.18, 0.27, 1)
+color = Color(0.1, 0.105, 0.11, 1)
 polygon = PackedVector2Array(900, -100, 4600, -100, 4600, 100, 900, 100)
 
 [node name="LineaSuperior" type="Polygon2D" parent="Piso" unique_id=949387143]
-color = Color(0.42, 0.3, 0.55, 1)
+color = Color(0.24, 0.25, 0.26, 1)
 polygon = PackedVector2Array(-4600, -100, 300, -100, 300, -84, -4600, -84)
 
 [node name="LineaSuperiorDer" type="Polygon2D" parent="Piso" unique_id=632991067]
-color = Color(0.42, 0.3, 0.55, 1)
+color = Color(0.24, 0.25, 0.26, 1)
 polygon = PackedVector2Array(900, -100, 4600, -100, 4600, -84, 900, -84)
 
 [node name="PisoCollision" type="CollisionShape2D" parent="Piso" unique_id=855132670]
@@ -71,6 +89,189 @@ shape = SubResource("RectangleShape2D_piso")
 [node name="PisoCollisionDer" type="CollisionShape2D" parent="Piso" unique_id=1302475963]
 position = Vector2(2750, 1)
 shape = SubResource("RectangleShape2D_piso_der")
+
+[node name="TechoPasillo" type="StaticBody2D" parent="." unique_id=1167538500]
+position = Vector2(1850, -320)
+
+[node name="Visual" type="Polygon2D" parent="TechoPasillo" unique_id=89171997]
+color = Color(0.1, 0.105, 0.11, 1)
+polygon = PackedVector2Array(-1850, -380, 1850, -380, 1850, 380, -1850, 380)
+
+[node name="Linea" type="Polygon2D" parent="TechoPasillo" unique_id=2004744105]
+color = Color(0.24, 0.25, 0.26, 1)
+polygon = PackedVector2Array(-1850, 364, 1850, 364, 1850, 380, -1850, 380)
+
+[node name="Collision" type="CollisionShape2D" parent="TechoPasillo" unique_id=1411522103]
+shape = SubResource("RectangleShape2D_techo_pasillo")
+
+[node name="Latido" type="Node" parent="." unique_id=219887966]
+script = ExtResource("33_latido")
+oscuridad = NodePath("../NocheProfunda/Oscuridad")
+
+[node name="Pasillo" type="Node2D" parent="Latido" unique_id=1661127582]
+position = Vector2(2150, 500)
+script = ExtResource("34_zona")
+tamano = Vector2(4300, 1400)
+color_ambiente = Color(0.64, 0.82, 0.96, 1)
+frecuencia = 0.35
+intensidad = 0.015
+
+[node name="Antesala" type="Node2D" parent="Latido" unique_id=815325717]
+position = Vector2(4600, 500)
+script = ExtResource("34_zona")
+tamano = Vector2(600, 1400)
+color_ambiente = Color(0.66, 0.74, 0.96, 1)
+frecuencia = 0.55
+
+[node name="Arena" type="Node2D" parent="Latido" unique_id=1066825232 groups=["latido_jefe"]]
+position = Vector2(5200, 300)
+script = ExtResource("34_zona")
+tamano = Vector2(3200, 2200)
+color_ambiente = Color(0.68, 0.7, 0.94, 1)
+
+[node name="AtmosferaNivel3" parent="." unique_id=1167535473 instance=ExtResource("32_atm")]
+
+[node name="MotasVioleta" parent="AtmosferaNivel3" index="2"]
+visible = false
+emitting = false
+
+[node name="EsporasCorazon" parent="AtmosferaNivel3" index="3"]
+amount = 30
+direction = Vector2(0.2, 1)
+spread = 25.0
+initial_velocity_min = 3.0
+initial_velocity_max = 9.0
+color = Color(0.72, 0.72, 0.78, 0.3)
+
+[node name="Nieblas" parent="AtmosferaNivel3" index="4"]
+visible = false
+
+[node name="Decoracion" type="Node2D" parent="." unique_id=239755062]
+z_index = -5
+
+[node name="Estalagmita1" parent="Decoracion" unique_id=1610986715 instance=ExtResource("36_deco")]
+position = Vector2(300, 1000)
+tipo = 8
+escala = 3.4
+color_noche = Color(0.5, 0.7, 0.8, 1)
+sombra = false
+viento = false
+
+[node name="Hongos1" parent="Decoracion" unique_id=1763146811 instance=ExtResource("36_deco")]
+position = Vector2(900, 1000)
+tipo = 21
+escala = 3.0
+flip_h = true
+color_noche = Color(0.5, 0.7, 0.8, 1)
+sombra = false
+viento = false
+
+[node name="Piedra1" parent="Decoracion" unique_id=414911935 instance=ExtResource("36_deco")]
+position = Vector2(1600, 1000)
+tipo = 4
+escala = 3.2
+color_noche = Color(0.5, 0.7, 0.8, 1)
+sombra = false
+viento = false
+
+[node name="Cristal1" parent="Decoracion" unique_id=1836224310 instance=ExtResource("36_deco")]
+position = Vector2(2100, 1000)
+tipo = 10
+escala = 3.0
+halo_color = Color(0.2, 0.9, 0.85, 1)
+
+[node name="Estalagmita2" parent="Decoracion" unique_id=278847320 instance=ExtResource("36_deco")]
+position = Vector2(2600, 1000)
+tipo = 8
+escala = 3.8
+flip_h = true
+color_noche = Color(0.5, 0.7, 0.8, 1)
+sombra = false
+viento = false
+
+[node name="Hongos2" parent="Decoracion" unique_id=808064847 instance=ExtResource("36_deco")]
+position = Vector2(3100, 1000)
+tipo = 21
+escala = 3.0
+color_noche = Color(0.5, 0.7, 0.8, 1)
+sombra = false
+viento = false
+
+[node name="Cristal2" parent="Decoracion" unique_id=1740440855 instance=ExtResource("36_deco")]
+position = Vector2(3550, 1000)
+tipo = 10
+escala = 2.6
+flip_h = true
+halo_color = Color(0.2, 0.9, 0.85, 1)
+
+[node name="Estalactita1" parent="Decoracion" unique_id=97955067 instance=ExtResource("36_deco")]
+position = Vector2(550, 60)
+tipo = 9
+escala = 3.4
+color_noche = Color(0.5, 0.7, 0.8, 1)
+sombra = false
+viento = false
+
+[node name="Raices1" parent="Decoracion" unique_id=861474956 instance=ExtResource("36_deco")]
+position = Vector2(1250, 60)
+tipo = 22
+escala = 3.2
+flip_h = true
+color_noche = Color(0.5, 0.7, 0.8, 1)
+sombra = false
+viento = false
+
+[node name="Estalactita2" parent="Decoracion" unique_id=1876497867 instance=ExtResource("36_deco")]
+position = Vector2(1950, 60)
+tipo = 9
+escala = 3.8
+color_noche = Color(0.5, 0.7, 0.8, 1)
+sombra = false
+viento = false
+
+[node name="Raices2" parent="Decoracion" unique_id=418382318 instance=ExtResource("36_deco")]
+position = Vector2(2700, 60)
+tipo = 22
+escala = 3.0
+color_noche = Color(0.5, 0.7, 0.8, 1)
+sombra = false
+viento = false
+
+[node name="Estalactita3" parent="Decoracion" unique_id=1962443641 instance=ExtResource("36_deco")]
+position = Vector2(3400, 60)
+tipo = 9
+escala = 3.2
+flip_h = true
+color_noche = Color(0.5, 0.7, 0.8, 1)
+sombra = false
+viento = false
+
+[node name="Estatua" parent="Decoracion" groups=["destruible_f2"] unique_id=70345146 instance=ExtResource("36_deco")]
+position = Vector2(4100, 1000)
+tipo = 20
+escala = 3.0
+
+[node name="Velas" parent="Decoracion" groups=["destruible_f2"] unique_id=1295040949 instance=ExtResource("36_deco")]
+position = Vector2(4518, 1000)
+tipo = 13
+escala = 2.8
+
+[node name="Huesos" parent="Decoracion" groups=["destruible_f2"] unique_id=1419961560 instance=ExtResource("36_deco")]
+position = Vector2(4520, 1000)
+tipo = 16
+escala = 2.8
+flip_h = true
+
+[node name="Brasero1" parent="Decoracion" groups=["destruible_f2"] unique_id=2081774165 instance=ExtResource("36_deco")]
+position = Vector2(4794, 1000)
+tipo = 12
+escala = 3.2
+
+[node name="Brasero2" parent="Decoracion" groups=["destruible_f2"] unique_id=143448641 instance=ExtResource("36_deco")]
+position = Vector2(5615, 1000)
+tipo = 12
+escala = 3.2
+flip_h = true
 
 [node name="DialogoIntro" parent="." unique_id=2086547178 instance=ExtResource("12_dialog")]
 position = Vector2(500, 900)
@@ -85,6 +286,7 @@ position = Vector2(1050, 940)
 [node name="Encounter" parent="." unique_id=1219823109 instance=ExtResource("5_enc")]
 position = Vector2(5200, 970)
 camara_offset_y = 0.0
+antesala_silencio = 0.3
 
 [node name="JefeEstrella" parent="Encounter/Enemies" parent_id_path=PackedInt32Array(1219823109, 223207692) index="0" unique_id=641933076 instance=ExtResource("7_jefe")]
 position = Vector2(0, 30)
@@ -93,11 +295,14 @@ position = Vector2(0, 30)
 position = Vector2(0, -440)
 shape = SubResource("RectangleShape2D_arena_jefe")
 
+[node name="ArenaVisual" parent="Encounter/Arena" index="1"]
+position = Vector2(-5200, -969)
+
 [node name="CheckpointInicio" parent="." unique_id=1234388143 instance=ExtResource("ck_1")]
 position = Vector2(1300, 970)
 
 [node name="CheckpointPreJefe" parent="." unique_id=576380468 instance=ExtResource("ck_1")]
-position = Vector2(4000, 970)
+position = Vector2(2814, 926)
 
 [node name="Hud" parent="." unique_id=2014128999 instance=ExtResource("8_hud")]
 visible = false
@@ -112,4 +317,6 @@ visible = false
 script = ExtResource("titulo_niv")
 titulo = "El Santuario"
 
+[editable path="NocheProfunda"]
+[editable path="AtmosferaNivel3"]
 [editable path="Encounter"]

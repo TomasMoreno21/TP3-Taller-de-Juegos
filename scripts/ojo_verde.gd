@@ -39,6 +39,7 @@ var abierto := false
 var acorazado := false
 var dano_minimo_coraza := 24
 var golpe_proyectil := false   # lo marca el proyectil del jugador antes de take_damage
+var sonico_cierra := false     # ojos altos: el sónico los persigue y los cierra (lo fija la Estrella antes de add_child)
 var _aviso_t := 0.0
 var _aviso_dur := 0.0
 var _apertura := 0.0         # 0 = cerrado, 1 = abierto (anima el dibujo)
@@ -57,6 +58,8 @@ func _ready() -> void:
 		_apertura = 1.0   # en el editor se ve abierto para ubicarlo
 		return
 	add_to_group("ojo_verde")
+	if sonico_cierra:
+		add_to_group("cristal")   # el sónico del Murciélago lo persigue
 	collision_layer = 2
 	collision_mask = 0
 	_poner_colision(false)
@@ -134,8 +137,9 @@ func take_damage(_cantidad: int, _kb: float = 0.0, _dir: int = 1, _critico: bool
 		return
 	if golpe_proyectil:
 		golpe_proyectil = false
-		_rebotar()   # el sónico no lo cierra
-		return
+		if not sonico_cierra or acorazado:
+			_rebotar()   # los bajos/medios y la coraza no se cierran con el sónico
+			return
 	var p := get_tree().get_first_node_in_group("player")
 	if acorazado and (p == null or int(p.get("current_form")) != 2 or _cantidad < dano_minimo_coraza):
 		_rebotar()

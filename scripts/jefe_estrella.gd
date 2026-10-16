@@ -9,7 +9,9 @@ extends Node2D
 ## F2 (ciclo): al entrar, el piso central se rompe (foso con pinchos: Lobo/Murciélago lo cruzan).
 ## Tandas de torretas (una acorazada = Oso, a los dos lados del foso) + rayo grueso del ojo (avisa y pega 35) +
 ## ojo → el ojo se eleva fuera del alcance del salto: ventana aérea (Murciélago).
-## Por ahora la F3 repite el ciclo de la F2.
+## F3 (duelo, refs: Maestro de Almas, Hilda Berg, Mantis Lords): sin ojos verdes. Se arranca del tallo,
+## flota y encadena combos (picada con ondas, embestida horizontal/diagonal, orbes que giran, lluvia de
+## lanzas) y después queda agotada a ras del piso con el ojo vulnerable.
 ## Se integra al Encounter igual que un enemigo manual (preparar_ola / activar / died / health).
 
 signal salud_cambio(hp: int, max_hp: int)
@@ -20,6 +22,7 @@ signal died
 const LANZA_SCENE := preload("res://scenes/lanza_estrella.tscn")
 const ORBE_VIDA_SCENE := preload("res://scenes/pickup_vida.tscn")
 const OJO_SCENE := preload("res://scenes/ojo_verde.tscn")
+const ATAQUE_SCENE := preload("res://scenes/ataque_jefe.tscn")
 const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 
 enum Fase { UNO, DOS, TRES }
@@ -32,7 +35,9 @@ enum Fase { UNO, DOS, TRES }
 @export var curacion_fin_fase := 25         ## orbe de vida al cambiar de fase
 @export var distancia_orbe := 520.0         ## px del centro (del lado del jugador) donde aparece el orbe
 @export var mostrar_barra_hud := false      ## la vida se lee en las puntas del cuerpo, no en el HUD
-@export var orden_puntas: Array[int] = [0, 4, 2, 6, 1, 5, 3, 7]   ## en qué orden se rompen las puntas (0 = arriba)
+@export var orden_puntas: Array[int] = [5, 0, 3, 1, 2, 6, 4]   ## en qué orden se rompen las puntas (5 = arriba, 0 = derecha)
+@export_range(0.0, 1.0, 0.01) var tinte_fase := 0.35   ## cuánto tiñe el color de la F2/F3 al dibujo (la F1 sin tinte)
+@export var drenaje_energia_jefe := 0.35   ## multiplicador del gasto de energía en la pelea ("el amuleto arde")
 
 @export_group("Ojos verdes (tandas)")
 @export var ojos_por_tanda_min := 3
@@ -86,9 +91,9 @@ enum Fase { UNO, DOS, TRES }
 @export var aviso_derrumbe := 1.2           ## s de temblor antes de que el piso central se rompa
 
 @export_group("Rayo grueso del ojo (F2)")
-@export var dano_rayo_grueso := 35
-@export var aviso_rayo_grueso := 1.0        ## s que marca la dirección (franja translúcida) antes de disparar
-@export var ancho_rayo_grueso := 120.0
+@export var dano_rayo_grueso := 25
+@export var aviso_rayo_grueso := 1.3        ## s que marca la dirección (franja translúcida) antes de disparar
+@export var ancho_rayo_grueso := 70.0
 @export var primer_rayo_grueso := 3.0       ## s desde que se abren las torretas
 @export var color_rayo_grueso := Color(0.75, 0.9, 1.0)
 
@@ -107,10 +112,6 @@ enum Fase { UNO, DOS, TRES }
 @export var oleada2_arqueros := 2
 @export var pausa_entre_oleadas := 1.5
 @export var margen_spawn := 150.0           ## px desde el borde visible donde entran los enemigos
-@export var intervalo_lanza_pozo := 5.5
-@export var lanzas_desde_oleada := 2       ## las lanzas del pozo empiezan en esta oleada (1 = desde el inicio)
-@export var dano_lanza_pozo := 15
-@export var aviso_lanza_pozo := 0.8
 @export var tiempo_hundirse := 1.2
 @export var tiempo_resurgir := 1.4
 @export var profundidad_escondida := 500.0  ## px bajo el piso donde queda el cuerpo escondido
@@ -130,6 +131,67 @@ enum Fase { UNO, DOS, TRES }
 @export var tip_ojos := "¡Cerrá sus ojos! Lo debilitan."           ## primera tanda de la F2
 @export var tip_coraza := "Ese ojo tiene coraza… solo el Oso la parte."   ## primer ojo acorazado
 @export var tip_ventana := "¡Abrió el ojo! Volale encima, rápido."    ## primera ventana aérea
+@export var tip_amuleto := "¡El amuleto arde! Tus formas aguantan más."   ## al empezar la pelea
+
+@export_group("F3: duelo")
+@export var altura_duelo := 650.0           ## altura del ojo mientras pelea
+@export var seguimiento_duelo := 1.2        ## qué tan rápido sigue al jugador en x entre ataques
+@export var respiro_entre_ataques := 1.0
+@export var respiro_duelo := 1.5            ## después de cada ventana
+@export var ventana_duelo := 3.0            ## s agotada con el ojo vulnerable
+@export var altura_agotada := 220.0         ## el ojo a esta altura: lo alcanza cualquier forma parada
+@export var ancho_cuerpo := 360.0           ## media anchura del cuerpo para el daño por contacto (× escala)
+@export var alto_cuerpo_arriba := 330.0     ## px del cuerpo sobre el ojo (× escala)
+@export var alto_cuerpo_abajo := 311.0      ## px del cuerpo bajo el ojo (× escala)
+@export var dano_picada := 20
+@export var aviso_picada := 1.0
+@export var altura_picada := 1000.0         ## desde dónde cae
+@export var dano_onda_picada := 12
+@export var velocidad_onda_picada := 600.0
+@export var dano_embestida := 18
+@export var aviso_embestida := 1.1
+@export var velocidad_embestida := 1000.0
+@export var hueco_embestida := 200.0        ## px libres bajo la estrella al embestir (Lobo y Murciélago pasan)
+@export var prob_diagonal := 0.4
+@export var dano_orbe := 12
+@export var orbes_cantidad := 2
+@export var orbe_radio := 60.0
+@export var orbes_radio_ini := 300.0
+@export var orbes_radio_fin := 750.0
+@export var orbes_duracion := 3.5
+@export var orbes_aviso := 0.6
+@export var orbes_giro := 2.4               ## rad/s
+@export var dano_cuchilla := 15
+@export var cuchillas_cantidad := 3
+@export var aviso_cuchillas := 1.2
+@export var vuelo_cuchilla := 0.45
+@export var escala_pieza := 0.45            ## tamaño de las puntas rotas que reusa (órbita y cuchillas)
+@export var golpes_caparazon := 3           ## golpes fuertes del Oso para romper el caparazón
+@export var tiempo_caparazon := 6.0         ## si no se rompe en este tiempo, se levanta sin ventana
+@export_range(0.0, 1.0, 0.05) var prob_escudo_nino := 0.35   ## al romper el caparazón, a veces usa al niño de escudo
+@export var duracion_escudo := 1.5
+@export var tope_dano_ventana := 40         ## daño máximo por ventana: al llegar, el ojo se cierra
+@export var absorber_cultistas := 3         ## al entrar a la F3 absorbe devotos
+@export var duracion_absorcion := 1.8
+
+@export_group("Ambiente por fase (latido de la sala y luciérnagas)")
+@export var latido_color_fase: Array[Color] = [Color(0.68, 0.7, 0.94), Color(0.66, 0.56, 0.92), Color(0.86, 0.56, 0.62)]
+@export var latido_frec_fase: Array[float] = [0.5, 0.8, 1.1]
+@export var latido_int_fase: Array[float] = [0.03, 0.05, 0.07]
+@export var luciernagas_color_fase: Array[Color] = [Color(0.25, 0.9, 0.85), Color(0.6, 0.45, 0.95), Color(0.95, 0.4, 0.4)]
+@export var luciernagas_nucleo_fase: Array[Color] = [Color(0.75, 1.0, 0.95), Color(0.85, 0.8, 1.0), Color(1.0, 0.8, 0.8)]
+@export var duracion_cambio_ambiente := 1.5
+@export var latido_pico_aparicion := 0.12   ## intensidad del latido cuando la Estrella sale del piso
+
+@export_group("Ambiente de combate")
+@export var piedritas_pelea := true          ## caen polvo y piedras del techo de vez en cuando (sin daño)
+@export var intervalo_piedritas := Vector2(4.0, 8.0)
+
+@export_group("Aparición (estilo Cult of the Lamb)")
+@export var aparicion_cine := true          ## sube desde el suelo con temblor la primera vez
+@export var aparicion_temblor := 2.0        ## s de temblor creciente antes de salir
+@export var aparicion_subida := 0.6         ## s que tarda en salir del piso
+@export var aparicion_shake_max := 12.0
 @export_group("")
 @export var muerte_slowmo_escala := 0.2
 
@@ -154,8 +216,8 @@ var _plat_y0: Array = []
 var _tw_sala: Tween
 var _invocados: Array = []
 var _invocados_vivos := 0
-var _lanza_pozo_t := 0.0
-var _oleada_actual := 0
+var _aparicion_vista := false
+var _piedritas_t := 3.0
 var _tips_dados := {}
 var _tw_cuerpo: Tween
 var _tw_ojo: Tween
@@ -169,11 +231,25 @@ var _rayo_t := 0.0
 var _ultimo_tirador: Node = null
 var _puntas: Array = []        # punta_estrella.gd, en orden Punta1..8
 var _puntas_rotas := 0
+var _sin_tallo := false       # F3: se arrancó del tallo
+var _x_base := 0.0            # x del cuerpo que respeta el temblor del aviso de cierre
+var _temblando := false
+var _ultimo_ataque := ""
+var _orbes_nodos: Array = []
+var _orbes_t := 0.0
+var _orbes_ang := 0.0
+var _contacto_dano := 0          # >0 mientras un ataque daña por contacto
+var _caparazon_nodos: Array = []
+var _golpes_cap := 0
+var _dano_ventana := 0
+var _cuchillas: Array = []
+var _devotos: Array = []
 
 @onready var tallo: Polygon2D = $Tallo
 @onready var cuerpo: Node2D = $Cuerpo
 @onready var estrella: Node2D = $Cuerpo/Estrella
 @onready var nucleo: Polygon2D = $Cuerpo/Estrella/Nucleo
+@onready var cabeza: AnimatedSprite2D = get_node_or_null("Cuerpo/Cabeza")   # arte de Micaela: fuente de los frames
 @onready var ojo = $Cuerpo/Ojo   # ojo_central.gd
 @onready var hurtbox = $Cuerpo/Hurtbox   # ojo_central_hurtbox.gd
 @onready var nudo = $Nudo   # nudo_tallo.gd
@@ -208,6 +284,10 @@ func _ready() -> void:
 	_pintar(color_fase1)
 	nudo.roto.connect(_on_nudo_roto)
 	_sembrar()
+	if cabeza != null:
+		cabeza.visible = false
+		cabeza.frame_changed.connect(_sync_textura)
+		_sync_textura()
 
 
 # --- API del Encounter (misma firma que enemy.gd) ---
@@ -232,14 +312,35 @@ func preparar_ola() -> void:
 	_sembrar()
 	_restaurar_piso()
 	_restaurar_sala()
+	_restaurar_destruibles()
 	_limpiar_invocados()
 	_grueso_activo = false
+	_sin_tallo = false
+	_contacto_dano = 0
+	_limpiar_orbes()
+	_limpiar_caparazon()
+	_limpiar_cuchillas()
+	_limpiar_devotos()
+	_contener_ataque(false)
+	if ojo != null:
+		ojo.nino_escudo = 0.0
+	_x_base = 0.0
+	cuerpo.position.x = 0.0
+	cuerpo.modulate.a = 1.0
 	cuerpo.visible = true
 	cuerpo.rotation = 0.0
 	nudo.restaurar()
 	_hurtbox_on(false)
 	_poner_ojo(0.0)
 	_poner_cuerpo(false, true)
+	_energia_jefe(false)
+	_ambiente_combate(false)
+	_ambiente_fase(true)
+	if aparicion_cine and not _aparicion_vista:
+		cuerpo.position.y = profundidad_escondida   # escondida bajo el piso hasta la aparición
+		cuerpo.visible = false
+		nudo.visible = false
+		_ajustar_tallo()
 
 
 func activar() -> void:
@@ -249,7 +350,6 @@ func activar() -> void:
 	_activo = true
 	salud_cambio.emit(health, vida_max)
 	fase_cambio.emit(fase)
-	_cine_entrada()
 	_bucle()
 
 
@@ -271,12 +371,23 @@ func take_damage(_cantidad: int, _kb: float = 0.0, _dir: int = 1, _critico: bool
 func _bucle() -> void:
 	_gen += 1
 	var gen := _gen
+	await _aparicion(gen)
+	if not _sigue(gen):
+		return
+	_energia_jefe(true)
+	_ambiente_combate(true)
+	_tip_una_vez("amuleto", tip_amuleto)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud != null and hud.get("dial") != null and hud.dial.has_method("pulso_energia"):
+		hud.dial.pulso_energia()
 	await _esperar(espera_inicio)
 	while _sigue(gen):
 		if fase == Fase.UNO:
 			await _ciclo_f1(gen)
-		else:
+		elif fase == Fase.DOS:
 			await _ciclo_f2(gen)
+		else:
+			await _ciclo_f3(gen)
 
 
 func _ciclo_f1(gen: int) -> void:
@@ -402,13 +513,15 @@ func _sugerir_forma(idx: int, seg: float) -> void:
 
 ## Último tramo de una ventana: el ojo parpadea y la Estrella tiembla (se va a cerrar).
 func _aviso_cierre_tick() -> void:
-	var en_ventana := (_estado == "castigo" or _estado == "ventana_aerea") and _ventana_t > 0.0
+	var en_ventana := (_estado == "castigo" or _estado == "ventana_aerea" or _estado == "agotada") and _ventana_t > 0.0
 	if en_ventana and _ventana_t <= aviso_cierre:
 		var t := Time.get_ticks_msec() * 0.001
 		ojo.apertura = 0.7 + 0.3 * absf(sin(t * 14.0))
-		cuerpo.position.x = sin(t * 55.0) * temblor_cierre
-	elif cuerpo.position.x != 0.0:
-		cuerpo.position.x = 0.0
+		cuerpo.position.x = _x_base + sin(t * 55.0) * temblor_cierre
+		_temblando = true
+	elif _temblando:
+		_temblando = false
+		cuerpo.position.x = _x_base
 
 
 func _sigue(gen: int) -> bool:
@@ -418,21 +531,27 @@ func _sigue(gen: int) -> bool:
 func _physics_process(delta: float) -> void:
 	if not _activo or _muerto:
 		return
-	if _estado != "castigo" and _estado != "ventana_aerea":
+	if _estado != "castigo" and _estado != "ventana_aerea" and _estado != "agotada":
 		estrella.rotation += giro_velocidad * delta
 	_aviso_cierre_tick()
+	if _estado == "duelo":
+		_seguir_jugador(delta)
+	if _contacto_dano > 0:
+		_contacto(_contacto_dano)
+	if not _orbes_nodos.is_empty():
+		_orbes_tick(delta)
 	_mirar_jugador(delta)
-	if _estado == "llaves" or _estado == "torretas":
+	if piedritas_pelea and _estado != "aparicion":
+		_piedritas_t -= delta
+		if _piedritas_t <= 0.0:
+			_piedritas_t = randf_range(intervalo_piedritas.x, intervalo_piedritas.y)
+			if DisplayServer.get_name() != "headless":
+				JuiceFx.escombros(get_tree(), techo.global_position + Vector2(randf_range(-1100.0, 1100.0), 270.0), Color(0.3, 0.3, 0.34), 4, 0.7)
+	if (_estado == "llaves" or _estado == "torretas") and not _grueso_activo:
 		_rayo_t -= delta
 		if _rayo_t <= 0.0:
 			_disparar_rayo()
 			_rayo_t = intervalo_rayo_f1 if fase == Fase.UNO else _rampa(rampa_rayo, 2.0)
-	if _estado == "interludio":
-		if _oleada_actual >= lanzas_desde_oleada:
-			_lanza_pozo_t -= delta
-		if _lanza_pozo_t <= 0.0:
-			_lanzar_lanza_pozo()
-			_lanza_pozo_t = intervalo_lanza_pozo
 	if _estado == "torretas" and _rampa(rampa_rayo_grueso, 0.0) > 0.0 and not _grueso_activo:
 		_grueso_t -= delta
 		if _grueso_t <= 0.0:
@@ -468,6 +587,7 @@ func _tanda(gen: int, torretas: bool) -> void:
 		var o = OJO_SCENE.instantiate()
 		o.position = puntos[i]
 		o.dano_minimo_coraza = dano_minimo_coraza
+		o.sonico_cierra = _franja(puntos[i]) >= 2   # más de media pantalla: vale el sónico
 		ojos_raiz.add_child(o)
 		o.cerrado.connect(_on_llave_cerrada)
 		o.aparecer(energia_por_ojo, torretas and i == 0, escalonado_aparicion * i)
@@ -606,7 +726,22 @@ func _on_nudo_roto() -> void:
 # --- Castigo: daño al ojo ---
 
 func golpe_ojo(cantidad: int, _dir: int, _critico: bool) -> void:
-	if _muerto or not _activo or (_estado != "castigo" and _estado != "ventana_aerea"):
+	if _muerto or not _activo:
+		return
+	if _estado == "caparazon":
+		_golpe_caparazon(cantidad)
+		return
+	if _estado == "agotada":
+		var resto := tope_dano_ventana - _dano_ventana
+		if resto <= 0:
+			return
+		var c := mini(cantidad, resto)
+		_dano_ventana += c
+		_recibir_dano(c)
+		if not _muerto and _dano_ventana >= tope_dano_ventana and _estado == "agotada":
+			_estado = "fin_castigo"   # tope de la ventana: el ojo se cierra
+		return
+	if _estado != "castigo" and _estado != "ventana_aerea":
 		return
 	_recibir_dano(cantidad)
 
@@ -668,6 +803,7 @@ func _transicion_fase(gen: int) -> void:
 	fase_cambio.emit(fase)
 	var col := _color_fase()
 	_pintar(col)
+	_ambiente_fase()
 	_rugido(10.0)
 	if DisplayServer.get_name() != "headless":
 		JefeCine.grieta(get_tree(), col)
@@ -675,6 +811,7 @@ func _transicion_fase(gen: int) -> void:
 	_soltar_orbe_vida()
 	_ciclo = 0
 	if fase == Fase.DOS:
+		_destruir_grupo("destruible_f2")
 		await _romper_piso()
 		if not _sigue(gen):
 			return
@@ -689,6 +826,16 @@ func _transicion_fase(gen: int) -> void:
 			return
 		await _resurgir()
 		return
+	if fase == Fase.TRES:
+		await _derrumbe_f3()
+		if not _sigue(gen):
+			return
+		await _absorber(gen)
+		if not _sigue(gen):
+			return
+		await _arrancarse()
+		if not _sigue(gen):
+			return
 	await _esperar(2.0)
 	if not _sigue(gen):
 		return
@@ -744,7 +891,7 @@ func _lanzar_lanza() -> void:
 	l.aviso = aviso_lanza
 	l.ancho = ancho_lanza
 	l.empuje = empuje_lanza
-	l.color = nucleo.color.lightened(0.2)
+	l.color = _color_fase().lightened(0.2)
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	destino.add_child(l)
 
@@ -804,6 +951,10 @@ func _rayo_grueso() -> void:
 	if p == null:
 		return
 	_grueso_activo = true
+	for _i in 20:   # nunca junto a un rayo chico (encierros): espera hasta 2 s a que termine
+		if not _hay_rayo_chico():
+			break
+		await _esperar(0.1)
 	_poner_ojo(1.0)
 	await _esperar(0.3)
 	if _muerto or not _activo or _estado != "torretas":
@@ -828,7 +979,15 @@ func _rayo_grueso() -> void:
 	await _esperar(aviso_rayo_grueso + 0.65)
 	if _estado == "torretas":
 		_poner_ojo(0.0)
+	_rayo_t = maxf(_rayo_t, 0.5)   # respiro antes del próximo rayo chico
 	_grueso_activo = false
+
+
+func _hay_rayo_chico() -> bool:
+	for n in get_tree().get_nodes_in_group("ataque_jefe"):
+		if is_instance_valid(n) and n.get("rayo") == true and float(n.get("ancho")) < ancho_rayo_grueso:
+			return true
+	return false
 
 
 ## Entrada a la F2: el piso bajo la Estrella tiembla y se rompe; queda el foso con pinchos.
@@ -933,21 +1092,16 @@ func _resurgir() -> void:
 	_rugido(12.0)
 
 
-## Mientras está escondida: 2 oleadas de enemigos comunes; desde la oleada 2, lanzas desde el pozo.
+## Mientras está escondida no ataca: solo 2 oleadas de enemigos comunes (respiro y curación).
 func _interludio(gen: int) -> void:
 	_estado = "interludio"
-	_lanza_pozo_t = 2.5
-	_oleada_actual = 1
 	await _oleada(gen, oleada1_cultistas, 0)
 	if not _sigue(gen):
 		return
 	await _esperar(pausa_entre_oleadas)
 	if not _sigue(gen):
 		return
-	_oleada_actual = 2
 	await _oleada(gen, oleada2_cultistas, oleada2_arqueros)
-	_oleada_actual = 0
-	_limpiar_lanzas()
 
 
 func _oleada(gen: int, cultistas: int, arqueros: int) -> void:
@@ -1013,23 +1167,6 @@ func _mitad_vista() -> float:
 	return get_viewport().get_visible_rect().size.x * 0.5 / maxf(z, 0.01)
 
 
-## Una punta sale del fondo del foso hacia el cuerpo del jugador (aviso con línea y marca).
-func _lanzar_lanza_pozo() -> void:
-	var p := _obtener_player()
-	if p == null:
-		return
-	var l = LANZA_SCENE.instantiate()
-	l.desde = global_position + Vector2(0, 40)
-	l.hasta = Vector2(p.global_position.x, global_position.y - 80.0)
-	l.dano = dano_lanza_pozo
-	l.aviso = aviso_lanza_pozo
-	l.ancho = ancho_lanza
-	l.empuje = empuje_lanza
-	l.color = nucleo.color.lightened(0.2)
-	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
-	destino.add_child(l)
-
-
 ## Vuelve la sala de la F1 al instante (reinicio de la pelea).
 func _restaurar_sala() -> void:
 	if _tw_sala != null and _tw_sala.is_valid():
@@ -1053,6 +1190,639 @@ func _poner_plataforma(pl: Node, on: bool) -> void:
 	var cs := pl.get_node_or_null("Collision") as CollisionShape2D
 	if cs != null:
 		cs.set_deferred("disabled", not on)
+
+
+## Rompe las piezas del grupo (decoración que la Estrella destruye al cambiar de fase).
+func _destruir_grupo(grupo: String) -> void:
+	var headless := DisplayServer.get_name() == "headless"
+	for n in get_tree().get_nodes_in_group(grupo):
+		if not (n is Node2D) or not (n as Node2D).visible:
+			continue
+		var nd := n as Node2D
+		if not nd.has_meta("pos0"):
+			nd.set_meta("pos0", nd.position)
+			nd.set_meta("esc0", nd.scale)
+		if headless:
+			nd.visible = false
+			continue
+		JuiceFx.escombros(get_tree(), nd.global_position + Vector2(0, -60), Color(0.32, 0.32, 0.36), 10, 1.0)
+		var tw := nd.create_tween().set_parallel(true)
+		tw.tween_property(nd, "position:y", nd.position.y + 120.0, 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.tween_property(nd, "scale", nd.scale * 0.6, 0.4)
+		tw.tween_property(nd, "modulate:a", 0.0, 0.4)
+		tw.chain().tween_callback(func() -> void: nd.visible = false)
+	_rugido(4.0)
+
+
+## Reinicio: vuelve toda la decoración destruible a su lugar.
+func _restaurar_destruibles() -> void:
+	for grupo in ["destruible_f2", "destruible_f3"]:
+		for n in get_tree().get_nodes_in_group(grupo):
+			if not (n is Node2D):
+				continue
+			var nd := n as Node2D
+			if nd.has_meta("pos0"):
+				nd.position = nd.get_meta("pos0")
+				nd.scale = nd.get_meta("esc0")
+			nd.modulate.a = 1.0
+			nd.visible = true
+
+
+## Entrada a la F3: rompe lo que queda, se caen las plataformas y el pozo se cierra (vuelve el piso).
+func _derrumbe_f3() -> void:
+	_destruir_grupo("destruible_f3")
+	var headless := DisplayServer.get_name() == "headless"
+	var cam := get_viewport().get_camera_2d()
+	if cam != null and cam.has_method("shake"):
+		cam.shake(12.0, 0.8)
+	for i in plataformas_raiz.get_child_count():
+		var pl := plataformas_raiz.get_child(i) as Node2D
+		var cs := pl.get_node_or_null("Collision") as CollisionShape2D
+		if cs != null:
+			cs.set_deferred("disabled", true)
+		if headless:
+			pl.visible = false
+			continue
+		JuiceFx.escombros(get_tree(), pl.global_position, Color(0.3, 0.3, 0.34), 14, 1.1)
+		var tw := pl.create_tween().set_parallel(true)
+		tw.tween_property(pl, "position:y", pl.position.y + 300.0, 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.tween_property(pl, "modulate:a", 0.0, 0.6)
+		tw.chain().tween_callback(func() -> void: pl.visible = false)
+	# El pozo se cierra: la losa sube desde abajo y vuelve el piso.
+	var p := _obtener_player()
+	if p != null:
+		var local := to_local(p.global_position)
+		if absf(local.x) <= float(foso.ancho) * 0.5 and local.y > -143.0:
+			p.global_position = to_global(Vector2(local.x, -150.0))   # dentro del pozo: arriba del piso nuevo
+			p.set("velocity", Vector2.ZERO)
+	foso.activo = false
+	_poner_bordes_foso(false)
+	losa.visible = true
+	var cs_losa := losa.get_node_or_null("Collision") as CollisionShape2D
+	if cs_losa != null:
+		cs_losa.set_deferred("disabled", false)
+	if headless:
+		losa.position.y = 0.0
+		losa.modulate.a = 1.0
+		return
+	if _tw_losa != null and _tw_losa.is_valid():
+		_tw_losa.kill()
+	losa.position.y = 260.0
+	losa.modulate.a = 1.0
+	JuiceFx.escombros(get_tree(), losa.global_position + Vector2(0, -260), Color(0.32, 0.32, 0.36), 18, 1.3)
+	_tw_losa = create_tween()
+	_tw_losa.tween_property(losa, "position:y", 0.0, 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	await _tw_losa.finished
+
+
+# --- F3: duelo ---
+
+## Se arranca del tallo (que se quiebra) y sube a la altura del duelo.
+func _arrancarse() -> void:
+	_sin_tallo = true
+	if DisplayServer.get_name() != "headless":
+		for k in 4:
+			JuiceFx.escombros(get_tree(), global_position + Vector2(0, -80.0 - 130.0 * k), Color(0.36, 0.2, 0.32), 6, 0.9)
+	_rugido(12.0)
+	_ajustar_tallo()
+	nudo.visible = false
+	_x_base = cuerpo.position.x
+	await _mover_cuerpo(altura_duelo, 0.0, 0.8, true)
+
+
+## Combo de 2 ataques (3 en la segunda mitad) y después queda agotada.
+func _ciclo_f3(gen: int) -> void:
+	_estado = "duelo"
+	var segunda := health < int(round(vida_max * umbral_fase3 * 0.5))
+	var n := 3 if segunda else 2
+	for _k in n:
+		await _esperar(respiro_entre_ataques)
+		if not _sigue(gen):
+			return
+		var opciones := ["picada", "embestida", "orbes", "cuchillas"]
+		opciones.erase(_ultimo_ataque)
+		var ataque: String = opciones[_rng.randi() % opciones.size()]
+		_ultimo_ataque = ataque
+		match ataque:
+			"picada":
+				await _picada(gen)
+				if segunda and _sigue(gen):
+					await _picada(gen)   # Maestro de Almas: picadas encadenadas
+			"embestida":
+				await _embestida(gen, segunda)
+			"orbes":
+				await _orbes(gen)
+			"cuchillas":
+				await _cuchillas_ataque(gen)
+		if not _sigue(gen):
+			return
+		_estado = "duelo"
+	await _agotada(gen)
+	if not _sigue(gen):
+		return
+	_estado = "duelo"
+	await _esperar(respiro_duelo)
+
+
+## Dónde colgar efectos y ataques (la escena actual; en tests, el padre).
+func _destino() -> Node:
+	return get_tree().current_scene if get_tree().current_scene != null else get_parent()
+
+
+func _limite_x() -> float:
+	return maxf(_mitad_vista() - 450.0, 300.0)
+
+
+func _seguir_jugador(delta: float) -> void:
+	var p := _obtener_player()
+	if p == null:
+		return
+	var objetivo := clampf(to_local(p.global_position).x, -_limite_x(), _limite_x())
+	cuerpo.position.x = lerpf(cuerpo.position.x, objetivo, minf(seguimiento_duelo * delta, 1.0))
+	cuerpo.position.y = lerpf(cuerpo.position.y, -altura_duelo, minf(3.0 * delta, 1.0))
+	_x_base = cuerpo.position.x
+	_ajustar_tallo()
+
+
+## Daño por contacto: la caja del cuerpo (× escala) contra el cuerpo del jugador (pies → alto de su forma).
+func _contacto(dano: int) -> void:
+	var p := _obtener_player()
+	if p == null or float(p.get("_invuln_timer") if p.get("_invuln_timer") != null else 0.0) > 0.0:
+		return
+	var esc := cuerpo.scale.x
+	var c := cuerpo.global_position
+	var pies := p.global_position.y + 143.0
+	var alto := 318.0
+	var formas = p.get("forms")
+	if formas != null and int(p.get("current_form")) < formas.size():
+		alto = float(formas[int(p.get("current_form"))].collider_size.y)
+	var arriba := c.y - alto_cuerpo_arriba * esc
+	var abajo := c.y + alto_cuerpo_abajo * esc
+	if absf(p.global_position.x - c.x) < ancho_cuerpo * esc and pies > arriba and pies - alto < abajo:
+		p.take_damage(dano, 300.0, 1 if p.global_position.x >= c.x else -1)
+
+
+func _ataque_listo(gen: int) -> bool:
+	return _sigue(gen)
+
+
+## Maestro de Almas: se desvanece, reaparece arriba del jugador, avisa con sombra y cae; ondas a los lados.
+func _picada(gen: int) -> void:
+	_estado = "picada"
+	var p := _obtener_player()
+	if p == null:
+		return
+	var headless := DisplayServer.get_name() == "headless"
+	var x := clampf(to_local(p.global_position).x, -_limite_x(), _limite_x())
+	if not headless:
+		var tw := create_tween()
+		tw.tween_property(cuerpo, "modulate:a", 0.0, 0.25)
+		await tw.finished
+	cuerpo.position = Vector2(x, -altura_picada)
+	_x_base = x
+	_ajustar_tallo()
+	var sombra := _sombra_piso(x)
+	if not headless:
+		create_tween().tween_property(cuerpo, "modulate:a", 1.0, 0.2)
+	await _esperar(aviso_picada)
+	if is_instance_valid(sombra):
+		sombra.queue_free()
+	if not _sigue(gen):
+		return
+	_contacto_dano = dano_picada
+	await _mover_cuerpo(alto_cuerpo_abajo * cuerpo.scale.x, 0.0, 0.2)
+	_contacto(dano_picada)
+	_contacto_dano = 0
+	if not _sigue(gen):
+		return
+	_rugido(10.0)
+	if not headless:
+		JuiceFx.escombros(get_tree(), to_global(Vector2(x, -10)), Color(0.32, 0.32, 0.36), 14, 1.2)
+	for d in [-1, 1]:
+		var a = ATAQUE_SCENE.instantiate()
+		a.dano = dano_onda_picada
+		a.velocidad = velocidad_onda_picada
+		a.dir = d
+		a.tamano = Vector2(120, 110)
+		a.color = _color_fase().lightened(0.3)
+		a.aviso = 0.05
+		a.recorrido_max = _limite_x() * 2.0 + 600.0
+		_destino().add_child(a)
+		a.global_position = to_global(Vector2(x + d * 100.0, -55.0))
+	await _esperar(0.4)
+	if not _sigue(gen):
+		return
+	await _mover_cuerpo(altura_duelo, 0.0, 0.5)
+
+
+## Tauro / Mantis: va a un borde, marca la trayectoria y cruza (horizontal con hueco abajo o en diagonal).
+func _embestida(gen: int, ida_y_vuelta: bool) -> void:
+	_estado = "embestida"
+	var p := _obtener_player()
+	if p == null:
+		return
+	var lado := 1.0 if to_local(p.global_position).x < cuerpo.position.x else -1.0   # arranca del lado opuesto
+	var lim := _limite_x() + 150.0
+	var diagonal := _rng.randf() < prob_diagonal
+	var alto_horiz := hueco_embestida + alto_cuerpo_abajo * cuerpo.scale.x
+	var desde := Vector2(lado * lim, -(1100.0 if diagonal else alto_horiz))
+	var hasta := Vector2(-lado * lim, -(alto_cuerpo_abajo * cuerpo.scale.x if diagonal else alto_horiz))
+	await _ir_a(desde, 0.5)
+	if not _sigue(gen):
+		return
+	var linea := _linea_aviso(desde, hasta)
+	await _esperar(aviso_embestida)
+	if is_instance_valid(linea):
+		linea.queue_free()
+	if not _sigue(gen):
+		return
+	_contacto_dano = dano_embestida
+	await _ir_a(hasta, desde.distance_to(hasta) / maxf(velocidad_embestida, 1.0))
+	if ida_y_vuelta and _sigue(gen):
+		await _esperar(0.35)
+		await _ir_a(desde, desde.distance_to(hasta) / maxf(velocidad_embestida, 1.0))
+	_contacto_dano = 0
+	if not _sigue(gen):
+		return
+	await _mover_cuerpo(altura_duelo, 0.0, 0.5)
+
+
+## Copia de una de sus puntas (pieza texturizada del dibujo), centrada, para reusarla como arma.
+func _copia_punta(i: int) -> Polygon2D:
+	var rotas := _puntas.filter(func(pt) -> bool: return pt.rota)
+	var fuente = rotas[i % rotas.size()] if not rotas.is_empty() else _puntas[i % maxi(_puntas.size(), 1)]
+	var c := Polygon2D.new()
+	var centro := Vector2.ZERO
+	for v in fuente.polygon:
+		centro += v
+	centro /= maxf(float(fuente.polygon.size()), 1.0)
+	var pts := PackedVector2Array()
+	for v in fuente.polygon:
+		pts.append(v - centro)
+	c.polygon = pts
+	c.uv = fuente.uv
+	c.texture = fuente.texture
+	c.color = fuente.color
+	c.scale = Vector2.ONE * escala_pieza * cuerpo.scale.x
+	c.z_index = 4
+	_destino().add_child(c)
+	return c
+
+
+## Puntas en órbita: sus puntas rotas giran a su alrededor y se alejan; aparecen tenues (aviso) antes de dañar.
+func _orbes(gen: int) -> void:
+	_estado = "orbes"
+	_limpiar_orbes()
+	var n := clampi(_puntas_rotas, 2, 4)
+	for i in n:
+		var o := _copia_punta(i)
+		o.modulate.a = 0.3
+		_orbes_nodos.append(o)
+	_orbes_t = 0.0
+	_orbes_ang = _rng.randf() * TAU
+	_orbes_tick(0.0)
+	await _esperar(orbes_aviso + orbes_duracion)
+	_limpiar_orbes()
+
+
+func _orbes_tick(delta: float) -> void:
+	_orbes_t += delta
+	_orbes_ang += orbes_giro * delta
+	var activos := _orbes_t >= orbes_aviso
+	var k := clampf((_orbes_t - orbes_aviso) / maxf(orbes_duracion, 0.01), 0.0, 1.0)
+	var r := lerpf(orbes_radio_ini, orbes_radio_fin, k)
+	var p := _obtener_player()
+	for i in _orbes_nodos.size():
+		var o = _orbes_nodos[i]
+		if not is_instance_valid(o):
+			continue
+		var ang := _orbes_ang + TAU * float(i) / float(maxi(_orbes_nodos.size(), 1))
+		o.global_position = cuerpo.global_position + Vector2(cos(ang), sin(ang)) * r
+		o.rotation = ang + PI * 0.5
+		o.modulate.a = 1.0 if activos else 0.3
+		if activos and p != null and float(p.get("_invuln_timer") if p.get("_invuln_timer") != null else 0.0) <= 0.0:
+			if p.global_position.distance_to(o.global_position) < orbe_radio + 70.0:
+				p.take_damage(dano_orbe, 220.0, 1 if p.global_position.x >= o.global_position.x else -1)
+
+
+func _limpiar_orbes() -> void:
+	for o in _orbes_nodos:
+		if is_instance_valid(o):
+			o.queue_free()
+	_orbes_nodos.clear()
+
+
+## Cuchillas: levanta sus puntas rotas y las arroja girando a puntos marcados del piso (uno cerca del jugador).
+func _cuchillas_ataque(gen: int) -> void:
+	_estado = "cuchillas"
+	var p := _obtener_player()
+	if p == null:
+		return
+	var lim := _limite_x() + 300.0
+	var xs: Array = [clampf(to_local(p.global_position).x, -lim, lim)]
+	var intentos := 0
+	while xs.size() < cuchillas_cantidad and intentos < 40:
+		intentos += 1
+		var x := _rng.randf_range(-lim, lim)
+		if xs.all(func(o) -> bool: return absf(float(o) - x) > 350.0):
+			xs.append(x)
+	var avisos: Array = []
+	for i in xs.size():
+		var pieza := _copia_punta(i)
+		pieza.global_position = cuerpo.global_position + Vector2(cos(TAU * i / xs.size()), sin(TAU * i / xs.size())) * 220.0
+		var objetivo := to_global(Vector2(float(xs[i]), -60.0))
+		_cuchillas.append(pieza)
+		avisos.append(_sombra_piso(float(xs[i])))
+		var linea := Line2D.new()
+		linea.points = PackedVector2Array([pieza.global_position, objetivo])
+		linea.width = 6.0
+		linea.default_color = Color(_color_fase().r, _color_fase().g, _color_fase().b, 0.25)
+		linea.z_index = 3
+		_destino().add_child(linea)
+		avisos.append(linea)
+		pieza.set_meta("objetivo", objetivo)
+	await _esperar(aviso_cuchillas)
+	for a in avisos:
+		if is_instance_valid(a):
+			a.queue_free()
+	if not _sigue(gen):
+		_limpiar_cuchillas()
+		return
+	for pieza in _cuchillas:
+		if is_instance_valid(pieza):
+			_lanzar_cuchilla(pieza)
+	await _esperar(vuelo_cuchilla + 0.6)
+	_limpiar_cuchillas()
+
+
+func _lanzar_cuchilla(pieza: Polygon2D) -> void:
+	var desde := pieza.global_position
+	var hasta: Vector2 = pieza.get_meta("objetivo")
+	var golpeo := [false]
+	var paso := func(k: float) -> void:
+		if not is_instance_valid(pieza):
+			return
+		pieza.global_position = desde.lerp(hasta, k)
+		pieza.rotation = k * TAU * 2.0
+		var p := _obtener_player()
+		if golpeo[0] or p == null or float(p.get("_invuln_timer") if p.get("_invuln_timer") != null else 0.0) > 0.0:
+			return
+		if p.global_position.distance_to(pieza.global_position) < 110.0:
+			golpeo[0] = true
+			p.take_damage(dano_cuchilla, 240.0, 1 if p.global_position.x >= pieza.global_position.x else -1)
+	if DisplayServer.get_name() == "headless":
+		for n in range(1, 11):
+			paso.call(float(n) / 10.0)
+		return
+	var tw := pieza.create_tween()
+	tw.tween_method(paso, 0.0, 1.0, vuelo_cuchilla)
+	tw.tween_callback(func() -> void:
+		JuiceFx.escombros(get_tree(), hasta + Vector2(0, 40), Color(0.32, 0.32, 0.36), 8, 0.9))
+
+
+func _limpiar_cuchillas() -> void:
+	for c in _cuchillas:
+		if is_instance_valid(c):
+			c.queue_free()
+	_cuchillas.clear()
+
+
+## Tras el combo cae y se cierra en un caparazón (lo rompe el Oso). A veces usa al niño de escudo
+## (el padre no ataca). Recién después expone el ojo: ventana corta con tope de daño.
+func _agotada(gen: int) -> void:
+	_contacto_dano = 0
+	_limpiar_orbes()
+	_poner_ojo(0.0)
+	await _mover_cuerpo(altura_agotada, 0.0, 0.5, true)
+	if not _sigue(gen):
+		return
+	_x_base = cuerpo.position.x
+	# 1) Caparazón
+	var roto: bool = await _caparazon(gen)
+	if not _sigue(gen):
+		return
+	if not roto:
+		await _mover_cuerpo(altura_duelo, 0.0, 0.6)
+		return
+	# 2) A veces, el niño de escudo
+	if _rng.randf() < prob_escudo_nino:
+		await _escudo_nino(gen)
+		if not _sigue(gen):
+			return
+	# 3) Ojo expuesto
+	_estado = "agotada"
+	_dano_ventana = 0
+	_poner_ojo(1.0)
+	_hurtbox_on(true)
+	_ventana_t = ventana_duelo
+	while _sigue(gen) and _estado == "agotada" and _ventana_t > 0.0:
+		await _esperar(0.1)
+		_ventana_t -= 0.1
+	_hurtbox_on(false)
+	if not _sigue(gen):
+		return
+	_poner_ojo(0.0)
+	await _mover_cuerpo(altura_duelo, 0.0, 0.6)
+
+
+## Cinco puntas se cierran sobre el ojo. Devuelve true si el Oso lo rompió a tiempo.
+func _caparazon(gen: int) -> bool:
+	_estado = "caparazon"
+	_golpes_cap = 0
+	_limpiar_caparazon()
+	for i in 5:
+		var pieza := _copia_punta(i)
+		var ang := TAU * float(i) / 5.0 - PI * 0.5
+		pieza.set_meta("ang", ang)
+		pieza.rotation = ang + PI * 0.5
+		pieza.global_position = cuerpo.global_position + Vector2(cos(ang), sin(ang)) * 380.0
+		_caparazon_nodos.append(pieza)
+		var hasta: Vector2 = cuerpo.global_position + Vector2(cos(ang), sin(ang)) * 120.0
+		if DisplayServer.get_name() == "headless":
+			pieza.global_position = hasta
+		else:
+			pieza.create_tween().tween_property(pieza, "global_position", hasta, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_rugido(6.0)
+	_sugerir_forma(2, tiempo_caparazon)
+	_hurtbox_on(true)
+	var t := 0.0
+	while _sigue(gen) and _estado == "caparazon" and t < tiempo_caparazon:
+		await _esperar(0.1)
+		t += 0.1
+	_hurtbox_on(false)
+	var roto := _estado == "caparazon_roto"
+	if not roto:
+		_limpiar_caparazon()
+	return roto
+
+
+func _golpe_caparazon(cantidad: int) -> void:
+	var p := _obtener_player()
+	var es_oso := p != null and int(p.get("current_form")) == 2
+	if not es_oso or cantidad < dano_minimo_coraza:
+		# Rebote: no es la fuerza del Oso.
+		for pieza in _caparazon_nodos:
+			if is_instance_valid(pieza):
+				Burst.emitir(self, pieza.global_position, Color(0.55, 0.55, 0.6), 3, 0.5)
+		_rugido(2.0)
+		return
+	_golpes_cap += 1
+	_flash()
+	_rugido(6.0)
+	if _golpes_cap < golpes_caparazon:
+		return
+	# Roto: las piezas saltan.
+	_estado = "caparazon_roto"
+	for pieza in _caparazon_nodos:
+		if not is_instance_valid(pieza):
+			continue
+		JuiceFx.escombros(get_tree(), pieza.global_position, Color(0.85, 0.82, 0.7), 8, 1.0)
+		if DisplayServer.get_name() == "headless":
+			continue
+		var ang: float = pieza.get_meta("ang")
+		var tw: Tween = pieza.create_tween().set_parallel(true)
+		tw.tween_property(pieza, "global_position", pieza.global_position + Vector2(cos(ang), sin(ang)) * 260.0 + Vector2(0, 200), 0.5)
+		tw.tween_property(pieza, "modulate:a", 0.0, 0.5)
+	_caparazon_nodos_soltar()
+
+
+func _caparazon_nodos_soltar() -> void:
+	# Las piezas se liberan solas tras la animación (o al instante en headless).
+	var nodos := _caparazon_nodos.duplicate()
+	_caparazon_nodos.clear()
+	if DisplayServer.get_name() == "headless":
+		for n in nodos:
+			if is_instance_valid(n):
+				n.queue_free()
+		return
+	get_tree().create_timer(0.6, false).timeout.connect(func() -> void:
+		for n in nodos:
+			if is_instance_valid(n):
+				n.queue_free())
+
+
+func _limpiar_caparazon() -> void:
+	for n in _caparazon_nodos:
+		if is_instance_valid(n):
+			n.queue_free()
+	_caparazon_nodos.clear()
+
+
+## El cultista aprieta al niño contra el iris: el padre no ataca hasta que el niño forcejea y queda libre.
+func _escudo_nino(gen: int) -> void:
+	_estado = "escudo"
+	_poner_ojo(1.0)
+	_contener_ataque(true)
+	if DisplayServer.get_name() == "headless":
+		ojo.nino_escudo = 1.0
+	else:
+		create_tween().tween_property(ojo, "nino_escudo", 1.0, 0.25)
+	await _esperar(duracion_escudo)
+	_contener_ataque(false)
+	if not _sigue(gen):
+		ojo.nino_escudo = 0.0
+		return
+	# El niño forcejea: la estrella tiembla y lo suelta.
+	_rugido(7.0)
+	if DisplayServer.get_name() == "headless":
+		ojo.nino_escudo = 0.0
+	else:
+		create_tween().tween_property(ojo, "nino_escudo", 0.0, 0.3)
+
+
+func _contener_ataque(on: bool) -> void:
+	var p := _obtener_player()
+	if p != null and "ataque_contenido" in p:
+		p.ataque_contenido = on
+
+
+## Al empezar la F3 se alimenta de su culto: devotos que flotan hacia la Estrella y se funden con ella.
+func _absorber(gen: int) -> void:
+	_estado = "absorcion"
+	_limpiar_devotos()
+	for i in absorber_cultistas:
+		var e = ENEMY_SCENE.instantiate()
+		e.set("tipo", "cultista")
+		_destino().add_child(e)
+		var lado := -1.0 if i % 2 == 0 else 1.0
+		e.global_position = to_global(Vector2(lado * (500.0 + 250.0 * floorf(i / 2.0)), -150.0))
+		e.set_physics_process(false)
+		var vis = e.get("visual")
+		if vis != null:
+			vis.visible = true
+		_devotos.append(e)
+	if DisplayServer.get_name() == "headless":
+		_limpiar_devotos()
+		_flash()
+		return
+	for e in _devotos:
+		var tw: Tween = (e as Node2D).create_tween().set_parallel(true)
+		tw.tween_property(e, "global_position", cuerpo.global_position, duracion_absorcion).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		tw.tween_property(e, "scale", Vector2.ONE * 0.2, duracion_absorcion)
+		tw.tween_property(e, "modulate", _color_fase(), duracion_absorcion)
+	await _esperar(duracion_absorcion)
+	_limpiar_devotos()
+	if not _sigue(gen):
+		return
+	_flash()
+	_rugido(12.0)
+	var cam := get_viewport().get_camera_2d()
+	if cam != null and cam.has_method("punch"):
+		cam.punch(1.06)
+	var tw2 := create_tween()
+	tw2.tween_property(cuerpo, "scale", cuerpo.scale * 1.12, 0.12)
+	tw2.tween_property(cuerpo, "scale", cuerpo.scale, 0.25)
+	await tw2.finished
+
+
+func _limpiar_devotos() -> void:
+	for e in _devotos:
+		if is_instance_valid(e):
+			e.queue_free()
+	_devotos.clear()
+
+
+## Lleva el cuerpo a una posición local (x, y) en `dur` s (lineal). Respeta el tallo.
+func _ir_a(destino: Vector2, dur: float) -> void:
+	if _tw_cuerpo != null and _tw_cuerpo.is_valid():
+		_tw_cuerpo.kill()
+	if dur <= 0.0 or DisplayServer.get_name() == "headless":
+		# Instantáneo: si el movimiento daña por contacto, se barre la trayectoria.
+		var inicio := cuerpo.position
+		if _contacto_dano > 0:
+			for k in range(1, 21):
+				cuerpo.position = inicio.lerp(destino, float(k) / 20.0)
+				_contacto(_contacto_dano)
+		cuerpo.position = destino
+		_x_base = destino.x
+		return
+	_tw_cuerpo = create_tween()
+	_tw_cuerpo.tween_property(cuerpo, "position", destino, dur)
+	await _tw_cuerpo.finished
+	_x_base = destino.x
+
+
+func _sombra_piso(x: float) -> Node2D:
+	var s := Polygon2D.new()
+	var pts := PackedVector2Array()
+	for k in 20:
+		pts.append(Vector2(cos(TAU * k / 20.0) * 260.0, sin(TAU * k / 20.0) * 22.0))
+	s.polygon = pts
+	s.color = Color(0, 0, 0, 0.45)
+	s.z_index = 3
+	_destino().add_child(s)
+	s.global_position = to_global(Vector2(x, -6.0))
+	return s
+
+
+func _linea_aviso(desde: Vector2, hasta: Vector2) -> Line2D:
+	var l := Line2D.new()
+	l.points = PackedVector2Array([to_global(desde), to_global(hasta)])
+	l.width = (alto_cuerpo_arriba + alto_cuerpo_abajo) * cuerpo.scale.x * 0.5
+	l.default_color = Color(_color_fase().r, _color_fase().g, _color_fase().b, 0.18)
+	l.z_index = 3
+	_destino().add_child(l)
+	return l
 
 
 func _restaurar_piso() -> void:
@@ -1079,7 +1849,7 @@ func _ajustar_tallo() -> void:
 	if tallo != null and _altura_ojo > 0.0:
 		tallo.scale.y = -cuerpo.position.y / _altura_ojo
 		tallo.scale.x = cuerpo.scale.x
-		tallo.visible = cuerpo.visible and cuerpo.position.y < -10.0
+		tallo.visible = cuerpo.visible and cuerpo.position.y < -10.0 and not _sin_tallo
 
 
 func _mirar_jugador(delta: float) -> void:
@@ -1101,10 +1871,129 @@ func _hurtbox_on(on: bool) -> void:
 			(p as PhysicsBody2D).add_collision_exception_with(hurtbox)
 
 
+## Color de fase: el dibujo de Micaela sin tinte en la F1; en la F2/F3 se tiñe `tinte_fase`.
 func _pintar(col: Color) -> void:
-	nucleo.color = col
+	var c := Color.WHITE if col == color_fase1 else Color.WHITE.lerp(col, tinte_fase)
+	nucleo.color = c
 	for pt in _puntas:
-		pt.color = col
+		pt.color = c
+
+
+## Cada frame de la cabeza animada (arte de Micaela) se copia a las piezas texturizadas.
+func _sync_textura() -> void:
+	if cabeza == null or cabeza.sprite_frames == null:
+		return
+	var tex := cabeza.sprite_frames.get_frame_texture(cabeza.animation, cabeza.frame)
+	if tex == null:
+		return
+	nucleo.texture = tex
+	for pt in _puntas:
+		pt.texture = tex
+
+
+## Latido de la sala (zona del grupo `latido_jefe`) y luciérnagas con el color de la fase actual.
+func _ambiente_fase(instantaneo: bool = false) -> void:
+	var i := clampi(fase, 0, 2)
+	var zona := get_tree().get_first_node_in_group("latido_jefe")
+	if zona != null:
+		if i < latido_color_fase.size():
+			zona.set("color_ambiente", latido_color_fase[i])
+		if i < latido_frec_fase.size():
+			zona.set("frecuencia", latido_frec_fase[i])
+		if i < latido_int_fase.size():
+			zona.set("intensidad", latido_int_fase[i])
+	if i < luciernagas_color_fase.size():
+		var cn: Color = luciernagas_nucleo_fase[i] if i < luciernagas_nucleo_fase.size() else Color.WHITE
+		for l in get_tree().get_nodes_in_group("luciernagas_ambiente"):
+			if l.has_method("tenir"):
+				l.tenir(luciernagas_color_fase[i], cn, 0.0 if instantaneo else duracion_cambio_ambiente)
+
+
+## En la pelea el ambiente sonoro queda solo con sus loops (sin acentos de suspenso); el latido sigue.
+func _ambiente_combate(on: bool) -> void:
+	for amb in get_tree().get_nodes_in_group("ambiente_sonoro"):
+		if "solo_capas" in amb:
+			amb.solo_capas = on
+
+
+## "El amuleto arde": en la pelea las formas gastan menos energía.
+func _energia_jefe(on: bool) -> void:
+	var p := _obtener_player()
+	if p != null and "mult_energia_externo" in p:
+		p.mult_energia_externo = drenaje_energia_jefe if on else 1.0
+
+
+## Aparición (Cult of the Lamb): temblor creciente con polvo y piedras, estalla desde el piso,
+## ruge (el ojo se abre de golpe) y entran las barras con el nombre. Solo la primera vez.
+func _aparicion(gen: int) -> void:
+	if not aparicion_cine or _aparicion_vista:
+		_cine_entrada()
+		return
+	_aparicion_vista = true
+	_estado = "aparicion"
+	var p := _obtener_player()
+	if p != null:
+		p.set("cinematica_activa", true)
+		p.set("velocity", Vector2.ZERO)
+	var headless := DisplayServer.get_name() == "headless"
+	if headless:
+		cuerpo.visible = true
+		nudo.visible = true
+		cuerpo.position.y = -_altura_reposo
+		_ajustar_tallo()
+		if p != null:
+			p.set("cinematica_activa", false)
+		return
+	_silencio(true)
+	var cam := get_viewport().get_camera_2d()
+	var t := 0.0
+	while t < aparicion_temblor:
+		if gen != _gen:
+			return
+		var k := t / maxf(aparicion_temblor, 0.01)
+		if cam != null and cam.has_method("shake"):
+			cam.shake(2.0 + k * aparicion_shake_max * 0.6, 0.3)
+		JuiceFx.escombros(get_tree(), global_position + Vector2(randf_range(-260.0, 260.0), -10.0), Color(0.42, 0.3, 0.55), 4 + int(k * 8.0), 0.8)
+		JuiceFx.escombros(get_tree(), techo.global_position + Vector2(randf_range(-900.0, 900.0), 270.0), Color(0.3, 0.26, 0.36), 3, 0.7)
+		await _esperar(0.25)
+		t += 0.25
+	if gen != _gen:
+		return
+	cuerpo.visible = true
+	nudo.visible = true
+	cuerpo.position.y = profundidad_escondida
+	JuiceFx.escombros(get_tree(), global_position + Vector2(0, -30), Color(0.42, 0.3, 0.55), 26, 1.5)
+	if cam != null and cam.has_method("shake"):
+		cam.shake(aparicion_shake_max, 0.5)
+	await _mover_cuerpo(_altura_reposo, 0.0, aparicion_subida, true)
+	if gen != _gen:
+		return
+	if cam != null and cam.has_method("punch"):
+		cam.punch(1.08)
+	_slowmo(0.35, 0.4)
+	var zona := get_tree().get_first_node_in_group("latido_jefe")
+	if zona != null:
+		zona.set("intensidad", latido_pico_aparicion)   # el corazón de la sala "golpea" al salir
+		get_tree().create_timer(1.2, false).timeout.connect(_ambiente_fase)
+	_poner_ojo(1.0)
+	var tw := create_tween()
+	for _i in 6:
+		tw.tween_property(cuerpo, "position:x", 7.0, 0.04)
+		tw.tween_property(cuerpo, "position:x", -7.0, 0.04)
+	tw.tween_property(cuerpo, "position:x", 0.0, 0.04)
+	await _esperar(0.6)
+	_poner_ojo(0.0)
+	_cine_entrada()
+	await _esperar(0.8)
+	_silencio(false)
+	if p != null and is_instance_valid(p):
+		p.set("cinematica_activa", false)
+
+
+func _silencio(on: bool) -> void:
+	var amb := get_tree().get_first_node_in_group("ambiente_sonoro")
+	if amb != null and amb.has_method("pedir_silencio"):
+		amb.pedir_silencio(self, 1.0 if on else 0.0)
 
 
 func _flash() -> void:
@@ -1139,6 +2028,14 @@ func _morir() -> void:
 	_limpiar_lanzas()
 	_limpiar_ojos()
 	_limpiar_invocados()
+	_limpiar_orbes()
+	_limpiar_caparazon()
+	_limpiar_cuchillas()
+	_limpiar_devotos()
+	_contener_ataque(false)
+	_contacto_dano = 0
+	_energia_jefe(false)
+	_ambiente_combate(false)
 	for pt in _puntas:
 		pt.romper()
 	_rugido(14.0)

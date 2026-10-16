@@ -45,6 +45,7 @@ var _k_cueva := 0.0
 
 func _ready() -> void:
 	add_to_group("reactivo")
+	add_to_group("luciernagas_ambiente")
 	var mat := CanvasItemMaterial.new()
 	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
 	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
@@ -150,6 +151,28 @@ func _process(delta: float) -> void:
 		(b.nucleo as Sprite2D).modulate.a = minf(a * 1.4, 1.0)
 		if b.luz != null:
 			(b.luz as PointLight2D).energy = luz_energia * pulso * b.aparicion * apagado
+
+
+## Cambia el color de las luciérnagas (las que ya vuelan y las nuevas) en `dur` s. Lo usa el jefe por fase.
+func tenir(nuevo: Color, nuevo_nucleo: Color, dur: float = 1.5) -> void:
+	var desde := color
+	var desde_n := color_nucleo
+	var aplicar := func(k: float) -> void:
+		var c := desde.lerp(nuevo, k)
+		var cn := desde_n.lerp(nuevo_nucleo, k)
+		for b in _bichos:
+			var h := b.halo as Sprite2D
+			h.modulate = Color(c.r, c.g, c.b, h.modulate.a)
+			var n := b.nucleo as Sprite2D
+			n.modulate = Color(cn.r, cn.g, cn.b, n.modulate.a)
+			if b.luz != null:
+				(b.luz as PointLight2D).color = c
+	color = nuevo
+	color_nucleo = nuevo_nucleo
+	if dur <= 0.0 or not is_inside_tree():
+		aplicar.call(1.0)
+		return
+	create_tween().tween_method(aplicar, 0.0, 1.0, dur)
 
 
 ## Bajo `y_cueva` las motas se enfrían (de amarillo-verdoso a celeste): el bosque y la cueva no se sienten iguales.
