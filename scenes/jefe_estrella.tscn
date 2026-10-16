@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://cf3puu6nxah0m" path="res://scripts/punta_estrella.gd" id="7_punta"]
 [ext_resource type="Texture2D" uid="uid://cwxtutvq6rgi8" path="res://Sprites/Enemigos/jefe_cabeza1.png" id="10_tex"]
 [ext_resource type="SpriteFrames" uid="uid://ciwis7isgjaqb" path="res://resources/jefe_cabeza.tres" id="9_cabeza"]
+[ext_resource type="Texture2D" uid="uid://6ogfiv3xenw7" path="res://Sprites/Enemigos/ojo_cerrado.png" id="10_ojo_cerrado"]
 
 [ext_resource type="PackedScene" path="res://scenes/pinchos.tscn" id="20_pinchos"]
 [ext_resource type="Script" path="res://scripts/borde_musgo.gd" id="21_musgo"]
@@ -58,7 +59,8 @@ speed_scale = 2.2
 centered = false
 offset = Vector2(-200, -320)
 
-[node name="Estrella" type="Node2D" parent="Cuerpo"]
+[node name="Estrella" type="Node2D" parent="Cuerpo" unique_id=2141618593]
+visible = false
 
 [node name="Nucleo" type="Polygon2D" parent="Cuerpo/Estrella"]
 texture = ExtResource("10_tex")
@@ -115,7 +117,9 @@ script = ExtResource("7_punta")
 vertice_local = Vector2(310, -217)
 
 [node name="Ojo" type="Node2D" parent="Cuerpo" unique_id=2074995646]
+position = Vector2(0, -129)
 script = ExtResource("2_ojo")
+textura_cerrado = ExtResource("10_ojo_cerrado")
 
 [node name="Hurtbox" type="StaticBody2D" parent="Cuerpo" unique_id=1567898200]
 collision_layer = 2
@@ -123,6 +127,7 @@ collision_mask = 0
 script = ExtResource("3_hurt")
 
 [node name="Collision" type="CollisionShape2D" parent="Cuerpo/Hurtbox" unique_id=660511265]
+position = Vector2(0, -129)
 shape = SubResource("CircleShape2D_hurt")
 disabled = true
 
