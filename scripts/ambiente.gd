@@ -29,7 +29,15 @@ var _fase_latido := 0.0
 var _acum := 0.0
 
 
+var _escena_vista: Node
+
+
 func _process(delta: float) -> void:
+	var escena := get_tree().current_scene
+	if escena != _escena_vista:   # nivel nuevo o recargado: la tensión de la escena anterior no se arrastra
+		_escena_vista = escena
+		tension = 0.0
+		_objetivo = 0.0
 	_acum += delta
 	if _acum >= 0.2:
 		_acum = 0.0
@@ -61,7 +69,7 @@ func _calcular_objetivo() -> float:
 	var pos := jugador.global_position
 	var cerca := 0
 	for n in get_tree().get_nodes_in_group("enemy"):
-		if is_instance_valid(n) and n is Node2D and (n as Node2D).global_position.distance_to(pos) < radio_enemigos:
+		if is_instance_valid(n) and n is Node2D and n.get("_activo") != false and (n as Node2D).global_position.distance_to(pos) < radio_enemigos:   # (los ocultos de olas pendientes no cuentan)
 			if not ("health" in n) or int(n.health) > 0:
 				cerca += 1
 	var t := minf(float(cerca), 4.0) / 4.0 * 0.6

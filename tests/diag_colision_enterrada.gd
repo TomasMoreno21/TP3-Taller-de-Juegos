@@ -31,6 +31,12 @@ func _init() -> void:
 			con_col[c] = true
 		if tm.get_cell_source_id(c) == 0 and Rect2i(1, 1, 4, 4).has_point(tm.get_cell_atlas_coords(c)):
 			solidas[c] = true
+	var prof := tm.get_node_or_null("Profundo") as TileMapLayer   # los bloques de roca profunda (4x4 celdas, sin colisión) cuentan como roca
+	if prof != null:
+		for b in prof.get_used_cells():
+			for dy in 4:
+				for dx in 4:
+					solidas[b * 4 + Vector2i(dx, dy)] = true
 	var sin_col_expuestas := 0
 	var rect: Rect2i = tm.get_used_rect()
 	for c in solidas:

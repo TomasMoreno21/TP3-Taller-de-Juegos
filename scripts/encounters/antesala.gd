@@ -53,6 +53,8 @@ func objetivo() -> float:
 	var jugador := get_tree().get_first_node_in_group("player") as Node2D
 	if jugador == null:
 		return 0.0
+	if absf(jugador.global_position.y - _enc.arena_center.y) > 900.0:
+		return 0.0   # arena en otro piso del mapa: no se siente desde acá
 	var fuera := maxf(absf(jugador.global_position.x - _enc.arena_center.x) - _enc.arena_medio_ancho, 0.0)
 	return smoothstep(0.0, 1.0, 1.0 - clampf(fuera / distancia, 0.0, 1.0))
 

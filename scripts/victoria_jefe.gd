@@ -60,6 +60,7 @@ var _frase_activa := false
 
 
 func _ready() -> void:
+	add_to_group("victoria")   # con la secuencia de cierre en juego no se puede pausar (pause.gd)
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 80   # bajo el diálogo (85): los globos se ven encima
 	resplandor.material = _material_suma()
@@ -105,8 +106,7 @@ func _posicion_inicial() -> Vector2:
 
 func _process(delta: float) -> void:
 	_t += delta
-	resplandor.queue_redraw()
-	silueta.queue_redraw()
+	resplandor.queue_redraw()   # (la silueta no se anima por dibujo: se dibuja una vez)
 
 
 func _espera(seg: float) -> void:

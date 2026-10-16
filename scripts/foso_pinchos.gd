@@ -65,7 +65,8 @@ func _pinchar(p: Node2D, x_local: float) -> void:
 		if audio != null:
 			audio.play_ui("pinchos", -8.0)
 		Burst.emitir(self, p.global_position + Vector2(0, 50), color_pincho, 10, 0.7)
-	p.take_damage(dano, 0.0, 0, true)
+	if dano > 0:   # (take_damage redondea a mínimo 1: con dano 0 no se llama)
+		p.take_damage(dano, 0.0, 0, true)
 	var lado := 1.0 if x_local >= 0.0 else -1.0
 	p.global_position = to_global(Vector2(lado * (ancho * 0.5 + distancia_borde), -alto_jugador))
 	if "velocity" in p:

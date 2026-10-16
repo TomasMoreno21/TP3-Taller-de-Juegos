@@ -1237,8 +1237,8 @@ position = Vector2(5018, 697)
 [node name="PremioMirador1" parent="Expansion/A" unique_id=1703487900 instance=ExtResource("31_pick")]
 position = Vector2(5931, -1056)
 
-[node name="VidaMirador" parent="Expansion/A/PremioMirador1" unique_id=1451188603 instance=ExtResource("90_pv")]
-position = Vector2(-7578, 5600)
+[node name="VidaMiradorB" parent="Expansion/A" unique_id=1451188603 instance=ExtResource("90_pv")]
+position = Vector2(-1647, 4544)
 
 [node name="PremioMirador3" parent="Expansion/A" unique_id=1340494397 instance=ExtResource("31_pick")]
 position = Vector2(-2248, 4533)
@@ -1316,8 +1316,8 @@ position = Vector2(7211, 5418)
 [node name="VidaCampamento" parent="Expansion/D" unique_id=182371605 instance=ExtResource("90_pv")]
 position = Vector2(-2595, 5417)
 
-[node name="VidaCampamento" parent="Expansion/D/VidaCampamento" unique_id=107255604 instance=ExtResource("90_pv")]
-position = Vector2(3397, -3596)
+[node name="VidaCampamentoB" parent="Expansion/D" unique_id=107255604 instance=ExtResource("90_pv")]
+position = Vector2(802, 1821)
 
 [node name="DialogoCampamento" parent="Expansion/D" unique_id=1444892924 instance=ExtResource("32_dtg")]
 position = Vector2(-1768, 5394)
@@ -2854,3 +2854,10 @@ variante = 4
 escala = 0.84
 flip_h = true
 viento = false
+
+[node name="CheckpointAntesDerrumbe" parent="." unique_id=1111099101 instance=ExtResource("ck_1")]
+position = Vector2(5100, 3496)
+
+[node name="DialogoPlaneo" parent="." unique_id=1739204561 instance=ExtResource("32_dtg")]
+position = Vector2(1500, -119)
+dialogo_id = "n2_planeo"

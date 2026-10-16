@@ -66,12 +66,6 @@ func _ready() -> void:
 		_caps[z] = p
 
 
-func _exit_tree() -> void:
-	var i := AudioServer.get_bus_index(bus_nombre)
-	if i >= 0:
-		AudioServer.remove_bus(i)
-
-
 func _process(delta: float) -> void:
 	if not is_instance_valid(_jugador):
 		_jugador = get_tree().get_first_node_in_group("player") as Node2D

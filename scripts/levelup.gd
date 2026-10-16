@@ -42,6 +42,9 @@ func abrir() -> void:
 	if _open:
 		_pendientes += 1
 		return
+	var dlg := get_node_or_null("/root/Dialogo")
+	if dlg != null:
+		_es_joypad = bool(dlg.get("_usa_joypad"))   # los textos de teclas arrancan según el último dispositivo usado
 	_build_opciones()
 	if _primera_elegible() < 0:
 		# Ninguna forma desbloqueada tiene un combo pendiente: la mejora espera a la próxima forma.
@@ -79,9 +82,11 @@ func cerrar() -> void:
 	if _pendientes > 0:
 		_pendientes -= 1
 		abrir()
-		return
-	if pausar_al_abrir:
+		if _open:
+			return
+	if pausar_al_abrir:   # (si abrir() no halló forma elegible el panel no se abrió: hay que despausar igual)
 		get_tree().paused = false
+		Input.action_release("jump")   # el botón que confirmó (A / Espacio) no debe hacer saltar al volver
 
 
 func _input(event: InputEvent) -> void:
@@ -91,10 +96,10 @@ func _input(event: InputEvent) -> void:
 		_es_joypad = true
 	elif event is InputEventKey:
 		_es_joypad = false
-	if (event.is_action_pressed("move_up") or event.is_action_pressed("ui_up")):
+	if event.is_action_pressed("move_up") or event.is_action_pressed("ui_up") or event.is_action_pressed("ui_left"):
 		_mover_indice(-1)
 		get_viewport().set_input_as_handled()
-	elif (event.is_action_pressed("move_down") or event.is_action_pressed("ui_down")):
+	elif event.is_action_pressed("move_down") or event.is_action_pressed("ui_down") or event.is_action_pressed("ui_right"):
 		_mover_indice(1)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("menu_confirm"):

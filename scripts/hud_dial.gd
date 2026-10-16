@@ -253,11 +253,10 @@ func rechazo() -> void:
 func set_energia(valor: float, maximo := 100.0) -> void:
 	energia_max = maximo
 	if valor < _fantasma:
-		if _tw_fantasma != null and _tw_fantasma.is_valid():
-			_tw_fantasma.kill()
-		_tw_fantasma = create_tween()
-		_tw_fantasma.tween_interval(0.32)
-		_tw_fantasma.tween_property(self, "_fantasma", valor, 0.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		if _tw_fantasma == null or not _tw_fantasma.is_running():   # el drenaje avisa cada frame: recrearlo lo dejaba congelado
+			_tw_fantasma = create_tween()
+			_tw_fantasma.tween_interval(0.32)
+			_tw_fantasma.tween_property(self, "_fantasma", valor, 0.45).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	else:
 		if _tw_fantasma != null and _tw_fantasma.is_valid():
 			_tw_fantasma.kill()

@@ -41,6 +41,7 @@ var _capa: CanvasLayer
 var _barra_sup: ColorRect
 var _barra_inf: ColorRect
 var _aura: Node2D
+var _tw_cam: Tween
 var _t := 0.0
 
 
@@ -109,9 +110,9 @@ func _correr() -> void:
 		_cam.call("modo_cine")
 		var mitad := (_jugador.global_position.x + global_position.x) * 0.5
 		var destino := Vector2(mitad, global_position.y + encuadre_y - altura_vuelo * 0.5 + alto_barra * 0.4)
-		var tw_cam := create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		tw_cam.tween_property(_cam, "global_position", destino, tiempo_camara)
-		tw_cam.tween_property(_cam, "zoom", Vector2.ONE * zoom_cine, tiempo_camara)
+		_tw_cam = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_tw_cam.tween_property(_cam, "global_position", destino, tiempo_camara)
+		_tw_cam.tween_property(_cam, "zoom", Vector2.ONE * zoom_cine, tiempo_camara)
 	# El jugador camina un momento hacia el cultista, frena de golpe y recién ahí lo sorprende.
 	var hacia := 1.0 if global_position.x >= _jugador.global_position.x else -1.0
 	_jugador.set("cinematica_dir", hacia * caminata_fraccion)
@@ -154,6 +155,8 @@ func _entregar_control() -> void:
 	if not _en_curso:
 		return
 	_en_curso = false
+	if _tw_cam != null and _tw_cam.is_valid():
+		_tw_cam.kill()   # no debe pelear con modo_normal por la posición/zoom de la cámara
 	if is_instance_valid(_jugador):
 		_jugador.set("cinematica_activa", false)
 		_jugador.set("cinematica_dir", 0.0)

@@ -40,6 +40,7 @@ const TEXTOS := {
 }
 
 var _dado := false
+var _capa_cine: CanvasLayer
 var _t := 0.0
 var _color := Color(0.66, 0.8, 1.0)
 
@@ -179,6 +180,7 @@ func _cinematica(jugador: Node2D, prog: Node) -> void:
 	jugador.set("tips_ayuda", false)
 	var capa := CanvasLayer.new()
 	capa.layer = 95
+	_capa_cine = capa
 	var barras: Array[ColorRect] = []
 	if cine_barras > 0.0:
 		for arriba in [true, false]:
@@ -201,7 +203,7 @@ func _cinematica(jugador: Node2D, prog: Node) -> void:
 		var tc := cam.create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		tc.tween_property(cam, "global_position", medio, cine_acercar)
 		tc.tween_property(cam, "zoom", cam.zoom * cine_zoom, cine_acercar)
-	await tree.create_timer(cine_acercar + cine_pausa_tras_acercar).timeout
+	await tree.create_timer(cine_acercar + cine_pausa_tras_acercar, false).timeout
 	if not is_inside_tree():
 		return
 	# El tótem despierta y el sello se carga antes de partir.
@@ -237,9 +239,9 @@ func _cinematica(jugador: Node2D, prog: Node) -> void:
 	prog.desbloquear_forma(forma)
 	desbloqueada.emit()
 	if transformar_al_final and is_instance_valid(jugador) and jugador.has_method("_transformar"):
-		await tree.create_timer(0.5).timeout
+		await tree.create_timer(0.5, false).timeout
 		jugador.call("_transformar", forma, true)
-	await tree.create_timer(cine_pausa_final).timeout
+	await tree.create_timer(cine_pausa_final, false).timeout
 	await _presentacion(capa, tree)
 	if is_instance_valid(jugador):
 		jugador.set("cinematica_activa", false)
@@ -254,7 +256,7 @@ func _cinematica(jugador: Node2D, prog: Node) -> void:
 		if is_instance_valid(b):
 			var tq := b.create_tween()
 			tq.tween_property(b, "custom_minimum_size:y", 0.0, 0.5)
-	await tree.create_timer(0.6).timeout
+	await tree.create_timer(0.6, false).timeout
 	capa.queue_free()
 
 
@@ -301,7 +303,7 @@ func _presentacion(capa: CanvasLayer, tree: SceneTree) -> void:
 	tw.tween_property(etiquetas[0], "modulate:a", 1.0, 0.6)
 	tw.tween_property(filete, "scale:x", 1.0, 0.7).set_delay(0.2)
 	tw.tween_property(etiquetas[1], "modulate:a", 1.0, 0.7).set_delay(0.7)
-	await tree.create_timer(cine_texto_duracion).timeout
+	await tree.create_timer(cine_texto_duracion, false).timeout
 	if not is_instance_valid(caja):
 		return
 	var tf := caja.create_tween()
@@ -314,3 +316,9 @@ func _exit_tree() -> void:
 	var j := get_tree().get_first_node_in_group("player") if is_inside_tree() else null
 	if j != null and j.get("cinematica_activa") == true and _dado:
 		j.set("cinematica_activa", false)
+	# Cortada a mitad (reiniciar / volver al menú): sin esto las barras quedaban colgadas en root y los globos invisibles.
+	if is_instance_valid(_capa_cine):
+		_capa_cine.queue_free()
+	var dlg := get_node_or_null("/root/Dialogo") as CanvasLayer
+	if dlg != null:
+		dlg.visible = true

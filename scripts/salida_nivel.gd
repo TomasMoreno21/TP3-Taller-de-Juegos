@@ -87,7 +87,8 @@ func _entrar_oscuridad(jugador: Node) -> void:
 	var t := 0.0
 	while t < espera_maxima and (jugador as Node2D).global_position.x * _signo() < x_fin * _signo():
 		await get_tree().process_frame
-		t += get_process_delta_time()
+		if not get_tree().paused:   # con la pausa abierta no cuenta el tiempo (si no, cambiaba de nivel en plena pausa)
+			t += get_process_delta_time()
 	var audio := get_node_or_null("/root/AudioManager")
 	if audio != null:
 		audio.play_sfx(sonido_salida, volumen_salida_db)

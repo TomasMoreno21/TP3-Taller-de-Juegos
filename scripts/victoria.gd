@@ -12,6 +12,7 @@ var _indice := 0
 
 
 func _ready() -> void:
+	add_to_group("victoria")   # con la pantalla de cierre en juego no se puede pausar (pause.gd)
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	for i in botones.size():
 		botones[i].pressed.connect(_on_boton_pressed.bind(i))

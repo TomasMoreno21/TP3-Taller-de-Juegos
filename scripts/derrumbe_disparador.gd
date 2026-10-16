@@ -60,22 +60,22 @@ func _cinematica(jugador: Node2D) -> void:
 	jugador.set("cinematica_activa", true)
 	_construir_barras()
 	_mover_barras(true)
-	await get_tree().create_timer(pausa_antes).timeout
+	await get_tree().create_timer(pausa_antes, false).timeout
 	if dlg != null:
 		_pulso(fuerza_inicio, 1.0, piedras_inicio, 4.0, 9.0)
 		dlg.mostrar(Array(lineas_previas), "Amuleto", true)
 		await dlg.dialogo_terminado
 	_pulso(fuerza_temblor, 1.2, 5, 5.0, 12.0)
-	await get_tree().create_timer(0.6).timeout
+	await get_tree().create_timer(0.6, false).timeout
 	if dlg != null:
 		dlg.mostrar(Array(lineas_alerta), "Amuleto", true)
 		_pulso(fuerza_corre, 1.6, piedras_corre, 9.0, 24.0)
 		await dlg.dialogo_terminado
-	await get_tree().create_timer(pausa_despues).timeout
+	await get_tree().create_timer(pausa_despues, false).timeout
 	_mover_barras(false)
 	if is_instance_valid(jugador):
 		jugador.set("cinematica_activa", false)
-	await get_tree().create_timer(0.8).timeout
+	await get_tree().create_timer(0.8, false).timeout
 	if is_instance_valid(_capa):
 		_capa.queue_free()
 

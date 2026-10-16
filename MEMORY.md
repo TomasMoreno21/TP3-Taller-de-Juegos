@@ -5,7 +5,7 @@
 - `player.gd`: `RECOVERY_HEAVY` 0.52→0.44, `RECOVERY_SPECIAL` 0.92→0.78 (~15 %); la animación se reparte sola vía `_planificar_anim_ataque`. Daños intactos. `diag_sync_golpes` forma=1 (Lobo) attack/heavy falla igual con los valores viejos → ajeno (otras sesiones tocan player.gd/projectile.gd).
 
 ## Sesión 14/10 — Progresión con orbes actuales · SIN COMMIT
-- Orbes azules hoy: N1 = 11, N2 = 17 (último `PremioA1_3` da la subida), N3 = 23 (51 en total). `FRAGMENTOS_NIVEL = [8, 28, 34, 48]` (antes 8/28/38/64 con N3 = 42). Quitados los carteles de arriba (HUD) al subir de nivel, elegir combo y desbloquear forma (`hud.gd`: `_on_nivel_subio/_on_combo` vacíos); quedan la pantalla LevelUp y la cinemática del tótem. Autotest y CLAUDE.md actualizados. Si se agregan orbes, recalcular.
+- Orbes azules hoy: N1 = 11, N2 = 17 (último `PremioA1_3` da la subida), N3 = 21 (49 en total). `FRAGMENTOS_NIVEL = [8, 28, 34, 46]` (15/10: bajado de 48 a 46: N3 tiene 21 almas, no 23) (antes 8/28/38/64 con N3 = 42). Quitados los carteles de arriba (HUD) al subir de nivel, elegir combo y desbloquear forma (`hud.gd`: `_on_nivel_subio/_on_combo` vacíos); quedan la pantalla LevelUp y la cinemática del tótem. Autotest y CLAUDE.md actualizados. Si se agregan orbes, recalcular.
 
 ## Sesión 14/10 — Optimización N1-N3 · SIN COMMIT
 - Medido con ventana (RTX 3050): N1 ~330 fps, N2 ~225, N3 ~260; ms/frame 2-4. El cuello real es la carga (~1.2 s parseo + 0.6-0.9 s 1er frame), no el frame.
@@ -114,6 +114,8 @@ Normas prácticas para el asistente:
 
 
 ## Notas / Lecciones Aprendidas
+- **(16/10) Regresiones propias detectadas en la revisión final:** (1) un `checkpoint` validado solo con rayo hacia abajo quedó DENTRO de la roca (el rayo pegó en el techo de la cueva de abajo): validar también que la celda del respawn esté vacía en `TileMap` y `Profundo` (ya lo hace `diag_checkpoints_niveles`). (2) "Gana el slowmo más fuerte" rompió la curva por tramos del parry: un cambio en un sistema compartido (`Hitstop`) hay que probarlo contra todos sus usuarios. (3) un `return` temprano en `hud_dial.set_energia` salteaba la asignación final. Correr la batería completa de `diag_*` tras cada tanda, no solo los del área.
+- **Bloques de terreno (`TileMap/Profundo`):** todo código que lea celdas del terreno debe contar los bloques 4x4 de `Profundo` como roca (`terreno.gd`, `terreno_mundo.gd`, `rampas_suaves.gd`, `diag_colision_enterrada`, `diag_checkpoints_niveles`). Informes de la revisión: `docs/INFORMES_REVISION_16-10.md`.
 - **(15/10) Al agregar un atajo de entrada (teclas 1-4), revisar qué beneficios da la acción al encadenarla:** la invulnerabilidad de transformación (0.8 s) superaba el cooldown (0.35 s) y con transformación directa quedaba invulnerable. Y un ataque de un solo golpe no debe "gastarse" contra i-frames.
 - **(15/10, jefe) Señales: nada de líneas/anillos superpuestos sobre la escena.** Al usuario no le gustaron el hilo de luz ojo→jefe ni el anillo de tiempo del ojo: prefiere que la información salga del propio objeto (el ojo parpadea, la estrella tiembla). Antes de agregar overlays de UI en la escena, proponerlos con 2-3 opciones.
 - **(15/10, jefe) La dificultad de una fase nueva sube de a poco:** al entrar a una fase, primero un respiro y un solo ataque nuevo; después se suman ataques por ciclo (rampa). No arrancar una fase con todas sus mecánicas a la vez (el usuario sintió un salto enorme de la F1 a la F2).

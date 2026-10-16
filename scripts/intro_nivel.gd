@@ -290,6 +290,10 @@ func _exit_tree() -> void:
 		_jugador.set("cinematica_dir", 0.0)
 	if _activa and is_instance_valid(_hud):
 		_hud.visible = _hud_visible
+	if _activa:
+		var dlg := get_node_or_null("/root/Dialogo")
+		if dlg != null:
+			dlg.lista_ocultar(false, 0.0)   # cortada a mitad: la lista de tareas no debe quedar transparente
 
 
 func _barras(entrar: bool) -> void:

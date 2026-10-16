@@ -298,6 +298,16 @@
 			"Luego aplastá la losa con el Oso."
 		]
 	},
+	"n3_liana": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 1.2,
+		"una_vez": true,
+		"lineas": [
+			"Hay una enredadera allá arriba.",
+			"Si llegás hasta ella, podés trepar."
+		]
+	},
 	"n3_final": {
 		"hablante": "Amuleto",
 		"modo": "Zona",

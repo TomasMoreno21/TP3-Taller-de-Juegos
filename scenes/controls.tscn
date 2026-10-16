@@ -112,7 +112,7 @@ bbcode_enabled = true
 fit_content = true
 scroll_active = false
 text = "[color=#e6554f][b]TECLADO[/b][/color]
-[color=#b8b4a6]Mover:[/color]  A / D · ← →
+[color=#b8b4a6]Mover:[/color]  A / D
 [color=#b8b4a6]Saltar:[/color]  Espacio
 [color=#b8b4a6]Golpe:[/color]  J
 [color=#b8b4a6]Fuerte:[/color]  K
@@ -120,8 +120,9 @@ text = "[color=#e6554f][b]TECLADO[/b][/color]
 [color=#b8b4a6]Bloquear (Humano):[/color]  Shift
 [color=#b8b4a6]Parry (Humano):[/color]  Shift justo al recibir el golpe
 [color=#b8b4a6]Aleteo (Murciélago):[/color]  Espacio en el aire
-[color=#b8b4a6]Picada (Murciélago):[/color]  S / ↓ en el aire
+[color=#b8b4a6]Picada (Murciélago):[/color]  S en el aire
 [color=#b8b4a6]Elegir forma (anterior / siguiente):[/color]  Q / E
+[color=#b8b4a6]Forma anterior:[/color]  R
 [color=#b8b4a6]Transformar / volver a Humano:[/color]  T
 [color=#b8b4a6]Transformar directo:[/color]  1 Humano · 2 Lobo · 3 Oso · 4 Murciélago
 [color=#b8b4a6]Pausa:[/color]  Esc"
@@ -136,7 +137,7 @@ bbcode_enabled = true
 fit_content = true
 scroll_active = false
 text = "[color=#e6554f][b]MANDO[/b][/color]
-[color=#b8b4a6]Mover:[/color]  Stick / Cruz
+[color=#b8b4a6]Mover:[/color]  Stick
 [color=#b8b4a6]Saltar:[/color]  A
 [color=#b8b4a6]Golpe:[/color]  X
 [color=#b8b4a6]Fuerte:[/color]  Y
@@ -144,9 +145,11 @@ text = "[color=#e6554f][b]MANDO[/b][/color]
 [color=#b8b4a6]Bloquear (Humano):[/color]  LB
 [color=#b8b4a6]Parry (Humano):[/color]  LB justo al recibir el golpe
 [color=#b8b4a6]Aleteo (Murciélago):[/color]  A en el aire
-[color=#b8b4a6]Picada (Murciélago):[/color]  Stick / Cruz abajo en el aire
+[color=#b8b4a6]Picada (Murciélago):[/color]  Stick abajo en el aire
 [color=#b8b4a6]Elegir forma (anterior):[/color]  Select
+[color=#b8b4a6]Forma anterior / siguiente:[/color]  LT / RT
 [color=#b8b4a6]Transformar:[/color]  RB
+[color=#b8b4a6]Transformar directo:[/color]  Cruz: ← Oso · → Lobo · ↑ Murciélago · ↓ Humano
 [color=#b8b4a6]Pausa:[/color]  Start"
 
 [node name="Volver" type="Button" parent="Panel/Margin/VBox"]

@@ -97,7 +97,7 @@ shape = SubResource("RectangleShape2D_arena_jefe")
 position = Vector2(1300, 970)
 
 [node name="CheckpointPreJefe" parent="." unique_id=576380468 instance=ExtResource("ck_1")]
-position = Vector2(4000, 970)
+position = Vector2(3375, 933)
 
 [node name="Hud" parent="." unique_id=2014128999 instance=ExtResource("8_hud")]
 visible = false

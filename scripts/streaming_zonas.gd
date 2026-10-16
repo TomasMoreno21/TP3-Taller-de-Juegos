@@ -52,6 +52,8 @@ func _recolectar(n: Node) -> void:
 		if c is Node2D and s != null and scripts_gestionados.has(s.resource_path.get_file()) \
 				and c.process_mode == Node.PROCESS_MODE_INHERIT:
 			_nodos.append(c)
+		elif c is CPUParticles2D and s == null and not (c as CPUParticles2D).one_shot 				and c.process_mode == Node.PROCESS_MODE_INHERIT and _luz_gestionable(c):
+			_nodos.append(c)   # nieblas y polvo sueltos del nivel (sin script): lejos no se simulan
 		_recolectar(c)
 
 

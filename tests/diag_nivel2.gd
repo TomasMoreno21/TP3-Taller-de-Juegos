@@ -130,7 +130,7 @@ func _initialize() -> void:
 			if n is Area2D and n.has_signal("activado") and nm.begins_with("Checkpoint"):
 				var d: float = piso_de.call(n.global_position, 0.0, 250.0)
 				_chk(d >= 30.0 and d <= 260.0, "%s apoya en piso (a %d px)" % [nm, int(d)])
-			elif nm.begins_with("Pinchos"):
+			elif nm.begins_with("Pinchos") and absf(n.global_rotation) < 0.2:   # (los rotados clavan en pared: el rayo vertical no aplica)
 				var d2: float = piso_de.call(n.global_position, -120.0, 120.0)
 				_chk(absf(d2) <= 40.0, "%s asentado en el piso (%d px)" % [nm, int(d2)])
 			elif nm.begins_with("Premio") or nm.begins_with("Vida"):

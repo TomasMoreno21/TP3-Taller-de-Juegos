@@ -7,11 +7,11 @@ signal nivel_subio(nuevo_nivel: int)
 signal forma_desbloqueada_evento(form_index: int)
 
 ## Fragmentos acumulados para alcanzar los niveles 2, 3, 4 y 5 (4 subidas = 1 combo por forma).
-## Ajustados a ~1 y 1/3 de subida por nivel de juego (orbes azules en los niveles, 14/10: nivel 1 = 11, nivel 2 = 17, nivel 3 = 23; 51 en total):
+## Ajustados a ~1 y 1/3 de subida por nivel de juego (orbes azules en los niveles, 14/10: nivel 1 = 11, nivel 2 = 17, nivel 3 = 21; 49 en total):
 ## 1.ª al ~75 % del nivel 1; 2.ª la da el orbe `PremioA1_3` del nivel 2 (`da_subida_de_nivel`: 28 = 11 del nivel 1 + los otros 16 del nivel 2 + ese; sin él no se llega);
-## 3.ª a ~1/4 del nivel 3 (34 = 28 + 6 de sus 23) y 4.ª al ~87 % del nivel 3 (48 = 28 + 20; deja margen si no se juntan todos).
+## 3.ª a ~1/4 del nivel 3 (34 = 28 + 6 de sus 21) y 4.ª al ~85 % del nivel 3 (46 = 28 + 18; deja margen de 3 almas, 49 en total).
 ## Si se agregan o quitan orbes, reajustar.
-const FRAGMENTOS_NIVEL: Array[int] = [8, 28, 34, 48]
+const FRAGMENTOS_NIVEL: Array[int] = [8, 28, 34, 46]
 const FRAGMENTOS_IMPOSIBLE := 999999
 
 var fragmentos := 0
@@ -22,6 +22,9 @@ var pasos_luz_base := 1
 var mejoras_diferidas := 0
 var combos_desbloqueados: Dictionary = {}
 var barreras_abiertas: Dictionary = {}
+## Almas ya recogidas (clave escena + ruta del nodo): al recargar el nivel (morir sin checkpoint, reiniciar) no reaparecen,
+## porque los fragmentos que dieron se conservan (si no, se duplican y rompen los umbrales de nivel).
+var almas_recogidas: Dictionary = {}
 ## Dialogos ya mostrados (persisten entre muertes; se limpian al resetear partida).
 var dialogos_vistos: Dictionary = {}
 ## Acciones que el jugador ya hizo en esta partida (mover, saltar, golpe_ligero...): el tutorial no se las pide de nuevo.
@@ -89,10 +92,14 @@ func reset() -> void:
 	mejoras_diferidas = 0
 	combos_desbloqueados = {}
 	barreras_abiertas = {}
+	almas_recogidas = {}
 	dialogos_vistos = {}
 	acciones_hechas = {}
 	ayuda_vista = []
 	muertes = 0
+	var dialogo := get_node_or_null("/root/Dialogo")
+	if dialogo != null:
+		dialogo.limpiar()
 	plataformas_rotas = {}
 	formas_forzadas = []
 	_extra_formas = {}

@@ -27,7 +27,7 @@ func _initialize() -> void:
 		return
 	_chk(ojos.sprite_frames != null and ojos.sprite_frames.has_animation("parpadeo"), "Ojos tiene la animación parpadeo")
 
-	_chk(not ojos.visible, "los ojos arrancan ocultos")
+	# (el Humano ya tiene ojos en run/idle: arrancan visibles; el Oso los oculta más abajo)
 
 	player.set("current_form", 2)  # OSO
 	player.call("_apply_form")

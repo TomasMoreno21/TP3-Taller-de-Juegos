@@ -39,6 +39,7 @@ func esta_ocupado() -> bool:
 ## archivo (nivel1.tscn pesa ~7 MB: ~1.4 s). Llamarlo con antelación (durante el cómic,
 ## al ver la puerta de salida...). Sin efecto en headless ni si ya estaba pedida.
 func precargar(ruta: String) -> void:
+	return   # shortcut: `cambiar_escena` no usa la carga en hilo (se deshabilitó por un fallo); precargar solo duplicaba la carga y retenía memoria. Reactivar junto con `_esperar_carga` si se arregla.
 	if DisplayServer.get_name() == "headless" or ruta.is_empty() or _pedidas.has(ruta):
 		return
 	if ResourceLoader.load_threaded_request(ruta, "PackedScene", true) == OK:
@@ -49,6 +50,9 @@ func cambiar_escena(ruta: String) -> void:
 	# precargar(ruta)   # deshabilitado para nivel1/comic largo por fallo threaded
 	fundido(func() -> void:
 		get_tree().paused = false
+		var dialogo := get_node_or_null("/root/Dialogo")
+		if dialogo != null:
+			dialogo.limpiar()   # globos, charlas en espera y lista de tareas no viajan a la escena siguiente
 		get_tree().change_scene_to_file(ruta))
 
 

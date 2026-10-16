@@ -45,9 +45,12 @@ func freeze(duracion: float = 0.04) -> void:
 func slowmo(duracion: float, escala: float) -> void:
 	if duracion <= 0.0 or escala <= 0.0 or escala >= 1.0:
 		return
-	var hasta := Time.get_ticks_msec() + maxi(1, int(duracion * 1000.0))
-	_slow_scale = escala
+	var ahora := Time.get_ticks_msec()
+	var hasta := ahora + maxi(1, int(duracion * 1000.0))
+	# Con un slowmo en curso gana el más fuerte (un parry durante la cámara lenta de la muerte del jefe no la pisaba hacia arriba).
+	# (solo si el nuevo termina antes que el activo: así una curva de tramos, como la del parry, sigue avanzando)
+	_slow_scale = minf(_slow_scale, escala) if _slow_restore_ms > ahora and hasta <= _slow_restore_ms else escala
 	_slow_restore_ms = maxi(_slow_restore_ms, hasta)
 	if Engine.time_scale == 0.0:
 		return
-	Engine.time_scale = escala
+	Engine.time_scale = _slow_scale

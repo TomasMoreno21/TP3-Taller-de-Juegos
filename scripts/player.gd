@@ -557,7 +557,10 @@ func _physics_process(delta: float) -> void:
 		_special_cooldown = maxf(_special_cooldown - delta, 0.0)
 		if _special_cooldown <= 0.0:
 			_flash_especial_listo()
-	_handle_enredadera(delta)
+	if not _dialogo_bloquea_input():
+		_handle_enredadera(delta)
+	elif _trepando:
+		_salir_enredadera()   # una cinemática o la muerte no lo dejan trepando ni colgado de la liana
 	if _attack_air_buffer > 0.0:
 		_attack_air_buffer -= delta
 		if _attack_air_buffer <= 0.0:
@@ -650,7 +653,7 @@ func _physics_process(delta: float) -> void:
 	var g: float = GRAVITY * data.gravity_scale
 	if _gravity_override >= 0.0:
 		g = _gravity_override
-	var gliding := data.is_gliding(self)
+	var gliding := data.is_gliding(self) and not _dialogo_bloquea_input()   # en cinemáticas no planea ni gasta energía
 	if gliding and current_form == Form.MURCIELAGO:
 		if not _was_gliding:
 			squash_y(0.12, 0.15)
@@ -800,6 +803,8 @@ func _physics_process(delta: float) -> void:
 		_handle_formas_cruceta()
 		_handle_forma_ciclo()
 		_handle_transform()
+	elif _attacking:
+		_cancelar_recuperacion(true)   # una cinemática/charla en pleno golpe lo dejaba colgado con la hitbox activa
 	_check_attack_hits()
 	_handle_racha(delta)
 	_handle_energia(delta)
@@ -809,6 +814,7 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector2.ZERO
 		else:
 			health = 0
+			health_changed.emit(health, VIDA_MAX)
 	_handle_death()
 	_update_animacion()
 	_actualizar_resorte(delta)
@@ -817,10 +823,7 @@ func _physics_process(delta: float) -> void:
 func _dialogo_bloquea_input() -> bool:
 	if cinematica_activa:
 		return true
-	if _derrota_activa:
-		return true   # muerto: sin control ni daño hasta reaparecer (evita golpes extra y acciones durante la caída)
-	var dialogo := get_node_or_null("/root/Dialogo")
-	return dialogo != null and dialogo.esta_activo()
+	return _derrota_activa   # muerto: sin control ni daño hasta reaparecer (los globos del Amuleto ya no bloquean)
 
 
 func _handle_racha(delta: float) -> void:
@@ -887,7 +890,7 @@ func _handle_attack(delta: float) -> void:
 			_attack_air_buffer = ATTACK_AIR_BUFFER_TIME
 	if Input.is_action_just_pressed("special"):
 		_procesar_ataque("special", data, airborne)
-		if airborne:
+		if airborne and not _attacking and _special_cooldown <= 0.0:   # si ya salió (o lo pagó) no se repite al aterrizar
 			_attack_air_buffer_type = "special"
 			_attack_air_buffer = ATTACK_AIR_BUFFER_TIME
 	elif current_form == Form.MURCIELAGO and Input.is_action_pressed("special") and _special_cooldown <= 0.0 and _puede_pagar_especial(data):
@@ -924,7 +927,7 @@ func _lanzar_buffered(data: Forma, airborne: bool) -> void:
 func _melee_sticky(data: Forma, delta: float) -> void:
 	if not _attacking or _hit_applied or data.melee_sticky <= 0.0 or _dano_reciente_t > 0.0:
 		return
-	var objetivo := _buscar_enemigo_homing(MELEE_STICKY_REACH)
+	var objetivo := _buscar_enemigo_homing(MELEE_STICKY_REACH, true)
 	if objetivo == null:
 		return
 	var dx := objetivo.global_position.x - global_position.x
@@ -1097,7 +1100,7 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	_early_exit_umbral = rec * data.recovery_early_fraccion
 	_early_liberado = false
 	# ImÃ¡n suave al enemigo mÃ¡s cercano si estÃ¡s un poco lejos
-	var objetivo := _buscar_enemigo_homing(200.0)
+	var objetivo := _buscar_enemigo_homing(200.0, true)
 	if objetivo != null:
 		var dir_enemigo := signf(objetivo.global_position.x - global_position.x)
 		var dist := global_position.distance_to(objetivo.global_position)
@@ -1114,7 +1117,7 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	var avance := data.lunge_para(_current_attack_type, paso) if is_on_floor() else 0.0
 	# Magnetismo: si hay un enemigo al frente un poco fuera de alcance, el avance se estira
 	# (hasta `magnetismo_mult`×) para llegar a contacto en vez de pegarle al aire.
-	var objetivo_mag := _buscar_enemigo_homing(magnetismo_alcance) if (avance > 0.0 and magnetismo_mult > 1.0) else null
+	var objetivo_mag := _buscar_enemigo_homing(magnetismo_alcance, true) if (avance > 0.0 and magnetismo_mult > 1.0) else null
 	if objetivo_mag != null:
 		var dx_m := objetivo_mag.global_position.x - global_position.x
 		if signf(dx_m) == float(facing):
@@ -1739,9 +1742,10 @@ func _handle_energia(delta: float) -> void:
 			energia = minf(energia + ENERGIA_REGEN * delta, ENERGIA_MAX)
 	else:
 		var drain := ENERGIA_DRAIN * forms[current_form].drenaje_mult * (0.45 if not _en_combate() else 1.0)
-		if not cinematica_activa:   # en cinemáticas (intros, tótems) la forma no gasta energía
+		var energia_congelada := cinematica_activa or _derrota_activa or _dialogo_bloquea_input()   # cinemáticas, muerte y charlas: la forma no gasta energía
+		if not energia_congelada:
 			energia -= drain * delta
-		if energia <= 0.0 and not cinematica_activa:
+		if energia <= 0.0 and not energia_congelada:
 			energia = 0.0
 			var agotada := current_form
 			# Solo si el cambio se concretó (bajo un techo bajo puede no haber lugar: se reintenta sin repetir aviso ni sonido).
@@ -1894,6 +1898,7 @@ func _transformar(nueva: int, forzar: bool = false) -> bool:
 		if not forzar:
 			_denegar_transformacion()   # forzada (energía agotada): se reintenta sin repetir el sonido cada frame
 		return false
+	var saltos_usados: int = forms[current_form]._jumps_usados
 	forms[current_form].reset_form_state()
 	current_form = nueva
 	if empuje != Vector2.ZERO:
@@ -1909,6 +1914,8 @@ func _transformar(nueva: int, forzar: bool = false) -> bool:
 	_seq.clear()
 	var data: Forma = forms[current_form]
 	data.reset_form_state()
+	if not is_on_floor():
+		data._jumps_usados = maxi(saltos_usados, 1)   # transformarse en el aire no devuelve los saltos ya gastados
 	_apply_form()
 	var cine := transformacion_cine and DisplayServer.get_name() != "headless"
 	_zoom_transform(data, cine)
@@ -2027,8 +2034,8 @@ func en_calma() -> bool:
 		if not (e is Node2D) or not is_instance_valid(e):
 			continue
 		var h = e.get("health")
-		if h != null and int(h) <= 0:
-			continue
+		if (h != null and int(h) <= 0) or e.get("_activo") == false:
+			continue   # muertos y ocultos de olas pendientes no rompen la calma
 		if (e as Node2D).global_position.distance_to(global_position) < 700.0:
 			return false
 	return true
@@ -2498,6 +2505,9 @@ func _handle_death() -> void:
 	if health > 0 or god_mode or _derrota_activa:
 		return
 	_derrota_activa = true
+	var prog := get_node_or_null("/root/Progresion")
+	if prog != null:
+		prog.muertes += 1
 	if DisplayServer.get_name() == "headless" or muerte_duracion <= 0.0:
 		_mostrar_derrota()
 		return
@@ -2602,7 +2612,7 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_blo
 		if costo > 0.0 and energia > 0.0:
 			energia = maxf(energia - costo, 0.0)
 			energia_changed.emit(energia)
-		velocity.x = -dir * bloqueo_empuje
+		velocity.x = dir * bloqueo_empuje   # `dir` ya apunta lejos del atacante
 	if god_mode or guardia or _invuln_timer > 0.0 or _dialogo_bloquea_input():
 		return
 	cantidad = maxi(roundi(cantidad * forms[current_form].dano_recibido_mult), 1)
@@ -2657,6 +2667,15 @@ func _juice_oso_suelo(impacto: float) -> void:
 
 func parry_activo() -> bool:
 	return _parry_t > 0.0 and blocking and current_form == Form.HUMAN
+
+
+## Parry de un proyectil enemigo: solo de frente (como el parry cuerpo a cuerpo) y con los mismos bonus
+## (energía, cámara lenta, contragolpe). `dir_x` = hacia dónde viaja el proyectil.
+func parry_proyectil(dir_x: float) -> bool:
+	if not parry_activo() or signf(dir_x) == float(facing):   # viaja en mi mismo sentido = viene por la espalda
+		return false
+	_parry_perfecto(int(signf(dir_x)))
+	return true
 
 
 ## Bloqueo justo a tiempo: no recibe daño, recupera energía, aturde a los cercanos y hace un mini slow-mo.
@@ -2721,6 +2740,8 @@ func onda_area(radio: float, dano: int, knockback: float, solo_atras: bool = fal
 			continue   # enemigos de olas pendientes u ocultos: no se los golpea antes de su ola
 		if "health" in n and int(n.health) <= 0:
 			continue
+		if n.get("flotante") == true and n.get("solo_proyectil") == true:
+			continue   # los voladores solo reciben proyectiles: la onda los rebotaba y empujaba al jugador
 		var dx: float = n.global_position.x - global_position.x
 		var dy: float = n.global_position.y - global_position.y
 		if absf(dx) > radio or absf(dy) > 320.0:
@@ -2958,6 +2979,9 @@ func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 70
 		# Sale de su cuerpo (el collider coincide con el sprite), no de un punto fijo del origen.
 		var cuerpo: Vector2 = collision_shape.shape.size
 		proj.global_position = global_position + Vector2(facing * (cuerpo.x * 0.5 + 6.0), collision_shape.position.y) + pos_referencia
+		var centro_cuerpo := global_position + Vector2(0.0, collision_shape.position.y)
+		if not preload("res://scripts/projectile.gd").linea_libre(self, centro_cuerpo, proj.global_position):
+			proj.global_position = centro_cuerpo   # pegado a una pared: nace dentro del cuerpo y su raycast sí la detecta
 	var dir_inicial := Vector2(facing, 0.0)
 	if current_form == Form.MURCIELAGO:
 		var objetivo := _buscar_enemigo_homing(3000.0)
@@ -2989,21 +3013,26 @@ func fire_projectile(pos_referencia: Vector2 = Vector2.ZERO, alcance: float = 70
 			cam2.shake(2.0, 0.08, Vector2(-facing, 0))
 
 
-func _buscar_enemigo_homing(rango: float) -> Node2D:
+## `melee`: para imanes de golpes cuerpo a cuerpo (los voladores no se pueden golpear así: se ignoran).
+func _buscar_enemigo_homing(rango: float, melee := false) -> Node2D:
 	var mejor: Node2D = null
 	var mejor_dist := rango
 	for n in get_tree().get_nodes_in_group("enemy"):
 		if not is_instance_valid(n) or not n.has_method("take_damage"):
 			continue
+		if melee and n.get("flotante") == true:
+			continue
 		if n.get("_activo") == false:
 			continue
 		if "health" in n and n.health <= 0:
 			continue
-		if not preload("res://scripts/projectile.gd").linea_libre(self, global_position + Vector2(0.0, -60.0), preload("res://scripts/projectile.gd").centro_objetivo(n)):
-			continue   # otro piso o detrás de la roca: no se le apunta (el disparo se iba hacia abajo, a través del terreno)
 		var d := global_position.distance_to(n.global_position)
 		if n.get("flotante") == true:
 			d *= 0.35   # prioridad a los voladores
+		if d >= mejor_dist:
+			continue   # (antes del raycast: es lo caro)
+		if not preload("res://scripts/projectile.gd").linea_libre(self, global_position + Vector2(0.0, -60.0), preload("res://scripts/projectile.gd").centro_objetivo(n)):
+			continue   # otro piso o detrás de la roca: no se le apunta (el disparo se iba hacia abajo, a través del terreno)
 		if d < mejor_dist:
 			mejor_dist = d
 			mejor = n
@@ -3034,7 +3063,9 @@ func _try_step_up() -> void:
 	# para subir antes de chocar y no perder velocidad. No espera contacto exacto.
 	var avance := maxf(absf(velocity.x), 130.0) * get_physics_process_delta_time() + 2.0
 	var adelante := minf(avance, 16.0)   # lo que realmente va a avanzar este frame (con tope)
-	if not test_move(global_transform, Vector2(facing * avance, 0)):
+	# Dirección REAL del movimiento (no `facing`): con un empujón hacia atrás el escalón está detrás.
+	var dir_mov := signf(velocity.x) if absf(velocity.x) >= 4.0 else signf(Input.get_axis("move_left", "move_right"))
+	if not test_move(global_transform, Vector2(dir_mov * avance, 0)):
 		return
 	# Alturas con 0.2 px de holgura sobre el peldaño entero (a ras de la esquina move_and_slide vuelve a chocar).
 	for h in [0.6, 1.2, 1.8, 2.4, 3.2, 4.2, 5.2, 6.2, 7.2, 8.2, 10.2, 12.2, 16.2, 24.2, 32.2, 48.2]:
@@ -3043,7 +3074,7 @@ func _try_step_up() -> void:
 		# Probar "pararse sobre el escalón": en frente y a h px de altura.
 		# test_move usa un transform ABSOLUTO (posición real en el mundo), así que
 		# siempre se parte de global_transform, nunca de Transform2D(0, Vector2.ZERO).
-		var sobre := global_transform.translated(Vector2(facing * adelante, -h))
+		var sobre := global_transform.translated(Vector2(dir_mov * adelante, -h))
 		if test_move(sobre, Vector2(0, 0)):
 			continue
 		# Verifica que delante hay piso a esa altura (no un hueco): lanza hacia abajo.
@@ -3052,11 +3083,11 @@ func _try_step_up() -> void:
 			continue
 		# Espacio libre subiendo justo desde la posición actual.
 		var vertical := global_transform.translated(Vector2(0, -h))
-		if test_move(vertical, Vector2(facing * adelante, 0)):
+		if test_move(vertical, Vector2(dir_mov * adelante, 0)):
 			continue
 		global_position.y -= h
 		if h >= 8.0:
-			velocity.x = facing * maxf(absf(velocity.x), 140.0)
+			velocity.x = dir_mov * maxf(absf(velocity.x), 140.0)
 			_emitir_polvo(0.4)
 		_step_up_hecho = true
 		_step_up_cd = 0.03 if h >= 8.0 else 0.0

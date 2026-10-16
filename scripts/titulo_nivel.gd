@@ -123,7 +123,7 @@ func _etiqueta(texto: String, tam: int, alfa := 1.0) -> Label:
 
 
 func _correr() -> void:
-	await get_tree().create_timer(espera_inicial).timeout
+	await get_tree().create_timer(espera_inicial, false).timeout
 	# Solo desvanecimientos y filetes que se abren: escalar el texto lo re-rasteriza cada frame y se ve vibrar.
 	var largo := largo_filete
 	if largo <= 0.0:
@@ -134,7 +134,7 @@ func _correr() -> void:
 		ap.tween_property(f, "custom_minimum_size:x", largo, aparicion * 1.2)
 	await ap.finished
 	create_tween().tween_property(_adorno, "modulate:a", 1.0, 0.4)
-	await get_tree().create_timer(duracion).timeout
+	await get_tree().create_timer(duracion, false).timeout
 	listo.emit()
 	var sal := create_tween().set_parallel(true)
 	sal.tween_property(_fondo, "color:a", 0.0, desvanecer)

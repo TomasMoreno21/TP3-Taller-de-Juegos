@@ -215,6 +215,8 @@ func _ready() -> void:
 func preparar_ola() -> void:
 	reiniciado.emit()
 	_gen += 1   # corta el ciclo que esté esperando
+	_ventana_t = 0.0
+	get_tree().call_group("orbe_jefe", "queue_free")   # los orbes del intento anterior no se acumulan
 	_activo = false
 	_invocado = false
 	_estado = "inactivo"
@@ -316,6 +318,7 @@ func _ciclo_f1(gen: int) -> void:
 	while _sigue(gen) and _estado == "castigo" and _ventana_t > 0.0:
 		await _esperar(0.1)
 		_ventana_t -= 0.1
+	_ventana_t = 0.0   # (si la ventana se cortó antes, el aviso de cierre de la siguiente parpadeaba y temblaba de más)
 	_hurtbox_on(false)
 	if not _sigue(gen):
 		return
@@ -360,6 +363,7 @@ func _ciclo_f2(gen: int) -> void:
 	while _sigue(gen) and _estado == "ventana_aerea" and _ventana_t > 0.0:
 		await _esperar(0.1)
 		_ventana_t -= 0.1
+	_ventana_t = 0.0
 	_hurtbox_on(false)
 	if not _sigue(gen):
 		return
@@ -699,6 +703,7 @@ func _soltar_orbe_vida() -> void:
 		return
 	var orbe: Node2D = ORBE_VIDA_SCENE.instantiate()
 	orbe.set("curacion", curacion_fin_fase)
+	orbe.add_to_group("orbe_jefe")
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	destino.add_child(orbe)
 	# Del lado del jugador, fuera del foso central (que se abre al entrar a la F2).
@@ -1134,6 +1139,7 @@ func _morir() -> void:
 		return
 	_muerto = true
 	_activo = false
+	foso.set("dano", 0)   # tras la victoria el foso no mata (si no, derrota y victoria se pisaban)
 	_estado = "inactivo"
 	_hurtbox_on(false)
 	_limpiar_lanzas()

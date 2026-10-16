@@ -38,7 +38,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_instance_valid(_controls):
 		return
 	if event.is_action_pressed("pause"):
-		if _dialogo_activo() or _levelup_abierto() or _jugador_muerto():
+		if _dialogo_activo() or _levelup_abierto() or _jugador_muerto() or get_tree().get_first_node_in_group("victoria") != null:
 			return
 		toggle()
 		get_viewport().set_input_as_handled()
@@ -98,6 +98,7 @@ func cerrar() -> void:
 		return
 	_open = false
 	get_tree().paused = false
+	Input.action_release("jump")   # el botón que confirmó (A / Espacio) no debe hacer saltar al volver
 	_fundido(false)
 
 

@@ -34,16 +34,35 @@ func _crear_bus(nombre: StringName) -> void:
 	AudioServer.set_bus_send(i, &"Master")
 
 
+var _guardado_pendiente := false
+
+
+## Arrastrar un slider dispara decenas de cambios por segundo: se escribe a disco una sola vez, medio segundo después del último.
+func _guardar_diferido() -> void:
+	if _guardado_pendiente:
+		return
+	_guardado_pendiente = true
+	await get_tree().create_timer(0.5).timeout
+	_guardado_pendiente = false
+	_guardar()
+
+
+## Salir del juego antes de los 0,5 s del guardado agrupado no debe perder el último cambio.
+func _exit_tree() -> void:
+	if _guardado_pendiente:
+		_guardar()
+
+
 func fijar_musica(v: float) -> void:
 	volumen_musica = clampf(v, 0.0, 1.0)
 	_aplicar_audio()
-	_guardar()
+	_guardar_diferido()
 
 
 func fijar_sfx(v: float) -> void:
 	volumen_sfx = clampf(v, 0.0, 1.0)
 	_aplicar_audio()
-	_guardar()
+	_guardar_diferido()
 
 
 func fijar_pantalla_completa(activa: bool) -> void:

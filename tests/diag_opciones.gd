@@ -9,6 +9,7 @@ func _init() -> void:
 	_c(absf(AudioServer.get_bus_volume_db(AudioServer.get_bus_index(&"Musica")) - linear_to_db(0.5)) < 0.01, "volumen de música aplicado")
 	o.fijar_sfx(0.0)
 	_c(AudioServer.is_bus_mute(AudioServer.get_bus_index(&"SFX")), "volumen 0 silencia el bus")
+	await create_timer(0.8).timeout   # el guardado de los sliders se agrupa (0,5 s tras el último cambio)
 	var cfg := ConfigFile.new()
 	_c(cfg.load("user://opciones.cfg") == OK and absf(float(cfg.get_value("audio", "musica", -1.0)) - 0.5) < 0.001, "se guarda en user://opciones.cfg")
 	o.fijar_musica(1.0)

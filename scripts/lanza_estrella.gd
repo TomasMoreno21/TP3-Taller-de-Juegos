@@ -117,7 +117,10 @@ func _golpear(b: Node2D) -> void:
 	var al_parry := func() -> void: hubo_parry[0] = true
 	if b.has_signal("parry_exitoso"):
 		b.parry_exitoso.connect(al_parry)
-	b.take_damage(dano, empuje, 1 if b.global_position.x >= desde.x else -1)
+	# Rayo casi vertical (ojo justo encima/debajo): dir 0 = la guardia cubre desde cualquier lado.
+	var dx := b.global_position.x - desde.x
+	var dir := 0 if absf(dx) < absf(b.global_position.y - desde.y) * 0.5 else (1 if dx >= 0.0 else -1)
+	b.take_damage(dano, empuje, dir)
 	if b.has_signal("parry_exitoso") and b.parry_exitoso.is_connected(al_parry):
 		b.parry_exitoso.disconnect(al_parry)
 	if hubo_parry[0]:

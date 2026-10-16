@@ -46,6 +46,7 @@
 [ext_resource type="Script" uid="uid://d4d5q3u8vx8dm" path="res://scripts/plano_intro.gd" id="71_plano"]
 [ext_resource type="Script" uid="uid://2vfwwokdugpy" path="res://scripts/tronco_torre.gd" id="98_torre"]
 [ext_resource type="Script" uid="uid://c2wcdp33n0exy" path="res://scripts/soporte_plataforma.gd" id="99_soporte"]
+[ext_resource type="PackedScene" path="res://scenes/terreno_bloques_n1.tscn" id="bloques_n1"]
 [ext_resource type="Script" uid="uid://gndour84be4f" path="res://scripts/cadenas_plataforma.gd" id="cadenas_cueva"]
 [ext_resource type="Script" uid="uid://bb6nqidd7q3bx" path="res://scripts/claridad_cueva.gd" id="claridad_cueva"]
 [ext_resource type="Script" uid="uid://busk1ol8cdtlo" path="res://scripts/goteo_techo.gd" id="goteo_cueva"]
@@ -56,7 +57,6 @@
 [ext_resource type="Script" uid="uid://b3hesueuc6bsr" path="res://scripts/rayo_luz.gd" id="rayo_luz"]
 [ext_resource type="Script" uid="uid://cuy7f37ej2tqw" path="res://scripts/streaming_zonas.gd" id="streaming_zonas"]
 [ext_resource type="Script" uid="uid://b2knw64qxpag6" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
-[ext_resource type="PackedScene" path="res://scenes/terreno_bloques_n1.tscn" id="bloques_n1"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte"]
 shader = ExtResource("45_tinte")
@@ -523,7 +523,7 @@ position = Vector2(5640, 786)
 dialogo_id = "n1_combate"
 
 [node name="DialogoLobo" parent="." unique_id=120336290 instance=ExtResource("8_dialog")]
-position = Vector2(25386, 2384)
+position = Vector2(25712, 2371)
 dialogo_id = "n1_lobo"
 
 [node name="UnlockLobo" parent="." unique_id=2117783545 instance=ExtResource("28_unlock")]
@@ -1099,7 +1099,7 @@ color_madera = Color(0.56, 0.38, 0.21, 1)
 
 [node name="Pinchos_20" parent="Pinchos/Subsuelo_A" unique_id=257343022 instance=ExtResource("17_pinchos")]
 z_index = -2
-position = Vector2(15717, 3311)
+position = Vector2(15777, 3311)
 color_estaca = Color(0.6, 0.58, 0.74, 1)
 color_madera = Color(0.56, 0.38, 0.21, 1)
 
@@ -1804,8 +1804,8 @@ semilla = 32
 [node name="Checkpoint4" parent="." unique_id=520744038 instance=ExtResource("27_46iir")]
 position = Vector2(26711, 2407)
 
-[node name="Checkpoint4" parent="Checkpoint4" unique_id=1858692116 instance=ExtResource("27_46iir")]
-position = Vector2(-8267, 3425)
+[node name="Checkpoint4b" parent="." unique_id=1858692116 instance=ExtResource("27_46iir")]
+position = Vector2(18444, 5832)
 
 [node name="Enredadera" parent="." unique_id=1957323541 instance=ExtResource("16_enredadera")]
 position = Vector2(16230, 2149)
@@ -2015,13 +2015,6 @@ variante = 3
 escala = 5.64
 flip_h = true
 
-[node name="Pasto14" parent="Decoracion" unique_id=924349052 instance=ExtResource("40_deco")]
-position = Vector2(12093, 6150)
-tipo = 3
-variante = 5
-escala = 3.32
-flip_h = true
-
 [node name="Piedra8" parent="Decoracion" unique_id=1303940384 instance=ExtResource("40_deco")]
 position = Vector2(23068, 2351)
 tipo = 4
@@ -2042,14 +2035,6 @@ position = Vector2(16332, 6023)
 tipo = 4
 variante = 2
 escala = 4.73
-flip_h = true
-viento = false
-
-[node name="Piedra12" parent="Decoracion" unique_id=724943853 instance=ExtResource("40_deco")]
-position = Vector2(16972, 4358)
-tipo = 4
-variante = 4
-escala = 4.67
 flip_h = true
 viento = false
 
@@ -2152,23 +2137,6 @@ variante = 2
 escala = 4.15
 viento = false
 
-[node name="Pasto41" parent="Decoracion" unique_id=1419524121 instance=ExtResource("40_deco")]
-position = Vector2(23329, 2054)
-tipo = 3
-escala = 3.23
-
-[node name="Piedra36" parent="Decoracion" unique_id=978926280 instance=ExtResource("40_deco")]
-position = Vector2(30660, 3078)
-tipo = 4
-variante = 4
-escala = 4.76
-viento = false
-
-[node name="Pasto45" parent="Decoracion" unique_id=1946400991 instance=ExtResource("40_deco")]
-position = Vector2(31521, 3078)
-tipo = 3
-escala = 3.13
-
 [node name="Pasto47" parent="Decoracion" unique_id=929227299 instance=ExtResource("40_deco")]
 position = Vector2(25408, 2630)
 tipo = 3
@@ -2215,14 +2183,6 @@ variante = 2
 escala = 4.05
 viento = false
 
-[node name="Piedra45" parent="Decoracion" unique_id=803971955 instance=ExtResource("40_deco")]
-position = Vector2(30480, 2822)
-tipo = 4
-variante = 5
-escala = 4.56
-flip_h = true
-viento = false
-
 [node name="Pasto52" parent="Decoracion" unique_id=202606323 instance=ExtResource("40_deco")]
 position = Vector2(29418, 5238)
 tipo = 3
@@ -2240,20 +2200,6 @@ position = Vector2(31389, 5238)
 tipo = 4
 variante = 3
 escala = 4.39
-viento = false
-
-[node name="Pasto55" parent="Decoracion" unique_id=1876794314 instance=ExtResource("40_deco")]
-position = Vector2(27448, 5638)
-tipo = 3
-variante = 5
-escala = 3.56
-
-[node name="Piedra60" parent="Decoracion" unique_id=1319469665 instance=ExtResource("40_deco")]
-position = Vector2(32925, 2054)
-tipo = 4
-variante = 5
-escala = 4.79
-flip_h = true
 viento = false
 
 [node name="Atmosfera" type="Node2D" parent="." unique_id=265861613]
@@ -2421,7 +2367,7 @@ texture_scale = 5.0
 z_index = -3
 
 [node name="Rayo1" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1525805174]
-modulate = Color(1, 1, 1, 0.8268717)
+modulate = Color(1, 1, 1, 0.8425935)
 material = SubResource("CanvasItemMaterial_n68a7")
 position = Vector2(15200, 4032)
 script = ExtResource("rayo_luz")
@@ -2433,7 +2379,7 @@ color = Color(0.5, 0.88, 0.95, 1)
 opacidad = 0.15
 
 [node name="Rayo2" type="Node2D" parent="EfectosCueva/Rayos" unique_id=781055913]
-modulate = Color(1, 1, 1, 0.77632797)
+modulate = Color(1, 1, 1, 0.8764778)
 material = SubResource("CanvasItemMaterial_75xtp")
 position = Vector2(22300, 4640)
 script = ExtResource("rayo_luz")
@@ -2445,7 +2391,7 @@ opacidad = 0.15
 semilla = 2
 
 [node name="Rayo3" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1436968058]
-modulate = Color(1, 1, 1, 0.8015821)
+modulate = Color(1, 1, 1, 0.8336147)
 material = SubResource("CanvasItemMaterial_8evbx")
 position = Vector2(28000, 3936)
 script = ExtResource("rayo_luz")
@@ -2458,7 +2404,7 @@ opacidad = 0.14
 semilla = 3
 
 [node name="Rayo4" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1382485448]
-modulate = Color(1, 1, 1, 0.8850864)
+modulate = Color(1, 1, 1, 0.7464905)
 material = SubResource("CanvasItemMaterial_se8yl")
 position = Vector2(20000, 1552)
 script = ExtResource("rayo_luz")
@@ -2471,7 +2417,7 @@ opacidad = 0.13
 semilla = 4
 
 [node name="Rayo5" type="Node2D" parent="EfectosCueva/Rayos" unique_id=267750525]
-modulate = Color(1, 1, 1, 0.96653575)
+modulate = Color(1, 1, 1, 0.6800868)
 material = SubResource("CanvasItemMaterial_w0qtn")
 position = Vector2(18874, 1680)
 script = ExtResource("rayo_luz")
@@ -2484,7 +2430,7 @@ opacidad = 0.13
 semilla = 5
 
 [node name="Rayo6" type="Node2D" parent="EfectosCueva/Rayos" unique_id=626391221]
-modulate = Color(1, 1, 1, 0.98709136)
+modulate = Color(1, 1, 1, 0.68422556)
 material = SubResource("CanvasItemMaterial_hgrc8")
 position = Vector2(24000, 2352)
 script = ExtResource("rayo_luz")
@@ -2497,7 +2443,7 @@ opacidad = 0.14
 semilla = 6
 
 [node name="Rayo7" type="Node2D" parent="EfectosCueva/Rayos" unique_id=493778764]
-modulate = Color(1, 1, 1, 0.93252975)
+modulate = Color(1, 1, 1, 0.75703067)
 material = SubResource("CanvasItemMaterial_6wpew")
 position = Vector2(26711, 1792)
 script = ExtResource("rayo_luz")
@@ -2509,7 +2455,7 @@ opacidad = 0.14
 semilla = 7
 
 [node name="Rayo8" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1329949578]
-modulate = Color(1, 1, 1, 0.8436726)
+modulate = Color(1, 1, 1, 0.8463027)
 material = SubResource("CanvasItemMaterial_j18m3")
 position = Vector2(13696, 5060)
 script = ExtResource("rayo_luz")
@@ -2801,3 +2747,6 @@ script = ExtResource("streaming_zonas")
 [editable path="PlataformaFragil4"]
 [editable path="PlataformaFragil4/PlataformaFragil4"]
 [editable path="PlataformaFragil2"]
+
+[node name="CheckpointSubsueloFinal" parent="." unique_id=955749473 instance=ExtResource("27_46iir")]
+position = Vector2(21500, 5784)

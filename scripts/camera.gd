@@ -313,7 +313,7 @@ func modo_arena(centro: Vector2) -> void:
 		_modo_tween.kill()   # el viaje de modo_normal no debe arrastrar la cámara fuera de la arena
 	_modo = "fija"
 	_fija_pos = centro
-	global_position = centro
+	_zoom_velocidad = 1.0   # en modo fija no se recalcula: si entrabas corriendo quedaba congelado toda la pelea
 	modo_cambio.emit("arena")
 
 
@@ -349,7 +349,7 @@ func modo_normal(instantaneo: bool = false) -> void:
 		_modo_tween.kill()
 	_modo = "seguir"
 	modo_cambio.emit("seguir")
-	if _escala_arena != 1.0:
+	if _escala_arena != 1.0 or (_escala_tween != null and _escala_tween.is_valid()):
 		escala_arena(1.0, 0.0 if instantaneo else 0.8)   # fuera de la arena vuelve el zoom normal
 	var player := get_tree().get_first_node_in_group("player") as Node2D
 	if player != null:
@@ -359,6 +359,14 @@ func modo_normal(instantaneo: bool = false) -> void:
 			_lookahead_actual = 0.0
 			_look_offset = Vector2.ZERO
 			_suelo_y = INF
+			# Estado de la zona anterior (cae del piso, ladeo, shake): no debe arrastrarse al reaparecer.
+			_apex_look = 0.0
+			_piso_extra = 0.0
+			_offset_descenso = 0.0
+			_mirar_abajo_extra = 0.0
+			_shake_timer = 0.0
+			_tilt = 0.0
+			rotation = 0.0
 			reset_smoothing()
 			return
 		_modo_tween = create_tween()

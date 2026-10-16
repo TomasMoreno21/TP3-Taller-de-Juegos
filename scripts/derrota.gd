@@ -83,6 +83,7 @@ func _reintentar() -> void:
 		# Con la pantalla en negro: reaparece, se limpian las arenas y se quita el panel.
 		TransicionPantalla.de(get_tree()).fundido(func() -> void:
 			get_tree().paused = false
+			Input.action_release("jump")   # el botón que confirmó (A / Espacio) no debe hacer saltar al volver
 			player.reaparecer_en_checkpoint()
 			_restaurar_post_muerte()
 			queue_free())
