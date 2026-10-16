@@ -281,7 +281,10 @@ var _bloqueo_sin_cd := false
 	"run:3": Vector2(31.5, -72.0),
 	"run:4": Vector2(36.0, -73.0),
 	"run:5": Vector2(35.0, -72.5),
-	"idle:0": Vector2(34.5, -73.5),
+	"idle:0": Vector2(29.5, -75.5),
+	"idle:1": Vector2(29.5, -75.5),
+	"idle:2": Vector2(29.5, -77.0),
+	"idle:3": Vector2(29.5, -76.5),
 }
 @export var ojos_ajuste_humano := Vector2.ZERO   ## desplazamiento global (px) de la capa Ojos para el PJ humano
 ## Animaciones del PJ humano cuyo arte ya NO trae el ojo dibujado (el resto sí lo trae):
@@ -2393,6 +2396,9 @@ func _update_animacion() -> void:
 	# Salto del PJ humano: pose pintada (el ojo ya viene dibujado), distinta al azar en cada salto.
 	if current_form == Form.HUMAN and en_aire and visual.sprite_frames.has_animation("salto"):
 		anim = "salto"
+	# Salto del Lobo: pose pintada en el aire (el ojo ya viene dibujado).
+	if current_form == Form.LOBO and en_aire and visual.sprite_frames.has_animation("lobo_salto"):
+		anim = "lobo_salto"
 	if visual.animation != anim:
 		visual.play(anim)
 		if anim == "salto":
