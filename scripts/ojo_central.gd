@@ -1,8 +1,8 @@
 @tool
 extends Node2D
 ## Ojo central de la Estrella. `apertura` 0 = cerrado, 1 = abierto.
-## Con arte (lo normal): `textura_abierta` es el ojo de fondo y `textura_iris` la pupila,
-## que se desplaza con `mirada` (sigue al jugador); al parpadear se recorta de arriba/abajo.
+## Con arte (lo normal): `textura_abierta` (fondo), `textura_iris` (pupila) y `textura_frente`
+## (encima de todo); la pupila se desplaza con `mirada` (sigue al jugador) y al parpadear se
 ## `textura_cerrado` se usa con el ojo del todo cerrado. Si no hay `textura_abierta`, dibuja
 ## el ojo con polígonos (respaldo). Todo editable en el Inspector.
 
@@ -54,6 +54,18 @@ extends Node2D
 @export var iris_offset := Vector2.ZERO:
 	set(v):
 		iris_offset = v
+		queue_redraw()
+@export var textura_frente: Texture2D:
+	set(v):
+		textura_frente = v
+		queue_redraw()
+@export var frente_escala := Vector2.ONE:
+	set(v):
+		frente_escala = v
+		queue_redraw()
+@export var frente_offset := Vector2.ZERO:
+	set(v):
+		frente_offset = v
 		queue_redraw()
 @export_group("Respaldo (si no hay arte)")
 @export var color_esclera := Color(0.85, 0.9, 1.0):
@@ -113,8 +125,8 @@ func _draw() -> void:
 		draw_line(p, p * 1.18, color_iris, 4.0, true)
 
 
-## Ojo con arte: fondo (`textura_abierta`) + iris (`textura_iris`) desplazado por la mirada.
-## `apertura` recorta el ojo de arriba y abajo (parpadeo / abrir-cerrar).
+## Ojo con arte: fondo (`textura_abierta`) + iris (`textura_iris`) desplazado por la mirada
+## + frente (`textura_frente`) encima de todo. `apertura` recorta de arriba y abajo (parpadeo).
 func _dibujar_arte() -> void:
 	var ah := clampf(apertura, 0.0, 1.0)
 	_dibujar_recortado(textura_abierta, abierta_offset, abierta_escala * escala, ah)
@@ -125,6 +137,8 @@ func _dibujar_arte() -> void:
 			var tsz := textura_iris.get_size() * iris_escala * escala
 			var r := minf(tsz.x, tsz.y) * 0.25
 			_dibujar_nino(centro, r)
+	if textura_frente != null:
+		_dibujar_recortado(textura_frente, frente_offset, frente_escala * escala, ah)
 
 
 ## Dibuja `tex` centrada en `offset`, escalada por `esc`, mostrando solo la franja central

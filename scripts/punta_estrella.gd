@@ -1,7 +1,8 @@
 @tool
 extends Polygon2D
 ## Una de las 8 puntas de la Estrella: muestra la vida del jefe en el cuerpo (la barra del HUD
-## está oculta). `dano` 0..1 dibuja grietas de luz en 3 etapas; `romper()` la desprende.
+## está oculta). `dano` 0..1 dibuja grietas de luz en 3 etapas; `romper()` la deja agrietada
+## del todo en su lugar (no se desprende).
 ## El polígono es un triángulo editable: base sobre el núcleo, vértice = la punta.
 
 @export_range(0.0, 1.0, 0.01) var dano := 0.0:
@@ -44,17 +45,15 @@ func romper() -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("shake"):
 		cam.shake(6.0, 0.2)
+	# No se desprende: queda agrietada en su lugar (sacudida corta y vuelve a la base).
 	if DisplayServer.get_name() == "headless":
-		visible = false
 		return
 	if _tw != null and _tw.is_valid():
 		_tw.kill()
 	var hacia := vertice().normalized()
-	_tw = create_tween().set_parallel(true)
-	_tw.tween_property(self, "position", _pos_base + hacia * 60.0 + Vector2(0, 260), 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	_tw.tween_property(self, "rotation", _rot_base + (0.9 if hacia.x >= 0.0 else -0.9), 0.7)
-	_tw.tween_property(self, "modulate:a", 0.0, 0.7)
-	_tw.chain().tween_callback(func() -> void: visible = false)
+	_tw = create_tween()
+	_tw.tween_property(self, "position", _pos_base + hacia * 12.0, 0.06)
+	_tw.tween_property(self, "position", _pos_base, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func restaurar() -> void:

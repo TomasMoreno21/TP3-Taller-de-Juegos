@@ -6,16 +6,16 @@
 [ext_resource type="Script" uid="uid://bk4dtjsfxsakv" path="res://scripts/nudo_tallo.gd" id="4_nudo"]
 [ext_resource type="Script" uid="uid://cpfnyo8nhg55f" path="res://scripts/foso_pinchos.gd" id="6_foso"]
 [ext_resource type="Script" uid="uid://cf3puu6nxah0m" path="res://scripts/punta_estrella.gd" id="7_punta"]
-[ext_resource type="Texture2D" uid="uid://cwxtutvq6rgi8" path="res://Sprites/Enemigos/jefe_cabeza1.png" id="10_tex"]
 [ext_resource type="SpriteFrames" uid="uid://ciwis7isgjaqb" path="res://resources/jefe_cabeza.tres" id="9_cabeza"]
 [ext_resource type="Texture2D" uid="uid://6ogfiv3xenw7" path="res://Sprites/Enemigos/ojo_cerrado.png" id="10_ojo_cerrado"]
+[ext_resource type="Texture2D" uid="uid://cwxtutvq6rgi8" path="res://Sprites/Enemigos/jefe_cabeza1.png" id="10_tex"]
 [ext_resource type="Texture2D" uid="uid://vytm31kppfeb" path="res://Sprites/Enemigos/cuelpo.png" id="11_cuerpo"]
 [ext_resource type="Texture2D" uid="uid://vl4qujusc2k3" path="res://Sprites/Enemigos/ojo_abierto.png" id="12_ojo_abierto"]
 [ext_resource type="Texture2D" uid="uid://cnw602t57bhte" path="res://Sprites/Enemigos/ojo_iris.png" id="13_ojo_iris"]
-
-[ext_resource type="PackedScene" path="res://scenes/pinchos.tscn" id="20_pinchos"]
-[ext_resource type="Script" path="res://scripts/borde_musgo.gd" id="21_musgo"]
-[ext_resource type="PackedScene" path="res://scenes/decorativo.tscn" id="22_deco"]
+[ext_resource type="Texture2D" uid="uid://pp7qieq8f447" path="res://Sprites/Enemigos/ojo_frente.png" id="14_ojo_frente"]
+[ext_resource type="PackedScene" uid="uid://bf8ohs7pjg025" path="res://scenes/pinchos.tscn" id="20_pinchos"]
+[ext_resource type="Script" uid="uid://2evt507mwee1" path="res://scripts/borde_musgo.gd" id="21_musgo"]
+[ext_resource type="PackedScene" uid="uid://skni1dec001" path="res://scenes/decorativo.tscn" id="22_deco"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hurt"]
 radius = 100.0
@@ -52,14 +52,14 @@ position = Vector2(0, -550)
 
 [node name="CuerpoSprite" type="Sprite2D" parent="Cuerpo" unique_id=1694038169]
 z_index = -1
-position = Vector2(0, 650)
+position = Vector2(0, 838)
 scale = Vector2(1, 1.3008131)
 texture = ExtResource("11_cuerpo")
 
 [node name="Cabeza" type="AnimatedSprite2D" parent="Cuerpo" unique_id=84560798]
 visible = false
 texture_filter = 1
-position = Vector2(-256, -160)
+position = Vector2(-256, -108)
 sprite_frames = ExtResource("9_cabeza")
 animation = &"cabeza"
 autoplay = "cabeza"
@@ -71,54 +71,54 @@ offset = Vector2(-200, -320)
 
 [node name="Estrella" type="Node2D" parent="Cuerpo" unique_id=2141618593]
 
-[node name="Nucleo" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Nucleo" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=1688972479]
 texture = ExtResource("10_tex")
 polygon = PackedVector2Array(200, 115, -2, 129, -198, 101, -237, -42, -92, -132, 67, -137, 196, -49)
 uv = PackedVector2Array(669, 449, 467, 463, 271, 435, 232, 292, 377, 202, 536, 197, 665, 285)
 
-[node name="Punta1" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta1" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=879322029]
 texture = ExtResource("10_tex")
 polygon = PackedVector2Array(196, -49, 467, -116, 467, -82, 467, -41, 467, 0, 467, 41, 467, 82, 467, 125, 467, 170, 467, 218, 467, 270, 200, 115)
 uv = PackedVector2Array(665, 285, 936, 218, 936, 252, 936, 293, 936, 334, 936, 375, 936, 416, 936, 459, 936, 504, 936, 552, 936, 604, 669, 449)
 script = ExtResource("7_punta")
 vertice_local = Vector2(418, 15)
 
-[node name="Punta2" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta2" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=729955943]
 texture = ExtResource("10_tex")
 polygon = PackedVector2Array(200, 115, 467, 270, 466, 326, 389, 326, 326, 326, 274, 326, 228, 326, 188, 326, 152, 326, 119, 326, 87, 326, 57, 326, 29, 326, 0, 326, -6, 326, -2, 129)
 uv = PackedVector2Array(669, 449, 936, 604, 935, 660, 858, 660, 795, 660, 743, 660, 697, 660, 657, 660, 621, 660, 588, 660, 556, 660, 526, 660, 498, 660, 469, 660, 463, 660, 467, 463)
 script = ExtResource("7_punta")
 vertice_local = Vector2(272, 272)
 
-[node name="Punta3" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta3" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=682237619]
 texture = ExtResource("10_tex")
 polygon = PackedVector2Array(-2, 129, -6, 326, -29, 326, -57, 326, -87, 326, -119, 326, -152, 326, -188, 326, -228, 326, -274, 326, -326, 326, -389, 326, -466, 326, -466, 269, -466, 237, -198, 101)
 uv = PackedVector2Array(467, 463, 463, 660, 440, 660, 412, 660, 382, 660, 350, 660, 317, 660, 281, 660, 241, 660, 195, 660, 143, 660, 80, 660, 3, 660, 3, 603, 3, 571, 271, 435)
 script = ExtResource("7_punta")
 vertice_local = Vector2(-235, 270)
 
-[node name="Punta4" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta4" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=4711956]
 texture = ExtResource("10_tex")
 polygon = PackedVector2Array(-198, 101, -466, 237, -466, 217, -466, 170, -466, 125, -466, 82, -466, 41, -466, 0, -466, -41, -466, -82, -237, -42)
 uv = PackedVector2Array(271, 435, 3, 571, 3, 551, 3, 504, 3, 459, 3, 416, 3, 375, 3, 334, 3, 293, 3, 252, 232, 292)
 script = ExtResource("7_punta")
 vertice_local = Vector2(-416, 7)
 
-[node name="Punta5" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta5" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=828828713]
 texture = ExtResource("10_tex")
 polygon = PackedVector2Array(-237, -42, -466, -82, -466, -125, -466, -170, -466, -217, -466, -269, -466, -326, -394, -331, -331, -331, -278, -331, -232, -331, -92, -132)
 uv = PackedVector2Array(232, 292, 3, 252, 3, 209, 3, 164, 3, 117, 3, 65, 3, 8, 75, 3, 138, 3, 191, 3, 237, 3, 377, 202)
 script = ExtResource("7_punta")
 vertice_local = Vector2(-359, -183)
 
-[node name="Punta6" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta6" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=342601042]
 texture = ExtResource("10_tex")
 polygon = PackedVector2Array(-92, -132, -232, -331, -191, -331, -154, -331, -120, -331, -89, -331, -58, -331, -29, -331, 0, -331, 29, -331, 58, -331, 89, -331, 120, -331, 154, -331, 161, -331, 67, -137)
 uv = PackedVector2Array(377, 202, 237, 3, 278, 3, 315, 3, 349, 3, 380, 3, 411, 3, 440, 3, 469, 3, 498, 3, 527, 3, 558, 3, 589, 3, 623, 3, 630, 3, 536, 197)
 script = ExtResource("7_punta")
 vertice_local = Vector2(-11, -304)
 
-[node name="Punta7" type="Polygon2D" parent="Cuerpo/Estrella"]
+[node name="Punta7" type="Polygon2D" parent="Cuerpo/Estrella" unique_id=346303261]
 texture = ExtResource("10_tex")
 polygon = PackedVector2Array(67, -137, 161, -331, 191, -331, 232, -331, 278, -331, 331, -331, 394, -331, 467, -327, 467, -270, 467, -218, 467, -170, 467, -125, 467, -116, 196, -49)
 uv = PackedVector2Array(536, 197, 630, 3, 660, 3, 701, 3, 747, 3, 800, 3, 863, 3, 936, 7, 936, 64, 936, 116, 936, 164, 936, 209, 936, 218, 665, 285)
@@ -131,6 +131,8 @@ textura_cerrado = ExtResource("10_ojo_cerrado")
 escala = Vector2(1.25, 1.25)
 textura_abierta = ExtResource("12_ojo_abierto")
 textura_iris = ExtResource("13_ojo_iris")
+textura_frente = ExtResource("14_ojo_frente")
+mostrar_nino = false
 
 [node name="Hurtbox" type="StaticBody2D" parent="Cuerpo" unique_id=1567898200]
 collision_layer = 2
@@ -164,11 +166,9 @@ disabled = true
 [node name="Foso" type="Node2D" parent="." unique_id=913524863]
 script = ExtResource("6_foso")
 
-[node name="Pinchos" parent="Foso" instance=ExtResource("20_pinchos")]
+[node name="Pinchos" parent="Foso" unique_id=558958078 instance=ExtResource("20_pinchos")]
 position = Vector2(0, 60)
 cantidad = 15
-ancho_pincho = 40.0
-estilo = 0
 color_estaca = Color(0.8, 0.78, 0.93, 1)
 z_index_detras = 0
 
@@ -216,16 +216,15 @@ polygon = PackedVector2Array(-2000, 244, 2000, 244, 2000, 260, -2000, 260)
 position = Vector2(-2093, -146)
 shape = SubResource("RectangleShape2D_techo")
 
-[node name="Estandarte1" parent="TechoArena" groups=["destruible_f3"] instance=ExtResource("22_deco")]
+[node name="Estandarte1" parent="TechoArena" unique_id=1371002377 groups=["destruible_f3"] instance=ExtResource("22_deco")]
 z_index = -1
 position = Vector2(-950, 260)
 tipo = 14
 escala = 3.0
-flip_h = false
 sombra = false
 viento = false
 
-[node name="Estandarte2" parent="TechoArena" groups=["destruible_f3"] instance=ExtResource("22_deco")]
+[node name="Estandarte2" parent="TechoArena" unique_id=1148046378 groups=["destruible_f3"] instance=ExtResource("22_deco")]
 z_index = -1
 position = Vector2(950, 260)
 tipo = 14
@@ -233,10 +232,6 @@ escala = 3.0
 flip_h = true
 sombra = false
 viento = false
-
-
-
-
 
 [node name="PlataformasF2" type="Node2D" parent="." unique_id=1323560123]
 
@@ -258,7 +253,7 @@ visible = false
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
 
-[node name="Musgo" type="Node2D" parent="PlataformasF2/Plataforma1"]
+[node name="Musgo" type="Node2D" parent="PlataformasF2/Plataforma1" unique_id=1110430269]
 script = ExtResource("21_musgo")
 color_pasto = Color(0.2, 0.25, 0.29, 1)
 color_veta = Color(0.52, 0.6, 0.64, 1)
@@ -288,7 +283,7 @@ visible = false
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
 
-[node name="Musgo" type="Node2D" parent="PlataformasF2/Plataforma2"]
+[node name="Musgo" type="Node2D" parent="PlataformasF2/Plataforma2" unique_id=68260357]
 script = ExtResource("21_musgo")
 color_pasto = Color(0.2, 0.25, 0.29, 1)
 color_veta = Color(0.52, 0.6, 0.64, 1)
@@ -318,7 +313,7 @@ visible = false
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
 
-[node name="Musgo" type="Node2D" parent="PlataformasF2/Plataforma3"]
+[node name="Musgo" type="Node2D" parent="PlataformasF2/Plataforma3" unique_id=1056658616]
 script = ExtResource("21_musgo")
 color_pasto = Color(0.2, 0.25, 0.29, 1)
 color_veta = Color(0.52, 0.6, 0.64, 1)
@@ -348,7 +343,7 @@ visible = false
 color = Color(0.42, 0.3, 0.55, 1)
 polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
 
-[node name="Musgo" type="Node2D" parent="PlataformasF2/Plataforma4"]
+[node name="Musgo" type="Node2D" parent="PlataformasF2/Plataforma4" unique_id=1746476772]
 script = ExtResource("21_musgo")
 color_pasto = Color(0.2, 0.25, 0.29, 1)
 color_veta = Color(0.52, 0.6, 0.64, 1)

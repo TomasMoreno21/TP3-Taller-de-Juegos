@@ -36,7 +36,7 @@ enum Fase { UNO, DOS, TRES }
 @export var distancia_orbe := 520.0         ## px del centro (del lado del jugador) donde aparece el orbe
 @export var mostrar_barra_hud := false      ## la vida se lee en las puntas del cuerpo, no en el HUD
 @export var orden_puntas: Array[int] = [5, 0, 3, 1, 2, 6, 4]   ## en qué orden se rompen las puntas (5 = arriba, 0 = derecha)
-@export_range(0.0, 1.0, 0.01) var tinte_fase := 0.35   ## cuánto tiñe el color de la F2/F3 al dibujo (la F1 sin tinte)
+@export_range(0.0, 1.0, 0.01) var tinte_fase := 0.0   ## cuánto tiñe el color de la F2/F3 al dibujo (0 = sin tinte, conserva el color original; la F1 nunca se tiñe)
 @export var drenaje_energia_jefe := 0.35   ## multiplicador del gasto de energía en la pelea ("el amuleto arde")
 
 @export_group("Ojos verdes (tandas)")
@@ -411,7 +411,7 @@ func _ciclo_f1(gen: int) -> void:
 	# 2) El ojo se abre arriba (fuera de alcance) y el nudo del tallo se puede romper (Oso).
 	_estado = "nudo"
 	_lanza_t = maxf(_lanza_t, 1.2)
-	_poner_ojo(0.6)
+	_poner_ojo(1.0)
 	nudo.activar()
 	while _sigue(gen) and not nudo.esta_roto():
 		await _esperar(0.1)
@@ -535,8 +535,6 @@ func _sigue(gen: int) -> bool:
 func _physics_process(delta: float) -> void:
 	if not _activo or _muerto:
 		return
-	if _estado != "castigo" and _estado != "ventana_aerea" and _estado != "agotada":
-		estrella.rotation += giro_velocidad * delta
 	_aviso_cierre_tick()
 	if _estado == "duelo":
 		_seguir_jugador(delta)

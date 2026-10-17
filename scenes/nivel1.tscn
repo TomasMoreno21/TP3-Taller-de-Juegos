@@ -2980,6 +2980,7 @@ script = ExtResource("streaming_zonas")
 
 [node name="CheckpointSubsueloFinal" parent="." unique_id=955749473 instance=ExtResource("27_46iir")]
 position = Vector2(21500, 5784)
+
 [node name="DecoPalo3" type="Sprite2D" parent="." unique_id=554250042]
 z_index = 2
 position = Vector2(1080, -124.573784)
@@ -3265,7 +3266,7 @@ texture = ExtResource("81_palo2")
 
 [node name="DecoPalo31" type="Sprite2D" parent="." unique_id=1902412302]
 z_index = 2
-position = Vector2(30989.002, 43)
+position = Vector2(28000.002, 13)
 scale = Vector2(0.41109884, 0.35265052)
 texture = ExtResource("81_palo2")
 
