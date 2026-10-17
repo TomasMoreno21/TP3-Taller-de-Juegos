@@ -163,6 +163,7 @@ var forma_seleccionada: int = Form.HUMAN
 var health: int = 100
 var energia: float = ENERGIA_MAX
 var god_mode := false
+var energia_infinita := false
 var facing := 1
 var blocking := false
 
@@ -908,6 +909,32 @@ func _dialogo_bloquea_input() -> bool:
 	if cinematica_activa:
 		return true
 	return _derrota_activa   # muerto: sin control ni daño hasta reaparecer (los globos del Amuleto ya no bloquean)
+
+
+## Tecla truco (solo build de debug): F9 alterna vida y energía infinitas.
+func _unhandled_input(event: InputEvent) -> void:
+	if not OS.is_debug_build():
+		return
+	if not (event is InputEventKey):
+		return
+	var k := event as InputEventKey
+	if not k.pressed or k.echo:
+		return
+	var codigo := k.physical_keycode if k.physical_keycode != KEY_NONE else k.keycode
+	if codigo != KEY_F9:
+		return
+	_alternar_trucos()
+
+
+func _alternar_trucos() -> void:
+	god_mode = not god_mode
+	energia_infinita = god_mode
+	if energia_infinita:
+		energia = ENERGIA_MAX
+		energia_changed.emit(energia)
+	var dialogo := get_node_or_null("/root/Dialogo")
+	if dialogo != null and dialogo.has_method("mostrar_tip"):
+		dialogo.mostrar_tip(["Trucos %s: vida y energía infinitas." % ("ON" if god_mode else "OFF")], "Amuleto")
 
 
 func _handle_racha(delta: float) -> void:
@@ -1929,6 +1956,8 @@ func _handle_energia(delta: float) -> void:
 				_cooldown_formas[agotada] = COOLDOWN_AGOTADA
 				transformacion_agotada.emit()
 				_sfx(sonido_energia_agotada, volumen_estado_db)
+	if energia_infinita:
+		energia = ENERGIA_MAX
 	energia_changed.emit(energia)
 
 

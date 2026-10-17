@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://ca7folks1s5l4" path="res://scenes/player.tscn" id="1_player"]
 [ext_resource type="Script" uid="uid://dr4ufpymfll0q" path="res://scripts/camera.gd" id="2_cam"]
+[ext_resource type="PackedScene" path="res://scenes/fondo_jefe.tscn" id="3_fondo"]
 [ext_resource type="Script" uid="uid://c20i4wytflcth" path="res://scripts/setup_progresion_nivel.gd" id="4_setup"]
 [ext_resource type="PackedScene" uid="uid://x0o25yeqfgsm" path="res://scenes/encounter.tscn" id="5_enc"]
 [ext_resource type="Script" uid="uid://bwvbj2bycs3nq" path="res://scripts/nivel_jefe.gd" id="6_niveljefe"]
@@ -11,7 +12,6 @@
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="10_levelup"]
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="12_dialog"]
 [ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="14_pick"]
-[ext_resource type="PackedScene" path="res://scenes/fondo_cueva_profunda.tscn" id="30_fondo"]
 [ext_resource type="PackedScene" path="res://scenes/noche_profunda.tscn" id="31_noche"]
 [ext_resource type="PackedScene" path="res://scenes/atmosfera_nivel3.tscn" id="32_atm"]
 [ext_resource type="Script" uid="uid://dotehvvuk7udf" path="res://scripts/latido_cueva.gd" id="33_latido"]
@@ -36,7 +36,7 @@ size = Vector2(1900, 1000)
 script = ExtResource("6_niveljefe")
 
 [node name="Player" parent="." unique_id=1861947130 instance=ExtResource("1_player")]
-position = Vector2(221, 772)
+position = Vector2(221, 900)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=985519331]
 limit_left = 0
@@ -50,8 +50,6 @@ script = ExtResource("4_setup")
 nivel_minimo = 4
 formas_forzadas = Array[int]([0, 1, 2, 3])
 
-[node name="FondoCuevaProfunda" parent="." unique_id=1247170179 instance=ExtResource("30_fondo")]
-
 [node name="NocheProfunda" parent="." unique_id=647659213 instance=ExtResource("31_noche")]
 
 [node name="LuciernagasAmbiente" parent="NocheProfunda" index="1"]
@@ -62,6 +60,8 @@ con_luz = 0
 [node name="HojasAmbiente" parent="NocheProfunda" index="2"]
 visible = false
 emitting = false
+
+[node name="FondoJefe" parent="." unique_id=794215151 instance=ExtResource("3_fondo")]
 
 [node name="Piso" type="StaticBody2D" parent="." unique_id=699220115]
 position = Vector2(4600, 1100)

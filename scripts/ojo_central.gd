@@ -1,7 +1,10 @@
 @tool
 extends Node2D
-## Ojo central de la Estrella (dibujo). `apertura` 0 = cerrado, 1 = abierto. Adentro se ve
-## la silueta del niño (placeholder hasta tener el arte). Todo editable en el Inspector.
+## Ojo central de la Estrella. `apertura` 0 = cerrado, 1 = abierto.
+## Con arte (lo normal): `textura_abierta` es el ojo de fondo y `textura_iris` la pupila,
+## que se desplaza con `mirada` (sigue al jugador); al parpadear se recorta de arriba/abajo.
+## `textura_cerrado` se usa con el ojo del todo cerrado. Si no hay `textura_abierta`, dibuja
+## el ojo con polígonos (respaldo). Todo editable en el Inspector.
 
 @export_range(0.0, 1.0, 0.01) var apertura := 0.0:
 	set(v):
@@ -23,6 +26,36 @@ extends Node2D
 	set(v):
 		cerrado_offset = v
 		queue_redraw()
+@export_group("Arte (abierto)")
+@export var escala := Vector2.ONE:  ## multiplica todo el ojo (abierto, iris y cerrado): un solo valor para agrandarlo
+	set(v):
+		escala = v
+		queue_redraw()
+@export var textura_abierta: Texture2D:
+	set(v):
+		textura_abierta = v
+		queue_redraw()
+@export var abierta_escala := Vector2.ONE:
+	set(v):
+		abierta_escala = v
+		queue_redraw()
+@export var abierta_offset := Vector2.ZERO:
+	set(v):
+		abierta_offset = v
+		queue_redraw()
+@export var textura_iris: Texture2D:
+	set(v):
+		textura_iris = v
+		queue_redraw()
+@export var iris_escala := Vector2.ONE:
+	set(v):
+		iris_escala = v
+		queue_redraw()
+@export var iris_offset := Vector2.ZERO:
+	set(v):
+		iris_offset = v
+		queue_redraw()
+@export_group("Respaldo (si no hay arte)")
 @export var color_esclera := Color(0.85, 0.9, 1.0):
 	set(v):
 		color_esclera = v
@@ -48,9 +81,13 @@ var nino_escudo := 0.0       # 0..1: el cultista aprieta al niño contra el iris
 
 func _draw() -> void:
 	if apertura <= 0.02 and textura_cerrado != null:
-		var ts := textura_cerrado.get_size() * cerrado_escala
+		var ts := textura_cerrado.get_size() * cerrado_escala * escala
 		draw_texture_rect(textura_cerrado, Rect2(cerrado_offset - ts * 0.5, ts), false)
 		return
+	if textura_abierta != null:
+		_dibujar_arte()
+		return
+	# --- Respaldo: ojo dibujado con polígonos (sin arte asignado) ---
 	var w := radio * 1.45
 	var h := radio * 0.85
 	var almendra := _almendra(w, h)
@@ -74,6 +111,36 @@ func _draw() -> void:
 		var a := -PI * 0.85 + PI * 0.7 * float(i) / 4.0
 		var p := Vector2(cos(a) * w * 1.05, sin(a) * h * 1.15)
 		draw_line(p, p * 1.18, color_iris, 4.0, true)
+
+
+## Ojo con arte: fondo (`textura_abierta`) + iris (`textura_iris`) desplazado por la mirada.
+## `apertura` recorta el ojo de arriba y abajo (parpadeo / abrir-cerrar).
+func _dibujar_arte() -> void:
+	var ah := clampf(apertura, 0.0, 1.0)
+	_dibujar_recortado(textura_abierta, abierta_offset, abierta_escala * escala, ah)
+	if textura_iris != null and ah > 0.02:
+		var centro := iris_offset + mirada * ah
+		_dibujar_recortado(textura_iris, centro, iris_escala * escala, ah)
+		if mostrar_nino and ah > 0.4:
+			var tsz := textura_iris.get_size() * iris_escala * escala
+			var r := minf(tsz.x, tsz.y) * 0.25
+			_dibujar_nino(centro, r)
+
+
+## Dibuja `tex` centrada en `offset`, escalada por `esc`, mostrando solo la franja central
+## de alto `a` (0 = nada, 1 = entera). Así el párpado "tapa" el ojo al parpadear.
+func _dibujar_recortado(tex: Texture2D, offset: Vector2, esc: Vector2, a: float) -> void:
+	var ah := clampf(a, 0.0, 1.0)
+	if ah <= 0.001:
+		return
+	var sz := tex.get_size()
+	var alto := sz.y * ah
+	var region := Rect2(Vector2(0.0, (sz.y - alto) * 0.5), Vector2(sz.x, alto))
+	var full := Rect2(offset - sz * esc * 0.5, sz * esc)
+	var dest_h := alto * esc.y
+	var dest := Rect2(Vector2(full.position.x, full.position.y + (full.size.y - dest_h) * 0.5),
+			Vector2(sz.x * esc.x, dest_h))
+	draw_texture_rect_region(tex, dest, region)
 
 
 ## Silueta del niño encogido dentro de la pupila (cabeza + cuerpo).

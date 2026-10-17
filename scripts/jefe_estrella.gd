@@ -1849,12 +1849,10 @@ func _poner_bordes_foso(on: bool) -> void:
 			(cs as CollisionShape2D).set_deferred("disabled", not on)
 
 
-## El tallo se acorta con el cuerpo (su polígono va del piso a la altura de reposo).
+## El cuerpo nuevo (CuerpoSprite) reemplaza al tallo y al nudo: quedan ocultos siempre.
 func _ajustar_tallo() -> void:
-	if tallo != null and _altura_ojo > 0.0:
-		tallo.scale.y = -cuerpo.position.y / _altura_ojo
-		tallo.scale.x = cuerpo.scale.x
-		tallo.visible = cuerpo.visible and cuerpo.position.y < -10.0 and not _sin_tallo
+	if tallo != null:
+		tallo.visible = false
 
 
 func _mirar_jugador(delta: float) -> void:

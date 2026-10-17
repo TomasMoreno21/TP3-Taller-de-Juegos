@@ -38,12 +38,16 @@
 [ext_resource type="Shader" uid="uid://2gmi16mug215" path="res://resources/tinte_terreno.gdshader" id="45_tinte"]
 [ext_resource type="PackedScene" path="res://scenes/tutorial_paso.tscn" id="64_tut"]
 [ext_resource type="Texture2D" uid="uid://dnwjj2u2vlg8h" path="res://Sprites/Fondos/Bosque/piso.png" id="65_piso"]
-[ext_resource type="Texture2D" uid="uid://c3jhi7ub5h7ar" path="res://Sprites/Elementos/arbusto1.png" id="66_arb1"]
+[ext_resource type="Texture2D" uid="uid://bl5y6c6nq5pcp" path="res://Sprites/Elementos/arbusto1_claro.png" id="66_arb1"]
 [ext_resource type="Texture2D" uid="uid://b1s3da000qxgx" path="res://Sprites/Elementos/arbusto2.png" id="67_arb2"]
-[ext_resource type="Texture2D" uid="uid://dafwvfq26r65w" path="res://Sprites/Elementos/arbusto3.png" id="68_arb3"]
+[ext_resource type="Texture2D" uid="uid://govpw4mu3t0x" path="res://Sprites/Elementos/arbusto3_claro.png" id="68_arb3"]
 [ext_resource type="Script" uid="uid://gq2nr6gop4t4" path="res://scripts/viento_sprite.gd" id="69_vsp"]
 [ext_resource type="Script" uid="uid://idd63jdwwtsy" path="res://scripts/intro_nivel.gd" id="70_intro"]
 [ext_resource type="Script" uid="uid://d4d5q3u8vx8dm" path="res://scripts/plano_intro.gd" id="71_plano"]
+[ext_resource type="Texture2D" uid="uid://18ctgoao5bdx" path="res://Sprites/Elementos/palo.png" id="80_palo"]
+[ext_resource type="Texture2D" uid="uid://dj6jg4hioti4m" path="res://Sprites/Elementos/palo2.png" id="81_palo2"]
+[ext_resource type="Texture2D" uid="uid://c2a0u2mk4fb32" path="res://Sprites/Elementos/lianaa.png" id="82_liana"]
+[ext_resource type="Texture2D" uid="uid://ddp5kny85vn5m" path="res://Sprites/Elementos/arbusto2_claro.png" id="83_arb2c"]
 [ext_resource type="Script" uid="uid://2vfwwokdugpy" path="res://scripts/tronco_torre.gd" id="98_torre"]
 [ext_resource type="Script" uid="uid://c2wcdp33n0exy" path="res://scripts/soporte_plataforma.gd" id="99_soporte"]
 [ext_resource type="PackedScene" path="res://scenes/terreno_bloques_n1.tscn" id="bloques_n1"]
@@ -99,18 +103,6 @@ size = Vector2(280, 36)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_torre"]
 size = Vector2(384, 562)
 
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_n68a7"]
-blend_mode = 1
-
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_75xtp"]
-blend_mode = 1
-
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_8evbx"]
-blend_mode = 1
-
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_se8yl"]
-blend_mode = 1
-
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_w0qtn"]
 blend_mode = 1
 
@@ -121,6 +113,18 @@ blend_mode = 1
 blend_mode = 1
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_j18m3"]
+blend_mode = 1
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_16gdd"]
+blend_mode = 1
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_va0mb"]
+blend_mode = 1
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_rg2jq"]
+blend_mode = 1
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_y6jhi"]
 blend_mode = 1
 
 [node name="Nivel1" type="Node2D" unique_id=1020284745]
@@ -149,7 +153,7 @@ acento_volumen_db = -2.0
 script = ExtResource("rampas_suaves")
 
 [node name="Player" parent="." unique_id=1763988589 instance=ExtResource("1_player")]
-position = Vector2(-717, 802)
+position = Vector2(26529, 2527)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
 position = Vector2(20, 120)
@@ -171,7 +175,7 @@ script = ExtResource("69_vsp")
 
 [node name="Arbusto2" type="Sprite2D" parent="ArbustosSuelo" unique_id=1305399687]
 position = Vector2(-71, 953)
-texture = ExtResource("67_arb2")
+texture = ExtResource("83_arb2c")
 script = ExtResource("69_vsp")
 
 [node name="Arbusto3" type="Sprite2D" parent="ArbustosSuelo" unique_id=1452096886]
@@ -183,6 +187,220 @@ script = ExtResource("69_vsp")
 z_index = 2
 position = Vector2(2641, -602)
 texture = ExtResource("45_cosito")
+
+[node name="CositoFrente1" type="Sprite2D" parent="CositoFrente1" unique_id=822089906]
+z_index = 2
+position = Vector2(-1561, 16)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente2" type="Sprite2D" parent="." unique_id=59946422]
+z_index = 2
+position = Vector2(4188, -634)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente3" type="Sprite2D" parent="." unique_id=1768859147]
+z_index = 2
+position = Vector2(5757, -651)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente4" type="Sprite2D" parent="." unique_id=1789029490]
+z_index = 2
+position = Vector2(7326, -667)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente6" type="Sprite2D" parent="." unique_id=208542918]
+z_index = 2
+position = Vector2(8895, -684)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente5" type="Sprite2D" parent="." unique_id=1913312296]
+z_index = 2
+position = Vector2(10464, -701)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente7" type="Sprite2D" parent="." unique_id=860939147]
+z_index = 2
+position = Vector2(12033, -718)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente8" type="Sprite2D" parent="." unique_id=271439122]
+z_index = 2
+position = Vector2(13602, -735)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente9" type="Sprite2D" parent="." unique_id=1965667307]
+z_index = 2
+position = Vector2(15171, -752)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente10" type="Sprite2D" parent="." unique_id=1739278260]
+z_index = 2
+position = Vector2(16740, -769)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente11" type="Sprite2D" parent="." unique_id=2115335391]
+z_index = 2
+position = Vector2(18309, -786)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente12" type="Sprite2D" parent="." unique_id=2029574308]
+z_index = 2
+position = Vector2(19878, -803)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente13" type="Sprite2D" parent="." unique_id=1746285236]
+z_index = 2
+position = Vector2(21447, -820)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente14" type="Sprite2D" parent="." unique_id=1013518936]
+z_index = 2
+position = Vector2(23016, -837)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente15" type="Sprite2D" parent="." unique_id=722796460]
+z_index = 2
+position = Vector2(24585, -854)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente16" type="Sprite2D" parent="." unique_id=1144955378]
+z_index = 2
+position = Vector2(26154, -871)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente17" type="Sprite2D" parent="." unique_id=1346008164]
+z_index = 2
+position = Vector2(27723, -888)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente18" type="Sprite2D" parent="." unique_id=264774862]
+z_index = 2
+position = Vector2(29292, -905)
+texture = ExtResource("45_cosito")
+
+[node name="CositoFrente19" type="Sprite2D" parent="." unique_id=1589088185]
+z_index = 2
+position = Vector2(30861, -922)
+texture = ExtResource("45_cosito")
+
+[node name="DecoPalo" type="Sprite2D" parent="." unique_id=1700000001]
+z_index = 2
+position = Vector2(-198, 190.99997)
+scale = Vector2(1.0475687, 0.8800989)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo6" type="Sprite2D" parent="." unique_id=584913273]
+z_index = 2
+position = Vector2(9235.001, 284)
+scale = Vector2(0.5768418, 0.54302734)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo7" type="Sprite2D" parent="." unique_id=1248331792]
+z_index = 2
+position = Vector2(8232, 281)
+scale = Vector2(0.33274642, 0.2948787)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo5" type="Sprite2D" parent="." unique_id=303227896]
+z_index = 2
+position = Vector2(2217.91, 366.4701)
+scale = Vector2(0.31763685, 0.33505177)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo2" type="Sprite2D" parent="." unique_id=1700000002]
+z_index = 2
+position = Vector2(6131, -114)
+scale = Vector2(0.893736, 0.8277675)
+texture = ExtResource("81_palo2")
+
+[node name="DecoPalo8" type="Sprite2D" parent="." unique_id=2109202155]
+z_index = 2
+position = Vector2(7990, 152)
+scale = Vector2(0.41109884, 0.35265052)
+texture = ExtResource("81_palo2")
+
+[node name="DecoPalo4" type="Sprite2D" parent="." unique_id=42155813]
+z_index = 2
+position = Vector2(-514, -19)
+scale = Vector2(0.79876405, 0.685199)
+texture = ExtResource("81_palo2")
+offset = Vector2(483.86816, 57.84378)
+
+[node name="DecoLiana" type="Sprite2D" parent="." unique_id=1700000003]
+z_index = 2
+position = Vector2(-432, -10)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana4" type="Sprite2D" parent="." unique_id=1184277654]
+z_index = 2
+position = Vector2(680, 32)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana7" type="Sprite2D" parent="." unique_id=1722060388]
+z_index = 2
+position = Vector2(7246, 21)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana8" type="Sprite2D" parent="." unique_id=273499270]
+z_index = 2
+position = Vector2(9747, 105)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana3" type="Sprite2D" parent="." unique_id=765686820]
+z_index = 2
+position = Vector2(788, -134)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana5" type="Sprite2D" parent="." unique_id=1732593749]
+z_index = 2
+position = Vector2(324, 107)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana6" type="Sprite2D" parent="." unique_id=1016505894]
+z_index = 2
+position = Vector2(2047, -113.5)
+scale = Vector2(1, 1.4612069)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana9" type="Sprite2D" parent="." unique_id=557587531]
+z_index = 2
+position = Vector2(5920, -165)
+scale = Vector2(1, 2.1351256)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana2" type="Sprite2D" parent="." unique_id=55091444]
+z_index = 2
+position = Vector2(-324, -176)
+texture = ExtResource("82_liana")
+
+[node name="DecoArbusto2" type="Sprite2D" parent="." unique_id=1700000004]
+z_index = 2
+position = Vector2(-352.39703, 1026.25)
+scale = Vector2(1.9537482, 2.2663937)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto5" type="Sprite2D" parent="." unique_id=139880140]
+z_index = 2
+position = Vector2(109.6651, 1032.3944)
+scale = Vector2(2.074845, 2.1277893)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto4" type="Sprite2D" parent="." unique_id=437481076]
+z_index = 2
+position = Vector2(3223.9998, 1004.00006)
+scale = Vector2(2.1987622, 2.06827)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto3" type="Sprite2D" parent="." unique_id=1261994339]
+z_index = 2
+position = Vector2(-874.00006, 963.99994)
+scale = Vector2(1.297487, 1.6411831)
+texture = ExtResource("67_arb2")
+offset = Vector2(-28.847717, 62.218567)
 
 [node name="Terreno" type="TileMapLayer" parent="." unique_id=211863747]
 tile_set = ExtResource("4_tileset")
@@ -208,7 +426,7 @@ color = Color(0.16, 0.32, 0.18, 1)
 polygon = PackedVector2Array(-8000, -100, 8000, -100, 8000, 2.3250732, 8000, 100, -20.410156, 100, -8000, 100)
 
 [node name="PisoCollision" type="CollisionShape2D" parent="Piso" unique_id=2085221829]
-position = Vector2(6931.5, 102)
+position = Vector2(6946, 102)
 shape = SubResource("RectangleShape2D_piso")
 
 [node name="Tierra" type="Polygon2D" parent="Piso" unique_id=880000010]
@@ -2354,8 +2572,8 @@ texture_scale = 5.0
 z_index = -3
 
 [node name="Rayo1" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1525805174]
-modulate = Color(1, 1, 1, 0.8425935)
-material = SubResource("CanvasItemMaterial_n68a7")
+modulate = Color(1, 1, 1, 0.8425031)
+material = SubResource("CanvasItemMaterial_w0qtn")
 position = Vector2(15200, 4032)
 script = ExtResource("rayo_luz")
 alto = 1400.0
@@ -2366,8 +2584,8 @@ color = Color(0.5, 0.88, 0.95, 1)
 opacidad = 0.15
 
 [node name="Rayo2" type="Node2D" parent="EfectosCueva/Rayos" unique_id=781055913]
-modulate = Color(1, 1, 1, 0.8764778)
-material = SubResource("CanvasItemMaterial_75xtp")
+modulate = Color(1, 1, 1, 0.75459313)
+material = SubResource("CanvasItemMaterial_hgrc8")
 position = Vector2(22300, 4640)
 script = ExtResource("rayo_luz")
 alto = 1100.0
@@ -2378,8 +2596,8 @@ opacidad = 0.15
 semilla = 2
 
 [node name="Rayo3" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1436968058]
-modulate = Color(1, 1, 1, 0.8336147)
-material = SubResource("CanvasItemMaterial_8evbx")
+modulate = Color(1, 1, 1, 0.6980605)
+material = SubResource("CanvasItemMaterial_6wpew")
 position = Vector2(28000, 3936)
 script = ExtResource("rayo_luz")
 alto = 1100.0
@@ -2391,8 +2609,8 @@ opacidad = 0.14
 semilla = 3
 
 [node name="Rayo4" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1382485448]
-modulate = Color(1, 1, 1, 0.7464905)
-material = SubResource("CanvasItemMaterial_se8yl")
+modulate = Color(1, 1, 1, 0.71583587)
+material = SubResource("CanvasItemMaterial_j18m3")
 position = Vector2(20000, 1552)
 script = ExtResource("rayo_luz")
 alto = 1700.0
@@ -2404,8 +2622,8 @@ opacidad = 0.13
 semilla = 4
 
 [node name="Rayo5" type="Node2D" parent="EfectosCueva/Rayos" unique_id=267750525]
-modulate = Color(1, 1, 1, 0.6800868)
-material = SubResource("CanvasItemMaterial_w0qtn")
+modulate = Color(1, 1, 1, 0.7963742)
+material = SubResource("CanvasItemMaterial_16gdd")
 position = Vector2(18874, 1680)
 script = ExtResource("rayo_luz")
 alto = 1500.0
@@ -2417,8 +2635,8 @@ opacidad = 0.13
 semilla = 5
 
 [node name="Rayo6" type="Node2D" parent="EfectosCueva/Rayos" unique_id=626391221]
-modulate = Color(1, 1, 1, 0.68422556)
-material = SubResource("CanvasItemMaterial_hgrc8")
+modulate = Color(1, 1, 1, 0.8821198)
+material = SubResource("CanvasItemMaterial_va0mb")
 position = Vector2(24000, 2352)
 script = ExtResource("rayo_luz")
 alto = 1000.0
@@ -2430,8 +2648,8 @@ opacidad = 0.14
 semilla = 6
 
 [node name="Rayo7" type="Node2D" parent="EfectosCueva/Rayos" unique_id=493778764]
-modulate = Color(1, 1, 1, 0.75703067)
-material = SubResource("CanvasItemMaterial_6wpew")
+modulate = Color(1, 1, 1, 0.9117133)
+material = SubResource("CanvasItemMaterial_rg2jq")
 position = Vector2(26711, 1792)
 script = ExtResource("rayo_luz")
 alto = 800.0
@@ -2442,8 +2660,8 @@ opacidad = 0.14
 semilla = 7
 
 [node name="Rayo8" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1329949578]
-modulate = Color(1, 1, 1, 0.8463027)
-material = SubResource("CanvasItemMaterial_j18m3")
+modulate = Color(1, 1, 1, 0.8649885)
+material = SubResource("CanvasItemMaterial_y6jhi")
 position = Vector2(13696, 5060)
 script = ExtResource("rayo_luz")
 alto = 780.0
@@ -2489,7 +2707,23 @@ script = ExtResource("44_frente")
 profundidad = 1.37
 
 [node name="PastoAlto" parent="PrimerPlano/Frente1_pasto" unique_id=232250157 instance=ExtResource("40_deco")]
-position = Vector2(-376, -59)
+position = Vector2(-182, 80)
+tipo = 7
+variante = 2
+escala = 5.17
+tono = Color(0.04, 0.042, 0.045, 1)
+sombra = false
+
+[node name="PastoAlto" parent="PrimerPlano/Frente1_pasto/PastoAlto" unique_id=2095461552 instance=ExtResource("40_deco")]
+position = Vector2(-446, -1)
+tipo = 7
+variante = 2
+escala = 5.17
+tono = Color(0.04, 0.042, 0.045, 1)
+sombra = false
+
+[node name="PastoAlto" parent="PrimerPlano/Frente1_pasto/PastoAlto/PastoAlto" unique_id=1538334167 instance=ExtResource("40_deco")]
+position = Vector2(1469, -17)
 tipo = 7
 variante = 2
 escala = 5.17
@@ -2511,7 +2745,7 @@ sombra = false
 viento = false
 
 [node name="Frente3_rama" type="CanvasGroup" parent="PrimerPlano" unique_id=36281111]
-position = Vector2(6107, -490)
+position = Vector2(6869, -298)
 script = ExtResource("44_frente")
 profundidad = 1.43
 
@@ -2525,7 +2759,15 @@ tono = Color(0.04, 0.042, 0.045, 1)
 sombra = false
 
 [node name="Rama2" parent="PrimerPlano/Frente3_rama" unique_id=1160753887 instance=ExtResource("40_deco")]
-position = Vector2(222, -40)
+position = Vector2(226, 175)
+tipo = 6
+variante = 6
+escala = 3.9
+tono = Color(0.04, 0.042, 0.045, 1)
+sombra = false
+
+[node name="Rama2" parent="PrimerPlano/Frente3_rama/Rama2" unique_id=2034714693 instance=ExtResource("40_deco")]
+position = Vector2(2537, 38)
 tipo = 6
 variante = 6
 escala = 3.9
@@ -2553,6 +2795,16 @@ script = ExtResource("44_frente")
 profundidad = 1.34
 
 [node name="Rama1" parent="PrimerPlano/Frente6_rama" unique_id=62932419 instance=ExtResource("40_deco")]
+position = Vector2(-117, 45)
+tipo = 6
+variante = 8
+escala = 4.79
+flip_h = true
+tono = Color(0.04, 0.042, 0.045, 1)
+sombra = false
+
+[node name="Rama1" parent="PrimerPlano/Frente6_rama/Rama1" unique_id=437012853 instance=ExtResource("40_deco")]
+position = Vector2(-990, 116)
 tipo = 6
 variante = 8
 escala = 4.79
@@ -2728,6 +2980,431 @@ script = ExtResource("streaming_zonas")
 
 [node name="CheckpointSubsueloFinal" parent="." unique_id=955749473 instance=ExtResource("27_46iir")]
 position = Vector2(21500, 5784)
+[node name="DecoPalo3" type="Sprite2D" parent="." unique_id=554250042]
+z_index = 2
+position = Vector2(1080, -124.573784)
+scale = Vector2(0.55379397, 0.67864114)
+texture = ExtResource("81_palo2")
+offset = Vector2(483.86816, 57.84378)
+
+[node name="DecoPalo9" type="Sprite2D" parent="." unique_id=912976520]
+z_index = 2
+position = Vector2(10677.859, 162.99988)
+scale = Vector2(1.0475687, 0.8800989)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo10" type="Sprite2D" parent="." unique_id=2099412356]
+z_index = 2
+position = Vector2(20136.002, 256)
+scale = Vector2(0.5768418, 0.54302734)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo11" type="Sprite2D" parent="." unique_id=435486738]
+z_index = 2
+position = Vector2(19107.86, 252.99988)
+scale = Vector2(0.33274642, 0.2948787)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo13" type="Sprite2D" parent="." unique_id=85189150]
+z_index = 2
+position = Vector2(17006.86, -142.00012)
+scale = Vector2(0.893736, 0.8277675)
+texture = ExtResource("81_palo2")
+
+[node name="DecoPalo14" type="Sprite2D" parent="." unique_id=1222885862]
+z_index = 2
+position = Vector2(18865.86, 123.99988)
+scale = Vector2(0.41109884, 0.35265052)
+texture = ExtResource("81_palo2")
+
+[node name="DecoPalo15" type="Sprite2D" parent="." unique_id=225323491]
+z_index = 2
+position = Vector2(10361.859, -47.000122)
+scale = Vector2(0.79876405, 0.685199)
+texture = ExtResource("81_palo2")
+offset = Vector2(483.86816, 57.84378)
+
+[node name="DecoLiana10" type="Sprite2D" parent="." unique_id=637290773]
+z_index = 2
+position = Vector2(10443.859, -38.000122)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana11" type="Sprite2D" parent="." unique_id=54543686]
+z_index = 2
+position = Vector2(11555.859, 3.999878)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana12" type="Sprite2D" parent="." unique_id=617931040]
+z_index = 2
+position = Vector2(18121.86, -7.000122)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana13" type="Sprite2D" parent="." unique_id=1883628389]
+z_index = 2
+position = Vector2(20622.86, 76.99988)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana14" type="Sprite2D" parent="." unique_id=1948125225]
+z_index = 2
+position = Vector2(11663.859, -162.00012)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana15" type="Sprite2D" parent="." unique_id=918593324]
+z_index = 2
+position = Vector2(11199.859, 78.99988)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana16" type="Sprite2D" parent="." unique_id=728765470]
+z_index = 2
+position = Vector2(12687.999, -74.00003)
+scale = Vector2(0.7195122, 1.0513562)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana17" type="Sprite2D" parent="." unique_id=1082886463]
+z_index = 2
+position = Vector2(16853, -162.00002)
+scale = Vector2(1, 2.1351256)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana18" type="Sprite2D" parent="." unique_id=1397525289]
+z_index = 2
+position = Vector2(10551.859, -204.00012)
+texture = ExtResource("82_liana")
+
+[node name="DecoArbusto6" type="Sprite2D" parent="." unique_id=1764701310]
+z_index = 2
+position = Vector2(10523.462, 998.2499)
+scale = Vector2(1.9537482, 2.2663937)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto7" type="Sprite2D" parent="." unique_id=1885876665]
+z_index = 2
+position = Vector2(10985.524, 1004.39417)
+scale = Vector2(2.074845, 2.1277893)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto8" type="Sprite2D" parent="." unique_id=1959894569]
+z_index = 2
+position = Vector2(14099.861, 976)
+scale = Vector2(2.1987622, 2.06827)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto9" type="Sprite2D" parent="." unique_id=663208615]
+z_index = 2
+position = Vector2(10001.859, 935.99976)
+scale = Vector2(1.297487, 1.6411831)
+texture = ExtResource("67_arb2")
+offset = Vector2(-28.847717, 62.218567)
+
+[node name="DecoPalo16" type="Sprite2D" parent="." unique_id=597376739]
+z_index = 2
+position = Vector2(11884, -88.000015)
+scale = Vector2(0.5121948, 0.4201377)
+texture = ExtResource("81_palo2")
+offset = Vector2(483.86816, 57.84378)
+
+[node name="DecoPalo17" type="Sprite2D" parent="." unique_id=1423793712]
+z_index = 2
+position = Vector2(10677.859, 162.99988)
+scale = Vector2(1.0475687, 0.8800989)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo43" type="Sprite2D" parent="." unique_id=1929590904]
+z_index = 2
+position = Vector2(20638.002, 276)
+scale = Vector2(0.24139297, 0.25709167)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo44" type="Sprite2D" parent="." unique_id=912852118]
+z_index = 2
+position = Vector2(21287, 296)
+scale = Vector2(0.29111755, 0.302843)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo20" type="Sprite2D" parent="." unique_id=1049163721]
+z_index = 2
+position = Vector2(12897.001, 209)
+scale = Vector2(0.31763685, 0.33505177)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo20" type="Sprite2D" parent="DecoPalo20" unique_id=483973146]
+z_index = 2
+position = Vector2(2282.0999, -147.46136)
+scale = Vector2(1.5790979, 1.1296455)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo25" type="Sprite2D" parent="." unique_id=1648284437]
+z_index = 2
+position = Vector2(14791.738, 129.5)
+scale = Vector2(0.3367439, 0.24551637)
+texture = ExtResource("81_palo2")
+
+[node name="DecoPalo42" type="Sprite2D" parent="." unique_id=373768044]
+z_index = 2
+position = Vector2(15290.001, 204.00002)
+scale = Vector2(0.35649973, 0.29993817)
+texture = ExtResource("81_palo2")
+offset = Vector2(-1102.3828, 0)
+
+[node name="DecoPalo23" type="Sprite2D" parent="." unique_id=227796843]
+z_index = 2
+position = Vector2(10361.859, -47.000122)
+scale = Vector2(0.79876405, 0.685199)
+texture = ExtResource("81_palo2")
+offset = Vector2(483.86816, 57.84378)
+
+[node name="DecoLiana19" type="Sprite2D" parent="." unique_id=478880561]
+z_index = 2
+position = Vector2(10443.859, -38.000122)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana20" type="Sprite2D" parent="." unique_id=1846901373]
+z_index = 2
+position = Vector2(11555.859, 3.999878)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana23" type="Sprite2D" parent="." unique_id=37813129]
+z_index = 2
+position = Vector2(11663.859, -162.00012)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana24" type="Sprite2D" parent="." unique_id=531030200]
+z_index = 2
+position = Vector2(11199.859, 78.99988)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana25" type="Sprite2D" parent="." unique_id=355763076]
+z_index = 2
+position = Vector2(12626, -269)
+scale = Vector2(1, 1.4612069)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana26" type="Sprite2D" parent="." unique_id=643902417]
+z_index = 2
+position = Vector2(14593, -358)
+scale = Vector2(1, 2.1351256)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana46" type="Sprite2D" parent="." unique_id=1943631199]
+z_index = 2
+position = Vector2(15562, -93)
+scale = Vector2(1.0955285, 1.42561)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana27" type="Sprite2D" parent="." unique_id=1909478439]
+z_index = 2
+position = Vector2(10551.859, -204.00012)
+texture = ExtResource("82_liana")
+
+[node name="DecoArbusto10" type="Sprite2D" parent="." unique_id=2005860902]
+z_index = 2
+position = Vector2(10523.462, 998.2499)
+scale = Vector2(1.9537482, 2.2663937)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto11" type="Sprite2D" parent="." unique_id=1511924826]
+z_index = 2
+position = Vector2(10985.524, 1004.39417)
+scale = Vector2(2.074845, 2.1277893)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto12" type="Sprite2D" parent="." unique_id=491559538]
+z_index = 2
+position = Vector2(14099.861, 976)
+scale = Vector2(2.1987622, 2.06827)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto13" type="Sprite2D" parent="." unique_id=1317794100]
+z_index = 2
+position = Vector2(10001.859, 935.99976)
+scale = Vector2(1.297487, 1.6411831)
+texture = ExtResource("67_arb2")
+offset = Vector2(-28.847717, 62.218567)
+
+[node name="DecoPalo24" type="Sprite2D" parent="." unique_id=160630075]
+z_index = 2
+position = Vector2(11884, -162.00002)
+scale = Vector2(0.38660005, 0.47375503)
+texture = ExtResource("81_palo2")
+offset = Vector2(483.86816, 57.84378)
+
+[node name="DecoPalo26" type="Sprite2D" parent="." unique_id=672933472]
+z_index = 2
+position = Vector2(22712.668, 130.99988)
+scale = Vector2(1.0475687, 0.8800989)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo28" type="Sprite2D" parent="." unique_id=1485113555]
+z_index = 2
+position = Vector2(31298, 374)
+scale = Vector2(0.33274642, 0.2948787)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo29" type="Sprite2D" parent="." unique_id=891873839]
+z_index = 2
+position = Vector2(25128.578, 306.46997)
+scale = Vector2(0.31763685, 0.33505177)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo30" type="Sprite2D" parent="." unique_id=1826862839]
+z_index = 2
+position = Vector2(29019, -211)
+scale = Vector2(0.893736, 0.8277675)
+texture = ExtResource("81_palo2")
+
+[node name="DecoPalo31" type="Sprite2D" parent="." unique_id=1902412302]
+z_index = 2
+position = Vector2(30989.002, 43)
+scale = Vector2(0.41109884, 0.35265052)
+texture = ExtResource("81_palo2")
+
+[node name="DecoPalo32" type="Sprite2D" parent="." unique_id=240629136]
+z_index = 2
+position = Vector2(22396.668, -79.00012)
+scale = Vector2(0.79876405, 0.685199)
+texture = ExtResource("81_palo2")
+offset = Vector2(483.86816, 57.84378)
+
+[node name="DecoLiana28" type="Sprite2D" parent="." unique_id=1854435794]
+z_index = 2
+position = Vector2(22478.668, -70.00012)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana29" type="Sprite2D" parent="." unique_id=220436272]
+z_index = 2
+position = Vector2(23590.668, -28.000122)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana30" type="Sprite2D" parent="." unique_id=297134051]
+z_index = 2
+position = Vector2(30156.668, -39.000122)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana30" type="Sprite2D" parent="DecoLiana30" unique_id=1333964141]
+z_index = 2
+position = Vector2(924.33203, 131.00012)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana32" type="Sprite2D" parent="." unique_id=1629710722]
+z_index = 2
+position = Vector2(23698.668, -194.00012)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana33" type="Sprite2D" parent="." unique_id=1792307353]
+z_index = 2
+position = Vector2(23234.668, 46.999878)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana34" type="Sprite2D" parent="." unique_id=1549161076]
+z_index = 2
+position = Vector2(24957.668, -173.50012)
+scale = Vector2(1, 1.4612069)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana35" type="Sprite2D" parent="." unique_id=1321661727]
+z_index = 2
+position = Vector2(28830.668, -225.00012)
+scale = Vector2(1, 2.1351256)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana36" type="Sprite2D" parent="." unique_id=1762207232]
+z_index = 2
+position = Vector2(22586.668, -236.00012)
+texture = ExtResource("82_liana")
+
+[node name="DecoArbusto14" type="Sprite2D" parent="." unique_id=1844257969]
+z_index = 2
+position = Vector2(22558.27, 966.2499)
+scale = Vector2(1.9537482, 2.2663937)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto15" type="Sprite2D" parent="." unique_id=508763646]
+z_index = 2
+position = Vector2(23020.334, 972.39417)
+scale = Vector2(2.074845, 2.1277893)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto16" type="Sprite2D" parent="." unique_id=58376282]
+z_index = 2
+position = Vector2(26134.672, 944)
+scale = Vector2(2.1987622, 2.06827)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto17" type="Sprite2D" parent="." unique_id=1122604019]
+z_index = 2
+position = Vector2(22036.668, 903.99976)
+scale = Vector2(1.297487, 1.6411831)
+texture = ExtResource("67_arb2")
+offset = Vector2(-28.847717, 62.218567)
+
+[node name="DecoPalo33" type="Sprite2D" parent="." unique_id=1485279060]
+z_index = 2
+position = Vector2(23990.668, -184.57385)
+scale = Vector2(0.55379397, 0.67864114)
+texture = ExtResource("81_palo2")
+offset = Vector2(483.86816, 57.84378)
+
+[node name="DecoPalo45" type="Sprite2D" parent="." unique_id=1612678611]
+z_index = 2
+position = Vector2(25755.002, 204.00002)
+scale = Vector2(0.5749798, 0.4139612)
+texture = ExtResource("80_palo")
+offset = Vector2(-427.65692, -521.5323)
+
+[node name="DecoPalo46" type="Sprite2D" parent="." unique_id=1475226334]
+z_index = 2
+position = Vector2(25724, 161)
+scale = Vector2(0.36140728, 0.26594594)
+texture = ExtResource("81_palo2")
+offset = Vector2(483.86816, 57.84378)
+
+[node name="DecoLiana47" type="Sprite2D" parent="." unique_id=825645734]
+z_index = 2
+position = Vector2(25717.828, 42.643044)
+scale = Vector2(0.79876405, 0.685199)
+texture = ExtResource("82_liana")
+
+[node name="DecoLiana48" type="Sprite2D" parent="." unique_id=604310022]
+z_index = 2
+position = Vector2(25804.094, -71.1)
+scale = Vector2(0.79876405, 0.685199)
+texture = ExtResource("82_liana")
+
+[node name="DecoArbusto18" type="Sprite2D" parent="." unique_id=668686679]
+z_index = 2
+position = Vector2(22558.27, 966.2499)
+scale = Vector2(1.9537482, 2.2663937)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto19" type="Sprite2D" parent="." unique_id=1509921547]
+z_index = 2
+position = Vector2(23020.334, 972.39417)
+scale = Vector2(2.074845, 2.1277893)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto20" type="Sprite2D" parent="." unique_id=2100695895]
+z_index = 2
+position = Vector2(26134.672, 944)
+scale = Vector2(2.1987622, 2.06827)
+texture = ExtResource("67_arb2")
+
+[node name="DecoArbusto21" type="Sprite2D" parent="." unique_id=1049955599]
+z_index = 2
+position = Vector2(22036.668, 903.99976)
+scale = Vector2(1.297487, 1.6411831)
+texture = ExtResource("67_arb2")
+offset = Vector2(-28.847717, 62.218567)
 
 [editable path="EncounterA"]
 [editable path="EncounterB"]

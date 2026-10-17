@@ -27,6 +27,7 @@ signal roto
 @export var sonido_romper: AudioStream = preload("res://assets/audio/sfx/gen/rompible_romper.wav")
 @export var volumen_db := -6.0
 @export_group("")
+@export var mostrar_arte := true   ## false = el nudo no dibuja (lo reemplaza el cuerpo nuevo)
 
 var activo := false
 var golpes := 0
@@ -70,7 +71,7 @@ func activar() -> void:
 	activo = true
 	_roto = false
 	golpes = 0
-	visible = true
+	visible = mostrar_arte
 	scale = Vector2.ONE
 	modulate.a = 1.0
 	_poner_colision(true)
@@ -88,7 +89,7 @@ func restaurar() -> void:
 	_poner_colision(false)
 	if _tw != null and _tw.is_valid():
 		_tw.kill()
-	visible = true
+	visible = mostrar_arte
 	position = _pos_base
 	modulate.a = 1.0
 	if DisplayServer.get_name() == "headless":

@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://Sprites/Fondos/Jefe/fondo1.png" id="1_tex"]
+
+[node name="FondoJefe" type="ParallaxBackground"]
+layer = -10
+
+[node name="Capa" type="ParallaxLayer" parent="."]
+motion_scale = Vector2(0.05, 1)
+motion_mirroring = Vector2(5827, 0)
+
+[node name="Sprite" type="Sprite2D" parent="Capa"]
+texture_filter = 2
+texture_repeat = 1
+position = Vector2(2913, 200)
+texture = ExtResource("1_tex")
