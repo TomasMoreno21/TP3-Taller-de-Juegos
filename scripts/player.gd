@@ -158,6 +158,7 @@ const VIDA_MAX := 100
 var forms: Array[Forma] = []
 var current_form: int = Form.HUMAN
 var forma_seleccionada: int = Form.HUMAN
+var forma_sugerida: int = -1   ## forma que el jefe sugiere en el HUD (T va directo a ella); -1 = ninguna
 ## Orden en que la rueda de selección recorre las formas (índices de `Form`): Humano, Lobo, Murciélago, Oso.
 @export var orden_rueda: Array[int] = [0, 1, 3, 2]
 var health: int = 100
@@ -242,7 +243,11 @@ static var _tips_vistos: Dictionary = {}
 @export_group("")
 var _tajo_tw: Tween
 var _giro_x := 1.0   # -1 = el sprite mira hacia la espalda (segundo tajo del Remate)
+@export var punch_ataque_mult := 0.04  ## pop de escala del sprite al atacar (1 = como antes, 0 = sin pop)
+@export var shake_golpe_mult := 1.5     ## multiplicador del temblor de cámara al conectar un golpe
+@export var pose_ataque_mult := 2.0     ## multiplicador de la inclinación del sprite al golpear
 var _embestida_t := 0.0
+var _embestida_armadura := false
 var _embestida_golpeados: Array = []
 var _bloqueo_sin_energia := false
 var _bloqueo_cd := 0.0
@@ -1073,7 +1078,7 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 				_light_step = 0
 				data.perform_jump_attack(self, false)
 				_play_attack_fx("light", 1)
-				_punch_sprite(0.15)
+				_punch_golpe(0.15)
 				attack_performed.emit("light", _light_step)
 				if current_form == Form.HUMAN:
 					_iniciar_anim_ataque("attack1")   # el golpe aéreo también se anima (antes seguía con las piernas de correr)
@@ -1088,7 +1093,7 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 					_combo_timer = COMBO_WINDOW
 					data.perform_light(self, _light_step)
 					_play_attack_fx("light", _light_step)
-					_punch_sprite(0.15)
+					_punch_golpe(0.15)
 					attack_performed.emit("light", _light_step)
 					if current_form == Form.HUMAN:
 						_iniciar_anim_ataque("attack1")
@@ -1100,7 +1105,7 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 				_cancelar_anim_ataque()
 				data.perform_jump_attack(self, true)
 				_play_attack_fx("heavy", 1)
-				_punch_sprite(0.3)
+				_punch_golpe(0.3)
 				attack_performed.emit("heavy", _heavy_step)
 				if current_form == Form.HUMAN:
 					_iniciar_anim_ataque("attack2")
@@ -1115,7 +1120,7 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 					_combo_timer = COMBO_WINDOW
 					data.perform_heavy(self, _heavy_step)
 					_play_attack_fx("heavy", _heavy_step)
-					_punch_sprite(0.3)
+					_punch_golpe(0.3)
 					attack_performed.emit("heavy", _heavy_step)
 					if current_form == Form.HUMAN:
 						_iniciar_anim_ataque("attack2")
@@ -1145,7 +1150,7 @@ func _procesar_ataque(tipo: String, data: Forma, airborne: bool) -> void:
 				data.perform_special(self)
 				_special_cooldown = data.special_cooldown_combate if _en_combate() else data.special_cooldown
 				_play_attack_fx("special", 1)
-				_punch_sprite(0.4)
+				_punch_golpe(0.4)
 				attack_performed.emit("special", 1)
 				if current_form == Form.HUMAN:
 					_iniciar_anim_ataque("attack_full")
@@ -1190,7 +1195,7 @@ func _ejecutar_finisher(data: Forma, combo: Dictionary) -> void:
 	data.perform_combo(self, combo)
 	_play_attack_fx("combo", 1)
 	_sfx(sonido_combo, volumen_combo_db, 0.04)
-	_punch_sprite(0.45)
+	_punch_golpe(0.45)
 	attack_performed.emit("combo", combo.get("nombre", "Combo"))
 	if current_form == Form.HUMAN:
 		_iniciar_anim_ataque("attack_full")
@@ -1348,7 +1353,7 @@ func _tajo_golpe_trasero(radio: float, dano: int, kb: float, lado: int) -> void:
 		return
 	_play_attack_fx("combo", 2, true)   # segundo tajo, espejado hacia la espalda
 	pose_ataque(12.0, 0.16)
-	_punch_sprite(0.3)
+	_punch_golpe(0.3)
 	if onda_area(radio, dano, kb, true, lado, false) > 0:
 		_freeze_hitstop(0.05)
 		var cam := get_viewport().get_camera_2d()
@@ -1365,12 +1370,16 @@ func iniciar_embestida(combo: Dictionary) -> void:
 	_hit_applied = true   # el golpe único normal no sale: pega el barrido
 	_lunge_t = dur
 	_lunge_vel = facing * dist / dur
-	_invuln_timer = maxf(_invuln_timer, dur + embestida_invuln)
-	_invuln_sin_parpadeo = true
-	for e in get_tree().get_nodes_in_group("enemy"):
-		if e is PhysicsBody2D and (e.global_position.x - global_position.x) * facing > -150.0 				and absf(e.global_position.x - global_position.x) < dist + 400.0:
-			eximir_solape(e)   # atraviesa a los enemigos del camino (se libera solo al separarse)
-	stretch_y(-0.18, dur)
+	# Lobo: invulnerable y atraviesa. Oso (`armadura`): embiste empujando, sin i-frames, y el daño recibido no lo frena.
+	_embestida_armadura = combo.get("armadura", false)
+	if combo.get("invulnerable", true):
+		_invuln_timer = maxf(_invuln_timer, dur + embestida_invuln)
+		_invuln_sin_parpadeo = true
+	if combo.get("atraviesa", true):
+		for e in get_tree().get_nodes_in_group("enemy"):
+			if e is PhysicsBody2D and (e.global_position.x - global_position.x) * facing > -150.0 				and absf(e.global_position.x - global_position.x) < dist + 400.0:
+				eximir_solape(e)   # atraviesa a los enemigos del camino (se libera solo al separarse)
+	stretch_y(combo.get("stretch_y", -0.05), dur)
 	_emitir_polvo(1.0)
 
 
@@ -1621,7 +1630,7 @@ func _shake_por_tipo(mult_tercer: float = 1.0) -> void:
 				fuerza = shake_special
 	if mult_tercer > 1.0:
 		fuerza *= shake_tercer_mult
-	cam.shake(fuerza, 0.15, Vector2(facing, 0))
+	cam.shake(fuerza * shake_golpe_mult, 0.15, Vector2(facing, 0))
 
 
 func _aplicar_knockback(body: Node2D) -> void:
@@ -1929,6 +1938,11 @@ func _mostrar_fantasma_forma(idx: int) -> void:
 	tw.tween_callback(fantasma.queue_free)
 
 
+## Pop de escala al atacar, reducido: el peso del golpe lo dan el shake, la pose y el hitstop.
+func _punch_golpe(amount: float) -> void:
+	_punch_sprite(amount * punch_ataque_mult)
+
+
 func _punch_sprite(amount: float) -> void:
 	_esc_off = (_esc_off + Vector2(amount, amount)).clamp(Vector2(-0.6, -0.6), Vector2(0.6, 0.6))
 	visual.position.y = _visual_base_y()
@@ -2055,6 +2069,11 @@ func _handle_transform() -> void:
 		_transform_buffer = TRANSFORM_BUFFER_TIME
 	if _transform_buffer <= 0.0 or _cooldown_transform > 0.0:
 		return
+	# Sugerencia del jefe en el HUD: T elige esa forma (el dial muestra la tecla sobre su ícono).
+	if forma_sugerida >= 0 and forma_sugerida != current_form and forma_seleccionada != forma_sugerida \
+			and _progresion().forma_desbloqueada(forma_sugerida) and not _forma_en_cooldown(forma_sugerida):
+		forma_seleccionada = forma_sugerida
+		forma_selectada_cambiada.emit(forma_sugerida)
 	if current_form != Form.HUMAN and forma_seleccionada == current_form:
 		var prev_h: int = current_form
 		_transformar(Form.HUMAN)
@@ -2530,11 +2549,11 @@ func _iniciar_anim_ataque(anim: String, frame_ini: int = 0) -> void:
 func pose_ataque(rot_deg: float, alargar: float = 0.0, dur: float = 0.2) -> void:
 	if _pose_tween != null and _pose_tween.is_valid():
 		_pose_tween.kill()
-	_pose_rot = deg_to_rad(rot_deg) * facing
+	_pose_rot = deg_to_rad(rot_deg * pose_ataque_mult) * facing
 	_pose_tween = create_tween()
 	_pose_tween.tween_property(self, "_pose_rot", 0.0, dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	if alargar > 0.0:
-		_punch_sprite(alargar)
+		_punch_golpe(alargar)
 
 
 func _cancelar_anim_ataque() -> void:
@@ -2871,11 +2890,13 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_blo
 	_flash_tint_dano()
 	_juice_dano(cantidad)
 	stretch_y(-0.12, 0.14)
-	_recoil_dano(dir)
-	if reaccion_dano_en_ataque and _attacking:
+	var armadura := _embestida_t > 0.0 and _embestida_armadura
+	if not armadura:
+		_recoil_dano(dir)
+	if reaccion_dano_en_ataque and _attacking and not armadura:
 		_lunge_t = 0.0          # el avance del golpe no empuja contra el retroceso
 		_dano_reciente_t = 0.25 # ni el imán del golpe tira hacia el enemigo
-	if knockback > 0.0:
+	if knockback > 0.0 and not armadura:
 		velocity.x = dir * knockback * (dano_empuje_mult if dano_cine else 1.0)
 	_invuln_timer = invuln_dano
 	_invuln_sin_parpadeo = false

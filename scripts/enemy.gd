@@ -975,6 +975,7 @@ func _rebotar_golpe() -> void:
 	if visual != null:
 		if _tint_tween != null and _tint_tween.is_valid():
 			_tint_tween.kill()
+		visual.self_modulate = Color.WHITE   # el tween matado podía dejar el destello blanco del golpe encendido
 		visual.modulate = Color(0.85, 0.7, 2.0)
 		_tint_tween = create_tween()
 		_tint_tween.tween_property(visual, "modulate", Color(1, 1, 1), 0.3)

@@ -107,6 +107,22 @@ func reset() -> void:
 	nivel_cambiado.emit(1)
 
 
+## Arranca "como si ya hubieras llegado hasta acá" (selector de nivel del modo prueba): partida limpia con
+## `frag` fragmentos acumulados, el nivel que les corresponde, 1 combo por cada subida (formas en orden)
+## y las formas que desbloquearon los tótems anteriores. No emite subidas: no abre el LevelUp.
+func saltar_a_punto(frag: int, formas_extra: Array) -> void:
+	reset()
+	fragmentos = maxi(frag, 0)
+	while nivel < FRAGMENTOS_NIVEL.size() + 1 and fragmentos >= fragmentos_para_nivel(nivel + 1):
+		nivel += 1
+	for f in mini(nivel - 1, 4):
+		combos_desbloqueados[f] = 1
+	for f in formas_extra:
+		_extra_formas[int(f)] = true
+	fragmentos_cambiado.emit(fragmentos)
+	nivel_cambiado.emit(nivel)
+
+
 func elegir_mejora(form_index: int) -> void:
 	if not combos_desbloqueados.has(form_index):
 		combos_desbloqueados[form_index] = 0

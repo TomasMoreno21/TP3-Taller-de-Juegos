@@ -4,6 +4,7 @@ const SCENE_CONTROLES := "res://scenes/controls.tscn"
 const SCENE_MENU := "res://scenes/main_menu.tscn"
 const SCENE_OPCIONES := "res://scenes/opciones.tscn"
 const SCENE_AYUDA := "res://scripts/ayuda_panel.gd"   # panel armado por código
+const SCENE_MODO_PRUEBA := "res://scripts/modo_prueba_panel.gd"   # panel armado por código
 
 @export var duracion_fundido := 0.14   ## s del fundido al abrir/cerrar la pausa
 var _tween_fundido: Tween
@@ -16,6 +17,7 @@ var _controls: CanvasLayer
 	$Panel/Margin/VBox/Controles,
 	$Panel/Margin/VBox/Opciones,
 	$Panel/Margin/VBox/Ayuda,
+	$Panel/Margin/VBox/ModoPrueba,
 	$Panel/Margin/VBox/Menu,
 	$Panel/Margin/VBox/VolverMenu,
 	$Panel/Margin/VBox/Salir,
@@ -27,6 +29,11 @@ func _ready() -> void:
 	visible = true
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 90
+	var modo_prueba := get_node_or_null("/root/ModoPrueba")
+	if modo_prueba == null or not modo_prueba.habilitado:   # versión final: sin modo prueba ni línea de ubicación
+		botones.erase($Panel/Margin/VBox/ModoPrueba)
+		$Panel/Margin/VBox/ModoPrueba.hide()
+		$Panel/Margin/VBox/Ubicacion.hide()
 	for i in botones.size():
 		botones[i].pressed.connect(_on_boton_pressed.bind(i))
 		botones[i].focus_entered.connect(_on_focus.bind(i))
@@ -85,6 +92,7 @@ func abrir() -> void:
 		return
 	_open = true
 	_indice = 0
+	_actualizar_ubicacion()
 	$Panel.visible = true
 	dim.visible = true
 	get_tree().paused = true
@@ -150,22 +158,38 @@ func _on_focus(i: int) -> void:
 			.tween_property(b, "scale", objetivo, 0.1).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
+## Dónde está el jugador (nivel y checkpoints activados), para que el tester sepa en qué parte del juego está.
+func _actualizar_ubicacion() -> void:
+	var etiqueta: Label = $Panel/Margin/VBox/Ubicacion
+	var modo_prueba := get_node_or_null("/root/ModoPrueba")
+	if modo_prueba == null or not modo_prueba.habilitado:
+		return
+	var texto: String = modo_prueba.nombre_nivel(modo_prueba.indice_de_escena())
+	var cp: Vector2i = modo_prueba.checkpoints_progreso()
+	if cp.y > 0:
+		texto += "\nCheckpoints %d/%d" % [cp.x, cp.y]
+	etiqueta.text = texto
+	etiqueta.visible = not texto.is_empty()
+
+
 func _on_boton_pressed(i: int) -> void:
 	_ui("ui_confirmar")
-	match i:
-		0:
+	match botones[i].name:
+		&"Reanudar":
 			cerrar()
-		1:
+		&"Controles":
 			_abrir_controles()
-		2:
+		&"Opciones":
 			_abrir_opciones()
-		3:
+		&"Ayuda":
 			_abrir_ayuda()
-		4:
+		&"ModoPrueba":
+			_abrir_modo_prueba()
+		&"Menu":
 			_reiniciar_nivel()
-		5:
+		&"VolverMenu":
 			_volver_menu()
-		6:
+		&"Salir":
 			get_tree().quit()
 
 
@@ -187,6 +211,14 @@ func _abrir_opciones() -> void:
 
 func _abrir_ayuda() -> void:
 	var c: CanvasLayer = (load(SCENE_AYUDA) as GDScript).new()
+	_controls = c
+	add_child(c)
+
+
+func _abrir_modo_prueba() -> void:
+	var c: CanvasLayer = (load(SCENE_MODO_PRUEBA) as GDScript).new()
+	c.en_juego = true
+	c.al_ejecutar = cerrar   # teletransportarse cierra la pausa
 	_controls = c
 	add_child(c)
 

@@ -23,6 +23,15 @@ extends CanvasGroup
 ## Prueba: tests/diag_primer_plano_horneado.gd (HORNEAR=0|1).
 @export var hornear_poligonos := false
 
+@export_group("Difuminado inferior")
+@export var difuminado_base := false          ## degradé negro bajo cada elemento: tapa el hueco con fondo debajo (pasto, troncos, matojos)
+@export var difuminado_alto := 160.0          ## px de degradé (transparente → negro) sobre el borde inferior del elemento
+@export var difuminado_largo := 260.0         ## px de negro sólido bajo el borde inferior
+@export var difuminado_fin := 140.0            ## px finales en que el negro se desvanece (evita una columna negra si la cámara baja mucho)
+@export_range(0.0, 0.45) var difuminado_margen := 0.2   ## recorte lateral (fracción del ancho) para no sobresalir de la silueta
+@export var tono_difuminado := Color(0.04, 0.042, 0.045, 1)
+@export_group("")
+
 var _ancla := Vector2.ZERO
 var _hojas: Array[Node2D] = []    ## cada "Hoja" = un elemento (árbol, rama, matojo...) que se aclara por separado
 var _rects: Array[Rect2] = []     ## AABB local de cada Hoja, para saber si tapa
@@ -54,6 +63,35 @@ func _preparar() -> void:
 	if hornear_poligonos:
 		for h in find_children("Hoja", "Node2D", true, false):
 			_hornear_hoja(h as Node2D)
+	if difuminado_base:
+		_crear_difuminados()
+
+
+## Bajo cada elemento (matojo, tronco) agrega un degradé a negro hacia abajo, para que no se vea
+## flotando con fondo claro debajo. Hijo de la Hoja: se aclara junto con ella cuando tapa al jugador.
+func _crear_difuminados() -> void:
+	var inv := global_transform.affine_inverse()
+	for i in _hojas.size():
+		var hoja := _hojas[i]
+		var r := _rects[i]
+		var margen := r.size.x * difuminado_margen
+		var x0 := r.position.x + margen
+		var x1 := r.end.x - margen
+		var y0 := r.end.y - difuminado_alto
+		var y1 := r.end.y
+		var y2 := r.end.y + difuminado_largo
+		var y3 := y2 + difuminado_fin
+		var a_hoja := (inv * hoja.global_transform).affine_inverse()
+		var clr := tono_difuminado
+		var clr0 := Color(clr.r, clr.g, clr.b, 0.0)
+		var poli := Polygon2D.new()
+		poli.name = "DifuminadoBase"
+		# Arriba transparente → negro en el borde del elemento → sólido → se vuelve a desvanecer (no asoma como columna si la cámara está muy abajo).
+		poli.polygon = PackedVector2Array([a_hoja * Vector2(x0, y0), a_hoja * Vector2(x1, y0), a_hoja * Vector2(x1, y1),
+			a_hoja * Vector2(x1, y2), a_hoja * Vector2(x1, y3), a_hoja * Vector2(x0, y3), a_hoja * Vector2(x0, y2),
+			a_hoja * Vector2(x0, y1)])
+		poli.vertex_colors = PackedColorArray([clr0, clr0, clr, clr, clr0, clr0, clr, clr])
+		hoja.add_child(poli)
 
 
 ## Dibuja las mallas horneadas de una Hoja (un solo nodo en vez de un Polygon2D por pieza).

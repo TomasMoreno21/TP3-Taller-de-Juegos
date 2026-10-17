@@ -1,23 +1,28 @@
-[gd_resource type="Resource" script_class="Oso" load_steps=2 format=3 uid="uid://m5t9p4n8b6r2s"]
+[gd_resource type="Resource" script_class="Oso" format=3 uid="uid://bkmnxxwhmk5si"]
 
 [ext_resource type="Script" uid="uid://d0remsxk01l00" path="res://scripts/forms/oso.gd" id="1_forma"]
 
 [resource]
 script = ExtResource("1_forma")
-attack_size = Vector2(168, 132)
 attack_range = 167.0
-heavy_size = Vector2(216, 156)
+attack_size = Vector2(168, 132)
 heavy_range = 174.0
-heavy_knockback = 220.0
-special_size = Vector2(390, 210)
+heavy_size = Vector2(216, 156)
 special_range = 234.0
+special_size = Vector2(390, 210)
 special_knockback = 320.0
-combos = [{
-"descripcion": "Zarpazo demoledor: golpe lento y devastador.",
-"dano": 70,
+heavy_knockback = 220.0
+combos = Array[Dictionary]([{
+"armadura": true,
+"atraviesa": false,
+"dano": 40,
+"descripcion": "Avance de tanque: embiste con armadura y empuja a todos.",
+"embestida_dist": 700.0,
+"embestida_dur": 0.7,
+"invulnerable": false,
 "knockback": 360.0,
 "nombre": "Garra",
 "rango": 198.0,
 "secuencia": ["light", "heavy"],
 "tamano": Vector2(288, 186)
-}]
+}])

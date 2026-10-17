@@ -40,7 +40,13 @@ func _init() -> void:
 	onda_transformacion_knockback = 380.0
 	heavy_knockback = 220.0
 	color = Color(0.55, 0.4, 0.22)
-	collider_size = Vector2(470, 324)
+	# Cuerpo ancho sobre patas centrales (como el Lobo): en rampas un collider plano de 470 px toca por una punta
+	# y el oso quedaba flotando. Altura total igual (264 + 60).
+	collider_size = Vector2(470, 264)
+	patas_alto = 60.0
+	patas_ancho = 220.0
+	flight_lift = -60.0   # = -patas_alto
+	pendiente_mult = 1.3
 	camera_lookahead_mult = 0.65
 	lean_angulo = 2.0
 	salto_rot_grados = 3.0   # inclinación leve al subir/caer
@@ -60,7 +66,7 @@ func _init() -> void:
 	melee_sticky = 0.0
 	shake_golpe_combo = 24.0   # la Garra sacude la cámara más que el resto
 	combos = [
-		{"nombre": "Garra", "descripcion": "Zarpazo demoledor: golpe lento y devastador.", "secuencia": ["light", "heavy"], "dano": 70, "knockback": 360.0, "tamano": Vector2(288, 186), "rango": 198.0},
+		{"nombre": "Garra", "descripcion": "Avance de tanque: embiste con armadura y empuja a todos.", "secuencia": ["light", "heavy"], "dano": 40, "knockback": 360.0, "tamano": Vector2(288, 186), "rango": 198.0, "embestida_dist": 700.0, "embestida_dur": 0.7, "atraviesa": false, "invulnerable": false, "armadura": true},
 	]
 
 
@@ -72,6 +78,11 @@ func mult_recuperacion_para(tipo: String, step: int) -> float:
 
 func perform_heavy(player: CharacterBody2D, step: int) -> void:
 	player.enable_melee(heavy_size, heavy_range, heavy_damage_at(step), heavy_knockback)
+
+
+func perform_combo(player: CharacterBody2D, combo: Dictionary) -> void:
+	super.perform_combo(player, combo)
+	player.iniciar_embestida(combo)
 
 
 func perform_special(player: CharacterBody2D) -> void:

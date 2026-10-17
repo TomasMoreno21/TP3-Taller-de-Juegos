@@ -83,7 +83,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_gordo")
+"texture": ExtResource("1_akdo1")
 }],
 "loop": 1,
 "name": &"jump",

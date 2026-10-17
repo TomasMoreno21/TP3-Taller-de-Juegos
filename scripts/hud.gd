@@ -38,6 +38,10 @@ var _combo_base_pos: Vector2
 @export var vineta_alpha_min := 0.12   # entre latidos casi no se ve (menos invasiva)
 @export var vineta_alpha_max := 0.55   # el golpe del latido: tensión sin tapar la pantalla
 @export var vineta_fade_dur := 0.4
+@export var vineta_energia_color := Color(0.3, 0.8, 0.95)   ## borde de pantalla con energía baja (cian = energía)
+@export var vineta_energia_alpha_min := 0.1
+@export var vineta_energia_alpha_max := 0.5
+@export var vineta_energia_velocidad := 9.0   ## igual que el pulso del aro del dial
 @onready var boss_bar: MarginContainer = $BossBar
 @onready var boss_fill: ProgressBar = $BossBar/Panel/Col/Envoltura/Fill
 @onready var boss_eco: ProgressBar = $BossBar/Panel/Col/Envoltura/FillEco   ## franja clara que baja con retraso tras un golpe
@@ -67,6 +71,7 @@ var _boss: Node2D
 var _boss_fill_style: StyleBoxFlat
 var _pip_on_style: StyleBox
 var _pip_off_style: StyleBox
+var _vineta_energia: TextureRect
 var _vineta_activa := false
 var _vineta_severidad := 0.0
 var _vineta_fade_tween: Tween
@@ -87,6 +92,11 @@ func _process(delta: float) -> void:
 		dial.forma_actual = _player.current_form
 		dial.set_cooldown(float(_player._cooldown_formas.get(_player.forma_seleccionada, 0.0)))
 	_auto_ocultar(delta)
+	if _vineta_energia != null:
+		var alfa := 0.0
+		if _energia_aviso_dado:
+			alfa = lerpf(vineta_energia_alpha_min, vineta_energia_alpha_max, 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.001 * vineta_energia_velocidad))
+		_vineta_energia.modulate.a = move_toward(_vineta_energia.modulate.a, alfa, delta * 3.0)
 	if _vineta_activa:
 		var onda := 0.0
 		if _amb == null:
@@ -100,7 +110,32 @@ func _process(delta: float) -> void:
 			onda = (sin(Time.get_ticks_msec() * 0.001 * vel) + 1.0) * 0.5
 		vineta_vida.modulate.a = lerpf(vineta_alpha_min, vineta_alpha_max, onda) * lerpf(0.45, 1.0, _vineta_severidad)
 
+func _crear_vineta_energia() -> void:
+	var grad := Gradient.new()
+	grad.offsets = PackedFloat32Array([0.0, 0.75, 1.0])
+	grad.colors = PackedColorArray([Color(vineta_energia_color, 0.0), Color(vineta_energia_color, 0.0), Color(vineta_energia_color, 0.55)])
+	var tex := GradientTexture2D.new()
+	tex.gradient = grad
+	tex.width = 512
+	tex.height = 512
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(1.0, 0.5)
+	_vineta_energia = TextureRect.new()
+	_vineta_energia.name = "VinetaEnergia"
+	_vineta_energia.texture = tex
+	_vineta_energia.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_vineta_energia.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_vineta_energia.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_vineta_energia.stretch_mode = TextureRect.STRETCH_SCALE
+	_vineta_energia.modulate.a = 0.0
+	add_child(_vineta_energia)
+	if vineta_vida != null:
+		move_child(_vineta_energia, vineta_vida.get_index() + 1)
+
+
 func _ready() -> void:
+	_crear_vineta_energia()
 	visible = true
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("hud")
@@ -283,6 +318,15 @@ func _pop_fragmentos() -> void:
 func sugerir_forma(idx: int, seg: float = 6.0) -> void:
 	if dial != null and dial.has_method("sugerir_forma"):
 		dial.sugerir_forma(idx, seg)
+		if _player != null:
+			_player.forma_sugerida = int(dial.get("_sug_idx"))   # T va directo a esta forma
+		if not dial.sugerencia_terminada.is_connected(_on_sugerencia_terminada):
+			dial.sugerencia_terminada.connect(_on_sugerencia_terminada)
+
+
+func _on_sugerencia_terminada() -> void:
+	if _player != null:
+		_player.forma_sugerida = -1
 
 
 func mostrar_aviso(texto: String) -> void:
@@ -554,9 +598,9 @@ func _on_energia_changed(energia: float) -> void:
 	_energia_llena = energia >= 99.9
 	if not _energia_llena:
 		_t_reposo = 0.0
+	# Sin cartel: el dial late, el aro pulsa en rojo y los bordes de pantalla se tiñen de cian.
 	if energia < 25.0 and _player != null and _player.current_form != Jugador.Form.HUMAN:
 		if not _energia_aviso_dado:
-			_aviso("¡Energía baja!")
 			var audio := get_node_or_null("/root/AudioManager")
 			if audio != null:
 				audio.play_ui("energia_baja", -12.0)
