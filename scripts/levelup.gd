@@ -31,7 +31,11 @@ func _ready() -> void:
 	panel.visible = false
 	var prog: Node = get_node("/root/Progresion")
 	prog.nivel_subio.connect(func(_n: int) -> void: abrir())
-	prog.forma_desbloqueada_evento.connect(func(_f: int) -> void: _canjear_diferida())
+	prog.forma_desbloqueada_evento.connect(func(_f: int) -> void:
+		var jugador := get_tree().get_first_node_in_group("player")
+		if jugador != null and jugador.get("cinematica_activa") == true:
+			return   # en plena cinemática de presentación: la propia cinemática avisa al terminar
+		canjear_diferida())
 
 
 func esta_abierto() -> bool:
@@ -122,7 +126,7 @@ func _mover_indice(dir: int) -> void:
 
 
 ## Si hay una mejora esperando y ya hay una forma con combo pendiente, abre el menú.
-func _canjear_diferida() -> void:
+func canjear_diferida() -> void:
 	var prog: Node = get_node("/root/Progresion")
 	if int(prog.mejoras_diferidas) <= 0:
 		return

@@ -44,6 +44,9 @@ enum Estilo { ROCA, MADERA, TRIBAL }
 ## pinchos solo cuenta una "hurtbox" chica, centrada y sobre los pies, así no matan desde lejos.
 @export_range(0.1, 1.0, 0.05) var hurtbox_ancho_jugador := 0.35   ## fracción del ancho del collider que cuenta
 @export_range(0.1, 1.0, 0.05) var hurtbox_alto_jugador := 0.4     ## fracción del alto del collider (desde los pies) que cuenta
+## Parado en el piso, el hurtbox baja estos px más: el collider ancho del Oso se apoya en los bordes de un pozo de
+## pinchos y quedaba flotando sobre las puntas (se veía parado encima sin recibir daño).
+@export var tolerancia_pisada := 32.0
 
 ## Todo el dibujo de un grupo de pinchos va en UN solo item de dibujo (antes eran ~60 nodos Polygon2D/Line2D por pincho).
 class _Rec:
@@ -253,6 +256,8 @@ func _cuerpo_en_zona(body: Node2D) -> bool:
 		var forma: Object = body.forms[body.current_form] if "forms" in body and "current_form" in body else null
 		if forma != null and not forma.patas_letales:
 			pies_y = rect_body.end.y   # Murciélago: sus "patas" (90 px) no se ven; mataba ~90 px antes de tocar la punta
+		if body is CharacterBody2D and (body as CharacterBody2D).is_on_floor():
+			pies_y += tolerancia_pisada
 		var tope_y := rect_body.end.y - alto_h
 		rect_body = Rect2(rect_body.get_center().x - ancho_h * 0.5, tope_y, ancho_h, pies_y - tope_y)
 	# La zona de daño es SOLO la porción superior del alto visible (fair: tocar

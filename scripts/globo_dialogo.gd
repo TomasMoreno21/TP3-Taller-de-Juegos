@@ -27,6 +27,7 @@ const COLA_MAX := 240.0  ## largo máximo de la cola (px)
 var _papel := PAPEL
 var _tinta := TINTA
 var tono: Tono = Tono.NORMAL
+var _humano := false   ## el Humano susurra con borde liso, no punteado
 var cola_a := Vector2.ZERO   ## punto (coordenadas locales) al que apunta la cola
 
 var _fuente: Font
@@ -63,6 +64,7 @@ func _ready() -> void:
 ## Prepara el globo: calcula su tamaño para que entre todo el texto (se escribe después).
 func configurar(texto: String, hablante: String, tono_nuevo: Tono, tam_fuente: int, ancho_max: float) -> void:
 	tono = tono_nuevo
+	_humano = hablante == "Humano"
 	var est: Dictionary = estilos.get(hablante, estilos["Humano"])
 	_papel = est["papel"]
 	_tinta = est["tinta"]
@@ -72,7 +74,7 @@ func configurar(texto: String, hablante: String, tono_nuevo: Tono, tam_fuente: i
 	_label.text = txt
 	_label.add_theme_font_size_override("font_size", tam_fuente)
 	_label.visible_ratio = 0.0
-	var mostrar_nombre := not hablante.is_empty() and hablante != "Amuleto" and hablante != "Humano"
+	var mostrar_nombre := not hablante.is_empty() and hablante != "Amuleto" and hablante != "Humano" and hablante != "Hijo"   # la voz del hijo llega sin nombre: misterio
 	_nombre.text = hablante.to_upper() + ":" if mostrar_nombre else ""
 	_nombre.visible = mostrar_nombre
 	var medida := _fuente.get_multiline_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, ancho_max, tam_fuente)
@@ -168,7 +170,7 @@ func _rellenar_cola(lados: Array, col: Color, desfase := Vector2.ZERO) -> void:
 
 
 func _contorno_linea(pts: PackedVector2Array, ancho: float) -> void:
-	if tono == Tono.SUSURRO:
+	if tono == Tono.SUSURRO and not _humano:
 		_punteado(pts, _tinta, 3.0)
 	else:
 		draw_polyline(pts, _tinta, ancho, true)

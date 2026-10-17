@@ -138,6 +138,8 @@ func _medir_hueco() -> bool:
 	var cols_b: Array[float] = []
 	var libres: Array[bool] = []
 	var n := int(ceil(maximo_x / PASO))
+	# Ejes LOCALES: una barrera rotada (p. ej. horizontal sobre un pozo) mide su hueco a lo largo de su propio alto.
+	var arriba := (to_global(Vector2.UP) - global_position).normalized()
 	for i in range(-n, n + 1):
 		var x := clampf(float(i) * PASO, -maximo_x, maximo_x)
 		var p := to_global(Vector2(x, 0.0))
@@ -149,8 +151,8 @@ func _medir_hueco() -> bool:
 		var t := -alcance_v
 		var b := alcance_v
 		if libre:
-			t = _distancia_rayo(espacio, p, Vector2.UP, alcance_v, excluir)
-			b = _distancia_rayo(espacio, p, Vector2.DOWN, alcance_v, excluir)
+			t = _distancia_rayo(espacio, p, arriba, alcance_v, excluir)
+			b = _distancia_rayo(espacio, p, -arriba, alcance_v, excluir)
 			t = -t
 			if b - t < 24.0:
 				libre = false   # una rendija: no cuenta como hueco
@@ -212,7 +214,7 @@ func _distancia_rayo(espacio: PhysicsDirectSpaceState2D, desde: Vector2, dir: Ve
 
 ## x local de la pared más cercana hacia `lado` (-1 izquierda, 1 derecha) desde un punto libre.
 func _x_pared(espacio: PhysicsDirectSpaceState2D, desde: Vector2, lado: float, alcance: float, excluir: Array[RID], x_local: float) -> float:
-	var q := PhysicsRayQueryParameters2D.create(desde, desde + Vector2(lado * alcance, 0.0))
+	var q := PhysicsRayQueryParameters2D.create(desde, desde + (to_global(Vector2(lado, 0.0)) - global_position).normalized() * alcance)
 	q.collision_mask = 1 << (capa_terreno - 1)
 	q.exclude = excluir
 	var hit := espacio.intersect_ray(q)

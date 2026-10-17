@@ -2,6 +2,9 @@ class_name Humano
 extends Forma
 
 
+const combo_mult_recuperacion := 0.34   # × RECOVERY_COMBO (1.05 s) ≈ 0.36 s
+
+
 func _init() -> void:
 	form_name = "Humano"
 	speed = 600.0
@@ -41,6 +44,13 @@ func _init() -> void:
 	combos = [
 		{"nombre": "Remate", "descripcion": "Tajo giratorio: golpea al frente y a tu espalda.", "secuencia": ["light", "heavy"], "dano": 40, "knockback": 260.0, "tamano": Vector2(162, 114), "rango": 126.0, "radio_trasero": 280.0, "mult_trasero": 0.75},
 	]
+
+
+## El Remate dura poco: la animación termina antes de que el sprite vuelva a mirar al frente.
+func mult_recuperacion_para(tipo: String, step: int) -> float:
+	if tipo == "combo":
+		return combo_mult_recuperacion
+	return super.mult_recuperacion_para(tipo, step)
 
 
 func perform_combo(player: CharacterBody2D, combo: Dictionary) -> void:

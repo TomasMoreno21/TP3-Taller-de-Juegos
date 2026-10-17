@@ -9,7 +9,7 @@ func _initialize() -> void:
 	current_scene = nivel
 	await create_timer(1.0, true, false, true).timeout
 	var d := root.get_node("Dialogo")
-	d.mostrar(["Hay huellas pequeñas: tu hijo caminó acá."], "Amuleto", false, true)
+	d.mostrar(["[humano][susurro]Mi hijo estuvo en este camino."], "Amuleto", false, true)
 	await create_timer(2.0, true, false, true).timeout
 	root.get_viewport().get_texture().get_image().save_png("user://globo_estilo.png")
 	await create_timer(4.0, true, false, true).timeout

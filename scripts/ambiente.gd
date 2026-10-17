@@ -31,6 +31,49 @@ var _acum := 0.0
 
 var _escena_vista: Node
 
+@export_group("Audio")
+@export var sonido_lub: AudioStream = preload("res://assets/audio/sfx/gen/latido_lub.wav")
+@export var sonido_dub: AudioStream = preload("res://assets/audio/sfx/gen/latido_dub.wav")
+@export var sonido_tension: AudioStream = preload("res://assets/audio/sfx/gen/tension_loop.wav")   ## drone en loop; su volumen sigue a `tension`
+@export var volumen_latido_db := -6.0
+@export var volumen_tension_min_db := -42.0   ## con tensión apenas > 0
+@export var volumen_tension_max_db := -17.0   ## con tensión 1 (jefe + enemigos + poca vida)
+var _drone: AudioStreamPlayer
+var _fase_prev := 0.0
+
+
+func _ready() -> void:
+	if DisplayServer.get_name() == "headless" or sonido_tension == null:
+		return
+	var s := sonido_tension.duplicate() as AudioStreamWAV
+	s.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	s.loop_end = s.data.size() / 2   # 16 bits mono
+	_drone = AudioStreamPlayer.new()
+	_drone.stream = s
+	_drone.bus = &"SFX"
+	_drone.volume_db = -80.0
+	add_child(_drone)
+
+
+func _audio(delta: float) -> void:
+	if _drone != null:
+		var objetivo_db := lerpf(volumen_tension_min_db, volumen_tension_max_db, tension) if tension > 0.03 else -80.0
+		_drone.volume_db = move_toward(_drone.volume_db, objetivo_db, delta * 30.0)
+		if _drone.volume_db > -70.0 and not _drone.playing:
+			_drone.play()
+		elif _drone.volume_db <= -70.0 and _drone.playing:
+			_drone.stop()
+	if latido_severidad > 0.05 and _drone != null:
+		# lub al empezar el ciclo, dub al cruzar 0.24 (mismo pulso que el visual)
+		var audio := get_node_or_null("/root/AudioManager")
+		if audio != null:
+			var vol := volumen_latido_db + linear_to_db(latido_severidad)
+			if _fase_latido < _fase_prev:
+				audio.play_sfx(sonido_lub, vol)
+			elif _fase_prev < 0.24 and _fase_latido >= 0.24:
+				audio.play_sfx(sonido_dub, vol - 3.0)
+	_fase_prev = _fase_latido
+
 
 func _process(delta: float) -> void:
 	var escena := get_tree().current_scene
@@ -49,6 +92,7 @@ func _process(delta: float) -> void:
 		latido = _pulso(_fase_latido) * latido_severidad
 	else:
 		latido = 0.0
+	_audio(delta)
 
 
 ## Doble golpe "lub-dub" sobre una fase 0..1.

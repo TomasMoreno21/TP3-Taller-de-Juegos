@@ -34,9 +34,9 @@ signal desbloqueada
 @export var cine_barras := 90.0                 ## alto (px) de las barras negras de cine (0 = sin barras)
 
 const TEXTOS := {
-	1: ["LOBO", "Pequeño y ágil: se cuela por pasajes estrechos y salta más alto."],
-	2: ["OSO", "Su peso activa las placas pesadas y rompe los muros de piedra."],
-	3: ["MURCIÉLAGO", "Planea y vuela. Sus ondas sónicas golpean desde lejos."],
+	1: ["LOBO", "Rápido y sigiloso. Se cuela donde nadie cabe."],
+	2: ["OSO", "Lento, pero imparable. Su peso hace ceder la piedra."],
+	3: ["MURCIÉLAGO", "Dueño del aire. Su grito quiebra lo que la fuerza no puede."],
 }
 
 var _dado := false
@@ -261,6 +261,7 @@ func _cinematica(jugador: Node2D, prog: Node) -> void:
 			tq.tween_property(b, "custom_minimum_size:y", 0.0, 0.5)
 	await tree.create_timer(0.6, false).timeout
 	capa.queue_free()
+	tree.call_group("levelup", "canjear_diferida")   # recién ahora se ofrece el combo pendiente
 
 
 ## Tarjeta de presentación: nombre grande, filete que se abre y la descripción debajo.

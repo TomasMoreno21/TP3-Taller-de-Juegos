@@ -249,6 +249,15 @@
 			"Vencé a sus guardias y que el Oso rompa la losa."
 		]
 	},
+	"n3_barrera_pozo": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"una_vez": true,
+		"lineas": [
+			"Más tarde volveremos.",
+			"Por ahora, vayamos por abajo."
+		]
+	},
 	"n3_liana": {
 		"hablante": "Amuleto",
 		"modo": "Zona",

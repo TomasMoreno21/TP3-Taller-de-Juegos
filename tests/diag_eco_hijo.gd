@@ -17,7 +17,7 @@ func _run() -> void:
 		var eco: Node = escena.get_node_or_null("EcoHijo")
 		_chk(eco != null, n + ": hay EcoHijo")
 		if eco != null:
-			_chk(eco.sonido_grito != null, n + ": tiene sonido del grito")
+			_chk(not eco.lineas_grito.is_empty(), n + ": tiene diálogo del grito")
 			var j: Node = get_first_node_in_group("player")
 			root.get_node("Progresion").dialogos_vistos.erase("eco_hijo")
 			if j != null:

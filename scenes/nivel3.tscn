@@ -1918,6 +1918,10 @@ position = Vector2(-3150, 3400)
 color_encendido = Color(0.35, 0.9, 0.85, 1)
 color_luz = Color(0.45, 0.95, 0.9, 1)
 
+[node name="DialogoBarreraPozo" parent="." unique_id=1624980318 instance=ExtResource("dialog")]
+position = Vector2(14800, 2665)
+dialogo_id = "n3_barrera_pozo"
+
 [node name="DialogoLiana" parent="." unique_id=1624980317 instance=ExtResource("dialog")]
 position = Vector2(6422, 4223)
 dialogo_id = "n3_liana"

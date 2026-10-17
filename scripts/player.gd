@@ -231,12 +231,12 @@ static var _tips_vistos: Dictionary = {}
 @export var bloqueo_energia_min := 10.0   ## sin energía no se puede bloquear hasta recuperar este mínimo
 @export var bloqueo_chispa_color := Color(0.75, 0.88, 1.0, 0.95)  ## chispa al bloquear un golpe (sin parry)
 @export_group("Tajo giratorio (combo del Humano)")
-@export var tajo_espera := 0.1      ## s tras el golpe de frente antes de empezar a girar
-@export var tajo_giro_dur := 0.16    ## s que tarda el sprite en darse vuelta
-@export var tajo_hold := 0.22        ## s que queda mirando atrás tras el tajo
-@export var tajo_vuelta_dur := 0.2   ## s que tarda en volver a mirar al frente
+@export var tajo_espera := 0.06      ## s tras el golpe de frente antes de empezar a girar
+@export var tajo_giro_dur := 0.12    ## s que tarda el sprite en darse vuelta
+@export var tajo_hold := 0.08        ## s que queda mirando atrás tras el tajo
+@export var tajo_vuelta_dur := 0.12   ## s que tarda en volver a mirar al frente
 @export_group("Embestida (combo del Lobo)")
-@export var embestida_invuln := 0.15   ## s sin recibir daño al arrancar la carrera
+@export var embestida_invuln := 0.15   ## s extra sin recibir daño al terminar la carrera (durante toda la carrera ya es invulnerable)
 @export var embestida_hitstop := 0.04  ## s de pausa por cada enemigo atravesado
 @export var embestida_shake := 6.0     ## temblor de cámara por enemigo atravesado
 @export_group("")
@@ -396,6 +396,10 @@ var _salto_aereo_limitado: bool = false
 @export var limite_caida := 12000.0
 @export var sonido_golpe_liviano: AudioStream
 @export var sonido_golpe_pesado: AudioStream
+@export var capa_impacto_liviano: Array[AudioStream] = [preload("res://assets/audio/sfx/gen/impacto_liviano_1.wav"), preload("res://assets/audio/sfx/gen/impacto_liviano_2.wav"), preload("res://assets/audio/sfx/gen/impacto_liviano_3.wav")]  ## capa sintética que se suma al mp3 al conectar un golpe liviano
+@export var capa_impacto_pesado: Array[AudioStream] = [preload("res://assets/audio/sfx/gen/impacto_pesado_1.wav"), preload("res://assets/audio/sfx/gen/impacto_pesado_2.wav")]  ## ídem para heavy/special/combo
+@export var volumen_capa_liviano_db := -8.0
+@export var volumen_capa_pesado_db := -4.0
 @export var sonido_transformacion: AudioStream
 @export var sonido_swing: AudioStream = preload("res://assets/audio/sfx/gen/swing_1.wav")           ## "whoosh" de cada ataque cuerpo a cuerpo (suene o no el golpe)
 @export var sonido_combo: AudioStream = preload("res://assets/audio/sfx/gen/proyectil_impacto.wav")  ## capa extra al ejecutar un combo
@@ -1361,7 +1365,7 @@ func iniciar_embestida(combo: Dictionary) -> void:
 	_hit_applied = true   # el golpe único normal no sale: pega el barrido
 	_lunge_t = dur
 	_lunge_vel = facing * dist / dur
-	_invuln_timer = maxf(_invuln_timer, embestida_invuln)
+	_invuln_timer = maxf(_invuln_timer, dur + embestida_invuln)
 	_invuln_sin_parpadeo = true
 	for e in get_tree().get_nodes_in_group("enemy"):
 		if e is PhysicsBody2D and (e.global_position.x - global_position.x) * facing > -150.0 				and absf(e.global_position.x - global_position.x) < dist + 400.0:
@@ -1479,7 +1483,12 @@ func _check_attack_hits() -> void:
 			vol += volumen_golpe_pesado_db
 		elif _current_attack_type == "special":
 			vol += volumen_special_db
-		audio_mgr.play_sfx_sincronizado(sonido_golpe, vol, dur_hitstop > 0.0, 1.0 + minf(float(_racha), 8.0) * tono_combo)
+		var tono_golpe := 1.0 + minf(float(_racha), 8.0) * tono_combo
+		audio_mgr.play_sfx_sincronizado(sonido_golpe, vol, dur_hitstop > 0.0, tono_golpe)
+		var capas := capa_impacto_liviano if _current_attack_type == "light" else capa_impacto_pesado
+		if not capas.is_empty():
+			var vol_capa := volumen_capa_liviano_db if _current_attack_type == "light" else volumen_capa_pesado_db
+			audio_mgr.play_sfx_sincronizado(capas.pick_random(), vol_capa, dur_hitstop > 0.0, randf_range(0.94, 1.06) * (1.0 + (tono_golpe - 1.0) * 0.5))
 
 
 ## Golpe pesado: el ambiente calla durante la preparación y vuelve con el impacto (Hollow Knight).

@@ -261,6 +261,20 @@ def generar():
         guardar("swing_%d" % (v + 1), whoosh(0.17, 700 + v * 150, 4200 + v * 300, r, 0.35))
     guardar("swing_pesado", mezclar((whoosh(0.3, 350, 2600, rng, 0.4), 1.0),
                                     (mul(pasabajos(ruido(0.3, rng), 300), env(n(0.3), 0.08, 0.1)), 0.5)))
+    # Capa de impacto del jugador (se suma al mp3): liviano = seco y crujiente, pesado = sub grave + crujido + cola.
+    # RNG propio para no mover el resto de sonidos.
+    for v in range(3):
+        r = random.Random(600 + v)
+        guardar("impacto_liviano_%d" % (v + 1), mezclar(
+            (golpe_seco(0.16, 210 + v * 15, 95, 0.04, r, crujido=0.8, crujido_banda=(1500, 5500)), 1.0),
+            (mul(pasaaltos(ruido(0.03, r), 3000), env(n(0.03), 0.0005, 0.008)), 0.6)))
+    for v in range(2):
+        r = random.Random(700 + v)
+        guardar("impacto_pesado_%d" % (v + 1), mezclar(
+            (golpe_seco(0.5, 100 + v * 8, 36, 0.15, r), 1.0),
+            (mul(banda(ruido(0.25, r), 250, 2800), env(n(0.25), 0.001, 0.07)), 0.9),
+            (mul(pasaaltos(ruido(0.04, r), 2500), env(n(0.04), 0.0005, 0.01)), 0.7),
+            (mul(pasabajos(ruido(0.45, r), 420), env(n(0.45), 0.005, 0.14)), 0.6)))
     guardar("dano_jugador", mezclar((golpe_seco(0.25, 150, 60, 0.06, rng, crujido=0.5, crujido_banda=(900, 3500)), 1.0),
                                     (mul(tono(0.22, 330, 190, "tri"), env(n(0.22), 0.005, 0.07)), 0.4)))
     guardar("bloqueo", mezclar((mul(mezclar((tono(0.3, 820), 1.0), (tono(0.3, 1370), 0.6), (tono(0.3, 2260), 0.3)),
@@ -328,6 +342,29 @@ def generar():
     guardar("arena_inicio", mezclar((golpe_seco(0.7, 75, 40, 0.2, rng), 1.0),
                                     (mul(tono(0.7, 110, 220, "tri"), env(n(0.7), 0.25, 0.2, 2.0)), 0.5),
                                     (mul(pasabajos(ruido(0.7, rng), 250), env(n(0.7), 0.3, 0.2, 2.0)), 0.4)))
+    # Atmósfera (la maneja Ambiente.gd): latido lub/dub con poca vida y drone de tensión en loop.
+    r = random.Random(810)
+    guardar("latido_lub", mezclar((golpe_seco(0.22, 70, 38, 0.07, r), 1.0),
+                                  (mul(pasabajos(ruido(0.12, r), 220), env(n(0.12), 0.003, 0.03)), 0.5)), 0.9)
+    guardar("latido_dub", mezclar((golpe_seco(0.18, 58, 34, 0.06, r), 1.0),
+                                  (mul(pasabajos(ruido(0.1, r), 180), env(n(0.1), 0.003, 0.025)), 0.4)), 0.7)
+    r = random.Random(811)
+    L = n(6.0)
+    # Frecuencias con ciclos enteros en 6 s y modulación lenta → empalma sin click; roce de viento grave encima.
+    drone = mezclar((tono(6.0, 55.0), 1.0), (tono(6.0, 55.5), 0.8), (tono(6.0, 82.5, None, "tri"), 0.35),
+                    (tono(6.0, 116.5, None, "tri"), 0.18))   # 116.5 ≈ tritono sobre 82.5: inquieta
+    moda = [0.7 + 0.3 * math.sin(2 * math.pi * i / L) for i in range(L)]
+    viento = pasabajos_var(banda(ruido(6.0, r), 80, 900), [250.0 + 200.0 * math.sin(2 * math.pi * i / L) for i in range(L)])
+    loop = normalizar(mul(mezclar((drone, 0.8), (viento, 0.5)), moda), 0.7)
+    cruce = n(0.25)
+    for i in range(cruce):
+        t = i / cruce
+        loop[i] = loop[i] * t + loop[len(loop) - cruce + i] * (1 - t)
+    loop = loop[:len(loop) - cruce]
+    with wave.open(os.path.join(SALIDA, "tension_loop.wav"), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR)
+        w.writeframes(b"".join(struct.pack("<h", int(v * 32767)) for v in loop))
+    print("   tension_loop")
     r = random.Random(703)
     L = n(0.9)
     exhala = mul(pasabajos_var(pasaaltos(ruido(0.9, r), 120), [1800.0 * (250.0 / 1800.0) ** (i / L) for i in range(L)]),

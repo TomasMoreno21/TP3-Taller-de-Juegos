@@ -45,6 +45,8 @@ const LIMITE_TROZO := 44   ## un texto más largo se parte en globos cortos
 @export var sacudida_grito := 5.0        ## ídem para GRITO
 @export var tono_voz_amuleto := 1.0      ## pitch base del blip al escribir (cada tipo de globo lo modifica)
 @export var tono_voz_humano := 0.85
+@export var tono_voz_hijo := 1.45   ## voz aguda del hijo
+@export_range(0.0, 1.0) var altura_globo_hijo := 0.38   ## altura del globo del hijo en pantalla (0 = arriba)
 @export_group("")
 
 var _datos: Dictionary = {}   ## cache de dialogos.json (ver lineas_de)
@@ -73,6 +75,7 @@ var _jugador: Node2D
 ## Hablante externo (p. ej. el cultista del nivel 3): si `nombre_ancla` habla, el globo sale de `ancla_hablante`.
 var ancla_hablante: Node2D
 var nombre_ancla := ""
+var hijo_a_la_derecha := true   ## de qué borde de la pantalla llega la voz del hijo
 var altura_ancla := 330.0
 var _tw_globo: Tween
 var _tw_gema: Tween
@@ -455,7 +458,8 @@ func _blip(tono_i: int) -> void:
 	var audio := get_node_or_null("/root/AudioManager")
 	if audio == null:
 		return
-	var base := tono_voz_humano if str(_item.get("hablante", "")) == "Humano" else tono_voz_amuleto
+	var hab := str(_item.get("hablante", ""))
+	var base := tono_voz_humano if hab == "Humano" else (tono_voz_hijo if hab == "Hijo" else tono_voz_amuleto)
 	var por_tono: float = [1.0, 1.12, 1.28, 0.82][clampi(tono_i, 0, 3)]
 	var vol := volumen_tipeo_db + (-4.0 if tono_i == 3 else (2.0 if tono_i == 2 else 0.0))
 	audio.play_sfx(SONIDO_TECLA, vol, 0.05, base * por_tono)
@@ -496,6 +500,11 @@ func _colocar() -> void:
 		pos.x = clampf(pos.x, 24.0, maxf(vp.x - tam.x - 24.0, 24.0))
 		pos.y = clampf(pos.y, 24.0, maxf(vp.y - tam.y - 24.0, 24.0))
 		punta = cabeza
+	elif str(_item.get("hablante", "")) == "Hijo":
+		# La voz llega desde más allá del borde: el globo pega al costado y la cola apunta afuera de la pantalla.
+		var x := vp.x - tam.x - 24.0 if hijo_a_la_derecha else 24.0
+		pos = Vector2(x, vp.y * altura_globo_hijo - tam.y * 0.5)
+		punta = Vector2(vp.x + 120.0 if hijo_a_la_derecha else -120.0, pos.y + tam.y + 90.0)
 	elif is_instance_valid(ancla_hablante) and str(_item.get("hablante", "")) == nombre_ancla:
 		var cabeza_a := get_viewport().get_canvas_transform() * (ancla_hablante.global_position + Vector2(0, -altura_ancla))
 		var a_la_derecha := is_instance_valid(_jugador) and _jugador.global_position.x < ancla_hablante.global_position.x
