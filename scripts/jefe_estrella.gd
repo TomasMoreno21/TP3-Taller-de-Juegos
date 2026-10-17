@@ -153,6 +153,11 @@ enum Fase { UNO, DOS, TRES }
 @export var aviso_embestida := 0.8
 @export var velocidad_embestida := 1000.0
 @export var hueco_embestida := 200.0        ## px libres bajo la estrella al embestir (Lobo y Murciélago pasan)
+@export var dano_rayo_blaster := 10        ## la embestida carga como un blaster: deja un rayo que daña en la franja
+@export var duracion_rayo_blaster := 0.3   ## s que queda el rayo tras la embestida
+@export var ancho_carga_blaster := 14.0    ## px de la franja mientras carga (al disparar se ensancha)
+@export var color_rayo_blaster := Color(1, 0.96, 0.96)
+@export var retroceso_blaster := 40.0      ## px que retrocede al cargar (retroceso del cañón)
 @export var prob_diagonal := 0.4
 @export var dano_orbe := 12
 @export var orbes_cantidad := 3            ## rocas que arranca del piso y hace girar
@@ -251,6 +256,10 @@ var _golpes_cap := 0
 var _dano_ventana := 0
 var _estalactitas: Array = []
 var _traidor: Node2D = null
+var _blaster: Line2D = null
+var _blaster_sigue := false
+var _blaster_t := 0.0
+var _blaster_pego := false
 
 @onready var tallo: Polygon2D = $Tallo
 @onready var cuerpo: Node2D = $Cuerpo
@@ -328,6 +337,7 @@ func preparar_ola() -> void:
 	_limpiar_orbes()
 	_limpiar_estalactitas()
 	_limpiar_traidor()
+	_limpiar_blaster()
 	_contener_ataque(false)
 	if ojo != null:
 		ojo.nino_escudo = 0.0
@@ -548,6 +558,7 @@ func _physics_process(delta: float) -> void:
 		_contacto(_contacto_dano)
 	if not _orbes_nodos.is_empty():
 		_orbes_tick(delta)
+	_blaster_tick(delta)
 	_mirar_jugador(delta)
 	if piedritas_pelea and _estado != "aparicion":
 		_piedritas_t -= delta
@@ -1441,20 +1452,114 @@ func _embestida(gen: int, ida_y_vuelta: bool) -> void:
 	if not _sigue(gen):
 		return
 	var linea := _linea_aviso(desde, hasta)
-	await _esperar(aviso_embestida)
+	await _carga_blaster(linea, lado)
 	if is_instance_valid(linea):
 		linea.queue_free()
 	if not _sigue(gen):
 		return
 	_contacto_dano = dano_embestida
+	_blaster_iniciar(cuerpo.global_position, cuerpo.global_position, true)
 	await _ir_a(hasta, desde.distance_to(hasta) / maxf(velocidad_embestida, 1.0))
+	_blaster_soltar()
 	if ida_y_vuelta and _sigue(gen):
 		await _esperar(0.35)
+		_blaster_iniciar(cuerpo.global_position, cuerpo.global_position, true)
 		await _ir_a(desde, desde.distance_to(hasta) / maxf(velocidad_embestida, 1.0))
+		_blaster_soltar()
 	_contacto_dano = 0
 	if not _sigue(gen):
 		return
 	await _mover_cuerpo(altura_duelo, 0.0, 0.35)
+
+
+## Gaster Blaster (Sans, Undertale): la franja nace fina y parpadea mientras la Estrella retrocede y
+## tiembla con el ojo abierto; al final se ensancha de golpe en blanco (el disparo).
+func _carga_blaster(linea: Line2D, lado: float) -> void:
+	if DisplayServer.get_name() == "headless":
+		await _esperar(aviso_embestida)
+		return
+	_poner_ojo(1.0)
+	var ancho := linea.width
+	var col := _color_fase()
+	linea.width = ancho_carga_blaster
+	var carga := maxf(aviso_embestida - 0.2, 0.05)
+	var x0 := cuerpo.position.x
+	var tw := create_tween()
+	tw.tween_property(cuerpo, "position:x", x0 + lado * retroceso_blaster, carga).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	var t := 0.0
+	while t < carga and is_instance_valid(linea):
+		var k := t / carga
+		var blanco := fmod(t * lerpf(6.0, 22.0, k), 1.0) < 0.5   # parpadeo cada vez más rápido
+		linea.default_color = Color(1, 1, 1, 0.55) if blanco else Color(col.r, col.g, col.b, 0.35)
+		cuerpo.rotation = sin(t * 60.0) * 0.03 * k
+		await _esperar(0.03)
+		t += 0.03
+	cuerpo.rotation = 0.0
+	if is_instance_valid(linea):
+		linea.default_color = Color(color_rayo_blaster.r, color_rayo_blaster.g, color_rayo_blaster.b, 0.85)
+		linea.create_tween().tween_property(linea, "width", ancho, 0.08).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_flash()
+	_rugido(8.0)
+	await _esperar(0.2)
+
+
+func _ancho_franja() -> float:
+	return (alto_cuerpo_arriba + alto_cuerpo_abajo) * cuerpo.scale.x * 0.5
+
+
+## Rayo del blaster entre dos puntos globales; con `sigue` la punta acompaña a la Estrella.
+func _blaster_iniciar(desde_g: Vector2, hasta_g: Vector2, sigue: bool = false) -> void:
+	_limpiar_blaster()
+	var l := Line2D.new()
+	l.width = _ancho_franja()
+	l.default_color = color_rayo_blaster
+	l.z_index = -4   # detrás de la Estrella (raíz en z -2, su cuerpo en -3): el rayo sale de ella
+	_destino().add_child(l)
+	l.points = PackedVector2Array([l.to_local(desde_g), l.to_local(hasta_g)])
+	_blaster = l
+	_blaster_sigue = sigue
+	_blaster_t = duracion_rayo_blaster
+	_blaster_pego = false
+
+
+## La Estrella llegó: el rayo queda un instante y se apaga.
+func _blaster_soltar() -> void:
+	if _blaster == null or not is_instance_valid(_blaster):
+		return
+	_blaster.set_point_position(1, _blaster.to_local(cuerpo.global_position))
+	_blaster_sigue = false
+	_blaster_t = duracion_rayo_blaster
+
+
+func _blaster_tick(delta: float) -> void:
+	if _blaster == null or not is_instance_valid(_blaster):
+		return
+	if _blaster_sigue:
+		_blaster.set_point_position(1, _blaster.to_local(cuerpo.global_position))
+	else:
+		_blaster_t -= delta
+		_blaster.modulate.a = clampf(_blaster_t / maxf(duracion_rayo_blaster, 0.01), 0.0, 1.0)
+		if _blaster_t <= 0.0:
+			_limpiar_blaster()
+			return
+	if _blaster_pego:
+		return
+	var p := _obtener_player()
+	if p == null or float(p.get("_invuln_timer") if p.get("_invuln_timer") != null else 0.0) > 0.0:
+		return
+	var a := _blaster.to_global(_blaster.points[0])
+	var b := _blaster.to_global(_blaster.points[1])
+	var cerca := Geometry2D.get_closest_point_to_segment(p.global_position, a, b)
+	if p.global_position.distance_to(cerca) < _blaster.width * 0.5:
+		_blaster_pego = true
+		p.take_damage(dano_rayo_blaster, 240.0, 1 if p.global_position.x >= cerca.x else -1)
+
+
+func _limpiar_blaster() -> void:
+	if _blaster != null and is_instance_valid(_blaster):
+		_blaster.queue_free()
+	_blaster = null
+	_blaster_sigue = false
 
 
 ## Roca de la cueva: polígono irregular con la paleta del nivel (no usa el arte del jefe).
@@ -1835,7 +1940,7 @@ func _sombra_piso(x: float) -> Node2D:
 func _linea_aviso(desde: Vector2, hasta: Vector2) -> Line2D:
 	var l := Line2D.new()
 	l.points = PackedVector2Array([to_global(desde), to_global(hasta)])
-	l.width = (alto_cuerpo_arriba + alto_cuerpo_abajo) * cuerpo.scale.x * 0.5
+	l.width = _ancho_franja()
 	l.default_color = Color(_color_fase().r, _color_fase().g, _color_fase().b, 0.18)
 	l.z_index = 3
 	_destino().add_child(l)
@@ -2047,6 +2152,7 @@ func _morir() -> void:
 	_limpiar_orbes()
 	_limpiar_estalactitas()
 	_limpiar_traidor()
+	_limpiar_blaster()
 	_contener_ataque(false)
 	_contacto_dano = 0
 	_energia_jefe(false)

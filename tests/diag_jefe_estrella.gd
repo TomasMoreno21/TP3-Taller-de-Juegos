@@ -371,6 +371,18 @@ func _init() -> void:
 	boss.prob_diagonal = 0.0
 	await boss._embestida(g, false)
 	_check(player.health == vida_e - 18, "La embestida le pega 18 al Humano parado (%d -> %d)" % [vida_e, player.health])
+	await _wait_frames(10)
+	_check(player.health == vida_e - 18, "Tras el golpe del cuerpo, el rayo del blaster no suma (%d)" % player.health)
+	await _wait_frames(int(boss.duracion_rayo_blaster * 60.0) + 5)
+	_check(boss._blaster == null, "El rayo de la embestida se apaga")
+	player.curar(100)
+	player._invuln_timer = 0.0
+	var vida_b: int = player.health
+	var ini_b: Vector2 = player.global_position + Vector2(-500, 0)
+	boss._blaster_iniciar(ini_b, ini_b + Vector2(1000, 0))
+	await _wait_frames(3)
+	_check(player.health == vida_b - boss.dano_rayo_blaster, "El rayo del blaster daña %d a quien queda en la franja (%d -> %d)" % [boss.dano_rayo_blaster, vida_b, player.health])
+	await _wait_frames(int(boss.duracion_rayo_blaster * 60.0) + 5)
 	player.curar(100)
 	player._invuln_timer = 0.0
 	boss._orbes(g)
