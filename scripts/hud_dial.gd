@@ -5,6 +5,8 @@ extends Control
 ## El aro exterior es la energía de transformación (con "fantasma" al gastarse) y su
 ## color es el de la forma ACTIVA. Todo vectorial, editable desde el Inspector.
 
+signal sugerencia_terminada
+
 const ICONO_ESCENA := preload("res://scenes/form_icon.tscn")
 
 @export var color_tinta := Color(0.04, 0.047, 0.063, 1.0)      ## contorno y silueta (estilo cómic de tinta)
@@ -15,6 +17,7 @@ const ICONO_ESCENA := preload("res://scenes/form_icon.tscn")
 @export var color_bajo := Color(0.95, 0.25, 0.25)     ## aro con energía baja
 @export var color_cooldown := Color(1.0, 0.7, 0.3)
 @export var ancho_aro := 12.0
+@export_range(0.0, 0.3) var latido_bajo := 0.07        ## cuánto late (escala) el dial con energía baja
 @export_range(0.0, 1.0) var umbral_bajo := 0.25
 @export var duracion_transicion := 0.22
 @export_range(0.2, 1.5) var recorrido := 0.95          ## cuánto se desliza el ícono (fracción del recorte)
@@ -72,6 +75,10 @@ func _process(delta: float) -> void:
 	# regrabar sus ~100 comandos de dibujo (aro, disco con puntos de semitono) en cada frame.
 	var frac := clampf(energia / maxf(energia_max, 0.01), 0.0, 1.0)
 	var parpadea := frac <= umbral_bajo and forma_actual != 0   # aro con energía baja: pulsa con el tiempo
+	if parpadea and (_tw_pulso == null or not _tw_pulso.is_running()):
+		scale = Vector2.ONE * (1.0 + latido_bajo * maxf(0.0, sin(_t * 9.0)))   # el dial late con la energía baja
+	elif scale != Vector2.ONE and (_tw_pulso == null or not _tw_pulso.is_running()):
+		scale = Vector2.ONE
 	var firma := [energia, energia_max, _fantasma, forma_actual, forma_sel, cooldown, _giro, _flash, size, colores, _t if parpadea else 0.0]
 	if firma != _firma_dibujo:
 		_firma_dibujo = firma.duplicate(true)
@@ -103,6 +110,26 @@ func sugerir_forma(idx: int, seg: float = 6.0) -> void:
 	ic.size = _sugerencia.size * 0.8
 	ic.position = _sugerencia.size * 0.1
 	_sugerencia.add_child(ic)
+	# Chapita con el botón de transformar: apretarlo va directo a esta forma.
+	var dlg := get_node_or_null("/root/Dialogo")
+	var tecla: String = str(dlg.nombre_accion("transform")) if dlg != null and dlg.has_method("nombre_accion") else "T"
+	var chapa := Label.new()
+	chapa.text = tecla.to_upper()
+	chapa.add_theme_font_size_override("font_size", 20)
+	chapa.add_theme_color_override("font_color", color_tinta)
+	chapa.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	chapa.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var caja := StyleBoxFlat.new()
+	caja.bg_color = color_disco
+	caja.border_color = color_tinta
+	caja.set_border_width_all(2)
+	caja.set_corner_radius_all(6)
+	caja.content_margin_left = 8.0
+	caja.content_margin_right = 8.0
+	chapa.add_theme_stylebox_override("normal", caja)
+	_sugerencia.add_child(chapa)
+	chapa.reset_size()
+	chapa.position = Vector2((lado - chapa.size.x) * 0.5, lado - chapa.size.y * 0.5)
 	add_child(_sugerencia)
 	_tw_sug = create_tween().set_loops(maxi(int(seg / 0.6), 1))
 	_tw_sug.tween_property(_sugerencia, "scale", Vector2.ONE * 1.25, 0.3).set_trans(Tween.TRANS_SINE)
@@ -111,6 +138,8 @@ func sugerir_forma(idx: int, seg: float = 6.0) -> void:
 
 
 func quitar_sugerencia() -> void:
+	if _sug_idx != -1:
+		sugerencia_terminada.emit()
 	if _tw_sug != null and _tw_sug.is_valid():
 		_tw_sug.kill()
 	if _sugerencia != null and is_instance_valid(_sugerencia):

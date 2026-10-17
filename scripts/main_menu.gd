@@ -4,12 +4,14 @@ const SCENE_JUEGO := "res://scenes/comic_intro.tscn"   # intro en viñetas; al t
 const SCENE_CONTROLES := "res://scenes/controls.tscn"
 const SCENE_OPCIONES := "res://scenes/opciones.tscn"
 const SCENE_CREDITOS := "res://scenes/creditos.tscn"
+const SCENE_MODO_PRUEBA := "res://scripts/modo_prueba_panel.gd"   # panel armado por código
 
 var _indice := 0
 var _controls: CanvasLayer
 
 @onready var botones: Array[Button] = [
 	$Center/VBox/Options/Jugar,
+	$Center/VBox/Options/Niveles,
 	$Center/VBox/Options/Controles,
 	$Center/VBox/Options/Opciones,
 	$Center/VBox/Options/Creditos,
@@ -19,6 +21,12 @@ var _controls: CanvasLayer
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	var modo_prueba := get_node_or_null("/root/ModoPrueba")
+	if modo_prueba == null or not modo_prueba.habilitado:   # versión final: sin selector de nivel
+		botones.erase($Center/VBox/Options/Niveles)
+		$Center/VBox/Options/Niveles.hide()
+	else:
+		_poner_version(modo_prueba.version_texto)
 	for i in botones.size():
 		botones[i].pressed.connect(_on_boton_pressed.bind(i))
 		botones[i].focus_entered.connect(_on_focus.bind(i))
@@ -77,17 +85,44 @@ func _resaltar(i: int) -> void:
 
 func _on_boton_pressed(i: int) -> void:
 	_ui("ui_confirmar")
-	match i:
-		0:
+	match botones[i].name:
+		&"Jugar":
 			_jugar()
-		1:
+		&"Niveles":
+			_abrir_niveles()
+		&"Controles":
 			_abrir_controles()
-		2:
+		&"Opciones":
 			_abrir_panel(SCENE_OPCIONES)
-		3:
+		&"Creditos":
 			_abrir_panel(SCENE_CREDITOS)
-		4:
+		&"Salir":
 			get_tree().quit()
+
+
+## Versión de la prueba, abajo a la derecha: los reportes de los testers dicen de qué build hablan.
+func _poner_version(texto: String) -> void:
+	var l := Label.new()
+	l.text = texto
+	l.add_theme_font_size_override("font_size", 18)
+	l.add_theme_color_override("font_color", Color(0.95, 0.85, 0.4, 0.8))
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	l.anchor_left = 1.0
+	l.anchor_right = 1.0
+	l.anchor_top = 1.0
+	l.anchor_bottom = 1.0
+	l.offset_left = -420.0
+	l.offset_right = -24.0
+	l.offset_top = -52.0
+	l.offset_bottom = -24.0
+	add_child(l)
+
+
+func _abrir_niveles() -> void:
+	var c: CanvasLayer = (load(SCENE_MODO_PRUEBA) as GDScript).new()
+	c.en_juego = false
+	_controls = c
+	add_child(c)
 
 
 func _jugar() -> void:

@@ -18,6 +18,9 @@ func _on_boss_died() -> void:
 		return
 	_victoria_mostrada = true
 	add_to_group("victoria")   # desde la muerte del jefe ya no se puede pausar (pause.gd)
+	var jugador := get_tree().get_first_node_in_group("player")
+	if jugador != null and jugador.has_method("_transformar") and jugador.current_form != jugador.Form.HUMAN:
+		jugador._transformar(jugador.Form.HUMAN, true)   # forzado: ignora cooldown y energía
 	await get_tree().create_timer(1.2, false).timeout   # si la pausa ya estaba abierta, espera a que se cierre
 	if get_tree().current_scene == null or not is_instance_valid(get_tree().current_scene):
 		return

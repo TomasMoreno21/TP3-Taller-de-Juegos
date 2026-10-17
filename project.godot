@@ -23,6 +23,7 @@ Dialogo="*res://scenes/dialog_box.tscn"
 Hitstop="*res://scripts/hitstop.gd"
 AudioManager="*res://scripts/audio_manager.gd"
 Ambiente="*res://scripts/ambiente.gd"
+ModoPrueba="*res://scenes/modo_prueba.tscn"
 
 [display]
 
