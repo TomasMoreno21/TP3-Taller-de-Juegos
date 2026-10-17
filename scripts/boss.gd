@@ -233,11 +233,7 @@ func activar() -> void:
 	visual.visible = true
 	_ritual_entrada()
 	_cine_entrada()
-	_hablar([
-		"¡EL ARZOBISPO! Preside desde su trono de energía corrupta.",
-		"Para herirlo tendrás que: matar a sus fieles, romper sus cristales",
-		"y golpear la zona marcada cuando baje.",
-	], true)
+	_hablar("jefe_presentacion", true)
 	_ronda()
 
 
@@ -435,14 +431,14 @@ func _ronda() -> void:
 		await _gate_legion()
 		if gen != _gen or not _activo or _muerto:
 			break
-		_hablar(["Respirá. Sigue: cristales de energía.", "Solo el sónico del Murciélago los rompe. Cuidado con el barrido a la altura de la cabeza."])
+		_hablar("jefe_cristales")
 		await _valle()
 		if gen != _gen or not _activo or _muerto:
 			break
 		await _gate_cristales()
 		if gen != _gen or not _activo or _muerto:
 			break
-		_hablar(["Respirá. Sigue: la zona marcada.", "Golpeala rápido, y saltá las ondas del piso."])
+		_hablar("jefe_zona")
 		await _valle()
 		if gen != _gen or not _activo or _muerto:
 			break
@@ -450,7 +446,7 @@ func _ronda() -> void:
 		if gen != _gen or not _activo or _muerto:
 			break
 		_vuelta += 1
-		_hablar(["Se rehace... Otra vez sus fieles."])
+		_hablar("jefe_rehace")
 		await _valle()
 
 
@@ -480,7 +476,7 @@ func _gate_legion() -> void:
 	var cant := _legion_size()
 	_legion_vivos = cant   # se cuentan por adelantado: llegan en oleadas de 2
 	var gen := _gen
-	_hablar(["Sus fieles lo protegen. Acaba con ellos para abrir su guardia."])
+	_hablar("jefe_fieles")
 	var i := 0
 	var t_spawn := 0.0
 	while gen == _gen and _activo and not _muerto and (i < cant or _legion_vivos > 0):
@@ -649,9 +645,9 @@ func _cambiar_fase(nueva: int) -> void:
 	_rugido()
 	_pulso_aura(_color_fase())
 	if fase == Fase.TRES:
-		_hablar(["¡SE ENFURECIÓ!", "Mismo ritual, pero ya estaba harto de tus formas."])
+		_hablar("jefe_furia")
 	else:
-		_hablar(["Se corrompe... ¡aprovechá su furia para la zona marcada!"])
+		_hablar("jefe_furia2")
 	var cam := get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("shake"):
 		cam.shake(8.0, 0.5)
@@ -782,7 +778,7 @@ func _lanzar_onda() -> void:
 	a.global_position = Vector2(_centro_arena + lado * _medio_arena, _suelo_y - 45.0)
 	_agregar_ataque(a)
 	_tele_ateos(0.4, Color(0.78, 0.5, 0.25))
-	_tip_una_vez("onda", ["¡Onda por el piso! Saltala: el Humano y el Lobo llegan alto, el Oso no."])
+	_tip_una_vez("onda", "jefe_onda")
 
 
 ## Franja de energía a la altura de la cabeza: golpea a Humano y Oso, Lobo y Murciélago pasan por debajo.
@@ -796,7 +792,7 @@ func _lanzar_barrido() -> void:
 	a.global_position = Vector2(_centro_arena + lado * _medio_arena, _suelo_y - barrido_base - barrido_alto * 0.5)
 	_agregar_ataque(a)
 	_tele_ateos(0.4, Color(0.65, 0.4, 0.95))
-	_tip_una_vez("barrido", ["¡Barrido a la altura de la cabeza! Transformate en Lobo o Murciélago y pasá por debajo."])
+	_tip_una_vez("barrido", "jefe_barrido")
 
 
 func _crear_ataque(tam: Vector2, col: Color, dmg: int, vel: float, aviso: float) -> Area2D:
@@ -848,7 +844,7 @@ func _golpe_reflejo(orbe: Node2D) -> void:
 		cam.shake(5.0, 0.2)
 
 
-func _tip_una_vez(clave: String, lineas: Array) -> void:
+func _tip_una_vez(clave: String, lineas: String) -> void:
 	if _tips_dados.has(clave):
 		return
 	_tips_dados[clave] = true
@@ -874,7 +870,7 @@ func _disparar_orb(to_player: Vector2, ang: float, dmg: int, speed: float) -> vo
 	destino.add_child(proj)
 	proj.global_position = global_position + Vector2(0, -120)
 	_orbes.append(proj)
-	_tip_una_vez("parry", ["¡Orbes! Bloqueá justo antes del impacto: el parry los devuelve y le hace daño al Arzobispo."])
+	_tip_una_vez("parry", "jefe_parry")
 
 
 ## Barras de cine con el nombre del jefe y un silencio del ambiente antes de que arranque la pelea.
@@ -1016,10 +1012,11 @@ func _rugido() -> void:
 
 ## `bloquea` = false usa un globo chico (TIP); true es la presentación del jefe (globo grande, "marcado").
 ## Ninguno frena al jugador.
-func _hablar(lineas: Array, bloquea: bool = false) -> void:
+func _hablar(id: String, bloquea: bool = false) -> void:
 	var dialogo := get_node_or_null("/root/Dialogo")
 	if dialogo == null:
 		return
+	var lineas: Array = dialogo.lineas_de(id)   # textos en data/dialogos.json
 	if bloquea or not dialogo.has_method("mostrar_tip"):
 		dialogo.mostrar(lineas, "Amuleto", bloquea)
 	else:

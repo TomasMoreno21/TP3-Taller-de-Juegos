@@ -98,7 +98,7 @@ const HITSTOP_COMBO := 0.11
 @export var inclinar_en_pendiente := true     # el sprite se inclina con el ángulo del piso (subidas y bajadas)
 @export_range(0.0, 1.0) var pendiente_inclinacion := 0.5   # fracción del ángulo real del piso que se inclina (1 = apoyado en la rampa, 0 = sin inclinar)
 @export_range(5.0, 45.0) var pendiente_max_grados := 16.0  # tope de inclinación
-@export var rampa_hundimiento := 6.0   # px que el sprite se hunde al pisar una rampa suave (rampas_suaves.gd), para que no flote sobre los bloques
+@export var rampa_hundimiento := 20.0   # px máx. que el sprite se hunde al pisar una rampa suave (rampas_suaves.gd): baja lo justo para apoyar los pies en los bloques visibles (0 = no hundir)
 @export var transicion_salida_ataque := 0.12  # s que se disuelve la última pose del golpe al volver a idle/correr (0 = corte seco)
 @export var piernas_vel_min := 0.15         # piso de la velocidad de las piernas al arrancar/frenar (antes 0.35: patinaban)
 @export var reaccion_dano_en_ataque := true # recibir daño en pleno golpe corta el avance del ataque y el retroceso solo mueve el sprite en X
@@ -187,6 +187,8 @@ var _lunge_vel: float = 0.0
 const LUNGE_DUR := 0.09           # el avance del golpe dura esto (la distancia la define la forma)
 var _hit_applied := false
 var _hit_delay := 0.0
+var _attack_rec := 0.0   # duración total de la recuperación del golpe en curso
+@export var combo_encadenar_min := 0.1   ## s mínimos desde el golpe anterior para que el siguiente (si completa un combo) salga ya, sin esperar la recuperación
 var _whiff_applied := false
 var _whiff_grace := 0.0
 @export var whiff_recovery_mult := 1.15
@@ -226,6 +228,21 @@ static var _tips_vistos: Dictionary = {}
 @export var bloqueo_empuje := 220.0       ## px/s que te empuja hacia atrás cada golpe bloqueado
 @export var bloqueo_drenaje := 4.0        ## energía/s que gasta mantener la guardia (el parry no cuesta)
 @export var bloqueo_energia_min := 10.0   ## sin energía no se puede bloquear hasta recuperar este mínimo
+@export var bloqueo_chispa_color := Color(0.75, 0.88, 1.0, 0.95)  ## chispa al bloquear un golpe (sin parry)
+@export_group("Tajo giratorio (combo del Humano)")
+@export var tajo_espera := 0.1      ## s tras el golpe de frente antes de empezar a girar
+@export var tajo_giro_dur := 0.16    ## s que tarda el sprite en darse vuelta
+@export var tajo_hold := 0.22        ## s que queda mirando atrás tras el tajo
+@export var tajo_vuelta_dur := 0.2   ## s que tarda en volver a mirar al frente
+@export_group("Embestida (combo del Lobo)")
+@export var embestida_invuln := 0.15   ## s sin recibir daño al arrancar la carrera
+@export var embestida_hitstop := 0.04  ## s de pausa por cada enemigo atravesado
+@export var embestida_shake := 6.0     ## temblor de cámara por enemigo atravesado
+@export_group("")
+var _tajo_tw: Tween
+var _giro_x := 1.0   # -1 = el sprite mira hacia la espalda (segundo tajo del Remate)
+var _embestida_t := 0.0
+var _embestida_golpeados: Array = []
 var _bloqueo_sin_energia := false
 var _bloqueo_cd := 0.0
 var _bloqueo_t := 0.0
@@ -380,6 +397,8 @@ var _salto_aereo_limitado: bool = false
 @export var sonido_golpe_pesado: AudioStream
 @export var sonido_transformacion: AudioStream
 @export var sonido_swing: AudioStream = preload("res://assets/audio/sfx/gen/swing_1.wav")           ## "whoosh" de cada ataque cuerpo a cuerpo (suene o no el golpe)
+@export var sonido_combo: AudioStream = preload("res://assets/audio/sfx/gen/proyectil_impacto.wav")  ## capa extra al ejecutar un combo
+@export var volumen_combo_db := -2.0
 @export var sonido_swing_pesado: AudioStream = preload("res://assets/audio/sfx/gen/swing_pesado.wav")
 @export var volumen_swing_db := -12.0
 @export var sonido_muerte: AudioStream = preload("res://assets/audio/sfx/gen/muerte_jugador.wav")
@@ -468,6 +487,8 @@ func _ready() -> void:
 	if DisplayServer.get_name() != "headless":
 		JuiceFx.precalentar.call_deferred(get_tree())
 	add_to_group("player")
+	if get_node_or_null("/root/Progresion") != null:
+		_progresion().combo_desbloqueado.connect(_tip_combo_nuevo)
 	_rng_salto.randomize()
 	for forma in FORMAS:
 		forms.append(forma)
@@ -551,7 +572,7 @@ func _eximir_solapados() -> void:
 
 
 func _tick_solape() -> void:
-	if _exentos_solape.is_empty():
+	if _exentos_solape.is_empty() or _embestida_t > 0.0:   # en plena embestida no se libera a nadie
 		return
 	var rp := _rect_colliders().grow(8.0)
 	for e in _exentos_solape.duplicate():
@@ -569,6 +590,8 @@ func _tick_solape() -> void:
 
 func _physics_process(delta: float) -> void:
 	_tick_solape()
+	if current_form == Form.HUMAN and not _tips_vistos.has("bloqueo") and _en_combate():
+		_tip_una_vez("bloqueo", "tip_bloqueo")
 	var dialogo_bloquea := _dialogo_bloquea_input()
 	var quiere_bloquear := not dialogo_bloquea and current_form == Form.HUMAN and Input.is_action_pressed("block")   # solo el Humano bloquea y hace parry
 	if not quiere_bloquear:
@@ -580,6 +603,8 @@ func _physics_process(delta: float) -> void:
 			_bloqueo_agotado = true
 	else:
 		_bloqueo_t = 0.0
+	if quiere_bloquear and _bloqueo_sin_energia and Input.is_action_just_pressed("block"):
+		_denegar_transformacion()   # sin energía no hay guardia: mismo aviso que al no poder transformarse
 	blocking = quiere_bloquear and not _bloqueo_agotado and _bloqueo_cd <= 0.0 and not _bloqueo_sin_energia
 	if _was_blocking and not blocking:
 		var fue_toque := _bloqueo_t <= bloqueo_toque_max
@@ -932,6 +957,9 @@ func _handle_attack(delta: float) -> void:
 			elif not _early_liberado:
 				_early_liberado = true
 		_buffer_durante_recuperacion()
+		# El golpe en cola completa un combo (p. ej. ligero + fuerte): sale en cuanto el anterior conectó o falló.
+		if _buffered_attack != "" and not airborne and (_hit_applied or _whiff_applied) and _attack_rec - _attack_timer >= combo_encadenar_min and not _buscar_combo(_seq + [_buffered_attack]).is_empty():
+			_attack_timer = 0.0
 		if _attack_timer <= 0.0:
 			end_attack()
 			_lanzar_buffered(data, airborne)
@@ -1096,21 +1124,28 @@ func _detectar_combo(tipo: String) -> Dictionary:
 	_seq.append(tipo)
 	if _seq.size() > 3:
 		_seq.pop_front()
+	var c := _buscar_combo(_seq)
+	if not c.is_empty():
+		_seq.clear()
+	return c
+
+
+## Combo desbloqueado de la forma actual cuyo final coincide con `historial` ({} si ninguno).
+func _buscar_combo(historial: Array) -> Dictionary:
 	var data: Forma = forms[current_form]
 	var desbloqueados: int = _progresion().combos_desbloqueados_forma(current_form)
 	var total := mini(desbloqueados, data.combos.size())
 	for i in range(total - 1, -1, -1):
 		var c: Dictionary = data.combos[i]
 		var seq: Array = c.get("secuencia", [])
-		if seq.size() > _seq.size():
+		if seq.size() > historial.size():
 			continue
 		var coincide := true
 		for j in range(seq.size()):
-			if _seq[_seq.size() - seq.size() + j] != seq[j]:
+			if historial[historial.size() - seq.size() + j] != seq[j]:
 				coincide = false
 				break
 		if coincide:
-			_seq.clear()
 			return c
 	return {}
 
@@ -1123,6 +1158,7 @@ func _ejecutar_finisher(data: Forma, combo: Dictionary) -> void:
 	_combo_timer = 0.0
 	data.perform_combo(self, combo)
 	_play_attack_fx("combo", 1)
+	_sfx(sonido_combo, volumen_combo_db, 0.04)
 	_punch_sprite(0.45)
 	attack_performed.emit("combo", combo.get("nombre", "Combo"))
 	if current_form == Form.HUMAN:
@@ -1154,6 +1190,7 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	_silencio_previo_golpe()
 	var rec := _recovery_for(_current_attack_type) * data.mult_recuperacion_para(_current_attack_type, paso)
 	_attack_timer = rec
+	_attack_rec = rec
 	# El lobo usa la misma cola que el humano: _iniciar_anim_ataque estira la
 	# anim con speed_scale para que los 4 frames de lobo_attack duren
 	# exactamente la recuperación -> se ve completa (no se corta al 1er frame).
@@ -1257,7 +1294,83 @@ func _make_rect_polygon(size: Vector2) -> PackedVector2Array:
 	return PackedVector2Array([Vector2(-w, -h), Vector2(w, -h), Vector2(w, h), Vector2(-w, h)])
 
 
+## Combo del Humano: el giro también golpea a quien está a la espalda (el frente lo cubre el golpe normal).
+func tajo_trasero(combo: Dictionary) -> void:
+	var lado := facing
+	var radio: float = combo.get("radio_trasero", 280.0)
+	var dano := int(int(combo.get("dano", 0)) * float(combo.get("mult_trasero", 0.75)))
+	var kb: float = combo.get("knockback", 260.0)
+	if _tajo_tw != null and _tajo_tw.is_valid():
+		_tajo_tw.kill()
+	_giro_x = 1.0
+	_tajo_tw = create_tween()
+	_tajo_tw.tween_interval(tajo_espera)
+	# 1) se da vuelta (arranca lento, termina rápido); 2) pega atrás; 3) sostiene; 4) vuelve con un leve rebote.
+	_tajo_tw.tween_property(self, "_giro_x", -1.0, tajo_giro_dur).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	_tajo_tw.tween_callback(func() -> void: _tajo_golpe_trasero(radio, dano, kb, lado))
+	_tajo_tw.tween_interval(tajo_hold)
+	_tajo_tw.tween_property(self, "_giro_x", 1.0, tajo_vuelta_dur).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func _tajo_golpe_trasero(radio: float, dano: int, kb: float, lado: int) -> void:
+	if _current_attack_type != "combo":
+		return
+	_play_attack_fx("combo", 2, true)   # segundo tajo, espejado hacia la espalda
+	pose_ataque(12.0, 0.16)
+	_punch_sprite(0.3)
+	if onda_area(radio, dano, kb, true, lado, false) > 0:
+		_freeze_hitstop(0.05)
+		var cam := get_viewport().get_camera_2d()
+		if cam != null and cam.has_method("shake"):
+			cam.shake(10.0, 0.15, Vector2(-lado, 0))
+
+
+## Combo del Lobo: arranca la carrera que atraviesa enemigos (distancia y duración vienen del combo).
+func iniciar_embestida(combo: Dictionary) -> void:
+	var dur: float = combo.get("embestida_dur", 0.28)
+	var dist: float = combo.get("embestida_dist", 400.0)
+	_embestida_t = dur
+	_embestida_golpeados.clear()
+	_hit_applied = true   # el golpe único normal no sale: pega el barrido
+	_lunge_t = dur
+	_lunge_vel = facing * dist / dur
+	_invuln_timer = maxf(_invuln_timer, embestida_invuln)
+	_invuln_sin_parpadeo = true
+	for e in get_tree().get_nodes_in_group("enemy"):
+		if e is PhysicsBody2D and (e.global_position.x - global_position.x) * facing > -150.0 				and absf(e.global_position.x - global_position.x) < dist + 400.0:
+			eximir_solape(e)   # atraviesa a los enemigos del camino (se libera solo al separarse)
+	stretch_y(-0.18, dur)
+	_emitir_polvo(1.0)
+
+
+## Cada tick de la carrera: golpea una sola vez a cada enemigo que toca la caja de ataque.
+func _barrer_embestida() -> void:
+	_embestida_t -= get_physics_process_delta_time()
+	if not _attacking:
+		_embestida_t = 0.0
+		return
+	for b in attack_area.get_overlapping_bodies():
+		if b == self or _embestida_golpeados.has(b):
+			continue
+		if b.has_method("registrar_golpe"):
+			_embestida_golpeados.append(b)
+			b.registrar_golpe(_current_attack_damage)
+			_aplicar_knockback(b)
+		elif b.has_method("take_damage"):
+			_embestida_golpeados.append(b)
+			b.take_damage(_current_attack_damage, _current_attack_knockback, facing, true)
+		else:
+			continue
+		_spark_golpe(b, 0)
+		_freeze_hitstop(embestida_hitstop)
+		var cam := get_viewport().get_camera_2d()
+		if cam != null and cam.has_method("shake"):
+			cam.shake(embestida_shake, 0.12)
+
+
 func _check_attack_hits() -> void:
+	if _embestida_t > 0.0:
+		_barrer_embestida()
 	if not _attacking or _hit_applied:
 		return
 	if _hit_delay > 0.0:
@@ -1537,7 +1650,7 @@ func _punto_impacto(body: Node2D) -> Vector2:
 
 ## Estela del golpe: medialuna vectorial del color de la forma que barre el alcance
 ## real del hitbox. Pasos pares del combo barren al revés (de abajo hacia arriba).
-func _play_attack_fx(tipo: String, step: int) -> void:
+func _play_attack_fx(tipo: String, step: int, espejo: bool = false) -> void:
 	if attack_hitbox.disabled or attack_hitbox.shape == null:
 		return
 	_sfx(sonido_swing_pesado if tipo in ["heavy", "combo"] else sonido_swing, volumen_swing_db, 0.1)
@@ -1554,6 +1667,7 @@ func _play_attack_fx(tipo: String, step: int) -> void:
 	var dur: float = swing_duracion * {"light": 1.0, "heavy": 1.2, "special": 1.3, "combo": 1.4}.get(tipo, 1.0)
 	# El ángulo de la medialuna sale de la altura real de la hitbox (así la estela cubre lo mismo que pega).
 	var a_max := clampf(rad_to_deg(asin(clampf(rect_golpe.size.y * 0.5 * swing_alto / radio, 0.0, 0.95))), 18.0, 62.0)
+	var f := -facing if espejo else facing   # espejo: el mismo tajo pero hacia la espalda
 	var desde := deg_to_rad(-a_max)
 	var hasta := deg_to_rad(a_max * 0.8)
 	if step % 2 == 0:
@@ -1567,13 +1681,13 @@ func _play_attack_fx(tipo: String, step: int) -> void:
 	# Estela: la cabeza (t=1) es nítida y la cola (t=0) se desvanece; el grosor es máximo cerca de la cabeza.
 	for i in N + 1:
 		var a := lerpf(desde, hasta, float(i) / N)
-		puntos.append(Vector2(cos(a) * facing, sin(a)) * radio)
+		puntos.append(Vector2(cos(a) * f, sin(a)) * radio)
 		colores.append(Color(color, swing_alpha * pow(float(i) / N, 1.4)))
 	for i in range(N, -1, -1):
 		var t := float(i) / N
 		var r := radio * (1.0 - grosor * sin(PI * pow(t, 1.9)))
 		var a := lerpf(desde, hasta, t)
-		puntos.append(Vector2(cos(a) * facing, sin(a)) * r)
+		puntos.append(Vector2(cos(a) * f, sin(a)) * r)
 		colores.append(Color(color, swing_alpha * pow(t, 1.4)))
 	var arco := Polygon2D.new()
 	arco.polygon = puntos
@@ -1583,10 +1697,10 @@ func _play_attack_fx(tipo: String, step: int) -> void:
 	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 	arco.material = mat
 	arco.z_index = 2
-	arco.position = Vector2(-facing * atras, rect_golpe.get_center().y - global_position.y)   # centrada en la hitbox
+	arco.position = Vector2(-f * atras, rect_golpe.get_center().y - global_position.y)   # centrada en la hitbox
 	add_child(arco)
 	arco.scale = Vector2.ONE * 0.85
-	var giro := 0.22 * facing * (1.0 if step % 2 == 1 else -1.0)
+	var giro := 0.22 * f * (1.0 if step % 2 == 1 else -1.0)
 	var tw := arco.create_tween().set_parallel(true)
 	tw.tween_property(arco, "scale", Vector2.ONE * 1.08, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_property(arco, "rotation", giro, dur)
@@ -1617,7 +1731,7 @@ func _actualizar_resorte(delta: float) -> void:
 			_amb = get_node_or_null("/root/Ambiente")
 		if _amb != null:
 			resp += float(_amb.latido) * respiracion_latido   # el cuerpo late con el corazón (mismo pulso que la viñeta)
-	var base := Vector2(absf(_base_sprite_scale.x) * float(facing), _base_sprite_scale.y)
+	var base := Vector2(absf(_base_sprite_scale.x) * float(facing) * _giro_x, _base_sprite_scale.y)
 	visual.scale = Vector2(base.x * (1.0 + _esc_off.x), base.y * (1.0 + _esc_off.y + resp))
 
 
@@ -2065,7 +2179,7 @@ func _zoom_transform(data: Forma, cine: bool = false) -> void:
 	if not cine:
 		_flash_transformacion(data.color)
 	if current_form != Form.HUMAN:
-		_tip_una_vez("energia", "Las formas gastan energía. Al llegar a cero volvés a Humano; matá enemigos para recuperarla.")
+		_tip_una_vez("energia", "tip_energia")
 
 
 ## Aviso de ayuda que se muestra una sola vez por partida (no bloquea el juego). Si hay pelea o acaba de
@@ -2084,7 +2198,8 @@ func _mostrar_tip_ahora(clave: String, texto: String) -> void:
 	if dlg == null or not dlg.has_method("mostrar_tip"):
 		return
 	_tips_vistos[clave] = true
-	dlg.mostrar_tip([texto], "Amuleto")
+	# `texto` es un id de data/dialogos.json ("tip_...") o ya el texto armado
+	dlg.mostrar_tip(dlg.lineas_de(texto) if texto.begins_with("tip_") else [texto], "Amuleto")
 
 
 ## Sin enemigos cerca, sin daño reciente y sin estar atacando o bloqueando: buen momento para hablarle.
@@ -2185,7 +2300,7 @@ func _suavizar_desnivel(delta: float) -> void:
 				var piso := col.get_collider() as Node
 				_sobre_rampa = piso != null and piso.is_in_group("rampa_suave")
 		if _sobre_rampa:
-			hundir = rampa_hundimiento
+			hundir = clampf(_altura_sobre_bloques(), 0.0, rampa_hundimiento)
 	else:
 		_sobre_rampa = false
 	_hundido_rampa = lerpf(_hundido_rampa, hundir, 1.0 - exp(-10.0 * delta))
@@ -2200,6 +2315,28 @@ func _suavizar_desnivel(delta: float) -> void:
 	if _mat_suave != null:
 		_mat_suave.set_shader_parameter("desfase_px", _suave_y - entero)
 		_mat_suave.set_shader_parameter("escala_y", absf(visual.scale.y))
+
+
+## Cuántos px quedan los pies por encima de los bloques visibles (la rampa invisible los levanta): promedio de tres
+## rayos bajo los pies que ignoran las rampas.
+func _altura_sobre_bloques() -> float:
+	var excluir: Array[RID] = []
+	for n in get_tree().get_nodes_in_group("rampa_suave"):
+		if n is CollisionObject2D:
+			excluir.append((n as CollisionObject2D).get_rid())
+	var pies := global_position.y + 142.5
+	var espacio := get_world_2d().direct_space_state
+	var suma := 0.0
+	var n_hit := 0
+	for dx in [-24.0, 0.0, 24.0]:
+		var desde := Vector2(global_position.x + dx, pies - 6.0)
+		var q := PhysicsRayQueryParameters2D.create(desde, desde + Vector2(0.0, 80.0), 1)
+		q.exclude = excluir
+		var h := espacio.intersect_ray(q)
+		if not h.is_empty():
+			suma += float(h.position.y) - pies
+			n_hit += 1
+	return suma / float(n_hit) if n_hit > 0 else 0.0
 
 
 func _visual_base_y() -> float:
@@ -2676,6 +2813,7 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_blo
 			energia = maxf(energia - costo, 0.0)
 			energia_changed.emit(energia)
 		velocity.x = dir * bloqueo_empuje   # `dir` ya apunta lejos del atacante
+		_chispa_bloqueo(dir)
 	if god_mode or guardia or _invuln_timer > 0.0 or _dialogo_bloquea_input():
 		return
 	cantidad = maxi(roundi(cantidad * forms[current_form].dano_recibido_mult), 1)
@@ -2690,7 +2828,7 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, ignora_blo
 	health_changed.emit(health, VIDA_MAX)
 	dano_recibido.emit(cantidad)
 	if health > 0:
-		_tip_una_vez("parry", "Bloqueá justo antes de que te golpeen para hacer un parry: no recibís daño y recuperás energía.")
+		_tip_una_vez("parry", "tip_parry")
 	_shake_dano_recibido(dir)
 	_flash_tint_dano()
 	_juice_dano(cantidad)
@@ -2793,7 +2931,7 @@ func _parry_slowmo_curva() -> float:
 
 ## Onda alrededor del jugador: daña y empuja a los enemigos cercanos. `solo_atras` excluye a los
 ## que están delante (los cubre el golpe frontal). Devuelve cuántos alcanzó.
-func onda_area(radio: float, dano: int, knockback: float, solo_atras: bool = false, lado: int = 0) -> int:
+func onda_area(radio: float, dano: int, knockback: float, solo_atras: bool = false, lado: int = 0, anillo: bool = true) -> int:
 	var golpeados := 0
 	var frente := lado if lado != 0 else facing
 	for n in get_tree().get_nodes_in_group("enemy"):
@@ -2813,7 +2951,8 @@ func onda_area(radio: float, dano: int, knockback: float, solo_atras: bool = fal
 			continue
 		n.take_damage(dano, knockback, 1 if dx >= 0.0 else -1, false)
 		golpeados += 1
-	_anillo_onda(radio)
+	if anillo:
+		_anillo_onda(radio)
 	var amb := get_node_or_null("/root/Ambiente")
 	if amb != null:
 		amb.empujar(global_position, clampf(radio / 300.0, 0.3, 1.0))
@@ -2925,7 +3064,7 @@ func rebote_golpe(dir: int) -> void:
 	if cam != null and cam.has_method("shake"):
 		cam.shake(5.0, 0.1, Vector2(-dir, 0))
 	if tips_ayuda and not _tips_vistos.has("flotante"):
-		_mostrar_tip_ahora("flotante", "Los enemigos flotantes solo reciben daño de proyectiles. Transformate en Murciélago y disparales con L.")
+		_mostrar_tip_ahora("flotante", "tip_flotante")
 
 
 func heal_full() -> void:
@@ -2947,6 +3086,7 @@ func actualizar_checkpoint(pos: Vector2) -> void:
 	_spawn_position = pos
 	_checkpoint_forma = current_form
 	_checkpoint_vida = health
+	energia = ENERGIA_MAX   # cada checkpoint recarga toda la energía (y reaparecés con ella llena)
 	_checkpoint_energia = energia
 	_tiene_checkpoint = true
 
@@ -3345,6 +3485,25 @@ func _en_combate() -> bool:
 		if int(n.get("estado")) == 1:
 			return true
 	return false
+
+
+## Aviso al elegir un combo: cómo se hace (una vez por forma).
+func _tip_combo_nuevo(form_index: int, combo_nombre: String) -> void:
+	_tip_una_vez("combo_%d" % form_index, "Combo %s: ligero ({attack}) y después fuerte ({heavy}) con %s." % [combo_nombre, forms[form_index].form_name])
+
+
+## Bloqueo normal (no parry): chispa en el frente y un golpe de escala del sprite.
+func _chispa_bloqueo(dir: int) -> void:
+	_punch_sprite(0.2)
+	if DisplayServer.get_name() == "headless":
+		return
+	var p: CPUParticles2D = (preload("res://scenes/burst.tscn") as PackedScene).instantiate()
+	p.global_position = global_position + Vector2(-dir * 70.0, -20.0)
+	p.self_modulate = bloqueo_chispa_color
+	p.amount = 6
+	get_tree().root.add_child(p)
+	p.restart()
+	p.emitting = true
 
 
 func _progresion() -> Node:

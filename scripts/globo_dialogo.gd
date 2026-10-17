@@ -12,6 +12,20 @@ const TINTA := Color(0.05, 0.05, 0.06)
 const COLA_MIN := 22.0   ## largo mínimo de la cola (px)
 const COLA_MAX := 240.0  ## largo máximo de la cola (px)
 
+## Estilo por hablante (papel del globo, tinta del texto y borde). Un hablante que no está aquí usa "Humano".
+@export var estilos := {
+	"Amuleto": {"papel": Color(0.89, 0.96, 0.91), "tinta": Color(0.03, 0.13, 0.12)},
+	"Humano": {"papel": PAPEL, "tinta": TINTA},
+	"Cultista": {"papel": Color(0.87, 0.72, 0.70), "tinta": Color(0.22, 0.03, 0.05)},
+	"Arzobispo": {"papel": Color(0.93, 0.83, 0.52), "tinta": Color(0.20, 0.10, 0.02)},
+	"Hijo": {"papel": Color(0.80, 0.88, 0.97), "tinta": Color(0.04, 0.08, 0.22)},
+}
+## Fuente del globo: Comic Neue Bold (OFL, en assets/fonts), embebida para no depender de la PC.
+@export var fuente: Font = preload("res://assets/fonts/ComicNeue-Bold.ttf")
+@export var mayusculas := false   ## el cómic original iba todo en mayúsculas; apagado se lee mejor
+
+var _papel := PAPEL
+var _tinta := TINTA
 var tono: Tono = Tono.NORMAL
 var cola_a := Vector2.ZERO   ## punto (coordenadas locales) al que apunta la cola
 
@@ -26,15 +40,17 @@ var _bump := 0.0   ## golpecito del texto al aparecer cada letra (0..1, decae so
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sf := SystemFont.new()
-	sf.font_names = PackedStringArray(["Comic Sans MS", "Comic Neue", "Arial Black"])
-	sf.font_weight = 700
-	_fuente = sf
+	_fuente = fuente
+	if _fuente == null:
+		var sf := SystemFont.new()
+		sf.font_names = PackedStringArray(["Comic Neue", "Comic Sans MS", "Arial Black"])
+		sf.font_weight = 700
+		_fuente = sf
 	_label = Label.new()
 	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_label.add_theme_font_override("font", _fuente)
-	_label.add_theme_color_override("font_color", TINTA)
+	_label.add_theme_color_override("font_color", _tinta)
 	add_child(_label)
 	_nombre = Label.new()
 	_nombre.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -47,7 +63,12 @@ func _ready() -> void:
 ## Prepara el globo: calcula su tamaño para que entre todo el texto (se escribe después).
 func configurar(texto: String, hablante: String, tono_nuevo: Tono, tam_fuente: int, ancho_max: float) -> void:
 	tono = tono_nuevo
-	var txt := texto.to_upper()
+	var est: Dictionary = estilos.get(hablante, estilos["Humano"])
+	_papel = est["papel"]
+	_tinta = est["tinta"]
+	_label.add_theme_color_override("font_color", _tinta)
+	_nombre.add_theme_color_override("font_color", _tinta.lerp(_papel, 0.4))
+	var txt := texto.to_upper() if mayusculas else texto
 	_label.text = txt
 	_label.add_theme_font_size_override("font_size", tam_fuente)
 	_label.visible_ratio = 0.0
@@ -148,9 +169,9 @@ func _rellenar_cola(lados: Array, col: Color, desfase := Vector2.ZERO) -> void:
 
 func _contorno_linea(pts: PackedVector2Array, ancho: float) -> void:
 	if tono == Tono.SUSURRO:
-		_punteado(pts, TINTA, 3.0)
+		_punteado(pts, _tinta, 3.0)
 	else:
-		draw_polyline(pts, TINTA, ancho, true)
+		draw_polyline(pts, _tinta, ancho, true)
 
 
 func _draw() -> void:
@@ -158,7 +179,7 @@ func _draw() -> void:
 		return
 	var cuerpo := _cuerpo()
 	var ancho_borde := 5.0 if tono == Tono.ALERTA else 4.0
-	var relleno := PAPEL if tono != Tono.SUSURRO else Color(0.91, 0.89, 0.85)   # opaco: con transparencia, la cola y el cuerpo se doblan y manchan
+	var relleno := _papel if tono != Tono.SUSURRO else _papel.darkened(0.07)   # opaco: con transparencia, la cola y el cuerpo se doblan y manchan
 	# --- cola: nace del borde de abajo (en el grito, del borde de la elipse) y apunta a quien habla
 	var ancho_base := clampf(size.x * 0.13, 36.0, 54.0) * (1.15 if tono == Tono.GRITO else 1.0)
 	var margen_cola := 28.0 + ancho_base * 0.5
@@ -205,9 +226,9 @@ func _draw() -> void:
 		_contorno_linea(ld, ancho_borde)
 	if tono == Tono.ALERTA:
 		var b := Vector2(size.x - 8.0, 6.0)
-		draw_circle(b, 20.0, TINTA)
-		draw_circle(b, 16.0, PAPEL)
-		draw_string(_fuente, b + Vector2(-5.0, 9.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, TINTA)
+		draw_circle(b, 20.0, _tinta)
+		draw_circle(b, 16.0, _papel)
+		draw_string(_fuente, b + Vector2(-5.0, 9.0), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, _tinta)
 
 
 func _punteado(pts: PackedVector2Array, col: Color, ancho: float) -> void:

@@ -339,9 +339,7 @@ func _construir_capa() -> void:
 	_cartela.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_cartela.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_cartela.visible_ratio = 0.0
-	var sf := SystemFont.new()
-	sf.font_names = PackedStringArray(["Comic Sans MS", "Comic Neue", "Arial Black"])
-	_cartela.add_theme_font_override("font", sf)
+	_cartela.add_theme_font_override("font", preload("res://assets/fonts/ComicNeue-Bold.ttf"))
 	_cartela.add_theme_font_size_override("font_size", tam_cartela)
 	_cartela.add_theme_color_override("font_color", Color(0.96, 0.94, 0.88))
 	_cartela.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))

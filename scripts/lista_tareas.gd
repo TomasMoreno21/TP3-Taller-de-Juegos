@@ -23,10 +23,7 @@ var _tw: Tween
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sf := SystemFont.new()
-	sf.font_names = PackedStringArray(["Comic Sans MS", "Comic Neue", "Arial Black"])
-	sf.font_weight = 700
-	_fuente = sf
+	_fuente = preload("res://assets/fonts/ComicNeue-Bold.ttf")
 	visible = false
 
 

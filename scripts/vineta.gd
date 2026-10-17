@@ -41,10 +41,7 @@ var _ultimo_blip := 0
 
 
 func _ready() -> void:
-	var sf := SystemFont.new()
-	sf.font_names = PackedStringArray(["Comic Sans MS", "Comic Neue", "Arial Black"])
-	sf.font_weight = 700
-	_fuente = sf
+	_fuente = preload("res://assets/fonts/ComicNeue-Bold.ttf")
 	_forma = forma
 	if _forma.size() < 3:
 		_forma = PackedVector2Array([Vector2.ZERO, Vector2(size.x, 0), size, Vector2(0, size.y)])

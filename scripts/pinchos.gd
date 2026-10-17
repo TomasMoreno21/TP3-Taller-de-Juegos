@@ -250,6 +250,9 @@ func _cuerpo_en_zona(body: Node2D) -> bool:
 		var ancho_h := s.x * hurtbox_ancho_jugador
 		var alto_h := s.y * hurtbox_alto_jugador
 		var pies_y := maxf(body.global_position.y + 142.5, rect_body.end.y)   # hasta los PIES: el lobo flota 40 px (patas_alto)
+		var forma: Object = body.forms[body.current_form] if "forms" in body and "current_form" in body else null
+		if forma != null and not forma.patas_letales:
+			pies_y = rect_body.end.y   # Murciélago: sus "patas" (90 px) no se ven; mataba ~90 px antes de tocar la punta
 		var tope_y := rect_body.end.y - alto_h
 		rect_body = Rect2(rect_body.get_center().x - ancho_h * 0.5, tope_y, ancho_h, pies_y - tope_y)
 	# La zona de daño es SOLO la porción superior del alto visible (fair: tocar

@@ -18,10 +18,10 @@ func _init() -> void:
 	heavy_range = 105.0
 	heavy_size = Vector2(150, 95)
 	heavy_combo_steps = 2
-	special_damage = 18
+	special_damage = 26
 	special_size = Vector2(210, 120)
 	special_range = 180.0
-	special_knockback = 220.0
+	special_knockback = 300.0
 	special_cost = 4.0
 	color = Color(0.58, 0.64, 0.75)
 	# Cuerpo ancho sobre patas angostas: en una pendiente un collider plano de 360 px solo toca por una punta y el
@@ -59,7 +59,7 @@ func _init() -> void:
 	lunge_combo = 130.0
 	melee_sticky = 0.0
 	combos = [
-		{"nombre": "Mordida", "secuencia": ["light", "heavy"], "dano": 40, "knockback": 240.0, "tamano": Vector2(180, 102), "rango": 102.0},
+		{"nombre": "Embestida", "descripcion": "Embestida: atraviesa a los enemigos de una pasada.", "secuencia": ["light", "heavy"], "dano": 40, "knockback": 240.0, "tamano": Vector2(220, 110), "rango": 160.0, "embestida_dist": 400.0, "embestida_dur": 0.28},
 	]
 
 
@@ -125,6 +125,11 @@ func pose_ataque(player: CharacterBody2D, tipo: String, step: int) -> void:
 
 func perform_light(player: CharacterBody2D, step: int) -> void:
 	player.enable_melee(attack_size, attack_range, light_damage_at(step), light_knockback)
+
+
+func perform_combo(player: CharacterBody2D, combo: Dictionary) -> void:
+	super.perform_combo(player, combo)
+	player.iniciar_embestida(combo)
 
 
 func perform_special(player: CharacterBody2D) -> void:

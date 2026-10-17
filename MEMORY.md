@@ -1,5 +1,13 @@
 # MEMORY.md — Spirit Keeper (ex proyecto Guardabosques / Espíritus del Bosque)
 
+## Sesión 17/10 — Jugador levantado sobre escaleras (rampas suaves) · SIN COMMIT
+- Causa: `rampas_suaves.gd` rellena con colliders invisibles el hueco de cada peldaño de 16 px; el cuerpo camina sobre esa rampa y queda hasta ~16-32 px sobre los bloques visibles; el hundimiento fijo de 6 px (`rampa_hundimiento`) no alcanzaba. Fix `player.gd`: `_altura_sobre_bloques()` (3 rayos bajo los pies que ignoran el grupo `rampa_suave`) → el sprite se hunde exactamente esa altura (tope `rampa_hundimiento` ahora 20). Test `tests/diag_rampa_hundir.gd` (nivel3, 23 rampas, dif. máx 0.46 px). `diag_rampa_pixel` tiene 2 fallos previos (baja ancho 4 Lobo, sube ancho 8 Oso), idénticos antes del cambio.
+
+## Sesión 16/10 — Pulido de combos, especiales y bloqueo · SIN COMMIT
+- Plan en `docs/plan_combos_bloqueo.md`. Combos con `descripcion` (menú LevelUp); tip al elegir combo (`_tip_combo_nuevo`). **Lobo = Embestida** (`player.gd::iniciar_embestida/_barrer_embestida`, datos `embestida_dist/dur` en el `.tres`): carrera de 400 px que atraviesa (eximir_solape, `_tick_solape` no libera durante `_embestida_t`) y pega una vez a cada enemigo; i-frames 0.15 s. **Humano = Remate con giro** (`tajo_trasero`: `onda_area` solo_atras + volteo del sprite con `_giro_x`). Sonido extra de combo (`sonido_combo`); Oso shake_golpe_combo 24; Murciélago combo rango 160.
+- Especiales: Humano 24 dmg, kb 340, cuesta 6 de energía, cooldown 1.5 s en combate; Lobo 26 dmg, kb 300 (costo 4).
+- Bloqueo: tip "bloqueo" al primer combate como Humano, chispa al bloquear (`_chispa_bloqueo`, `bloqueo_chispa_color`), aviso (`_denegar_transformacion`) al apretar bloquear sin energía. Test nuevo `tests/diag_combos.gd`. Pendiente: probar a mano los visuales (estela/giro) y decidir `parry_ventana` 0.16→0.20.
+
 ## Sesión 16/10 — Empujones por solape jugador/enemigo · SIN COMMIT
 - Causa: jugador (capa 4, máscara 1+2) y enemigo (capa 2, máscara 1+3) colisionan; si uno nace/crece encima del otro el motor depenetra a la fuerza. Además `_transformar` rechazaba la forma (p. ej. Oso) si había un enemigo pegado, porque `test_move` contaba al enemigo. Fix: `player.eximir_solape(e)` (excepción de colisión mutua hasta que dejan de solaparse, `_tick_solape`); `_transformar` exime a los solapados antes de `test_move`; `enemy._apartar_del_jugador` exime si no logra separarse. Test `tests/diag_solape.gd`. Sprite que desaparece: NO reproducido (hipótesis: jugador hundido tras roca por la depenetración).
 

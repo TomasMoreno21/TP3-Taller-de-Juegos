@@ -11,8 +11,11 @@ heavy_size = Vector2(140, 100)
 special_range = 98.0
 combos = Array[Dictionary]([{
 "dano": 40,
+"descripcion": "Tajo giratorio: golpea al frente y a tu espalda.",
 "knockback": 260.0,
+"mult_trasero": 0.75,
 "nombre": "Remate",
+"radio_trasero": 280.0,
 "rango": 126.0,
 "secuencia": ["light", "heavy"],
 "tamano": Vector2(162, 114)

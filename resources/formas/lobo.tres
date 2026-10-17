@@ -10,12 +10,15 @@ heavy_range = 219.0
 heavy_size = Vector2(150, 95)
 special_range = 212.0
 special_size = Vector2(210, 120)
-special_knockback = 220.0
+special_knockback = 300.0
 combos = Array[Dictionary]([{
+"descripcion": "Embestida: atraviesa a los enemigos de una pasada.",
 "dano": 40,
 "knockback": 240.0,
-"nombre": "Mordida",
-"rango": 102.0,
+"nombre": "Embestida",
+"rango": 160.0,
+"embestida_dist": 400.0,
+"embestida_dur": 0.28,
 "secuencia": ["light", "heavy"],
-"tamano": Vector2(180, 102)
+"tamano": Vector2(220, 110)
 }])

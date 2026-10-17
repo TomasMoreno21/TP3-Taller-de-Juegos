@@ -24,6 +24,7 @@ extends Node2D
 @export var motas := 18
 @export var chispas_cada := 0.9                        ## s entre chisporroteos (0 = sin chispas)
 @export var semilla := 5
+@export var intensidad := 1.7                         ## qué tan notoria es la barrera: opacidad del velo, bandas, corrientes y contorno (1 = como antes)
 
 const PASO := 8.0
 
@@ -270,7 +271,7 @@ func _nueva_chispa() -> void:
 func _color_velo(xn: float, yn: float, abierto_arriba: bool, abierto_abajo: bool) -> Color:
 	var c := color_base
 	var borde := pow(absf(xn * 2.0 - 1.0), 3.0)
-	var a := 0.17 + 0.26 * borde + 0.20 * yn
+	var a := minf((0.17 + 0.26 * borde + 0.20 * yn) * intensidad, 0.95)
 	if not _pared_izq:
 		a *= smoothstep(0.0, 0.22, xn)
 	if not _pared_der:
@@ -352,8 +353,8 @@ func _construir_velo() -> void:
 func _tramo_contorno(pts: PackedVector2Array, halo: Color, nucleo: Color) -> void:
 	if pts.size() < 2:
 		return
-	draw_polyline(pts, halo, 9.0, true)
-	draw_polyline(pts, nucleo, 3.0, true)
+	draw_polyline(pts, halo, 9.0 * intensidad, true)
+	draw_polyline(pts, nucleo, 3.0 + intensidad, true)
 
 
 func _draw() -> void:
@@ -400,8 +401,8 @@ func _draw() -> void:
 			yb = clampf(yb, lim.x, lim.y)
 			var xa := x_c + sin(ya * 0.018 + _t * 1.6 + fase) * 7.0
 			var xb := x_c + sin(yb * 0.018 + _t * 1.6 + fase) * 7.0
-			var ca := Color(l.r, l.g, l.b, sin(u0 * PI) * 0.55)
-			var cb := Color(l.r, l.g, l.b, sin(u1 * PI) * 0.55)
+			var ca := Color(l.r, l.g, l.b, minf(sin(u0 * PI) * 0.55 * intensidad, 1.0))
+			var cb := Color(l.r, l.g, l.b, minf(sin(u1 * PI) * 0.55 * intensidad, 1.0))
 			_quad(_tri_pts, _tri_col, _tri_idx, Vector2(xa - ancho_c, ya), Vector2(xa + ancho_c, ya), Vector2(xb + ancho_c, yb), Vector2(xb - ancho_c, yb), ca, ca, cb, cb)
 	# Bandas de luz que barren de abajo hacia arriba: franjas por columna recortadas al hueco.
 	var y_min := 0.0
@@ -413,7 +414,7 @@ func _draw() -> void:
 		var y := y_max - fposmod(_t * velocidad * 0.9 + float(b) * (y_max - y_min) / maxf(bandas, 1), y_max - y_min)
 		var alto_b := 46.0
 		var tr := Color(l.r, l.g, l.b, 0.0)
-		var cen := Color(l.r, l.g, l.b, 0.20)
+		var cen := Color(l.r, l.g, l.b, minf(0.20 * intensidad, 0.7))
 		for i in n - 1:
 			var xa := _px[i]
 			var xb := _px[i + 1]
@@ -433,7 +434,7 @@ func _draw() -> void:
 		RenderingServer.canvas_item_add_triangle_array(item, _tri_idx, _tri_pts, _tri_col)
 	# Contorno brillante solo donde el muro toca roca: sigue el contorno del terreno arriba, abajo y en las paredes.
 	var pulso := 0.75 + 0.25 * sin(_t * 2.2)
-	var halo := Color(c.r, c.g, c.b, 0.35 * pulso)
+	var halo := Color(c.r, c.g, c.b, minf(0.35 * intensidad, 0.9) * pulso)
 	var nucleo := Color(l.r, l.g, l.b, 0.85 * pulso)
 	var tramo_t := PackedVector2Array()
 	var tramo_b := PackedVector2Array()

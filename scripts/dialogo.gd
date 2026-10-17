@@ -31,6 +31,7 @@ const LIMITE_TROZO := 44   ## un texto más largo se parte en globos cortos
 @export var seg_calma_tras_dano := 2.0   ## el Amuleto espera este tiempo sin daño para hablar
 @export var hud_ancho_libre := 470.0         ## zona del HUD (arriba a la izquierda) que los globos esquivan: ancho
 @export var hud_alto_libre := 170.0          ## … y alto
+@export var avisos_en_hud := false       ## true: los consejos salen como tira de HUD (abajo) en vez de globo del Amuleto
 @export var seg_entre_charlas := 7.0     ## respiro mínimo entre una charla y la siguiente (no se pisan ni se encadenan)
 @export var seg_charla_vence := 30.0     ## una charla que esperó más que esto ya no viene al caso (el jugador siguió de largo) y se descarta
 @export var seg_tip_vence := 25.0        ## un consejo que esperó la calma más que esto ya no tiene sentido y se descarta
@@ -46,6 +47,7 @@ const LIMITE_TROZO := 44   ## un texto más largo se parte en globos cortos
 @export var tono_voz_humano := 0.85
 @export_group("")
 
+var _datos: Dictionary = {}   ## cache de dialogos.json (ver lineas_de)
 var _cola: Array[Dictionary] = []
 var _en_espera: Array[Dictionary] = []   # charlas y consejos que esperan un lugar sin acción
 var _t_calma := 0.0
@@ -116,6 +118,7 @@ const NOMBRES_TECLA := {
 @onready var gema: Control = $Gema
 @onready var globo: Control = $Globo
 @onready var lista: Control = $Lista
+@onready var aviso: Control = $Aviso
 
 
 func _ready() -> void:
@@ -151,6 +154,19 @@ func hay_narrativa() -> bool:
 	return false
 
 
+## Líneas de una entrada de data/dialogos.json, para scripts que hablan sin DialogTrigger (jefe, jugador).
+func lineas_de(id: String) -> Array:
+	if _datos.is_empty():
+		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/dialogos.json"))
+		if d is Dictionary:
+			_datos = d
+	var e: Variant = _datos.get(id)
+	if e is not Dictionary:
+		push_error("Dialogo: no existe el diálogo '%s'" % id)
+		return []
+	return e.get("lineas", [])
+
+
 func texto_actual() -> String:
 	return _texto_actual
 
@@ -183,6 +199,17 @@ func mostrar_tip(lineas: Array, hablante: String = "Amuleto", guardar_en_ayuda: 
 	if guardar_en_ayuda:
 		for l in lineas:
 			_registrar_ayuda(String(l))
+	if avisos_en_hud:
+		var partes: Array[String] = []
+		for l in lineas:
+			var t := _tokens(String(l))
+			var m := _re_tag.search(t)
+			while m != null:   # los avisos no llevan etiquetas de tono
+				t = t.substr(m.get_end())
+				m = _re_tag.search(t)
+			partes.append(t)
+		aviso.mostrar("\n".join(partes))
+		return
 	for l in lineas:
 		for it in _armar(String(l), hablante, true, false):
 			_cola.append(it)
@@ -299,6 +326,7 @@ func limpiar() -> void:
 	_item = {}
 	_texto_actual = ""
 	ancla_hablante = null
+	aviso.vaciar()
 	if _tw_globo != null and _tw_globo.is_valid():
 		_tw_globo.kill()
 	_fase = Fase.LIBRE

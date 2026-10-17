@@ -10,6 +10,9 @@ const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 @export var camara: Camera2D
 @export var arena_center := Vector2.ZERO
 @export var arena_medio_ancho := 300.0
+## Opcional: un muro de piedra (muro_piedra.gd). Mientras no se rompa, entrar a la arena no inicia el combate.
+@export var requiere_muro_roto: NodePath
+var _muro_pendiente := false
 
 # Diálogo opcional al completar la arena (post-combate). Vacío = no habla.
 @export var lineas_post_combate: PackedStringArray = []
@@ -63,6 +66,10 @@ func _ready() -> void:
 	_generar_paredes()
 	_agrupar_manuales()
 	body_entered.connect(_on_body_entered)
+	var muro := get_node_or_null(requiere_muro_roto)
+	if muro != null and muro.has_signal("roto"):
+		_muro_pendiente = true
+		muro.roto.connect(_on_muro_roto, CONNECT_ONE_SHOT)
 	_preparar_manuales()
 	_ocultar_bounds()
 	if antesala_activa:
@@ -174,8 +181,14 @@ func _conectar_died(e: Node, ola_idx: int) -> void:
 	_conectados[key] = ola_idx
 
 
+func _on_muro_roto() -> void:
+	_muro_pendiente = false
+	for b in get_overlapping_bodies():   # ya estaba parado dentro de la arena: body_entered no vuelve a saltar
+		_on_body_entered(b)
+
+
 func _on_body_entered(body: Node) -> void:
-	if estado != Estado.INACTIVE:
+	if estado != Estado.INACTIVE or _muro_pendiente:
 		return
 	if body.is_in_group("player"):
 		_empezar()

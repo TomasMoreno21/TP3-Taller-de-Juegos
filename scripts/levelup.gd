@@ -229,7 +229,7 @@ func _render_detalle_combo() -> void:
 		return
 	var c: Dictionary = forma.combos[desbloqueados]
 	combo_nombre.text = "Combo: %s" % str(c.get("nombre", "Combo"))
-	combo_funcion.text = "Es un ataque más fuerte."
+	combo_funcion.text = str(c.get("descripcion", "Es un ataque más fuerte."))
 	combo_como.text = "%s" % _secuencia_texto(c.get("secuencia", []))
 
 

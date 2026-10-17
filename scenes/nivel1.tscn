@@ -1628,10 +1628,10 @@ dialogo_id = "n1-joystick"
 [node name="Noche" parent="." unique_id=814453849 instance=ExtResource("26_dr8ev")]
 
 [node name="Checkpoint" parent="." unique_id=1335162961 instance=ExtResource("27_46iir")]
-position = Vector2(9517, 802)
+position = Vector2(9712, 801)
 
 [node name="Checkpoint2" parent="." unique_id=1431593649 instance=ExtResource("27_46iir")]
-position = Vector2(19903, 790)
+position = Vector2(18508, 818)
 
 [node name="Checkpoint3" parent="." unique_id=1097156044 instance=ExtResource("27_46iir")]
 position = Vector2(25349, 814)

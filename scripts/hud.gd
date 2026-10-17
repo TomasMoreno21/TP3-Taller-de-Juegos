@@ -466,7 +466,7 @@ func _pintar_golpes() -> void:
 
 func _texto_ataque(_attack_type: String, _step: Variant) -> String:
 	if _attack_type == "combo":
-		return "[color=#ffd76a]%s[/color]" % str(_step)
+		return "[color=#ffd76a]%s[/color]" % str(_step).to_upper()
 	var nombre := "LIGERO" if _attack_type == "light" else ("FUERTE" if _attack_type == "heavy" else "ESPECIAL")
 	return "[color=#ffd76a]%s[/color]" % nombre
 

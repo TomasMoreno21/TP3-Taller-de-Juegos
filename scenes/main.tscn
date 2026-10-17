@@ -127,10 +127,6 @@ shape = SubResource("RectangleShape2D_plat")
 [node name="Tronco" parent="Level" unique_id=822609678 instance=ExtResource("6_tronco")]
 position = Vector2(-448, 890)
 
-[node name="DialogoTronco" parent="Level" unique_id=2033732964 instance=ExtResource("9_dialog")]
-position = Vector2(-690, 834)
-dialogo_id = "main_tronco"
-
 [node name="BarreraBosque" parent="Level" unique_id=910000001 instance=ExtResource("18_barrera")]
 position = Vector2(2331, 879)
 barrera_id = "main_barrera_1"
@@ -362,10 +358,6 @@ position = Vector2(4537, 2400)
 [node name="Noche" parent="." unique_id=249434551 instance=ExtResource("22_noche")]
 
 [node name="Hud" parent="." unique_id=972088848 instance=ExtResource("4_hud")]
-
-[node name="DialogoIntro" parent="." unique_id=860836594 instance=ExtResource("9_dialog")]
-position = Vector2(184, 801)
-dialogo_id = "main_intro"
 
 [node name="Pause" parent="." unique_id=423654189 instance=ExtResource("8_pause")]
 

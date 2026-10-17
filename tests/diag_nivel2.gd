@@ -40,7 +40,7 @@ func _initialize() -> void:
 
 	# Diálogos nuevos existen en el json.
 	var datos: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/dialogos.json"))
-	for id in ["n2_intro", "n2_aleteos", "n2_murcielago", "n2_planeo", "n2_voladores", "n2_voladores2"]:
+	for id in ["n2_intro", "n2_aleteos", "n2_murcielago", "n2_planeo", "n2_voladores"]:
 		_chk(datos is Dictionary and (datos as Dictionary).has(id), "dialogos.json tiene " + id)
 		for l in (datos as Dictionary)[id]["lineas"]:
 			_chk(str(l).length() <= 48, "%s: línea corta (%d)" % [id, str(l).length()])

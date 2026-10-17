@@ -59,7 +59,8 @@ var _jumps_usados := 0
 @export var color: Color = Color(1, 1, 1)
 @export var collider_size: Vector2 = Vector2(16, 40)
 @export var patas_alto: float = 0.0          # px que el cuerpo (collider) flota sobre el piso; lo sostiene un collider angosto ("Patas") debajo
-@export var patas_ancho: float = 30.0         # ancho de ese collider de apoyo
+@export var patas_letales: bool = true       # los pinchos cuentan las patas como parte del cuerpo (false si son un soporte invisible, como en el Murciélago)
+@export var patas_ancho: float = 30.0        # ancho de ese collider de apoyo
 @export var flight_lift: float = 0.0         # px que flota el sprite sobre su base (volar/planeo)
 @export var pendiente_mult: float = 1.0      # cuánto se inclina el sprite en pendientes respecto del valor base del jugador (cuerpos largos: más)
 @export var flotar_amplitud: float = 0.0       # px que sube y baja el sprite en reposo (formas que vuelan; 0 = sin vaivén)

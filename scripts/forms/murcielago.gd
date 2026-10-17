@@ -20,7 +20,7 @@ func _init() -> void:
 	special_damage = 15
 	dano_recibido_mult = 1.1
 	special_cost = 8.0
-	flap_impulso = 360.0
+	flap_impulso = 460.0
 	flap_costo = 6.0
 	special_cooldown = 0.3
 	special_cooldown_combate = 0.6
@@ -28,6 +28,7 @@ func _init() -> void:
 	collider_size = Vector2(115, 105)   # coincide con el sprite (89-130 × 79-118 px)
 	patas_alto = 90.0               # flota a esta altura del piso (el collider va con el sprite)
 	patas_ancho = 30.0
+	patas_letales = false           # el soporte es invisible: los pinchos solo cuentan el cuerpo dibujado
 	flight_lift = 0.0
 	camera_lookahead_mult = 1.0
 	lean_angulo = 3.5
@@ -51,7 +52,7 @@ func _init() -> void:
 	melee_sticky = 0.0
 	step_up_max = 16.0   # sube escalones chicos (rampas suaves) pero no obstáculos
 	combos = [
-		{"nombre": "Ala Cortante", "secuencia": ["light", "heavy"], "dano": 32, "knockback": 240.0, "tamano": Vector2(192, 102), "rango": 114.0},
+		{"nombre": "Ala Cortante", "descripcion": "Corte de ala: golpe veloz de largo alcance.", "secuencia": ["light", "heavy"], "dano": 32, "knockback": 240.0, "tamano": Vector2(230, 102), "rango": 160.0},
 	]
 
 

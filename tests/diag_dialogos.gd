@@ -9,11 +9,11 @@ func _init() -> void:
 	root.add_child(trigger)
 	await process_frame
 	var lineas: PackedStringArray = trigger.lineas
-	_check(lineas.size() == 4, "n1_intro carga 4 líneas (es %d)" % lineas.size())
+	_check(lineas.size() == 3, "n1_intro carga 3 líneas (es %d)" % lineas.size())
 	_check(String(trigger.hablante) == "Amuleto", "hablante Amuleto")
 	_check(String(trigger.modo) == "Automatico", "modo Automatico")
 	_check(trigger.una_vez == true, "una_vez true (no repetir)")
-	_check(lineas[0].begins_with("Humano, soy el Amuleto"), "primera línea correcta")
+	_check(lineas[0].begins_with("Humano… soy el Amuleto"), "primera línea correcta")
 
 	var desconocido: Node = preload("res://scenes/dialog_trigger.tscn").instantiate()
 	desconocido.set("dialogo_id", "no_existe")

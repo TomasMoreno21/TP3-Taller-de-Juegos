@@ -58,8 +58,9 @@ func _init() -> void:
 	recovery_early_fraccion = 0.25
 	lunge_heavy = 36.0
 	melee_sticky = 0.0
+	shake_golpe_combo = 24.0   # la Garra sacude la cámara más que el resto
 	combos = [
-		{"nombre": "Garra", "secuencia": ["light", "heavy"], "dano": 70, "knockback": 360.0, "tamano": Vector2(288, 186), "rango": 198.0},
+		{"nombre": "Garra", "descripcion": "Zarpazo demoledor: golpe lento y devastador.", "secuencia": ["light", "heavy"], "dano": 70, "knockback": 360.0, "tamano": Vector2(288, 186), "rango": 198.0},
 	]
 
 

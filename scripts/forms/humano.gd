@@ -17,10 +17,12 @@ func _init() -> void:
 	heavy_range = 45.0
 	heavy_size = Vector2(140, 100)
 	heavy_combo_steps = 2
-	special_damage = 17
+	special_damage = 24
 	special_size = Vector2(198, 126)
 	special_range = 50.0
-	special_knockback = 260.0
+	special_knockback = 340.0
+	special_cost = 6.0
+	special_cooldown_combate = 1.5
 	color = Color(0.42, 0.62, 0.36)
 	collider_size = Vector2(190, 318)
 	landing_squash = 0.12
@@ -37,8 +39,13 @@ func _init() -> void:
 	salto_rot_grados = 5.0   # inclinación leve al subir/caer
 	melee_sticky = 0.0
 	combos = [
-		{"nombre": "Remate", "secuencia": ["light", "heavy"], "dano": 40, "knockback": 260.0, "tamano": Vector2(162, 114), "rango": 126.0},
+		{"nombre": "Remate", "descripcion": "Tajo giratorio: golpea al frente y a tu espalda.", "secuencia": ["light", "heavy"], "dano": 40, "knockback": 260.0, "tamano": Vector2(162, 114), "rango": 126.0, "radio_trasero": 280.0, "mult_trasero": 0.75},
 	]
+
+
+func perform_combo(player: CharacterBody2D, combo: Dictionary) -> void:
+	super.perform_combo(player, combo)
+	player.tajo_trasero(combo)
 
 
 func perform_special(player: CharacterBody2D) -> void:

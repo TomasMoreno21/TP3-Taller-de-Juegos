@@ -9,10 +9,11 @@ attack_range = 90.0
 heavy_size = Vector2(130, 85)
 heavy_range = 110.0
 combos = [{
+"descripcion": "Corte de ala: golpe veloz de largo alcance.",
 "dano": 32,
 "knockback": 240.0,
 "nombre": "Ala Cortante",
-"rango": 114.0,
+"rango": 160.0,
 "secuencia": ["light", "heavy"],
-"tamano": Vector2(192, 102)
+"tamano": Vector2(230, 102)
 }]

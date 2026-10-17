@@ -1,28 +1,13 @@
 {
-	"main_intro": {
-		"hablante": "Amuleto",
-		"modo": "Automatico",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": []
-	},
-	"main_tronco": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": []
-	},
 	"n1_intro": {
 		"hablante": "Amuleto",
 		"modo": "Automatico",
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Humano, soy el Amuleto del bosque.",
-			"Una secta quiere su poder.",
-			"Sus cultistas atrajeron a tu hijo.",
-			"Te presto mi fuerza. ¡Vamos!"
+			"Humano… soy el Amuleto del bosque.",
+			"Se llevaron a tu hijo para llegar a mí.",
+			"Te presto mi fuerza. Alcanzará."
 		]
 	},
 	"n1_combate": {
@@ -31,9 +16,9 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"[alerta]Esperá... hay cultistas cerca.",
-			"[alerta]¡Preparate para pelear!",
-			"Las almas que liberes te curarán."
+			"[alerta]Cultistas. Siempre en grupo.",
+			"[alerta]No dejes que te rodeen.",
+			"Cada alma que liberes vuelve a vos como aliento."
 		]
 	},
 	"n1_lobo": {
@@ -54,10 +39,10 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"[humano][susurro]¿Oís eso? Qué silencio...",
-			"Hasta los pájaros huyeron. Están cerca.",
-			"[humano][susurro]Tengo un mal presentimiento.",
-			"Lo sé. Sigamos juntos."
+			"[humano][susurro]Qué silencio… ni un pájaro.",
+			"Huyeron. Algo oscuro pasó por acá.",
+			"[humano][susurro]Mi hijo estuvo en este camino.",
+			"Lo sé. Su rastro sigue tibio. Caminá conmigo."
 		]
 	},
 	"n1_final": {
@@ -66,9 +51,9 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Dejamos el bosque. Ahora, hacia su guarida.",
-			"[humano]¿Falta mucho?",
-			"Ya falta menos. Seguí conmigo."
+			"El bosque se acaba. Adelante, la guarida.",
+			"[humano]¿Y si llegamos tarde?",
+			"No vamos a llegar tarde."
 		]
 	},
 	"n1_zona2": {
@@ -97,7 +82,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"[susurro]Su guarida está cerca..."
+			"[susurro]Hasta las raíces callan acá."
 		]
 	},
 	"n1-joystick": {
@@ -131,25 +116,15 @@
 			"Cruzá de a una y saltá rápido."
 		]
 	},
-	"p1_lobo": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"Usá el Lobo para estos saltos."
-		]
-	},
 	"n2_intro": {
 		"hablante": "Amuleto",
 		"modo": "Automatico",
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Esta cueva es de los cultistas.",
-			"Hay huellas frescas: tu hijo pasó.",
-			"[susurro]Avanzá con cuidado."
+			"La guarida. Huele a humo y a cera.",
+			"Hay huellas pequeñas: tu hijo caminó acá.",
+			"[susurro]Despacio. Las paredes oyen."
 		]
 	},
 	"n2_aleteos": {
@@ -158,7 +133,7 @@
 		"retraso": 0.3,
 		"una_vez": true,
 		"lineas": [
-			"[susurro]¿Oís eso? Alas en la oscuridad..."
+			"[susurro]Alas en la oscuridad. Nos vigilan."
 		]
 	},
 	"n2_murcielago": {
@@ -167,8 +142,8 @@
 		"retraso": 0.4,
 		"una_vez": true,
 		"lineas": [
-			"Los murciélagos te reconocen.",
-			"Cambiá con {forma_swap}."
+			"Los murciélagos no nos temen. Me reconocen.",
+			"Pedímelo y su forma es tuya."
 		]
 	},
 	"n2_planeo": {
@@ -178,8 +153,7 @@
 		"retraso": 0.4,
 		"una_vez": true,
 		"lineas": [
-			"Murciélago: mantené salto para planear.",
-			"Planeá sobre los pinchos."
+			"Murciélago: mantené {jump} para planear."
 		]
 	},
 	"n2_voladores": {
@@ -188,19 +162,8 @@
 		"retraso": 0.4,
 		"una_vez": true,
 		"lineas": [
-			"[alerta]Arqueros flotando: un aura los eleva.",
-			"Los golpes rebotan.",
-			"Dispará con {special} como Murciélago."
-		]
-	},
-	"n2_voladores2": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"Más arqueros voladores: usá el Murciélago."
+			"[alerta]Arqueros flotando en un aura corrupta.",
+			"Tus golpes no llegan. Necesitás volar."
 		]
 	},
 	"n2_pozo": {
@@ -213,24 +176,14 @@
 			"Pinchos en el piso: saltá a tiempo."
 		]
 	},
-	"n2_mirador": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.4,
-		"una_vez": true,
-		"lineas": [
-			"Trepá por las lianas: hay premios arriba."
-		]
-	},
 	"n2_abismo": {
 		"hablante": "Amuleto",
 		"modo": "Zona",
 		"retraso": 0.4,
 		"una_vez": true,
 		"lineas": [
-			"Más adelante se abre el abismo.",
-			"El techo es alto: aprovechá el vuelo."
+			"El suelo se termina. El techo, no.",
+			"Quien vuela, cruza."
 		]
 	},
 	"n2_campamento": {
@@ -239,8 +192,7 @@
 		"retraso": 0.4,
 		"una_vez": true,
 		"lineas": [
-			"[susurro]Un respiro. Aprovechalo.",
-			"Recuperá fuerzas antes de seguir."
+			"[susurro]Un respiro. Aprovechalo, son pocos."
 		]
 	},
 	"n2_final": {
@@ -250,7 +202,7 @@
 		"una_vez": true,
 		"lineas": [
 			"El santuario está cerca.",
-			"[susurro]Más abajo, algo pesado respira..."
+			"[susurro]Algo grande respira allá abajo."
 		]
 	},
 	"jefe_intro": {
@@ -259,10 +211,10 @@
 		"retraso": 0.8,
 		"una_vez": true,
 		"lineas": [
-			"[alerta]Ahí está: el ARZOBISPO.",
-			"Oso rompe su guardia, Lobo esquiva.",
-			"Murciélago te da altura. ¡Usalos!",
-			"[grito]¡No aflojes!"
+			"[alerta]El Arzobispo.",
+			"Sus fieles lo cubren. Rompé su guardia, esquivá, buscá altura.",
+			"[humano]Devolveme a mi hijo.",
+			"[grito]¡Ahora!"
 		],
 		"marcado": true
 	},
@@ -272,9 +224,9 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Esto es más hondo que la guarida.",
-			"Estas cuevas son antiguas... y raras.",
-			"Hay marcas frescas: tu hijo pasó."
+			"Más hondo que la guarida. Esta roca es más vieja que la secta.",
+			"[humano]Esta tela… es de mi hijo.",
+			"Entonces vamos bien. No te detengas."
 		]
 	},
 	"n3_oso": {
@@ -293,9 +245,8 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"[alerta]Hay un espíritu encadenado...",
-			"Vencé a sus guardias.",
-			"Luego aplastá la losa con el Oso."
+			"[alerta]Un espíritu encadenado. Sufre.",
+			"Vencé a sus guardias y que el Oso rompa la losa."
 		]
 	},
 	"n3_liana": {
@@ -314,7 +265,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"El sello cayó. El corazón late.",
+			"El sello cayó. El corazón late libre.",
 			"Más allá espera el Arzobispo.",
 			"[alerta]Usá todo lo que aprendiste."
 		]
@@ -322,57 +273,15 @@
 	"n3_cultista": {
 		"hablante": "Cultista",
 		"lineas": [
-			"[susurro]Shh... no grites. Soy de ellos, pero no por mucho tiempo.",
-			"[susurro]Yo no quiero este ritual. No con niños de por medio.",
-			"[susurro]Seguí, estás a tiempo. Y no le digas a nadie que me viste."
+			"[susurro]Shh. Soy de ellos… pero ya no.",
+			"[susurro]No quiero este ritual. No con niños de por medio.",
+			"[susurro]Seguí. Y no digas que me viste."
 		],
 		"lineas_despues": [
-			"Tené cuidado, podría ser una trampa.",
-			"[humano]No importa, voy a ir a rescatar a mi hijo.",
-			"......",
-			"Está bien, pero tené cuidado."
+			"Podría ser una trampa.",
+			"[humano]Aunque lo sea. Es mi hijo.",
+			"Entonces no hay trampa que valga. Vamos."
 		]
-	},
-	"n4_intro": {
-		"hablante": "Amuleto",
-		"modo": "Automatico",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": []
-	},
-	"n4_murcielago": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"El Murciélago vuela: cruzá por arriba."
-		]
-	},
-	"n4_abismo": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"Mantené el salto para planear."
-		]
-	},
-	"n4_final": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": []
-	},
-	"n5_intro": {
-		"hablante": "Amuleto",
-		"modo": "Automatico",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": []
 	},
 	"n5_pruebas": {
 		"tipo": "tip",
@@ -383,13 +292,6 @@
 		"lineas": [
 			"Combiná formas: Oso, Lobo y Murciélago."
 		]
-	},
-	"n5_umbral": {
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": []
 	},
 	"tut_mover": {
 		"hablante": "Amuleto",
@@ -403,8 +305,7 @@
 		"lineas": [
 			"Saltá con {jump}"
 		],
-		"pista": "Más impulso, Humano: {jump}.",
-		"cierre": "Bien. Así se mueve un guardián."
+		"pista": "Más impulso, Humano: {jump}."
 	},
 	"tut_ligero": {
 		"hablante": "Amuleto",
@@ -425,8 +326,7 @@
 		"lineas": [
 			"Bloqueá con {block}"
 		],
-		"pista": "Cubrite cuando te ataquen: {block}.",
-		"cierre": "Bien. Así lucha un guardián."
+		"pista": "Cubrite cuando te ataquen: {block}."
 	},
 	"n3_descenso": {
 		"tipo": "tip",
@@ -438,16 +338,6 @@
 			"Esta caída es larga, pero segura."
 		]
 	},
-	"n3_pozo": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.5,
-		"una_vez": true,
-		"lineas": [
-			"Mantené salto para planear."
-		]
-	},
 	"n3_lago": {
 		"tipo": "tip",
 		"hablante": "Amuleto",
@@ -456,16 +346,6 @@
 		"una_vez": true,
 		"lineas": [
 			"El Oso pesa: las tablas no lo aguantan."
-		]
-	},
-	"n3_ascenso": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"Trepá con {trepar} por la chimenea."
 		]
 	},
 	"n3_foso": {
@@ -486,16 +366,6 @@
 		"una_vez": true,
 		"lineas": [
 			"Corré y mantené salto para cruzar."
-		]
-	},
-	"n3_cuenco": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.6,
-		"una_vez": true,
-		"lineas": [
-			"Hay repisas arriba: atajo con premio."
 		]
 	},
 	"n3_latido": {
@@ -523,8 +393,8 @@
 		"retraso": 0.5,
 		"una_vez": true,
 		"lineas": [
-			"Un campamento cultista, vacío.",
-			"[susurro]Huyeron. Algo los asustó."
+			"Un campamento vacío.",
+			"[susurro]Huyeron de algo. No de nosotros."
 		]
 	},
 	"n3_cristal": {
@@ -533,9 +403,9 @@
 		"retraso": 0.5,
 		"una_vez": true,
 		"lineas": [
-			"Una barrera de energía sella el altar.",
-			"Sus cristales caen con el sónico.",
-			"[alerta]Usá el Murciélago."
+			"Una barrera sella el altar.",
+			"Los cristales vibran: el sonido los quiebra.",
+			"[alerta]Murciélago."
 		]
 	},
 	"n3_sala": {
@@ -545,17 +415,7 @@
 		"una_vez": true,
 		"lineas": [
 			"Dos sellos, dos formas.",
-			"Cristales y un muro alto."
-		]
-	},
-	"n3_sala_lobo": {
-		"tipo": "tip",
-		"hablante": "Amuleto",
-		"modo": "Zona",
-		"retraso": 0.5,
-		"una_vez": true,
-		"lineas": [
-			"Muro alto: el Lobo escala más."
+			"Cristales abajo, un muro alto arriba."
 		]
 	},
 	"n3_madriguera": {
@@ -564,8 +424,7 @@
 		"retraso": 0.5,
 		"una_vez": true,
 		"lineas": [
-			"[susurro]Un hueco muy bajo en la pared.",
-			"Solo el Lobo cabe ahí."
+			"[susurro]Una grieta baja en el muro. Solo el Lobo pasa."
 		]
 	},
 	"n3_madriguera_dentro": {
@@ -584,7 +443,7 @@
 		"retraso": 0.4,
 		"una_vez": true,
 		"lineas": [
-			"[humano]Vamos a tener que volar para esquivar esto."
+			"[humano]Tendremos que volar para esquivar esto."
 		]
 	},
 	"n3_mirador": {
@@ -595,7 +454,8 @@
 		"lineas": [
 			"Islas flotantes más adelante.",
 			"Planeá con el Murciélago o saltá lejos."
-		]
+		],
+		"tipo": "tip"
 	},
 	"n3_ala_oso": {
 		"hablante": "Amuleto",
@@ -604,7 +464,7 @@
 		"una_vez": true,
 		"lineas": [
 			"Una cámara de piedra, sellada.",
-			"El Oso puede romper estos muros."
+			"Solo la fuerza del Oso la abre."
 		]
 	},
 	"n3_ala_fin": {
@@ -613,8 +473,8 @@
 		"retraso": 0.5,
 		"una_vez": true,
 		"lineas": [
-			"[susurro]Un recuerdo del Oso ancestral.",
-			"Esperaba a quien lo despertara."
+			"[susurro]El recuerdo de un Oso ancestral.",
+			"Esperó siglos a quien lo despertara."
 		]
 	},
 	"n3_diario": {
@@ -635,7 +495,7 @@
 		"una_vez": true,
 		"lineas": [
 			"[susurro]El latido se acelera.",
-			"Ya falta poco para el sello."
+			"Estamos cerca del sello."
 		]
 	},
 	"n2_calma_d3": {
@@ -644,8 +504,8 @@
 		"retraso": 0.4,
 		"una_vez": true,
 		"lineas": [
-			"El sonido es capaz de romper la barrera.",
-			"Intentalo."
+			"El sonido quiebra lo que la fuerza no puede.",
+			"Probá con un grito."
 		]
 	},
 	"n2_derrumbe_fin": {
@@ -655,7 +515,7 @@
 		"una_vez": true,
 		"lineas": [
 			"[susurro]Eso estuvo cerca.",
-			"Las lianas bajan hacia lo más profundo."
+			"Las lianas bajan hacia lo más hondo. Sigamos."
 		]
 	},
 	"n3_aviso_continuar": {
@@ -664,8 +524,120 @@
 		"retraso": 0.5,
 		"una_vez": true,
 		"lineas": [
-			"Ahora sí podremos llegar al corazón de esta cueva.",
-			"Volvamos a la sala principal para romper esos muros."
+			"El camino al corazón se abrió.",
+			"Volvamos a la sala principal y rompamos esos muros."
+		]
+	},
+	"jefe_presentacion": {
+		"hablante": "Amuleto",
+		"lineas": [
+			"¡EL ARZOBISPO! Preside desde su trono de energía corrupta.",
+			"Para herirlo tendrás que: matar a sus fieles, romper sus cristales",
+			"y golpear la zona marcada cuando baje."
+		]
+	},
+	"jefe_cristales": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"Respirá. Sigue: cristales de energía.",
+			"Solo el sónico del Murciélago los rompe. Cuidado con el barrido a la altura de la cabeza."
+		]
+	},
+	"jefe_zona": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"Respirá. Sigue: la zona marcada.",
+			"Golpeala rápido, y saltá las ondas del piso."
+		]
+	},
+	"jefe_rehace": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"Se rehace... Otra vez sus fieles."
+		]
+	},
+	"jefe_fieles": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"Sus fieles lo protegen. Acaba con ellos para abrir su guardia."
+		]
+	},
+	"jefe_furia": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"¡SE ENFURECIÓ!",
+			"Mismo ritual, pero ya estaba harto de tus formas."
+		]
+	},
+	"jefe_furia2": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"Se corrompe... ¡aprovechá su furia para la zona marcada!"
+		]
+	},
+	"jefe_onda": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"¡Onda por el piso! Saltala: el Humano y el Lobo llegan alto, el Oso no."
+		]
+	},
+	"jefe_barrido": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"¡Barrido a la altura de la cabeza! Transformate en Lobo o Murciélago y pasá por debajo."
+		]
+	},
+	"jefe_parry": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"¡Orbes! Bloqueá justo antes del impacto: el parry los devuelve y le hace daño al Arzobispo."
+		]
+	},
+	"tip_bloqueo": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"Mantené {block} para bloquear. Apretalo justo antes del golpe y es un parry."
+		]
+	},
+	"tip_energia": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"Las formas gastan energía. Al llegar a cero volvés a Humano; matá enemigos para recuperarla."
+		]
+	},
+	"tip_parry": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"Bloqueá justo antes de que te golpeen para hacer un parry: no recibís daño y recuperás energía."
+		]
+	},
+	"tip_flotante": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"Los enemigos flotantes solo reciben daño de proyectiles. Transformate en Murciélago y disparales con {special}."
+		]
+	},
+	"p1_lobo": {
+		"hablante": "Amuleto",
+		"modo": "Zona",
+		"retraso": 0.6,
+		"una_vez": true,
+		"lineas": [
+			"El espíritu del Lobo despierta.",
+			"Su agilidad ahora es tuya."
 		]
 	}
 }
