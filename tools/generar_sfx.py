@@ -391,6 +391,33 @@ def generar():
     guardar("dialogo_tecla", mul(mezclar((tono(0.045, 1100, 950, "tri"), 1.0), (tono(0.045, 560, 520), 0.5)),
                                  env(n(0.045), 0.001, 0.012)), 0.75)
 
+    generar_jefe()
+
+
+def generar_jefe():
+    """Jefe final: grito de aparición y rebote de coraza (golpe que no es del Oso). Semilla propia."""
+    r = random.Random(4242)
+    largo = 2.6
+    # Rugido grave: armónicos de una fundamental que baja 72→52 Hz, con aspereza (AM por ruido lento).
+    base = [0.0] * n(largo)
+    for k in range(1, 9):
+        for i, v in enumerate(tono(largo, 72 * k, 52 * k, "tri" if k == 1 else "seno")):
+            base[i] += v / k
+    aspereza = [0.55 + 0.45 * abs(v) * 6 for v in pasabajos(ruido(largo, r), 35)]
+    rugido = mul(mul(base, aspereza), env(n(largo), 0.15, 0.9))
+    # Chillido: dos voces que suben (formantes ásperos), desde 0.25 s, con ruido de garganta.
+    voz = mezclar((tono(1.9, 520, 900, "tri"), 1.0), (tono(1.9, 790, 1380), 0.6))
+    garganta = banda(ruido(1.9, r), 900, 2600)
+    chillido = pasabajos(mul(mezclar((voz, 1.0), (garganta, 0.5)), env(n(1.9), 0.3, 0.45, 1.5)), 3000)
+    retumbe = mul(pasabajos(ruido(largo, r), 120), env(n(largo), 0.4, 1.0, 2.0))
+    guardar("jefe_grito", mezclar((golpe_seco(1.2, 60, 28, 0.35, r), 1.0),
+                                  (rugido, 0.9),
+                                  (desplazar(chillido, 0.25), 0.45),
+                                  (retumbe, 0.8)), 0.9)
+    # Rebote de coraza: "clonk" seco de piedra.
+    guardar("rebote_coraza", mezclar((golpe_seco(0.25, 260, 140, 0.05, r, crujido=0.6, crujido_banda=(1500, 4000)), 1.0),
+                                     (mul(tono(0.2, 410), env(n(0.2), 0.001, 0.04)), 0.4)), 0.7)
+
 
 if __name__ == "__main__":
     generar()

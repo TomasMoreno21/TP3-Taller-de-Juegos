@@ -16,9 +16,14 @@
 [ext_resource type="PackedScene" uid="uid://bf8ohs7pjg025" path="res://scenes/pinchos.tscn" id="20_pinchos"]
 [ext_resource type="Script" uid="uid://2evt507mwee1" path="res://scripts/borde_musgo.gd" id="21_musgo"]
 [ext_resource type="PackedScene" uid="uid://skni1dec001" path="res://scenes/decorativo.tscn" id="22_deco"]
+[ext_resource type="Script" path="res://scripts/marca_garra.gd" id="23_marca"]
+[ext_resource type="Script" path="res://scripts/blanco_sonico.gd" id="24_blanco"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hurt"]
 radius = 100.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_blanco"]
+radius = 230.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fondo"]
 size = Vector2(600, 40)
@@ -143,6 +148,20 @@ script = ExtResource("3_hurt")
 shape = SubResource("CircleShape2D_hurt")
 disabled = true
 
+[node name="MarcaGarra" type="Node2D" parent="Cuerpo"]
+visible = false
+z_index = 2
+script = ExtResource("23_marca")
+tamano = 110.0
+
+[node name="BlancoSonico" type="StaticBody2D" parent="Cuerpo"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("24_blanco")
+
+[node name="Collision" type="CollisionShape2D" parent="Cuerpo/BlancoSonico"]
+shape = SubResource("CircleShape2D_blanco")
+
 [node name="FondoFoso" type="StaticBody2D" parent="." unique_id=723950658]
 
 [node name="Collision" type="CollisionShape2D" parent="FondoFoso" unique_id=441298113]
@@ -198,6 +217,13 @@ position = Vector2(0, -105)
 shape = SubResource("RectangleShape2D_nudo")
 disabled = true
 
+[node name="MarcaNudo" type="Node2D" parent="."]
+visible = false
+z_index = 3
+position = Vector2(0, -150)
+script = ExtResource("23_marca")
+tamano = 90.0
+
 [node name="TechoArena" type="StaticBody2D" parent="." unique_id=1443221073]
 position = Vector2(0, -1200)
 
@@ -235,7 +261,7 @@ viento = false
 
 [node name="PlataformasF2" type="Node2D" parent="." unique_id=1323560123]
 
-[node name="Plataforma1" type="StaticBody2D" parent="PlataformasF2" unique_id=775338297]
+[node name="Plataforma1" type="StaticBody2D" parent="PlataformasF2" unique_id=775338297 groups=["plataforma_bajable"]]
 position = Vector2(-1150, -150)
 
 [node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma1" unique_id=1961038723]
@@ -265,7 +291,7 @@ color_mota = Color(0.55, 0.65, 0.66, 0.22)
 piedra = true
 semilla = 31
 
-[node name="Plataforma2" type="StaticBody2D" parent="PlataformasF2" unique_id=28518161]
+[node name="Plataforma2" type="StaticBody2D" parent="PlataformasF2" unique_id=28518161 groups=["plataforma_bajable"]]
 position = Vector2(1150, -150)
 
 [node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma2" unique_id=1796630039]
@@ -295,7 +321,7 @@ color_mota = Color(0.55, 0.65, 0.66, 0.22)
 piedra = true
 semilla = 32
 
-[node name="Plataforma3" type="StaticBody2D" parent="PlataformasF2" unique_id=401160871]
+[node name="Plataforma3" type="StaticBody2D" parent="PlataformasF2" unique_id=401160871 groups=["plataforma_bajable"]]
 position = Vector2(-650, -310)
 
 [node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma3" unique_id=467458288]
@@ -325,7 +351,7 @@ color_mota = Color(0.55, 0.65, 0.66, 0.22)
 piedra = true
 semilla = 33
 
-[node name="Plataforma4" type="StaticBody2D" parent="PlataformasF2" unique_id=534324767]
+[node name="Plataforma4" type="StaticBody2D" parent="PlataformasF2" unique_id=534324767 groups=["plataforma_bajable"]]
 position = Vector2(650, -310)
 
 [node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma4" unique_id=854076729]

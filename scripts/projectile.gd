@@ -227,6 +227,15 @@ func _buscar_enemigo_cercano() -> Node2D:
 		if n.abierto and d < mejor_dist and linea_libre(self, global_position, n.global_position):
 			mejor_dist = d
 			mejor = n
+	if mejor != null:
+		return mejor
+	for n in get_tree().get_nodes_in_group("blanco_sonico"):   # el jefe final (siempre se le puede disparar)
+		if not is_instance_valid(n) or not n.apuntable():
+			continue
+		var d := global_position.distance_to(n.global_position)
+		if d < mejor_dist:
+			mejor_dist = d
+			mejor = n
 	return mejor
 
 

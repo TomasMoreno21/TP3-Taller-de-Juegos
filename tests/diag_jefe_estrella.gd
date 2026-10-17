@@ -114,8 +114,20 @@ func _init() -> void:
 		player.blocking = false
 		player.god_mode = true
 		_check(boss.health == hp_r - 30, "El parry devuelve el rayo al ojo central: -30 (%d -> %d)" % [hp_r, boss.health])
-		_check(boss._puntas.all(func(pt) -> bool: return pt.dano == 0.0 and not pt.rota) and boss.ojo.herida > 0.04, "La cabeza no se agrieta: el daño se ve en el ojo (herida %.2f)" % boss.ojo.herida)
+		var primera = boss._puntas[boss.orden_puntas[0]]
+		_check(primera.dano > 0.3 and boss._puntas.all(func(pt) -> bool: return not pt.rota and pt.visible) and boss.ojo.herida > 0.04, "Grietas finas: la primera punta se agrieta sin partirse (dano %.2f, herida %.2f)" % [primera.dano, boss.ojo.herida])
 	rayo2 = null
+
+	# --- Sónico del Murciélago: le pega siempre (BlancoSonico); el cuerpo a cuerpo no cuenta ahí ---
+	var bs = boss.blanco_sonico
+	var hp_s: int = boss.health
+	bs.golpe_proyectil = true
+	bs.take_damage(15, 120.0, 1)
+	_check(boss.health == hp_s - 15, "El sónico le pega fuera de las ventanas (%d -> %d)" % [hp_s, boss.health])
+	bs.take_damage(15, 0.0, 1, false)
+	_check(boss.health == hp_s - 15 and bs.ignora_melee, "El cuerpo a cuerpo no cuenta en el blanco del sónico")
+	_check(bs.apuntable() and bs.is_in_group("blanco_sonico") and not boss.is_in_group("enemy"), "El teledirigido puede apuntarle (sin entrar al grupo enemy)")
+	_check(boss.sonido_aparicion != null and boss.sonido_rebote != null, "Hay grito de aparición y sonido de rebote")
 
 	# --- Llaves: la baja se cierra con el melee real y da energía; llegan 2 tandas ---
 	tanda = boss._ojos()
@@ -137,6 +149,7 @@ func _init() -> void:
 	_check(boss.ojos_raiz.get_child_count() == 0, "Los ojos cerrados se desvanecen")
 
 	# --- Nudo: el Humano no lo rompe, el Oso sí ---
+	_check(boss.marca_nudo.encendida and boss.marca_nudo.visible, "Nudo activo: late la marca de garra del Oso")
 	var nudo_pos: Vector2 = boss.nudo.global_position + Vector2(0, -100)
 	await _golpear(player, "heavy", nudo_pos, -1)
 	_check(boss.nudo.golpes == 0, "El golpe fuerte del Humano no daña el nudo")
@@ -160,11 +173,19 @@ func _init() -> void:
 	_check(boss.health < hp1, "El Oso le pega al ojo en la ventana (%d -> %d)" % [hp1, boss.health])
 	boss.hurtbox.take_damage(1000, 0.0, 1, false)
 	_check(boss.health == 396, "El daño se frena en el umbral de la F2 (vida %d)" % boss.health)
-	_check(boss._puntas.all(func(pt) -> bool: return pt.visible and not pt.rota and pt.dano == 0.0) and absf(boss.ojo.herida - 204.0 / 600.0) < 0.01, "Con 204 de daño la cabeza sigue entera y el ojo tiene venas (herida %.2f)" % boss.ojo.herida)
+	var p0 = boss._puntas[boss.orden_puntas[0]]
+	var p1 = boss._puntas[boss.orden_puntas[1]]
+	var p2 = boss._puntas[boss.orden_puntas[2]]
+	_check(p0.dano == 1.0 and p1.dano == 1.0 and p2.dano > 0.3 and p2.dano < 0.45 and boss._puntas.all(func(pt) -> bool: return pt.visible and not pt.rota) and absf(boss.ojo.herida - 204.0 / 600.0) < 0.01, "Con 204 de daño se agrietan 2⅓ puntas sin partirse y el ojo tiene venas")
+	_check(not boss.marca_nudo.encendida, "Roto el nudo, la marca se apaga")
 
 	# --- Interludio de la F2: la Estrella se hunde, 2 oleadas y lanzas del pozo (desde la 2) ---
 	await _esperar_estado(boss, "interludio", 900)
 	_check(boss._estado == "interludio" and not boss.cuerpo.visible, "Al entrar a la F2 la Estrella se hunde y desaparece")
+	var hp_i: int = boss.health
+	boss.blanco_sonico.golpe_proyectil = true
+	boss.blanco_sonico.take_damage(15, 120.0, 1)
+	_check(boss.health == hp_i and not boss.blanco_sonico.apuntable(), "Escondida (interludio) el sónico no le pega")
 	var hp_i: int = boss.health
 	boss.golpe_ojo(50, 1, false)
 	_check(boss.health == hp_i, "Escondida no recibe daño")
@@ -238,6 +259,15 @@ func _init() -> void:
 	var alturas_plat: Array = plats.map(func(pl) -> float: return -pl.position.y)
 	alturas_plat.sort()
 	_check(alturas_plat[0] <= 170.0 and alturas_plat[-1] - alturas_plat[0] <= 170.0, "El Humano llega a las plataformas (%s)" % str(alturas_plat))
+	# Abajo + salto: se baja de la plataforma (solo las del jefe están en el grupo).
+	var pl1: Node2D = plats[0]
+	player.global_position = pl1.global_position + Vector2(0, -150)
+	player.velocity = Vector2.ZERO
+	await _wait_frames(20)
+	var sobre: bool = player.is_on_floor() and player.global_position.y < pl1.global_position.y
+	var bajo: bool = sobre and player._bajar_plataforma()
+	await _wait_frames(25)
+	_check(pl1.is_in_group("plataforma_bajable") and bajo and player.global_position.y - 143.0 > pl1.global_position.y, "Abajo + salto atraviesa la plataforma hacia abajo (y %.0f vs %.0f)" % [player.global_position.y, pl1.global_position.y])
 	_check(boss.altura_ojo_aerea - 100.0 * boss.escala_jefe_f2 > alcance_lobo, "La ventana aérea queda fuera del Lobo desde la plataforma más alta (%.0f > %.0f)" % [boss.altura_ojo_aerea - 100.0 * boss.escala_jefe_f2, alcance_lobo])
 	var torres: Array = boss._ojos()
 	_check(torres.size() == 3, "Primer ciclo de la F2: tanda de 3 torretas (%d)" % torres.size())
@@ -421,6 +451,7 @@ func _init() -> void:
 	boss._clavada(g)
 	await _wait_frames(5)
 	_check(boss._estado == "caparazon" and boss.ojo.apertura < 0.05 and not boss.hurtbox.get_node("Collision").disabled, "Clavada con el ojo cerrado (caparazón)")
+	_check(boss.marca_ojo.encendida, "El ojo cerrado muestra la marca de garra del Oso")
 	boss.hurtbox.take_damage(30, 0.0, 1, false)
 	_check(boss._golpes_cap == 0, "El Humano no abre el ojo cerrado")
 	player.energia = 100.0
@@ -430,6 +461,7 @@ func _init() -> void:
 		boss.hurtbox.take_damage(30, 0.0, 1, false)
 	await _wait_frames(15)
 	_check(boss._estado == "clavada" and boss.ojo.apertura > 0.95 and not boss.hurtbox.get_node("Collision").disabled and absf(boss.cuerpo.position.y + boss.altura_agotada) < 2.0, "El Oso fuerza el ojo y queda abierto a tiro")
+	_check(not boss.marca_ojo.encendida, "Abierto el ojo, la marca se apaga")
 	var hp_d: int = boss.health
 	boss.hurtbox.take_damage(30, 0.0, 1, false)
 	boss.hurtbox.take_damage(30, 0.0, 1, false)

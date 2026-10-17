@@ -466,6 +466,7 @@ var _salto_aereo_limitado: bool = false
 @export var golpe_rapido_tras_transformar := 1.0 ## s tras transformarte en que el primer ataque conecta sin retardo (0 = off)
 var _golpe_rapido_t := 0.0
 @export var invuln_dano := 0.8                  ## s de invulnerabilidad tras recibir un golpe
+@export var tiempo_bajar_plataforma := 0.3      ## s que atraviesa una plataforma bajable (abajo + salto, solo en el jefe)
 @export var energia_min_transformar := 25.0      ## energía mínima para transformarse (el retorno a Humano no la pide)
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
@@ -726,7 +727,9 @@ func _physics_process(delta: float) -> void:
 
 	if not dialogo_bloquea and not _trepando and Input.is_action_just_pressed("jump"):
 		_cancelar_recuperacion()
-		if _salto_enredadera:
+		if Input.is_action_pressed("move_down") and _bajar_plataforma():
+			pass   # abajo + salto sobre una plataforma bajable (jefe): la atraviesa hacia abajo
+		elif _salto_enredadera:
 			pass
 		elif _coyote_time > 0.0 or data.can_jump():
 			data.try_jump(self)
@@ -1390,7 +1393,7 @@ func _barrer_embestida() -> void:
 		_embestida_t = 0.0
 		return
 	for b in attack_area.get_overlapping_bodies():
-		if b == self or _embestida_golpeados.has(b):
+		if b == self or _embestida_golpeados.has(b) or b.get("ignora_melee") == true:
 			continue
 		if b.has_method("registrar_golpe"):
 			_embestida_golpeados.append(b)
@@ -1420,8 +1423,8 @@ func _check_attack_hits() -> void:
 	var bodies := attack_area.get_overlapping_bodies()
 	var objetivos: Array[Node2D] = []
 	for b in bodies:
-		if b == self:
-			continue
+		if b == self or b.get("ignora_melee") == true:
+			continue   # (el blanco del sónico del jefe solo recibe proyectiles)
 		if b.has_method("registrar_golpe") or b.has_method("take_damage"):
 			objetivos.append(b as Node2D)
 			if objetivos.size() >= 2:
@@ -3305,7 +3308,34 @@ func _buscar_enemigo_homing(rango: float, melee := false) -> Node2D:
 		if d < mejor_dist:
 			mejor_dist = d
 			mejor = n
+	if mejor == null and not melee:
+		for n in get_tree().get_nodes_in_group("blanco_sonico"):   # el jefe final: el sónico le apunta siempre
+			if not is_instance_valid(n) or not n.apuntable():
+				continue
+			var d := global_position.distance_to(n.global_position)
+			if d < mejor_dist:
+				mejor_dist = d
+				mejor = n
 	return mejor
+
+
+## Abajo + salto parado sobre una plataforma del grupo `plataforma_bajable`: deja de chocarla un instante.
+func _bajar_plataforma() -> bool:
+	if not is_on_floor():
+		return false
+	for i in get_slide_collision_count():
+		var c := get_slide_collision(i)
+		var col := c.get_collider() as PhysicsBody2D
+		if col == null or not col.is_in_group("plataforma_bajable") or c.get_normal().y > -0.5:
+			continue
+		add_collision_exception_with(col)
+		global_position.y += 4.0
+		velocity.y = maxf(velocity.y, 150.0)
+		get_tree().create_timer(tiempo_bajar_plataforma, false).timeout.connect(func() -> void:
+			if is_instance_valid(col):
+				remove_collision_exception_with(col))
+		return true
+	return false
 
 
 func _try_interact() -> bool:
