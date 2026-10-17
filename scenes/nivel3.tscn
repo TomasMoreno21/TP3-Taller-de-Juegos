@@ -224,7 +224,7 @@ color_encendido = Color(0.35, 0.9, 0.85, 1)
 color_luz = Color(0.45, 0.95, 0.9, 1)
 
 [node name="CheckpointZ5a2" parent="." unique_id=1105307863 instance=ExtResource("check")]
-position = Vector2(8888, 5784)
+position = Vector2(8888, 5779)
 color_encendido = Color(0.35, 0.9, 0.85, 1)
 color_luz = Color(0.45, 0.95, 0.9, 1)
 
@@ -1035,9 +1035,44 @@ alto = 1800.0
 position = Vector2(16746, 2631)
 barrera_id = "n3_bosque2"
 
-[node name="EncounterMuroAla3" parent="." instance=ExtResource("enc")]
-position = Vector2(16746, 2658)
+[node name="EncounterMuroAla3" parent="." unique_id=1268237842 instance=ExtResource("enc")]
+position = Vector2(16756, 2536)
 requiere_muro_roto = NodePath("../MuroAla3")
+
+[node name="Enemy" parent="EncounterMuroAla3" unique_id=1125765021 instance=ExtResource("enemy")]
+position = Vector2(483, 246)
+spawn_telegrafiado = true
+
+[node name="Enemy2" parent="EncounterMuroAla3" unique_id=616026730 instance=ExtResource("enemy")]
+position = Vector2(842, 307)
+tipo = "arqueroq"
+spawn_telegrafiado = true
+
+[node name="Enemy3" parent="EncounterMuroAla3" unique_id=1158364305 instance=ExtResource("enemy")]
+position = Vector2(-328, 231)
+spawn_telegrafiado = true
+
+[node name="Enemy4" parent="EncounterMuroAla3" unique_id=688315583 instance=ExtResource("enemy")]
+position = Vector2(-467, 233)
+ola_asignada = 1
+spawn_telegrafiado = true
+
+[node name="Enemy5" parent="EncounterMuroAla3" unique_id=689422491 instance=ExtResource("enemy")]
+position = Vector2(931, 300)
+ola_asignada = 1
+spawn_telegrafiado = true
+
+[node name="Enemy6" parent="EncounterMuroAla3" unique_id=107788083 instance=ExtResource("enemy")]
+position = Vector2(-597, 249)
+tipo = "arquero"
+ola_asignada = 2
+spawn_telegrafiado = true
+flotante = true
+
+[node name="Enemy7" parent="EncounterMuroAla3" unique_id=1534202238 instance=ExtResource("enemy")]
+position = Vector2(688, 279)
+ola_asignada = 2
+spawn_telegrafiado = true
 
 [node name="Pinchos14" parent="." unique_id=1632744839 instance=ExtResource("pinchos")]
 z_index = -2
