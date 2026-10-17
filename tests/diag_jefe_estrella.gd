@@ -101,7 +101,7 @@ func _init() -> void:
 		_check(player.health == vida0 - 10, "El rayo hace 10 de daño (%d -> %d)" % [vida0, player.health])
 		player.god_mode = true
 		player.curar(100)
-	# Parry del rayo (Humano, de frente) → -30 al ojo central y la primera punta se agrieta.
+	# Parry del rayo (Humano, de frente) → -30 al ojo central; la cabeza no se agrieta, el ojo sí.
 	var rayo2 = await _esperar_rayo(400)
 	if rayo2 != null:
 		var hp_r: int = boss.health
@@ -114,8 +114,7 @@ func _init() -> void:
 		player.blocking = false
 		player.god_mode = true
 		_check(boss.health == hp_r - 30, "El parry devuelve el rayo al ojo central: -30 (%d -> %d)" % [hp_r, boss.health])
-		var primera = boss._puntas[boss.orden_puntas[0]]
-		_check(not primera.rota and absf(primera.dano - 30.0 / (600.0 / 7.0)) < 0.01, "La primera punta se agrieta (dano %.2f)" % primera.dano)
+		_check(boss._puntas.all(func(pt) -> bool: return pt.dano == 0.0 and not pt.rota) and boss.ojo.herida > 0.04, "La cabeza no se agrieta: el daño se ve en el ojo (herida %.2f)" % boss.ojo.herida)
 	rayo2 = null
 
 	# --- Llaves: la baja se cierra con el melee real y da energía; llegan 2 tandas ---
@@ -161,7 +160,7 @@ func _init() -> void:
 	_check(boss.health < hp1, "El Oso le pega al ojo en la ventana (%d -> %d)" % [hp1, boss.health])
 	boss.hurtbox.take_damage(1000, 0.0, 1, false)
 	_check(boss.health == 396, "El daño se frena en el umbral de la F2 (vida %d)" % boss.health)
-	_check(boss._puntas_rotas == 2 and boss._puntas_sanas().size() == 5, "Con 204 de daño caen 2 puntas (rotas %d)" % boss._puntas_rotas)
+	_check(boss._puntas.all(func(pt) -> bool: return pt.visible and not pt.rota and pt.dano == 0.0) and absf(boss.ojo.herida - 204.0 / 600.0) < 0.01, "Con 204 de daño la cabeza sigue entera y el ojo tiene venas (herida %.2f)" % boss.ojo.herida)
 
 	# --- Interludio de la F2: la Estrella se hunde, 2 oleadas y lanzas del pozo (desde la 2) ---
 	await _esperar_estado(boss, "interludio", 900)
@@ -337,7 +336,7 @@ func _init() -> void:
 	await _esperar_estado(boss, "torretas", 600)
 	await _wait_frames(3)
 	_check(boss.fase == 2, "Pasa a la fase 3 (fase=%d)" % boss.fase)
-	_check(boss._devotos.is_empty(), "Al entrar a la F3 absorbe a los devotos (no queda ninguno)")
+	_check(boss.absorber_traidor and boss.traidor_frames != null and boss._traidor == null, "Al entrar a la F3 absorbe al traidor (el cultista arrepentido del N3)")
 	_check(boss.plataformas_raiz.get_children().all(func(pl) -> bool: return not pl.visible and pl.get_node("Collision").disabled), "En la F3 se caen las plataformas")
 	_check(not boss.foso.activo and not boss.losa.get_node("Collision").disabled and boss.losa.visible, "En la F3 el pozo se cierra")
 	var d3 := get_nodes_in_group("destruible_f3")
@@ -347,6 +346,13 @@ func _init() -> void:
 	await _wait_frames(360)
 	_check(boss.ojos_raiz.get_child_count() == 0, "En la F3 no aparecen ojos")
 	_check(boss._sin_tallo and not boss.tallo.visible, "En la F3 se arrancó del tallo")
+	var clavo := false
+	for _i in 1500:
+		if boss._estado in ["clavada", "caparazon", "escudo"]:
+			clavo = true
+			break
+		await physics_frame
+	_check(clavo, "El combo de la F3 termina con la Estrella clavada en el piso")
 	boss._gen += 1   # corta el ciclo para probar cada ataque por separado
 	var g: int = boss._gen
 	boss._limpiar_lanzas()
@@ -369,7 +375,7 @@ func _init() -> void:
 	player._invuln_timer = 0.0
 	boss._orbes(g)
 	await _wait_frames(int(boss.orbes_aviso * 60.0) + 10)
-	_check(boss._orbes_nodos.size() >= 2 and boss._orbes_nodos.size() <= 4 and boss._orbes_nodos.all(func(o) -> bool: return o.texture != null), "Puntas en órbita: sus puntas rotas giran (%d)" % boss._orbes_nodos.size())
+	_check(boss._orbes_nodos.size() == boss.orbes_cantidad and boss._orbes_nodos.all(func(o) -> bool: return o.texture == null), "Rocas en órbita: arranca %d rocas de la cueva (no usa el arte)" % boss._orbes_nodos.size())
 	var vida_o: int = player.health
 	for _i in 20:
 		if boss._orbes_nodos.is_empty() or player.health < vida_o:
@@ -385,34 +391,38 @@ func _init() -> void:
 	player.global_position = Vector2(boss.global_position.x + 400.0, piso_y - 143.0)
 	player.velocity = Vector2.ZERO
 	var vida_c: int = player.health
-	boss._cuchillas_ataque(g)
+	boss._lluvia_estalactitas(g)
 	await _wait_frames(3)
-	_check(boss._cuchillas.size() == 3 and boss._cuchillas.all(func(c) -> bool: return c.texture != null), "Cuchillas: 3 puntas rotas apuntan al piso")
-	await _wait_frames(int((boss.aviso_cuchillas + boss.vuelo_cuchilla) * 60.0) + 20)
-	_check(player.health == vida_c - 15, "Una cuchilla pega 15 (%d -> %d)" % [vida_c, player.health])
+	_check(boss._estalactitas.size() == 3 and boss._estalactitas.all(func(c) -> bool: return c.texture == null), "Estalactitas: 3 tiemblan en el techo")
+	await _wait_frames(int((boss.aviso_estalactitas + boss.caida_estalactita) * 60.0) + 20)
+	_check(player.health == vida_c - 15, "Una estalactita pega 15 (%d -> %d)" % [vida_c, player.health])
 	player.god_mode = true
 	player.curar(100)
 	await _wait_frames(40)
-	# Agotada: caparazón (solo el Oso lo rompe) → ojo expuesto con tope de daño.
+	# Clavada: la picada final la clava; a veces con el ojo cerrado (solo el Oso lo abre) → ojo a tiro con tope.
 	boss.prob_escudo_nino = 0.0
+	boss.prob_caparazon = 1.0
 	player._transformar(0, true)
 	await _wait_frames(5)
-	boss._agotada(g)
-	await _wait_frames(50)
-	_check(boss._estado == "caparazon" and boss._caparazon_nodos.size() == 5, "Agotada: se cierra en un caparazón")
+	await boss._picada(g, true)
+	_check(absf(boss.cuerpo.position.y + boss.altura_agotada) < 2.0, "La picada final la deja clavada con el ojo a %.0f px" % -boss.cuerpo.position.y)
+	boss._clavada(g)
+	await _wait_frames(5)
+	_check(boss._estado == "caparazon" and boss.ojo.apertura < 0.05 and not boss.hurtbox.get_node("Collision").disabled, "Clavada con el ojo cerrado (caparazón)")
 	boss.hurtbox.take_damage(30, 0.0, 1, false)
-	_check(boss._golpes_cap == 0, "El Humano no rompe el caparazón")
+	_check(boss._golpes_cap == 0, "El Humano no abre el ojo cerrado")
 	player.energia = 100.0
 	player._transformar(2, true)
 	await _wait_frames(5)
 	for _i in 3:
 		boss.hurtbox.take_damage(30, 0.0, 1, false)
 	await _wait_frames(15)
-	_check(boss._estado == "agotada" and not boss.hurtbox.get_node("Collision").disabled and absf(boss.cuerpo.position.y + boss.altura_agotada) < 2.0, "El Oso rompe el caparazón y el ojo queda expuesto")
+	_check(boss._estado == "clavada" and boss.ojo.apertura > 0.95 and not boss.hurtbox.get_node("Collision").disabled and absf(boss.cuerpo.position.y + boss.altura_agotada) < 2.0, "El Oso fuerza el ojo y queda abierto a tiro")
 	var hp_d: int = boss.health
 	boss.hurtbox.take_damage(30, 0.0, 1, false)
 	boss.hurtbox.take_damage(30, 0.0, 1, false)
-	_check(boss.health == hp_d - boss.tope_dano_ventana and boss._estado != "agotada", "Tope de %d por ventana (%d -> %d)" % [boss.tope_dano_ventana, hp_d, boss.health])
+	_check(boss._tips_dados.has("clavada"), "Sale el tip de la clavada")
+	_check(boss.health == hp_d - boss.tope_dano_ventana and boss._estado != "clavada", "Tope de %d por ventana (%d -> %d)" % [boss.tope_dano_ventana, hp_d, boss.health])
 	# El niño de escudo: el padre no ataca hasta que lo suelta.
 	boss._escudo_nino(boss._gen)
 	await _wait_frames(3)
@@ -424,7 +434,7 @@ func _init() -> void:
 	encounter.reiniciar()
 	await _wait_frames(5)
 	_check(boss.health == 600 and boss.fase == 0 and not boss._activo, "Al reiniciar la arena la Estrella vuelve a cero")
-	_check(boss._puntas_rotas == 0 and boss._puntas.all(func(pt) -> bool: return pt.visible and not pt.rota and pt.dano == 0.0), "Al reiniciar vuelven las 8 puntas")
+	_check(boss.ojo.herida == 0.0 and boss._puntas.all(func(pt) -> bool: return pt.visible and not pt.rota and pt.dano == 0.0), "Al reiniciar el ojo sana y la cabeza sigue entera")
 	_check(boss._ojos().is_empty(), "Al reiniciar no quedan ojos")
 	_check(boss._invocados.is_empty() and boss.cuerpo.visible, "Al reiniciar no quedan enemigos invocados y la Estrella se ve (sin repetir la aparición)")
 	_check(absf(boss.cuerpo.position.x) < 0.1 and boss._orbes_nodos.is_empty(), "Al reiniciar vuelve el cuerpo al centro")
@@ -438,7 +448,7 @@ func _init() -> void:
 	_check(absf(scene.get_node("Camara")._escala_arena - 1.0) < 0.01, "Al reiniciar la cámara vuelve al zoom normal")
 	player._transformar(0, true)
 
-	# --- Muerte: la última punta cae y emite died ---
+	# --- Muerte: emite died y la cabeza queda entera ---
 	boss.died.connect(func() -> void: _murio = true)
 	encounter.empezar()
 	await _esperar_estado(boss, "llaves", 400)
@@ -455,7 +465,7 @@ func _init() -> void:
 	boss.hurtbox.take_damage(100, 0.0, 1, false)
 	await _wait_frames(2)
 	_check(_murio and boss.health == 0, "En la fase 3 el golpe final la mata y emite died")
-	_check(boss._puntas.all(func(pt) -> bool: return pt.rota), "Al morir caen todas las puntas")
+	_check(boss._puntas.all(func(pt) -> bool: return pt.visible and not pt.rota), "Al morir la cabeza queda entera")
 	_fin()
 
 

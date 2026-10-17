@@ -86,9 +86,35 @@ extends Node2D
 		color_nino = v
 		queue_redraw()
 
-var mirada := Vector2.ZERO   # la mueve el jefe (hacia el jugador)
-var nino_escudo := 0.0       # 0..1: el cultista aprieta al niño contra el iris (escudo); lo agranda y lo ilumina
 @export var color_escudo := Color(0.55, 0.85, 1.0)
+@export_group("Herida (la vida del jefe se lee en el ojo)")
+@export_range(0.0, 1.0, 0.01) var herida := 0.0:   ## 0 = sano, 1 = casi muerto: venas rojas en el blanco
+	set(v):
+		herida = v
+		queue_redraw()
+@export var venas_max := 10
+@export var color_venas := Color(0.72, 0.06, 0.1, 0.85)
+@export var grosor_venas := 4.0
+@export var venas_semilla := 7
+@export_group("")
+
+var mirada := Vector2.ZERO   # la mueve el jefe (hacia el jugador)
+var nino_escudo := 0.0:      # 0..1: el cultista aprieta al niño contra el iris (escudo); lo agranda y lo ilumina
+	set(v):
+		nino_escudo = v
+		queue_redraw()
+var _pulso := 0.0:           # 1 al recibir un golpe: la pupila se encoge y vuelve
+	set(v):
+		_pulso = v
+		queue_redraw()
+
+
+## Golpe recibido: la pupila se encoge un instante.
+func golpe() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	_pulso = 1.0
+	create_tween().tween_property(self, "_pulso", 0.0, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 
 func _draw() -> void:
@@ -107,11 +133,12 @@ func _draw() -> void:
 	if apertura > 0.02:
 		var hh := h * apertura
 		draw_colored_polygon(_almendra(w * (0.6 + 0.4 * apertura), hh), color_esclera)
-		var r_iris := minf(radio * 0.55, hh * 0.95)
+		_dibujar_venas(Vector2.ZERO, w * 0.85, h * 0.8, apertura)
+		var r_iris := minf(radio * 0.55, hh * 0.95) * (1.0 - 0.15 * _pulso)
 		var c := mirada * apertura
 		draw_circle(c, r_iris, color_iris)
 		draw_circle(c, r_iris * 0.55, Color(0.03, 0.03, 0.08))
-		if mostrar_nino and apertura > 0.4:
+		if (mostrar_nino and apertura > 0.4) or nino_escudo > 0.0:
 			if nino_escudo > 0.0:
 				draw_circle(c, r_iris * (0.9 + 0.5 * nino_escudo), Color(color_escudo.r, color_escudo.g, color_escudo.b, 0.35 * nino_escudo))
 			_dibujar_nino(c, r_iris * (0.5 + 0.9 * nino_escudo))
@@ -130,13 +157,18 @@ func _draw() -> void:
 func _dibujar_arte() -> void:
 	var ah := clampf(apertura, 0.0, 1.0)
 	_dibujar_recortado(textura_abierta, abierta_offset, abierta_escala * escala, ah)
+	if ah > 0.02 and herida > 0.0:
+		var sz := textura_abierta.get_size() * abierta_escala * escala
+		_dibujar_venas(abierta_offset, sz.x * 0.4, sz.y * 0.3, ah)
 	if textura_iris != null and ah > 0.02:
 		var centro := iris_offset + mirada * ah
-		_dibujar_recortado(textura_iris, centro, iris_escala * escala, ah)
-		if mostrar_nino and ah > 0.4:
+		_dibujar_recortado(textura_iris, centro, iris_escala * escala * (1.0 - 0.15 * _pulso), ah)
+		if (mostrar_nino and ah > 0.4) or nino_escudo > 0.0:
 			var tsz := textura_iris.get_size() * iris_escala * escala
 			var r := minf(tsz.x, tsz.y) * 0.25
-			_dibujar_nino(centro, r)
+			if nino_escudo > 0.0:
+				draw_circle(centro, r * (1.2 + 0.6 * nino_escudo), Color(color_escudo.r, color_escudo.g, color_escudo.b, 0.4 * nino_escudo))
+			_dibujar_nino(centro, r * (1.0 + 0.9 * nino_escudo))
 	if textura_frente != null:
 		_dibujar_recortado(textura_frente, frente_offset, frente_escala * escala, ah)
 
@@ -155,6 +187,29 @@ func _dibujar_recortado(tex: Texture2D, offset: Vector2, esc: Vector2, a: float)
 	var dest := Rect2(Vector2(full.position.x, full.position.y + (full.size.y - dest_h) * 0.5),
 			Vector2(sz.x * esc.x, dest_h))
 	draw_texture_rect_region(tex, dest, region)
+
+
+## Venas rojas desde el borde del blanco hacia el iris: más, más largas y más intensas con `herida`.
+## Se recortan a la franja visible del párpado (`a` = apertura).
+func _dibujar_venas(c: Vector2, rx: float, ry: float, a: float) -> void:
+	var n := ceili(herida * float(venas_max))
+	if n <= 0:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = venas_semilla
+	var lim_y := ry * clampf(a, 0.0, 1.0)
+	var col := Color(color_venas.r, color_venas.g, color_venas.b, color_venas.a * (0.5 + 0.5 * herida))
+	for i in n:
+		var lado := -1.0 if i % 2 == 0 else 1.0
+		var ang := rng.randf_range(-0.7, 0.7) + (PI if lado < 0.0 else 0.0)
+		var p := c + Vector2(cos(ang) * rx, sin(ang) * ry * 0.8)
+		var hacia := (c - p).normalized()
+		var largo := rx * rng.randf_range(0.25, 0.45) * (0.5 + 0.5 * herida)
+		var pts := PackedVector2Array([Vector2(p.x, clampf(p.y, c.y - lim_y, c.y + lim_y))])
+		for k in 3:
+			p += hacia.rotated(rng.randf_range(-0.6, 0.6)) * largo / 3.0
+			pts.append(Vector2(p.x, clampf(p.y, c.y - lim_y, c.y + lim_y)))
+		draw_polyline(pts, col, grosor_venas * (0.7 + 0.3 * herida), true)
 
 
 ## Silueta del niño encogido dentro de la pupila (cabeza + cuerpo).
