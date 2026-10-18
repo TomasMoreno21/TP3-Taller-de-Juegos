@@ -622,7 +622,8 @@
 		"tipo": "tip",
 		"hablante": "Amuleto",
 		"lineas": [
-			"¿Te trabás acá? Cada forma tiene su truco: el Lobo rompe y trepa, el Murciélago vuela. Transformate con {transform}."
+			"¿Te trabás acá? Cada forma tiene su truco: el Lobo rompe y trepa, el Murciélago vuela.",
+			"Transformate directo: {forma_derecha} Lobo, {forma_izquierda} Oso, {forma_arriba} Murciélago, {forma_abajo} Humano."
 		]
 	},
 	"tip_energia": {

@@ -29,6 +29,10 @@ var _espera := 1.0
 var _charcos: Array = []
 
 
+func _ready() -> void:
+	add_to_group("goteo_techo")
+
+
 func _process(delta: float) -> void:
 	if not activo:
 		return
@@ -59,7 +63,13 @@ func _nueva_gota() -> void:
 	var techo := espacio.intersect_ray(q)
 	if techo.is_empty():
 		return
-	var punto: Vector2 = techo.position + Vector2(0, 3)
+	soltar_desde(techo.position + Vector2(0, 3))
+
+
+## Suelta una gota que cuelga de `punto` y cae hasta el piso (si no hay piso a la vista, no pasa nada).
+## La llaman las estalactitas con `gotea` (decorativo.gd).
+func soltar_desde(punto: Vector2) -> void:
+	var espacio := get_world_2d().direct_space_state
 	var q2 := PhysicsRayQueryParameters2D.create(punto, punto + Vector2(0, caida_max))
 	q2.collision_mask = mascara
 	var piso := espacio.intersect_ray(q2)

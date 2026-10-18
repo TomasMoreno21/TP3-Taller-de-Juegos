@@ -750,8 +750,8 @@ func _update_animacion() -> void:
 		return
 	if _attack_anim_timer > 0.0:
 		nombre = _attack_anim
-	elif not is_on_floor() and not flotante:
-		nombre = "jump"
+	elif not is_on_floor():
+		nombre = "idle"   # en el aire (suspendido/lanzado) usa idle, no "jump"
 	elif absf(velocity.x) > 10.0:
 		nombre = "run"
 	if animated.animation != nombre:

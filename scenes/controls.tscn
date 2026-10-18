@@ -121,10 +121,12 @@ text = "[color=#e6554f][b]TECLADO[/b][/color]
 [color=#b8b4a6]Parry (Humano):[/color]  Shift justo al recibir el golpe
 [color=#b8b4a6]Aleteo (Murciélago):[/color]  Espacio en el aire
 [color=#b8b4a6]Picada (Murciélago):[/color]  S en el aire
+[color=#e6554f][b]Transformar directo (1-4):[/b][/color]  [b]1 Humano · 2 Lobo · 3 Oso · 4 Murciélago[/b]
 [color=#b8b4a6]Elegir forma (anterior / siguiente):[/color]  Q / E
-[color=#b8b4a6]Forma anterior:[/color]  R
 [color=#b8b4a6]Transformar / volver a Humano:[/color]  T
-[color=#b8b4a6]Transformar directo:[/color]  1 Humano · 2 Lobo · 3 Oso · 4 Murciélago
+[color=#b8b4a6]Cámara:[/color]  Flechas
+[color=#b8b4a6]Adelantar diálogo:[/color]  Enter
+[color=#b8b4a6]Omitir cinemática / intro:[/color]  X (en la intro, mantener)
 [color=#b8b4a6]Pausa:[/color]  Esc"
 
 [node name="Mando" type="RichTextLabel" parent="Panel/Margin/VBox/Columns"]
@@ -146,10 +148,12 @@ text = "[color=#e6554f][b]MANDO[/b][/color]
 [color=#b8b4a6]Parry (Humano):[/color]  LB justo al recibir el golpe
 [color=#b8b4a6]Aleteo (Murciélago):[/color]  A en el aire
 [color=#b8b4a6]Picada (Murciélago):[/color]  Stick abajo en el aire
-[color=#b8b4a6]Elegir forma (anterior):[/color]  Select
-[color=#b8b4a6]Forma anterior / siguiente:[/color]  LT / RT
-[color=#b8b4a6]Transformar:[/color]  RB
-[color=#b8b4a6]Transformar directo:[/color]  Cruz: ← Oso · → Lobo · ↑ Murciélago · ↓ Humano
+[color=#e6554f][b]Transformar directo (Cruceta):[/b][/color]  [b]← Oso · → Lobo · ↑ Murciélago · ↓ Humano[/b]
+[color=#b8b4a6]Elegir forma (anterior / siguiente):[/color]  LT o Select / RT
+[color=#b8b4a6]Transformar / volver a Humano:[/color]  RB
+[color=#b8b4a6]Cámara:[/color]  Stick derecho
+[color=#b8b4a6]Adelantar diálogo:[/color]  L3 (clic del stick izquierdo)
+[color=#b8b4a6]Omitir cinemática / intro:[/color]  X (en la intro, mantener)
 [color=#b8b4a6]Pausa:[/color]  Start"
 
 [node name="Volver" type="Button" parent="Panel/Margin/VBox"]
@@ -170,5 +174,5 @@ size_flags_horizontal = 4
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.68, 0.62, 1)
 theme_override_font_sizes/font_size = 24
-text = "Esc / Volver para cerrar"
+text = "Esc / Start / Volver para cerrar"
 horizontal_alignment = 1

@@ -5,11 +5,11 @@ extends Node2D
 ## StaticBody2D con CollisionShape2D rectangular y toma su rectángulo.
 ## Colores planos, sin colisión; todo editable en el Inspector.
 
-@export var color_pasto := Color(0.20, 0.42, 0.20):
+@export var color_pasto := Color(0.14, 0.19, 0.15):
 	set(v):
 		color_pasto = v
 		queue_redraw()
-@export var color_veta := Color(0.42, 0.62, 0.30):
+@export var color_veta := Color(0.27, 0.32, 0.26):
 	set(v):
 		color_veta = v
 		queue_redraw()
@@ -42,7 +42,7 @@ extends Node2D
 	set(v):
 		color_grieta = v
 		queue_redraw()
-@export var color_mota := Color(0.45, 0.62, 0.32, 0.30):
+@export var color_mota := Color(0.30, 0.36, 0.28, 0.30):
 	set(v):
 		color_mota = v
 		queue_redraw()

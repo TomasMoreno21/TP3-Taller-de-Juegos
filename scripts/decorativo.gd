@@ -87,6 +87,10 @@ const LUZ_RADIAL := preload("res://resources/luz_radial.tres")
 ## Arbustos y pastos se apartan al pasar el jugador y se sacuden con golpes fuertes cercanos.
 @export var distancia_animacion := Vector2(2600, 1800)   ## más lejos que esto del centro de la cámara (px) no se anima: viento, llamas ni reacción
 @export var reactivo := true
+@export_group("Goteo (solo estalactitas)")
+@export var gotea := false               ## de tanto en tanto suelta una gota desde la punta (necesita un GoteoTecho en el nivel)
+@export var goteo_min := 6.0             ## s entre gota y gota (se sortea entre min y max)
+@export var goteo_max := 18.0
 @export var reaccion_angulo := 0.28      # rad máx. que se dobla al pasar el jugador
 @export var reaccion_margen := 50.0      # px extra de alcance más allá del ancho de la silueta
 @export var reaccion_rigidez := 55.0     # vuelta a la posición (más alto = más rápido)
@@ -105,6 +109,7 @@ var _latido: Node
 var _rx := 0.0                # ángulo de reacción (resorte)
 var _rv := 0.0
 var _jugador: Node2D
+var _espera_gota := 0.0
 
 
 func _ready() -> void:
@@ -112,6 +117,23 @@ func _ready() -> void:
 	_rehacer()
 	if reactivo and not Engine.is_editor_hint() and tipo in [Tipo.ARBUSTO, Tipo.PASTO, Tipo.PASTO_ALTO]:
 		add_to_group("reactivo")
+	_espera_gota = randf_range(0.0, goteo_max)
+
+
+func _goteo(delta: float) -> void:
+	_espera_gota -= delta
+	if _espera_gota > 0.0:
+		return
+	_espera_gota = randf_range(goteo_min, goteo_max)
+	var cam := get_viewport().get_camera_2d()
+	var g := get_tree().get_first_node_in_group("goteo_techo")
+	if cam == null or g == null or cam.get_screen_center_position().distance_to(global_position) > 1300.0:
+		return
+	# Misma geometría que la silueta: la punta cuelga a (jx, h) en unidades de silueta.
+	var v := variante - 1
+	var h := 40.0 + float(v % 5) * 12.0
+	var jx := (12.0 + float(v % 3) * 3.0) * 0.1 * float((v % 3) - 1)
+	g.soltar_desde(global_position + Vector2(jx * (-1.0 if flip_h else 1.0), h) * escala)
 
 
 ## Golpe fuerte en `pos` (lo llama Ambiente): la mata se inclina lejos del origen del golpe.
@@ -150,6 +172,8 @@ func _reaccionar(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
+	if gotea and tipo == Tipo.ESTALACTITA and not Engine.is_editor_hint():
+		_goteo(delta)
 	if Engine.is_editor_hint():
 		if _editor_sync:
 			var s := scale

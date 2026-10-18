@@ -205,6 +205,6 @@ text = "VOLVER"
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.68, 0.62, 1)
 theme_override_font_sizes/font_size = 20
-text = "← → ajustar · Esc volver"
+text = "← → ajustar · Esc / Start volver"
 horizontal_alignment = 1
 
