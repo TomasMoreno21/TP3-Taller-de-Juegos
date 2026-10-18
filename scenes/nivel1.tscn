@@ -619,7 +619,7 @@ ancho = 60.0
 alto = 1200.0
 
 [node name="Enredadera3" parent="." unique_id=1758860922 instance=ExtResource("44_liana")]
-position = Vector2(4193, -789)
+position = Vector2(4163, -24)
 ancho = 60.0
 alto = 2000.0
 
