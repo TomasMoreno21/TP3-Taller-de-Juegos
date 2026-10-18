@@ -37,7 +37,9 @@ enum Fase { UNO, DOS, TRES }
 @export var distancia_orbe := 520.0         ## px del centro (del lado del jugador) donde aparece el orbe
 @export var mostrar_barra_hud := false      ## la vida se lee en el cuerpo (grietas finas + venas del ojo), no en el HUD
 @export var orden_puntas: Array[int] = [5, 0, 3, 1, 2, 6, 4]   ## en qué orden se agrietan las puntas (nunca se rompen)
-@export var mult_dano_sonico := 1.0         ## el sónico del Murciélago le pega siempre: multiplica su daño
+@export var color_grietas := Color(0.2, 0.14, 0.24)   ## grietas finas sobre el dibujo (oscuras: el arte es claro)
+@export var grosor_grietas := 5.0
+@export var mult_dano_sonico := 1.0         ## en la F3 el sónico del Murciélago le pega siempre: multiplica su daño
 @export var sonido_rebote: AudioStream = preload("res://assets/audio/sfx/gen/rebote_coraza.wav")   ## golpe al ojo cerrado sin la fuerza del Oso
 @export_range(0.0, 1.0, 0.01) var tinte_fase := 0.0   ## cuánto tiñe el color de la F2/F3 al dibujo (0 = sin tinte, conserva el color original; la F1 nunca se tiñe)
 @export var drenaje_energia_jefe := 0.35   ## multiplicador del gasto de energía en la pelea ("el amuleto arde")
@@ -305,6 +307,8 @@ func _ready() -> void:
 	for n in estrella.get_children():
 		if n.has_method("romper"):
 			_puntas.append(n)
+			n.color_grieta = color_grietas
+			n.grosor_grieta = grosor_grietas
 	_pintar(color_fase1)
 	nudo.roto.connect(_on_nudo_roto)
 	if nudo.has_signal("rebotado"):
@@ -381,6 +385,9 @@ func activar() -> void:
 		return
 	_invocado = true
 	_activo = true
+	var pj := _obtener_player()
+	if pj is PhysicsBody2D and blanco_sonico != null:
+		(pj as PhysicsBody2D).add_collision_exception_with(blanco_sonico)   # el blanco del sónico no es una pared
 	salud_cambio.emit(health, vida_max)
 	fase_cambio.emit(fase)
 	_bucle()
@@ -821,11 +828,17 @@ func _marcas() -> void:
 		marca_nudo.encendida = _activo and nudo.activo and not nudo.esta_roto()
 	if marca_ojo != null:
 		marca_ojo.encendida = _activo and _estado == "caparazon"
+	if blanco_sonico != null:
+		var cs := blanco_sonico.get_node_or_null("Collision") as CollisionShape2D
+		var on := _activo and fase == Fase.TRES
+		if cs != null and cs.disabled == on:
+			cs.set_deferred("disabled", not on)
 
 
-## El sónico del Murciélago le pega siempre (no solo en las ventanas), salvo cuando no está en juego.
+## F3: el sónico del Murciélago le pega siempre (no solo en las ventanas), salvo cuando no está en juego.
+## En la F1 y la F2 el blanco está apagado: los disparos cuentan solo en las ventanas (como siempre).
 func sonico_vale() -> bool:
-	if _muerto or not _activo or not cuerpo.visible:
+	if _muerto or not _activo or not cuerpo.visible or fase != Fase.TRES:
 		return false
 	return not (_estado in ["inactivo", "aparicion", "transicion", "interludio", "absorcion", "escudo", "caparazon"])
 

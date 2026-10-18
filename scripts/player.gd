@@ -466,7 +466,7 @@ var _salto_aereo_limitado: bool = false
 @export var golpe_rapido_tras_transformar := 1.0 ## s tras transformarte en que el primer ataque conecta sin retardo (0 = off)
 var _golpe_rapido_t := 0.0
 @export var invuln_dano := 0.8                  ## s de invulnerabilidad tras recibir un golpe
-@export var tiempo_bajar_plataforma := 0.3      ## s que atraviesa una plataforma bajable (abajo + salto, solo en el jefe)
+@export var tiempo_bajar_plataforma := 0.3      ## s que atraviesa una plataforma bajable (abajo, solo en el jefe)
 @export var energia_min_transformar := 25.0      ## energía mínima para transformarse (el retorno a Humano no la pide)
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
@@ -727,9 +727,7 @@ func _physics_process(delta: float) -> void:
 
 	if not dialogo_bloquea and not _trepando and Input.is_action_just_pressed("jump"):
 		_cancelar_recuperacion()
-		if Input.is_action_pressed("move_down") and _bajar_plataforma():
-			pass   # abajo + salto sobre una plataforma bajable (jefe): la atraviesa hacia abajo
-		elif _salto_enredadera:
+		if _salto_enredadera:
 			pass
 		elif _coyote_time > 0.0 or data.can_jump():
 			data.try_jump(self)
@@ -737,6 +735,9 @@ func _physics_process(delta: float) -> void:
 			_aletear(data)
 		else:
 			_jump_buffer = data.jump_buffer_time
+	# Abajo parado sobre una plataforma bajable (solo las del jefe): la atraviesa hacia abajo.
+	if is_on_floor() and not dialogo_bloquea and not _trepando and Input.is_action_just_pressed("move_down"):
+		_bajar_plataforma()
 	if current_form == Form.MURCIELAGO and not is_on_floor() and not dialogo_bloquea and not _trepando \
 			and Input.is_action_just_pressed("move_down") and not _picada:
 		_picada = true
@@ -3319,7 +3320,7 @@ func _buscar_enemigo_homing(rango: float, melee := false) -> Node2D:
 	return mejor
 
 
-## Abajo + salto parado sobre una plataforma del grupo `plataforma_bajable`: deja de chocarla un instante.
+## Abajo parado sobre una plataforma del grupo `plataforma_bajable`: deja de chocarla un instante.
 func _bajar_plataforma() -> bool:
 	if not is_on_floor():
 		return false

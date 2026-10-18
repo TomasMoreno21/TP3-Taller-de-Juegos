@@ -161,6 +161,7 @@ script = ExtResource("24_blanco")
 
 [node name="Collision" type="CollisionShape2D" parent="Cuerpo/BlancoSonico"]
 shape = SubResource("CircleShape2D_blanco")
+disabled = true
 
 [node name="FondoFoso" type="StaticBody2D" parent="." unique_id=723950658]
 
