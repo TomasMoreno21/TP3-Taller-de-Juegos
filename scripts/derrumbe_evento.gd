@@ -161,6 +161,7 @@ func _ready() -> void:
 ## El jugador murió y reaparece en un checkpoint: el derrumbe se rearma y vuelve a arrancar al cruzar el disparador.
 func al_reaparecer() -> void:
 	_disparado = false
+	_terminado = false   # si ya había terminado, al volver a cruzar el disparador arranca de nuevo (sin cinemática)
 	_y_arranque = INF
 	_activo = false
 	_t_amb = randf_range(ambiente_pausa_min, ambiente_pausa_max)

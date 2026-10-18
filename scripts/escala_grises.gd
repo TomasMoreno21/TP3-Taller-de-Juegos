@@ -16,9 +16,8 @@ extends Node
 @export var escenas: PackedStringArray = [
 	"res://scenes/pinchos.tscn",
 	"res://scenes/plataforma_fragil.tscn", "res://scenes/plataforma_fragil_grande.tscn",
-	"res://scenes/enredadera.tscn", "res://scenes/liana_trepable.tscn",
 	"res://scenes/losa_peso.tscn", "res://scenes/muro_lobo.tscn", "res://scenes/muro_piedra.tscn",
-	"res://scenes/grieta_lobo.tscn", "res://scenes/barrera_bosque.tscn", "res://scenes/cristal.tscn",
+	"res://scenes/grieta_lobo.tscn", "res://scenes/cristal.tscn",
 	"res://scenes/tronco.tscn", "res://scenes/santuario.tscn",
 ]
 

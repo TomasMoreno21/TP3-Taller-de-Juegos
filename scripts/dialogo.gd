@@ -736,9 +736,12 @@ func _input(event: InputEvent) -> void:
 		_usa_joypad = true
 	elif event is InputEventKey or event is InputEventMouseButton:
 		_usa_joypad = false
-	# Enter (solo teclado) adelanta el globo; el mando no, para no chocar con salto/ataque.
-	if event is InputEventKey and (event as InputEventKey).pressed and not (event as InputEventKey).echo \
-			and (event as InputEventKey).keycode == KEY_ENTER and _fase != Fase.LIBRE and not get_tree().paused:
+	# Enter (teclado) o L3 (mando, botón libre: A/X ya saltan/atacan) adelantan el globo.
+	var adelantar: bool = (event is InputEventKey and (event as InputEventKey).pressed and not (event as InputEventKey).echo \
+			and (event as InputEventKey).keycode == KEY_ENTER) \
+			or (event is InputEventJoypadButton and (event as InputEventJoypadButton).pressed \
+			and (event as InputEventJoypadButton).button_index == JOY_BUTTON_LEFT_STICK)
+	if adelantar and _fase != Fase.LIBRE and not get_tree().paused:
 		if _fase == Fase.ESCRIBIENDO:
 			_ratio = 1.0
 			globo.set_ratio(1.0)

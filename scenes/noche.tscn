@@ -16,6 +16,15 @@ fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(1, 0.5)
 
+[sub_resource type="Environment" id="Environment_glow"]
+background_mode = 3
+glow_enabled = true
+glow_intensity = 0.6
+glow_strength = 1.0
+glow_bloom = 0.1
+glow_blend_mode = 1
+glow_hdr_threshold = 0.85
+
 [node name="Noche" type="Node" unique_id=1637767478]
 script = ExtResource("1_noche")
 
@@ -38,3 +47,6 @@ grow_vertical = 2
 mouse_filter = 2
 texture = SubResource("GradTexture2D_vin")
 texture_filter = 2
+
+[node name="Resplandor" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_glow")

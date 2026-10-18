@@ -39,8 +39,8 @@ var _combo_base_pos: Vector2
 @export var vineta_alpha_max := 0.55   # el golpe del latido: tensión sin tapar la pantalla
 @export var vineta_fade_dur := 0.4
 @export var vineta_energia_color := Color(0.3, 0.8, 0.95)   ## borde de pantalla con energía baja (cian = energía)
-@export var vineta_energia_alpha_min := 0.1
-@export var vineta_energia_alpha_max := 0.5
+@export var vineta_energia_alpha_min := 0.04
+@export var vineta_energia_alpha_max := 0.18
 @export var vineta_energia_velocidad := 9.0   ## igual que el pulso del aro del dial
 @onready var boss_bar: MarginContainer = $BossBar
 @onready var boss_fill: ProgressBar = $BossBar/Panel/Col/Envoltura/Fill

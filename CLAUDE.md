@@ -9,6 +9,7 @@ Instrucciones de trabajo para el asistente en este proyecto.
 - **MODO CAVERMAN (activo, todas las sesiones):** habla telegráfico. Frases cortas, fragmentos, sin saludos, sin introducciones, sin resumen de lo que ya dijiste, sin adornos. Ej: "Bug en `boss.gd:210`. Arreglado. Autotest 0." Listas/tablas solo si ahorran palabras. Código, rutas, comandos, nombres y mensajes de commit: normales y exactos. Excepción: avisos de riesgo, acciones destructivas y preguntas de diseño van claras y completas (sin telegrafiar).
 - **Antes de implementar algo no trivial, preguntame** y ofrecé opciones concretas (recomendando una), salvo que yo te pida el cambio explícito. No me sorprendas con cambios grandes sin consultar.
 - **No hagas commits ni pushes sin que yo te lo pida.** Cuando corresponda, preguntame el mensaje.
+- **Todo commit lleva descripción (SIEMPRE):** además del título, el mensaje incluye un cuerpo breve (1-3 líneas) con qué se hizo/cambió. Nunca commits de una sola línea ni mensajes vacíos tipo "." o "hola".
 - Si te muestro un error o algo no anda, investigá la causa real (log, `--headless`, tests) antes de proponer una solución al azar. Explicame en 1 o 2 líneas qué pasaba y qué cambiaste.
 
 ## Reglas del asistente (unificadas del AGENTS.md de escritorio)

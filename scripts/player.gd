@@ -471,7 +471,7 @@ var _salto_aereo_limitado: bool = false
 var _golpe_rapido_t := 0.0
 @export var invuln_dano := 0.8                  ## s de invulnerabilidad tras recibir un golpe
 @export var tiempo_bajar_plataforma := 0.3      ## s que atraviesa una plataforma bajable (abajo, solo en el jefe)
-@export var energia_min_transformar := 25.0      ## energía mínima para transformarse (el retorno a Humano no la pide)
+@export var energia_min_transformar := 0.0     ## energía mínima para transformarse (el retorno a Humano no la pide)
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $Collision
@@ -625,7 +625,7 @@ func _physics_process(delta: float) -> void:
 	if current_form == Form.HUMAN and not _tips_vistos.has("bloqueo") and _en_combate():
 		_tip_una_vez("bloqueo", "tip_bloqueo")
 	var dialogo_bloquea := _dialogo_bloquea_input()
-	var quiere_bloquear := not dialogo_bloquea and current_form == Form.HUMAN and Input.is_action_pressed("block")   # solo el Humano bloquea y hace parry
+	var quiere_bloquear := not dialogo_bloquea and current_form == Form.HUMAN and not _attacking and Input.is_action_pressed("block")   # solo el Humano bloquea y hace parry
 	if not quiere_bloquear:
 		_bloqueo_agotado = false
 	_bloqueo_cd = maxf(_bloqueo_cd - delta, 0.0)
@@ -1026,7 +1026,7 @@ func _handle_attack(delta: float) -> void:
 			_lanzar_buffered(data, airborne)
 		return
 
-	if ataque_contenido:
+	if ataque_contenido or blocking:
 		return   # el padre se niega a golpear a su hijo
 
 	if Input.is_action_just_pressed("attack"):
