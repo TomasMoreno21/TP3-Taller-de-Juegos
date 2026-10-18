@@ -1257,6 +1257,8 @@ func enable_melee(size: Vector2, range: float, damage: int = -1, knockback: floa
 	# exactamente la recuperación -> se ve completa (no se corta al 1er frame).
 	if current_form == Form.LOBO and visual.sprite_frames.has_animation("lobo_attack"):
 		_iniciar_anim_ataque("lobo_attack", data.anim_frame_inicio(_current_attack_type, paso))
+	elif current_form == Form.OSO and visual.sprite_frames.has_animation("oso_attack"):
+		_iniciar_anim_ataque("oso_attack", data.anim_frame_inicio(_current_attack_type, paso))
 	_early_exit_umbral = rec * data.recovery_early_fraccion
 	_early_liberado = false
 	# ImÃ¡n suave al enemigo mÃ¡s cercano si estÃ¡s un poco lejos
@@ -2683,6 +2685,8 @@ func _update_animacion() -> void:
 		anim = "lobo_idle"
 	elif current_form == Form.LOBO and visual.sprite_frames.has_animation("lobo_run"):
 		anim = "lobo_run"
+	elif current_form == Form.OSO and _attacking and visual.sprite_frames.has_animation("oso_attack"):
+		anim = "oso_attack"
 	elif current_form == Form.OSO and quieto and visual.sprite_frames.has_animation("oso_idle"):
 		anim = "oso_idle"
 	elif current_form == Form.OSO and visual.sprite_frames.has_animation("oso_caminar"):

@@ -35,6 +35,12 @@ signal cerrado
 @export var volumen_db := -6.0
 @export var sonido_rebote: AudioStream = preload("res://assets/audio/sfx/gen/rebote_coraza.wav")
 @export var color_murcielago := Color(0.62, 0.45, 0.9)   ## aro de los ojos altos: el sónico del Murciélago los cierra
+@export_group("Arte (ojos)")
+@export var textura_fondo: Texture2D                  ## ojo1: blanco del ojo (atrás)
+@export var textura_pupila: Texture2D                 ## ojo2: pupila/iris oscuro (medio, sigue al jugador)
+@export var textura_frente: Texture2D                 ## ojo3: aro rojo (adelante)
+@export var escala_arte := 1.0                        ## multiplica todo el ojo: para agrandarlo/achicarlo
+@export_group("")
 
 var energia := 12.0          # la fija el jefe al abrirlo
 var abierto := false
@@ -197,7 +203,59 @@ func _poner_colision(on: bool) -> void:
 func _draw() -> void:
 	var w := radio * 1.35
 	var h := radio * 0.62 * maxf(_apertura, 0.06)
-	# Almendra del ojo.
+	if _hay_arte():
+		_dibujar_arte()
+	else:
+		_dibujar_respaldo(w, h)
+	# Aro de forma: el Oso lo rompe (acorazado) o el sónico del Murciélago lo cierra (alto).
+	if acorazado and abierto:
+		CirculoProteccion.dibujar(self, Vector2.ZERO, w * 1.08, color_coraza, "oso")
+	elif sonico_cierra and abierto:
+		CirculoProteccion.dibujar(self, Vector2.ZERO, w * 1.08, color_murcielago, "murcielago")
+
+
+func _hay_arte() -> bool:
+	return textura_fondo != null or textura_pupila != null or textura_frente != null
+
+
+## Ojo con arte: fondo blanco (ojo1) detrás, pupila oscura (ojo2) que sigue al jugador (`_mirada`)
+## y aro rojo (ojo3) delante. La pupila se enciende en rojo al avisar el rayo; `_apertura` recorta el ojo.
+func _dibujar_arte() -> void:
+	var base := textura_fondo if textura_fondo != null else (textura_frente if textura_frente != null else textura_pupila)
+	var esc := escala_arte * (radio * 2.7) / float(base.get_size().x)
+	var a := clampf(_apertura, 0.0, 1.0)
+	if textura_fondo != null:
+		_dibujar_textura(textura_fondo, Vector2.ZERO, esc, a)
+	if textura_pupila != null and a > 0.02:
+		var pe := 1.0 + 0.35 * (1.0 - _aviso_t / _aviso_dur) if _aviso_t > 0.0 else 1.0
+		_dibujar_textura(textura_pupila, _mirada, esc * pe, a)
+		if _aviso_t > 0.0:
+			# Aviso del rayo: la pupila (oscura) se enciende con un rojo por encima.
+			var r := esc * pe * minf(textura_pupila.get_size().x, textura_pupila.get_size().y) * 0.5
+			draw_circle(_mirada, r, color_aviso)
+			draw_circle(_mirada, r * 0.45, Color(1.0, 0.9, 0.8, 0.9))
+	if textura_frente != null:
+		_dibujar_textura(textura_frente, Vector2.ZERO, esc, a)
+
+
+## Dibuja `tex` centrada en `offset`, escalada por `esc`, mostrando la franja central de alto
+## `a` (0 = nada, 1 = entera): así el ojo "se abre y se cierra" al aparecer/salir.
+func _dibujar_textura(tex: Texture2D, offset: Vector2, esc: float, a: float) -> void:
+	var ah := clampf(a, 0.0, 1.0)
+	if ah <= 0.001:
+		return
+	var sz := tex.get_size()
+	var alto := sz.y * ah
+	var region := Rect2(Vector2(0.0, (sz.y - alto) * 0.5), Vector2(sz.x, alto))
+	var full := Rect2(offset - sz * esc * 0.5, sz * esc)
+	var dh := alto * esc
+	var dest := Rect2(Vector2(full.position.x, full.position.y + (full.size.y - dh) * 0.5),
+			Vector2(sz.x * esc, dh))
+	draw_texture_rect_region(tex, dest, region)
+
+
+## Respaldo: ojo dibujado con polígonos (si no hay arte asignado).
+func _dibujar_respaldo(w: float, h: float) -> void:
 	var almendra := PackedVector2Array()
 	for i in 24:
 		var a := TAU * float(i) / 24.0
@@ -215,10 +273,6 @@ func _draw() -> void:
 		draw_circle(_mirada, r_iris * 0.45, color_fondo)
 	almendra.append(almendra[0])
 	draw_polyline(almendra, color_contorno, 4.0, true)
-	if acorazado and abierto:
-		CirculoProteccion.dibujar(self, Vector2.ZERO, w * 1.08, color_coraza, "oso")   # este ojo es del Oso
-	elif sonico_cierra and abierto:
-		CirculoProteccion.dibujar(self, Vector2.ZERO, w * 1.08, color_murcielago, "murcielago")   # lo cierra el sónico
 	# Párpado: trazo cian que atraviesa el ojo (como en el boceto); cerrado tapa todo.
 	var y_parpado := -h * 0.55 if _apertura > 0.5 else 0.0
 	draw_line(Vector2(-w * 1.15, y_parpado - 6.0), Vector2(w * 1.15, y_parpado + 4.0), color_parpado, 5.0, true)

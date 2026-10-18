@@ -33,13 +33,13 @@ extends Area2D
 		color_contorno = v
 		if is_inside_tree():
 			_actualizar_visual()
-## Sprite de la liana. Se apila sin deformarse (mismo aspecto en todos los niveles); vacío = liana dibujada a mano.
-@export var textura: Texture2D = preload("res://Sprites/Elementos/liana2.png"):
+## Sprite de la liana. Una sola copia estirada para llenar el ancho y el alto de la liana (así toma
+## su misma forma en todos los niveles); vacío = liana dibujada a mano con polígonos.
+@export var textura: Texture2D = preload("res://Sprites/Elementos/liana.png"):
 	set(v):
 		textura = v
 		if is_inside_tree():
 			_actualizar_visual()
-@export_range(0.0, 0.5) var solape_segmentos := 0.06  ## cuánto se pisan los sprites apilados (fracción de su alto)
 @export var fase := 0.0:  ## desfase del serpenteo del tallo
 	set(v):
 		fase = v
@@ -136,8 +136,9 @@ func _actualizar_visual() -> void:
 		_agregar(hojas_root, PackedVector2Array([Vector2(xp - 5, yp - 20), Vector2(xp + 5, yp - 20), Vector2(xp, yp + 8)]), color_tallo.lightened(0.1))
 
 
-## Apila copias del sprite a lo largo de `alto` conservando su proporción: la escala sale del
-## alto de cada tramo (no del ancho de la colisión), así nunca se ve estirado ni aplastado.
+## Dibuja el sprite de la liana: UNA copia escalada por separado en X e Y para llenar exactamente
+## `ancho` × `alto`. Si la liana es más alta que la textura, se estira (no se repite), así todas
+## conservan la forma que tienen en el juego.
 func _actualizar_sprites() -> void:
 	var visual := get_node_or_null("Visual") as Node2D
 	if visual == null:
@@ -156,18 +157,12 @@ func _actualizar_sprites() -> void:
 	if textura == null:
 		return
 	var tam := textura.get_size()
-	var esc_ancho := ancho / maxf(tam.x, 1.0)
-	var n := maxi(1, roundi(alto / maxf(tam.y * esc_ancho, 1.0)))
-	var paso := alto / float(n)
-	var alto_seg := paso * (1.0 + solape_segmentos)
-	var esc := alto_seg / maxf(tam.y, 1.0)
-	for i in n:
-		var s := Sprite2D.new()
-		s.texture = textura
-		s.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-		s.scale = Vector2(esc, esc)
-		s.position = Vector2(0.0, -alto * 0.5 + paso * (float(i) + 0.5))
-		raiz.add_child(s)
+	var s := Sprite2D.new()
+	s.texture = textura
+	s.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	s.scale = Vector2(ancho / maxf(tam.x, 1.0), alto / maxf(tam.y, 1.0))
+	s.position = Vector2.ZERO
+	raiz.add_child(s)
 
 
 func _agregar(padre: Node2D, puntos: PackedVector2Array, color: Color) -> Polygon2D:

@@ -48,6 +48,12 @@
 [ext_resource type="Texture2D" uid="uid://bo2kxk5nhlqgr" path="res://Sprites/Jugador y Transformaciones/afk pj3.png" id="44_afk3"]
 [ext_resource type="Texture2D" uid="uid://3srm1i11vtgl" path="res://Sprites/Jugador y Transformaciones/afk pj4.png" id="45_afk4"]
 [ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/pj bloqueo.png" id="46_bloqueo"]
+[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/oso atq1.png" id="47_oso1"]
+[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/oso atq2.png" id="48_oso2"]
+[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/oso atq3.png" id="49_oso3"]
+[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/oso atq4.png" id="50_oso4"]
+[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/oso atq5.png" id="51_oso5"]
+[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/oso atq6.png" id="52_oso6"]
 
 [resource]
 animations = [{
@@ -304,4 +310,27 @@ animations = [{
 "loop": 0,
 "name": &"bloqueo",
 "speed": 1.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("47_oso1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("48_oso2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("49_oso3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("50_oso4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("51_oso5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("52_oso6")
+}],
+"loop": 0,
+"name": &"oso_attack",
+"speed": 14.0
 }]
