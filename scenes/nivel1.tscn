@@ -54,7 +54,7 @@
 [ext_resource type="Script" uid="uid://gndour84be4f" path="res://scripts/cadenas_plataforma.gd" id="cadenas_cueva"]
 [ext_resource type="Script" uid="uid://bb6nqidd7q3bx" path="res://scripts/claridad_cueva.gd" id="claridad_cueva"]
 [ext_resource type="Script" uid="uid://b7pe81u1rsu0r" path="res://scripts/escala_grises.gd" id="escala_grises"]
-[ext_resource type="Script" path="res://scripts/terreno_mundo.gd" id="tmundo1"]
+[ext_resource type="Shader" uid="uid://ctiil2mftftqe" path="res://resources/fade_base_arbusto.gdshader" id="fade_arb"]
 [ext_resource type="Script" uid="uid://busk1ol8cdtlo" path="res://scripts/goteo_techo.gd" id="goteo_cueva"]
 [ext_resource type="Texture2D" uid="uid://bxbde5qhpdic2" path="res://resources/luz_radial.tres" id="luz_cueva"]
 [ext_resource type="PackedScene" path="res://scenes/niebla_cueva.tscn" id="niebla_cueva"]
@@ -63,6 +63,7 @@
 [ext_resource type="Script" uid="uid://b3hesueuc6bsr" path="res://scripts/rayo_luz.gd" id="rayo_luz"]
 [ext_resource type="Script" uid="uid://cuy7f37ej2tqw" path="res://scripts/streaming_zonas.gd" id="streaming_zonas"]
 [ext_resource type="Script" uid="uid://b2knw64qxpag6" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
+[ext_resource type="Script" uid="uid://jt077f0nd47a" path="res://scripts/terreno_mundo.gd" id="tmundo1"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte"]
 shader = ExtResource("45_tinte")
@@ -96,6 +97,12 @@ shader_parameter/mundo_o = Vector2(0, 0)
 shader_parameter/mundo_x = Vector2(1920, 0)
 shader_parameter/mundo_y = Vector2(0, 1080)
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fade_arb"]
+shader = ExtResource("fade_arb")
+shader_parameter/alto_fade = 0.3
+shader_parameter/oscurecer = 0.8
+shader_parameter/color_piso = Color(0.03, 0.025, 0.02, 1)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
 size = Vector2(33001, 401)
 
@@ -104,12 +111,6 @@ size = Vector2(280, 36)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_torre"]
 size = Vector2(384, 562)
-
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_hgrc8"]
-blend_mode = 1
-
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_6wpew"]
-blend_mode = 1
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_j18m3"]
 blend_mode = 1
@@ -129,6 +130,12 @@ blend_mode = 1
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_p7nfm"]
 blend_mode = 1
 
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_xth0v"]
+blend_mode = 1
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_jqmcq"]
+blend_mode = 1
+
 [node name="Nivel1" type="Node2D" unique_id=1020284745]
 metadata/_edit_vertical_guides_ = [45606.0]
 
@@ -142,7 +149,7 @@ tile_map_data = PackedByteArray("AADwAff/AAABAAAAAADxAff/AAABAAAAAADyAff/AAABAAA
 
 [node name="VacioNegro" type="Polygon2D" parent="TileMap" unique_id=1867067344]
 color = Color(0.02, 0.018, 0.02, 1)
-polygon = PackedVector2Array(-3000, 990, 11000, 990, 11900, 990, 30500, 990, 31240, 990, -3000, 1110, 11000, 1110, 11900, 1110, 30500, 1110, 31240, 1110, -3000, 1260, 11000, 1260, 11900, 1260, 30500, 1260, 31240, 1260, -3000, 1400, 11000, 1400, 11900, 1400, 30500, 1400, 31240, 1400)
+polygon = PackedVector2Array(-3000, 990, 11000, 990, 11900, 990, 30500, 990, 31240, 990, -3000, 1050, 11000, 1050, 11900, 1050, 30500, 1050, 31240, 1050, -3000, 1260, 11000, 1260, 11900, 1260, 30500, 1260, 31240, 1260, -3000, 1400, 11000, 1400, 11900, 1400, 30500, 1400, 31240, 1400)
 vertex_colors = PackedColorArray(0.02, 0.018, 0.02, 0, 0.02, 0.018, 0.02, 0, 0.02, 0.018, 0.02, 0, 0.02, 0.018, 0.02, 0, 0.02, 0.018, 0.02, 0, 0.02, 0.018, 0.02, 1, 0.02, 0.018, 0.02, 1, 0.02, 0.018, 0.02, 1, 0.02, 0.018, 0.02, 1, 0.02, 0.018, 0.02, 0, 0.02, 0.018, 0.02, 1, 0.02, 0.018, 0.02, 1, 0.02, 0.018, 0.02, 1, 0.02, 0.018, 0.02, 1, 0.02, 0.018, 0.02, 0, 0.02, 0.018, 0.02, 1, 0.02, 0.018, 0.02, 1, 0.02, 0.018, 0.02, 0, 0.02, 0.018, 0.02, 0, 0.02, 0.018, 0.02, 0)
 polygons = [PackedInt32Array(0, 1, 6, 5), PackedInt32Array(1, 2, 7, 6), PackedInt32Array(2, 3, 8, 7), PackedInt32Array(3, 4, 9, 8), PackedInt32Array(5, 6, 11, 10), PackedInt32Array(6, 7, 12, 11), PackedInt32Array(7, 8, 13, 12), PackedInt32Array(8, 9, 14, 13), PackedInt32Array(10, 11, 16, 15), PackedInt32Array(11, 12, 17, 16), PackedInt32Array(12, 13, 18, 17), PackedInt32Array(13, 14, 19, 18)]
 
@@ -161,7 +168,7 @@ acento_volumen_db = -2.0
 script = ExtResource("rampas_suaves")
 
 [node name="Player" parent="." unique_id=1763988589 instance=ExtResource("1_player")]
-position = Vector2(31085, 795)
+position = Vector2(-717, 802)
 
 [node name="Camara" type="Camera2D" parent="." unique_id=1543614025]
 position = Vector2(20, 120)
@@ -387,13 +394,15 @@ texture = ExtResource("82_liana")
 
 [node name="DecoArbusto5" type="Sprite2D" parent="." unique_id=139880140]
 z_index = 2
-position = Vector2(-1317, 911.0001)
+material = SubResource("ShaderMaterial_fade_arb")
+position = Vector2(-1313, 984)
 scale = Vector2(2.074845, 2.1277893)
 texture = ExtResource("67_arb2")
 
 [node name="DecoArbusto3" type="Sprite2D" parent="." unique_id=1261994339]
 z_index = 2
-position = Vector2(-521, 854)
+material = SubResource("ShaderMaterial_fade_arb")
+position = Vector2(-518, 908)
 scale = Vector2(1.297487, 1.6411831)
 texture = ExtResource("67_arb2")
 offset = Vector2(-28.847717, 62.218567)
@@ -431,7 +440,7 @@ position = Vector2(43.638065, -77)
 scale = Vector2(1.0030642, 1.4941175)
 color = Color(0.17, 0.13, 0.1, 1)
 polygon = PackedVector2Array(-9346, 0, 23290, 0, 23290, 60, 23290, 170, 3350.859, 170, -9346, 170, -9346, 84.66295, -9346, 60)
-vertex_colors = PackedColorArray(0.17, 0.13, 0.1, 1, 0.17, 0.13, 0.1, 1, 0.1, 0.08, 0.07, 0.75, 0.05, 0.05, 0.05, 0, 0.05, 0.05, 0.05, 0, 0.1, 0.08, 0.07, 0.75)
+vertex_colors = PackedColorArray(0.6, 0.44, 0.32, 1, 0.6, 0.44, 0.32, 1, 0.06, 0.045, 0.035, 1, 0.03, 0.025, 0.02, 0, 0.03, 0.025, 0.02, 0, 0.03, 0.025, 0.02, 0, 0.1, 0.07, 0.055, 0.8, 0.06, 0.045, 0.035, 1)
 
 [node name="Musgo" type="Node2D" parent="Piso" unique_id=609170245]
 script = ExtResource("44_musgo")
@@ -2562,7 +2571,7 @@ z_index = -3
 
 [node name="Rayo1" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1525805174]
 modulate = Color(1, 1, 1, 0.8425031)
-material = SubResource("CanvasItemMaterial_hgrc8")
+material = SubResource("CanvasItemMaterial_j18m3")
 position = Vector2(15200, 4032)
 script = ExtResource("rayo_luz")
 alto = 1400.0
@@ -2574,7 +2583,7 @@ opacidad = 0.15
 
 [node name="Rayo2" type="Node2D" parent="EfectosCueva/Rayos" unique_id=781055913]
 modulate = Color(1, 1, 1, 0.75459313)
-material = SubResource("CanvasItemMaterial_6wpew")
+material = SubResource("CanvasItemMaterial_16gdd")
 position = Vector2(22300, 4640)
 script = ExtResource("rayo_luz")
 alto = 1100.0
@@ -2586,7 +2595,7 @@ semilla = 2
 
 [node name="Rayo3" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1436968058]
 modulate = Color(1, 1, 1, 0.6980605)
-material = SubResource("CanvasItemMaterial_j18m3")
+material = SubResource("CanvasItemMaterial_va0mb")
 position = Vector2(28000, 3936)
 script = ExtResource("rayo_luz")
 alto = 1100.0
@@ -2599,7 +2608,7 @@ semilla = 3
 
 [node name="Rayo4" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1382485448]
 modulate = Color(1, 1, 1, 0.71583587)
-material = SubResource("CanvasItemMaterial_16gdd")
+material = SubResource("CanvasItemMaterial_rg2jq")
 position = Vector2(20000, 1552)
 script = ExtResource("rayo_luz")
 alto = 1700.0
@@ -2612,7 +2621,7 @@ semilla = 4
 
 [node name="Rayo5" type="Node2D" parent="EfectosCueva/Rayos" unique_id=267750525]
 modulate = Color(1, 1, 1, 0.7963742)
-material = SubResource("CanvasItemMaterial_va0mb")
+material = SubResource("CanvasItemMaterial_y6jhi")
 position = Vector2(18874, 1680)
 script = ExtResource("rayo_luz")
 alto = 1500.0
@@ -2625,7 +2634,7 @@ semilla = 5
 
 [node name="Rayo6" type="Node2D" parent="EfectosCueva/Rayos" unique_id=626391221]
 modulate = Color(1, 1, 1, 0.8821198)
-material = SubResource("CanvasItemMaterial_rg2jq")
+material = SubResource("CanvasItemMaterial_p7nfm")
 position = Vector2(24000, 2352)
 script = ExtResource("rayo_luz")
 alto = 1000.0
@@ -2638,7 +2647,7 @@ semilla = 6
 
 [node name="Rayo7" type="Node2D" parent="EfectosCueva/Rayos" unique_id=493778764]
 modulate = Color(1, 1, 1, 0.9117133)
-material = SubResource("CanvasItemMaterial_y6jhi")
+material = SubResource("CanvasItemMaterial_xth0v")
 position = Vector2(26711, 1792)
 script = ExtResource("rayo_luz")
 alto = 800.0
@@ -2650,7 +2659,7 @@ semilla = 7
 
 [node name="Rayo8" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1329949578]
 modulate = Color(1, 1, 1, 0.8649885)
-material = SubResource("CanvasItemMaterial_p7nfm")
+material = SubResource("CanvasItemMaterial_jqmcq")
 position = Vector2(13696, 5060)
 script = ExtResource("rayo_luz")
 alto = 780.0
@@ -3043,13 +3052,15 @@ texture = ExtResource("82_liana")
 
 [node name="DecoArbusto7" type="Sprite2D" parent="." unique_id=1885876665]
 z_index = 2
-position = Vector2(9303, 910.00006)
+material = SubResource("ShaderMaterial_fade_arb")
+position = Vector2(9307, 983)
 scale = Vector2(2.074845, 2.1277893)
 texture = ExtResource("67_arb2")
 
 [node name="DecoArbusto8" type="Sprite2D" parent="." unique_id=1959894569]
 z_index = 2
-position = Vector2(14099.999, 918.00006)
+material = SubResource("ShaderMaterial_fade_arb")
+position = Vector2(14092.999, 983.00006)
 scale = Vector2(2.1987622, 2.06827)
 texture = ExtResource("67_arb2")
 
@@ -3254,25 +3265,29 @@ texture = ExtResource("82_liana")
 
 [node name="DecoArbusto14" type="Sprite2D" parent="." unique_id=1844257969]
 z_index = 2
-position = Vector2(22558.27, 966.2499)
+material = SubResource("ShaderMaterial_fade_arb")
+position = Vector2(22556.002, 1046)
 scale = Vector2(1.9537482, 2.2663937)
 texture = ExtResource("67_arb2")
 
 [node name="DecoArbusto15" type="Sprite2D" parent="." unique_id=508763646]
 z_index = 2
-position = Vector2(23020.334, 972.39417)
+material = SubResource("ShaderMaterial_fade_arb")
+position = Vector2(22927, 1045)
 scale = Vector2(2.074845, 2.1277893)
 texture = ExtResource("67_arb2")
 
 [node name="DecoArbusto16" type="Sprite2D" parent="." unique_id=58376282]
 z_index = 2
-position = Vector2(26134.672, 944)
+material = SubResource("ShaderMaterial_fade_arb")
+position = Vector2(26142.998, 1045)
 scale = Vector2(2.1987622, 2.06827)
 texture = ExtResource("67_arb2")
 
 [node name="DecoArbusto17" type="Sprite2D" parent="." unique_id=1122604019]
 z_index = 2
-position = Vector2(22036.668, 903.99976)
+material = SubResource("ShaderMaterial_fade_arb")
+position = Vector2(21519, 943.00006)
 scale = Vector2(1.297487, 1.6411831)
 texture = ExtResource("67_arb2")
 offset = Vector2(-28.847717, 62.218567)
@@ -3310,35 +3325,10 @@ position = Vector2(25804.094, -71.1)
 scale = Vector2(0.79876405, 0.685199)
 texture = ExtResource("82_liana")
 
-[node name="DecoArbusto18" type="Sprite2D" parent="." unique_id=668686679]
-z_index = 2
-position = Vector2(22558.27, 966.2499)
-scale = Vector2(1.9537482, 2.2663937)
-texture = ExtResource("67_arb2")
-
-[node name="DecoArbusto19" type="Sprite2D" parent="." unique_id=1509921547]
-z_index = 2
-position = Vector2(23020.334, 972.39417)
-scale = Vector2(2.074845, 2.1277893)
-texture = ExtResource("67_arb2")
-
-[node name="DecoArbusto20" type="Sprite2D" parent="." unique_id=2100695895]
-z_index = 2
-position = Vector2(26134.672, 944)
-scale = Vector2(2.1987622, 2.06827)
-texture = ExtResource("67_arb2")
-
-[node name="DecoArbusto21" type="Sprite2D" parent="." unique_id=1049955599]
-z_index = 2
-position = Vector2(22036.668, 903.99976)
-scale = Vector2(1.297487, 1.6411831)
-texture = ExtResource("67_arb2")
-offset = Vector2(-28.847717, 62.218567)
-
 [node name="EscalaGrises" type="Node" parent="." unique_id=2030551009]
 script = ExtResource("escala_grises")
 
-[node name="TerrenoMundo" type="Node" parent="."]
+[node name="TerrenoMundo" type="Node" parent="." unique_id=173523292]
 script = ExtResource("tmundo1")
 
 [editable path="EncounterA"]

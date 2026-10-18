@@ -35,7 +35,10 @@ enum Fase { UNO, DOS, TRES }
 @export_range(0.0, 1.0, 0.01) var umbral_fase3 := 0.33
 @export var curacion_fin_fase := 25         ## orbe de vida al cambiar de fase
 @export var distancia_orbe := 520.0         ## px del centro (del lado del jugador) donde aparece el orbe
-@export var mostrar_barra_hud := false      ## la vida se lee en las puntas del cuerpo, no en el HUD
+@export var mostrar_barra_hud := false      ## la vida se lee en el cuerpo (grietas finas + venas del ojo), no en el HUD
+@export var orden_puntas: Array[int] = [5, 0, 3, 1, 2, 6, 4]   ## en qué orden se agrietan las puntas (nunca se rompen)
+@export var mult_dano_sonico := 1.0         ## el sónico del Murciélago le pega siempre: multiplica su daño
+@export var sonido_rebote: AudioStream = preload("res://assets/audio/sfx/gen/rebote_coraza.wav")   ## golpe al ojo cerrado sin la fuerza del Oso
 @export_range(0.0, 1.0, 0.01) var tinte_fase := 0.0   ## cuánto tiñe el color de la F2/F3 al dibujo (0 = sin tinte, conserva el color original; la F1 nunca se tiñe)
 @export var drenaje_energia_jefe := 0.35   ## multiplicador del gasto de energía en la pelea ("el amuleto arde")
 
@@ -206,6 +209,8 @@ enum Fase { UNO, DOS, TRES }
 @export var aparicion_temblor := 2.0        ## s de temblor creciente antes de salir
 @export var aparicion_subida := 0.6         ## s que tarda en salir del piso
 @export var aparicion_shake_max := 12.0
+@export var sonido_aparicion: AudioStream = preload("res://assets/audio/sfx/gen/jefe_grito.wav")   ## grito al salir del piso
+@export var volumen_aparicion_db := 0.0
 @export_group("")
 @export var muerte_slowmo_escala := 0.2
 
@@ -277,6 +282,9 @@ var _blaster_pego := false
 @onready var bordes_foso: StaticBody2D = $BordesFoso   # topes solo para enemigos (capa 3): no caen al pozo
 @onready var losa: StaticBody2D = $LosaCentral
 @onready var foso = $Foso   # foso_pinchos.gd
+@onready var marca_ojo = get_node_or_null("Cuerpo/MarcaGarra")   # marca_garra.gd: ojo cerrado (F3)
+@onready var marca_nudo = get_node_or_null("MarcaNudo")          # marca_garra.gd: nudo del tallo (F1)
+@onready var blanco_sonico = get_node_or_null("Cuerpo/BlancoSonico")   # blanco_sonico.gd
 
 
 func _ready() -> void:
@@ -299,6 +307,12 @@ func _ready() -> void:
 			_puntas.append(n)
 	_pintar(color_fase1)
 	nudo.roto.connect(_on_nudo_roto)
+	if nudo.has_signal("rebotado"):
+		nudo.rebotado.connect(func() -> void:
+			if marca_nudo != null:
+				marca_nudo.destello())
+	if blanco_sonico != null:
+		blanco_sonico.jefe = self
 	_sembrar()
 	if cabeza != null:
 		cabeza.visible = false
@@ -342,6 +356,7 @@ func preparar_ola() -> void:
 	if ojo != null:
 		ojo.nino_escudo = 0.0
 		ojo.herida = 0.0
+	_marcas()
 	_x_base = 0.0
 	cuerpo.position.x = 0.0
 	cuerpo.modulate.a = 1.0
@@ -552,6 +567,7 @@ func _physics_process(delta: float) -> void:
 	if not _activo or _muerto:
 		return
 	_aviso_cierre_tick()
+	_marcas()
 	if _estado == "duelo":
 		_seguir_jugador(delta)
 	if _contacto_dano > 0:
@@ -788,6 +804,39 @@ func _herida_ojo() -> void:
 	ojo.herida = clampf(1.0 - float(health) / float(maxi(vida_max, 1)), 0.0, 1.0)
 	if ojo.has_method("golpe"):
 		ojo.golpe()
+	# Grietas finas de luz sobre el dibujo, en orden; nada se parte ni se desprende (pedido de Micaela).
+	if _puntas.is_empty():
+		return
+	var por_punta := float(vida_max) / float(_puntas.size())
+	var perdida := float(vida_max - health)
+	for i in _puntas.size():
+		var idx: int = orden_puntas[i] if i < orden_puntas.size() else i
+		if idx >= 0 and idx < _puntas.size():
+			_puntas[idx].dano = clampf(perdida / por_punta - float(i), 0.0, 1.0)
+
+
+## Marcas de garra: se encienden solo cuando hace falta el Oso (nudo activo / ojo cerrado).
+func _marcas() -> void:
+	if marca_nudo != null:
+		marca_nudo.encendida = _activo and nudo.activo and not nudo.esta_roto()
+	if marca_ojo != null:
+		marca_ojo.encendida = _activo and _estado == "caparazon"
+
+
+## El sónico del Murciélago le pega siempre (no solo en las ventanas), salvo cuando no está en juego.
+func sonico_vale() -> bool:
+	if _muerto or not _activo or not cuerpo.visible:
+		return false
+	return not (_estado in ["inactivo", "aparicion", "transicion", "interludio", "absorcion", "escudo", "caparazon"])
+
+
+func golpe_sonico(cantidad: int, dir: int, critico: bool) -> void:
+	if hurtbox.get_node("Collision").disabled == false:
+		golpe_ojo(cantidad, dir, critico)   # en una ventana cuenta como golpe al ojo (con su tope)
+		return
+	if not sonico_vale():
+		return
+	_recibir_dano(maxi(int(round(cantidad * mult_dano_sonico)), 0))
 
 
 func _puntas_sanas() -> Array:
@@ -1786,6 +1835,11 @@ func _golpe_caparazon(cantidad: int) -> void:
 	if not es_oso or cantidad < dano_minimo_coraza:
 		Burst.emitir(self, ojo.global_position, Color(0.55, 0.55, 0.6), 4, 0.5)   # rebote
 		_rugido(2.0)
+		if marca_ojo != null:
+			marca_ojo.destello()
+		var audio := get_node_or_null("/root/AudioManager")
+		if audio != null and sonido_rebote != null:
+			audio.play_sfx(sonido_rebote, -4.0, 0.1)
 		return
 	_golpes_cap += 1
 	_flash()
@@ -2046,6 +2100,7 @@ func _energia_jefe(on: bool) -> void:
 ## ruge (el ojo se abre de golpe) y entran las barras con el nombre. Solo la primera vez.
 func _aparicion(gen: int) -> void:
 	if not aparicion_cine or _aparicion_vista:
+		_grito(volumen_aparicion_db - 6.0)
 		_cine_entrada()
 		return
 	_aparicion_vista = true
@@ -2081,9 +2136,12 @@ func _aparicion(gen: int) -> void:
 	cuerpo.visible = true
 	nudo.visible = true
 	cuerpo.position.y = profundidad_escondida
+	_grito(volumen_aparicion_db)
 	JuiceFx.escombros(get_tree(), global_position + Vector2(0, -30), Color(0.42, 0.3, 0.55), 26, 1.5)
 	if cam != null and cam.has_method("shake"):
-		cam.shake(aparicion_shake_max, 0.5)
+		cam.shake(aparicion_shake_max * 1.4, 0.8)
+	if cam != null and cam.has_method("punch"):
+		cam.punch(1.05)
 	await _mover_cuerpo(_altura_reposo, 0.0, aparicion_subida, true)
 	if gen != _gen:
 		return
@@ -2107,6 +2165,13 @@ func _aparicion(gen: int) -> void:
 	_silencio(false)
 	if p != null and is_instance_valid(p):
 		p.set("cinematica_activa", false)
+
+
+## Grito de la Estrella (aparición; en los reintentos, más bajo).
+func _grito(volumen_db: float) -> void:
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null and sonido_aparicion != null:
+		audio.play_sfx(sonido_aparicion, volumen_db)
 
 
 func _silencio(on: bool) -> void:
@@ -2142,6 +2207,7 @@ func _morir() -> void:
 		return
 	_muerto = true
 	_activo = false
+	_marcas()
 	foso.set("dano", 0)   # tras la victoria el foso no mata (si no, derrota y victoria se pisaban)
 	_estado = "inactivo"
 	_hurtbox_on(false)

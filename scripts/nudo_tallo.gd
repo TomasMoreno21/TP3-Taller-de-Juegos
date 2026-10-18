@@ -6,6 +6,7 @@ extends StaticBody2D
 ## No frena al jugador (está en el centro de la arena). Todo editable en el Inspector.
 
 signal roto
+signal rebotado   # golpe de otra forma o flojo: el jefe hace destellar la marca de garra
 
 @export var tam := Vector2(170, 210):
 	set(v):
@@ -25,6 +26,7 @@ signal roto
 @export var shake_romper := 10.0
 @export var sonido_golpe: AudioStream = preload("res://assets/audio/sfx/gen/rompible_golpe.wav")
 @export var sonido_romper: AudioStream = preload("res://assets/audio/sfx/gen/rompible_romper.wav")
+@export var sonido_rebote: AudioStream = preload("res://assets/audio/sfx/gen/rebote_coraza.wav")
 @export var volumen_db := -6.0
 @export_group("")
 @export var mostrar_arte := true   ## false = el nudo no dibuja (lo reemplaza el cuerpo nuevo)
@@ -110,12 +112,14 @@ func registrar_golpe(dano: int) -> void:
 		return
 	var jugador := get_tree().get_first_node_in_group("player")
 	if forma_requerida >= 0 and jugador != null and int(jugador.get("current_form")) != forma_requerida:
-		_sacudir(3.0)
+		_sacudir(3.0, sonido_rebote)
+		rebotado.emit()
 		if tip_forma != "" and jugador.has_method("_tip_una_vez"):
 			jugador.call("_tip_una_vez", "nudo_tallo", tip_forma)
 		return
 	if dano < dano_minimo:
-		_sacudir(4.0)
+		_sacudir(4.0, sonido_rebote)
+		rebotado.emit()
 		return
 	golpes += 1
 	_sonar(sonido_golpe)
@@ -158,8 +162,8 @@ func _poner_colision(on: bool) -> void:
 		cs.set_deferred("disabled", not on)
 
 
-func _sacudir(fuerza: float) -> void:
-	_sonar(sonido_golpe)
+func _sacudir(fuerza: float, sonido: AudioStream = null) -> void:
+	_sonar(sonido if sonido != null else sonido_golpe)
 	if DisplayServer.get_name() == "headless":
 		return
 	if _tw != null and _tw.is_valid():

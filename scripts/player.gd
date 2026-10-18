@@ -220,6 +220,9 @@ var _attack_anim_cola: Array[String] = []
 var _attack_anim_speed_scale := 1.0
 var _attack_frame_dur := PackedFloat32Array()   # tiempo planificado de cada frame de la animación de ataque en curso
 static var _tips_vistos: Dictionary = {}
+@export var recordar_muertes := 3          ## muertes en la misma zona para que el Amuleto recuerde las transformaciones
+@export var recordar_radio := 1200.0       ## px: "misma zona"
+@export var recordar_y_max_n2 := 3500.0    ## el recordatorio solo corre en N1 y en N2 hasta esta y (mitad del descenso)
 @export var tips_ayuda := true             ## muestra avisos de ayuda la primera vez (parry, energía)
 @export_group("Defensa")
 @export var bloqueo_costo_energia := 3.0  ## energía base que gasta cada golpe bloqueado (0 = gratis)
@@ -467,6 +470,7 @@ var _salto_aereo_limitado: bool = false
 @export var golpe_rapido_tras_transformar := 1.0 ## s tras transformarte en que el primer ataque conecta sin retardo (0 = off)
 var _golpe_rapido_t := 0.0
 @export var invuln_dano := 0.8                  ## s de invulnerabilidad tras recibir un golpe
+@export var tiempo_bajar_plataforma := 0.3      ## s que atraviesa una plataforma bajable (abajo + salto, solo en el jefe)
 @export var energia_min_transformar := 25.0      ## energía mínima para transformarse (el retorno a Humano no la pide)
 
 @onready var visual: AnimatedSprite2D = $Sprite2D
@@ -506,6 +510,13 @@ func _ready() -> void:
 	health = VIDA_MAX
 	_spawn_position = global_position
 	_ultima_pos_valida = global_position
+	var prog_ini := get_node_or_null("/root/Progresion")
+	if prog_ini != null:
+		if prog_ini.recordar_formas:
+			prog_ini.recordar_formas = false
+			_tips_vistos.erase("formas_recordar")
+			_tip_una_vez("formas_recordar", "tip_formas_recordar")
+		prog_ini.almas_pendientes.clear()   # nivel nuevo: lo pendiente del anterior ya es definitivo
 	_base_sprite_scale = Vector2(absf(visual.scale.x), visual.scale.y)
 	_visual_base_x = visual.position.x
 	_suave_s = global_position.y
@@ -737,7 +748,9 @@ func _physics_process(delta: float) -> void:
 
 	if not dialogo_bloquea and not _trepando and Input.is_action_just_pressed("jump"):
 		_cancelar_recuperacion()
-		if _salto_enredadera:
+		if Input.is_action_pressed("move_down") and _bajar_plataforma():
+			pass   # abajo + salto sobre una plataforma bajable (jefe): la atraviesa hacia abajo
+		elif _salto_enredadera:
 			pass
 		elif _coyote_time > 0.0 or data.can_jump():
 			data.try_jump(self)
@@ -1401,7 +1414,7 @@ func _barrer_embestida() -> void:
 		_embestida_t = 0.0
 		return
 	for b in attack_area.get_overlapping_bodies():
-		if b == self or _embestida_golpeados.has(b):
+		if b == self or _embestida_golpeados.has(b) or b.get("ignora_melee") == true:
 			continue
 		if b.has_method("registrar_golpe"):
 			_embestida_golpeados.append(b)
@@ -1431,8 +1444,8 @@ func _check_attack_hits() -> void:
 	var bodies := attack_area.get_overlapping_bodies()
 	var objetivos: Array[Node2D] = []
 	for b in bodies:
-		if b == self:
-			continue
+		if b == self or b.get("ignora_melee") == true:
+			continue   # (el blanco del sónico del jefe solo recibe proyectiles)
 		if b.has_method("registrar_golpe") or b.has_method("take_damage"):
 			objetivos.append(b as Node2D)
 			if objetivos.size() >= 2:
@@ -2778,6 +2791,23 @@ func _update_animacion() -> void:
 		visual.position.y = lerpf(visual.position.y, _visual_base_y() + onda, minf(10.0 * dt, 1.0))
 
 
+func _registrar_muerte_zona(prog: Node) -> void:
+	var esc := get_tree().current_scene.scene_file_path if get_tree().current_scene != null else ""
+	var n1 := esc.ends_with("nivel1.tscn")
+	var n2 := esc.ends_with("nivel2.tscn") and global_position.y < recordar_y_max_n2
+	if not (n1 or n2):
+		return
+	var cerca := 0
+	for m in prog.muertes_zona:
+		if m["escena"] == esc and (m["pos"] as Vector2).distance_to(global_position) <= recordar_radio:
+			cerca += 1
+	prog.muertes_zona.append({"escena": esc, "pos": global_position})
+	if cerca + 1 >= recordar_muertes:
+		prog.recordar_formas = true
+		# Reinicia la cuenta de esta zona: el aviso vuelve a salir tras otras N muertes.
+		prog.muertes_zona = prog.muertes_zona.filter(func(m): return m["escena"] != esc or (m["pos"] as Vector2).distance_to(global_position) > recordar_radio)
+
+
 func _handle_death() -> void:
 	if health > 0 or god_mode or _derrota_activa:
 		return
@@ -2785,6 +2815,7 @@ func _handle_death() -> void:
 	var prog := get_node_or_null("/root/Progresion")
 	if prog != null:
 		prog.muertes += 1
+		_registrar_muerte_zona(prog)
 	if DisplayServer.get_name() == "headless" or muerte_duracion <= 0.0:
 		_mostrar_derrota()
 		return
@@ -2849,6 +2880,9 @@ func _reaparecer_ahora() -> void:
 	if is_instance_valid(_velo_muerte):
 		_velo_muerte.queue_free()
 	_velo_muerte = null
+	var prog_rep := get_node_or_null("/root/Progresion")
+	if prog_rep != null:
+		prog_rep.revertir_almas_pendientes()
 	if _tiene_checkpoint:
 		reaparecer_en_checkpoint()
 		var cam := get_viewport().get_camera_2d()
@@ -3163,6 +3197,9 @@ func curar(cantidad: int) -> void:
 
 func actualizar_checkpoint(pos: Vector2) -> void:
 	_spawn_position = pos
+	var prog_chk := get_node_or_null("/root/Progresion")
+	if prog_chk != null:
+		prog_chk.almas_pendientes.clear()   # lo recogido hasta acá ya no se pierde al morir
 	_checkpoint_forma = current_form
 	_checkpoint_vida = health
 	energia = ENERGIA_MAX   # cada checkpoint recarga toda la energía (y reaparecés con ella llena)
@@ -3325,7 +3362,34 @@ func _buscar_enemigo_homing(rango: float, melee := false) -> Node2D:
 		if d < mejor_dist:
 			mejor_dist = d
 			mejor = n
+	if mejor == null and not melee:
+		for n in get_tree().get_nodes_in_group("blanco_sonico"):   # el jefe final: el sónico le apunta siempre
+			if not is_instance_valid(n) or not n.apuntable():
+				continue
+			var d := global_position.distance_to(n.global_position)
+			if d < mejor_dist:
+				mejor_dist = d
+				mejor = n
 	return mejor
+
+
+## Abajo + salto parado sobre una plataforma del grupo `plataforma_bajable`: deja de chocarla un instante.
+func _bajar_plataforma() -> bool:
+	if not is_on_floor():
+		return false
+	for i in get_slide_collision_count():
+		var c := get_slide_collision(i)
+		var col := c.get_collider() as PhysicsBody2D
+		if col == null or not col.is_in_group("plataforma_bajable") or c.get_normal().y > -0.5:
+			continue
+		add_collision_exception_with(col)
+		global_position.y += 4.0
+		velocity.y = maxf(velocity.y, 150.0)
+		get_tree().create_timer(tiempo_bajar_plataforma, false).timeout.connect(func() -> void:
+			if is_instance_valid(col):
+				remove_collision_exception_with(col))
+		return true
+	return false
 
 
 func _try_interact() -> bool:

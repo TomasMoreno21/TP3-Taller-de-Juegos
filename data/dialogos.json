@@ -29,8 +29,8 @@
 		"una_vez": true,
 		"lineas": [
 			"Lobo: doble salto para este paso.",
-			"Cambiá de forma con {forma_swap}.",
-			"Transformate con {transform}."
+			"Atajo directo: {forma_derecha} Lobo, {forma_abajo} Humano.",
+			"O cambiá con {forma_swap} y confirmá con {transform}."
 		]
 	},
 	"n1_bosque1": {
@@ -153,7 +153,7 @@
 		"retraso": 0.4,
 		"una_vez": true,
 		"lineas": [
-			"Murciélago: mantené {jump} para planear."
+			"Atajo al Murciélago: {forma_arriba}. Mantené {jump} para planear."
 		]
 	},
 	"n2_voladores": {
@@ -236,7 +236,7 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Lento, pero imparable. Cambiá con {forma_swap}."
+			"Lento, pero imparable. Atajo al Oso: {forma_izquierda}."
 		]
 	},
 	"n3_guardian": {
@@ -616,6 +616,13 @@
 		"hablante": "Amuleto",
 		"lineas": [
 			"Mantené {block} para bloquear. Apretalo justo antes del golpe y es un parry."
+		]
+	},
+	"tip_formas_recordar": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"¿Te trabás acá? Cada forma tiene su truco: el Lobo rompe y trepa, el Murciélago vuela. Transformate con {transform}."
 		]
 	},
 	"tip_energia": {
