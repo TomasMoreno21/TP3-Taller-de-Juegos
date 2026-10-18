@@ -25,6 +25,8 @@ var barreras_abiertas: Dictionary = {}
 ## Almas ya recogidas (clave escena + ruta del nodo): al recargar el nivel (morir sin checkpoint, reiniciar) no reaparecen,
 ## porque los fragmentos que dieron se conservan (si no, se duplican y rompen los umbrales de nivel).
 var almas_recogidas: Dictionary = {}
+## Claves de las almas recogidas desde el último checkpoint (o subida de nivel): al morir se devuelven.
+var almas_pendientes: Array = []
 ## Dialogos ya mostrados (persisten entre muertes; se limpian al resetear partida).
 var dialogos_vistos: Dictionary = {}
 ## Acciones que el jugador ya hizo en esta partida (mover, saltar, golpe_ligero...): el tutorial no se las pide de nuevo.
@@ -33,6 +35,9 @@ var acciones_hechas: Dictionary = {}
 var ayuda_vista: Array = []
 ## Veces que el jugador cayó en esta partida (el Amuleto reacciona si se repite).
 var muertes := 0
+## Muertes recientes [{escena, pos}] para el recordatorio de transformaciones; recordar_formas = pendiente de mostrar tras reaparecer.
+var muertes_zona: Array = []
+var recordar_formas := false
 ## Plataformas fragiles ya rotas (por escena/posicion; persisten entre muertes y reinicios de nivel).
 var plataformas_rotas: Dictionary = {}
 ## Si no está vacía, las formas se desbloquean SOLO por esta lista (ignora el nivel).
@@ -60,7 +65,21 @@ func forzar_subida() -> void:
 	add_fragmentos(maxi(fragmentos_para_nivel(nivel + 1) - fragmentos, 0))
 
 
+## Al morir: las almas recogidas desde el último checkpoint dejan de contar y vuelven a aparecer.
+func revertir_almas_pendientes() -> void:
+	if almas_pendientes.is_empty():
+		return
+	for k in almas_pendientes:
+		almas_recogidas.erase(k)
+	fragmentos = maxi(fragmentos - almas_pendientes.size(), fragmentos_para_nivel(nivel))
+	almas_pendientes.clear()
+	fragmentos_cambiado.emit(fragmentos)
+	for a in get_tree().get_nodes_in_group("alma_recogida"):
+		a.reaparecer()
+
+
 func subir_nivel() -> void:
+	almas_pendientes.clear()   # una subida de nivel fija lo ganado hasta acá (ya se eligió combo)
 	nivel += 1
 	nivel_cambiado.emit(nivel)
 	nivel_subio.emit(nivel)
@@ -93,10 +112,13 @@ func reset() -> void:
 	combos_desbloqueados = {}
 	barreras_abiertas = {}
 	almas_recogidas = {}
+	almas_pendientes = []
 	dialogos_vistos = {}
 	acciones_hechas = {}
 	ayuda_vista = []
 	muertes = 0
+	muertes_zona = []
+	recordar_formas = false
 	var dialogo := get_node_or_null("/root/Dialogo")
 	if dialogo != null:
 		dialogo.limpiar()

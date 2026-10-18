@@ -26,6 +26,7 @@ extends Area2D
 
 var _t := randf() * TAU
 var _recogido := false
+var _pos_inicial := Vector2.ZERO
 var _base_visual := Vector2.ZERO
 var _base_halo := Vector2.ZERO
 var _alpha_halo := 1.0
@@ -48,6 +49,7 @@ func _ready() -> void:
 	if prog != null and prog.almas_recogidas.has(_clave()):
 		queue_free()   # ya recogida en esta partida: no se vuelve a contar
 		return
+	_pos_inicial = global_position
 	monitoring = true
 	collision_mask = 4
 	body_entered.connect(_on_body_entered)
@@ -160,15 +162,31 @@ func _recoger(body: Node2D) -> void:
 		return
 	_recogido = true
 	body.recoger_energia()
-	get_node("/root/Progresion").almas_recogidas[_clave()] = true
-	# El alma contribuye a subir de nivel (fragmentos → desbloqueo de combos).
 	var prog: Node = get_node("/root/Progresion")
+	prog.almas_recogidas[_clave()] = true
+	prog.almas_pendientes.append(_clave())   # si morís antes del próximo checkpoint, se devuelve
+	# El alma contribuye a subir de nivel (fragmentos → desbloqueo de combos).
 	var nivel_antes: int = prog.nivel
 	prog.add_fragmentos(1)
 	if da_subida_de_nivel and prog.nivel == nivel_antes:   # si el fragmento ya cruzó el umbral, no se fuerza una segunda subida
 		prog.forzar_subida()
 	_efecto_recoger()
-	queue_free()
+	# Se oculta en vez de liberarse: puede reaparecer si morís antes del próximo checkpoint.
+	visible = false
+	set_deferred("monitoring", false)
+	add_to_group("alma_recogida")
+
+
+## Vuelve a su lugar si ya no cuenta como recogida (ver Progresion.revertir_almas_pendientes).
+func reaparecer() -> void:
+	if not _recogido or get_node("/root/Progresion").almas_recogidas.has(_clave()):
+		return
+	_recogido = false
+	_iman_vel = 0.0
+	global_position = _pos_inicial
+	visible = true
+	set_deferred("monitoring", true)
+	remove_from_group("alma_recogida")
 
 
 func _efecto_recoger() -> void:
