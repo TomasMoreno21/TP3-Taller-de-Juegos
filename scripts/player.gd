@@ -350,6 +350,7 @@ var _amb: Node                     # autoload Ambiente (cacheado)
 var _turn_prev_facing := 0
 var _base_sprite_scale := Vector2.ONE
 var _spawn_position := Vector2.ZERO
+var _ultima_pos_valida := Vector2.ZERO   # guardia anti-NaN (colisión degenerada en move_and_slide)
 var _tiene_checkpoint := false
 var _checkpoint_forma := Form.HUMAN
 var _checkpoint_vida := VIDA_MAX
@@ -504,6 +505,7 @@ func _ready() -> void:
 		forms.append(forma)
 	health = VIDA_MAX
 	_spawn_position = global_position
+	_ultima_pos_valida = global_position
 	_base_sprite_scale = Vector2(absf(visual.scale.x), visual.scale.y)
 	_visual_base_x = visual.position.x
 	_suave_s = global_position.y
@@ -599,6 +601,15 @@ func _tick_solape() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Guardia anti-NaN (misma que enemy.gd): una colisión degenerada en move_and_slide puede volver
+	# no-finitos velocity/posición y spamear warnings del motor (normalize/sample_baked) al infinito.
+	if not velocity.is_finite():
+		velocity = Vector2.ZERO
+	if not global_position.is_finite():
+		global_position = _ultima_pos_valida if _ultima_pos_valida != Vector2.ZERO else _spawn_position
+		velocity = Vector2.ZERO
+		return
+	_ultima_pos_valida = global_position
 	_tick_solape()
 	if current_form == Form.HUMAN and not _tips_vistos.has("bloqueo") and _en_combate():
 		_tip_una_vez("bloqueo", "tip_bloqueo")
@@ -2579,6 +2590,15 @@ func _update_animacion() -> void:
 			nuevo_x = obj_x
 		visual.position.x += nuevo_x - _trepar_off_x
 		_trepar_off_x = nuevo_x
+	# Bloqueo: el Humano se planta con la pose de guardia (sprite pintado) y el cuerpo vuelve a su eje.
+	if blocking and current_form == Form.HUMAN and visual.sprite_frames != null and visual.sprite_frames.has_animation("bloqueo"):
+		if visual.animation != "bloqueo":
+			visual.play("bloqueo")
+		visual.speed_scale = 1.0
+		var dbl := get_physics_process_delta_time()
+		visual.skew = lerpf(visual.skew, 0.0, minf(12.0 * dbl, 1.0))
+		visual.rotation = lerpf(visual.rotation, 0.0, minf(12.0 * dbl, 1.0))
+		return
 # Ataques del Humano con cola propia: la anim se estira (speed_scale) para
 	# durar exactamente la recuperación del golpe. Light -> attack1 (1-3),
 	# Heavy -> attack2 (4-6), Special/Combo -> attack_full (1-6).

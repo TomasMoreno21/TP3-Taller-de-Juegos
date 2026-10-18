@@ -178,7 +178,7 @@ enum Fase { UNO, DOS, TRES }
 @export_range(0.0, 1.0, 0.05) var prob_escudo_nino := 0.3   ## a veces usa al niño de escudo
 @export var duracion_escudo := 1.0
 @export var tope_dano_ventana := 40         ## daño máximo por ventana: al llegar, el ojo se cierra
-@export var apertura_duelo := 0.6           ## ojo entornado mientras ataca (abierto del todo = se le puede pegar)
+@export var apertura_duelo := 1.0           ## apertura del ojo en el duelo (1 = arte completo; un valor parcial recorta el dibujo)
 @export var absorber_traidor := true        ## al entrar a la F3 absorbe al cultista arrepentido del N3
 @export var traidor_frames: SpriteFrames = preload("res://resources/enemigo1_frames.tres")
 @export var traidor_aura: PackedScene = preload("res://scenes/aura_mistica.tscn")
@@ -1792,8 +1792,7 @@ func _golpe_caparazon(cantidad: int) -> void:
 	_rugido(6.0)
 	Burst.emitir(self, ojo.global_position, Color(0.7, 0.7, 0.75), 8, 0.8)
 	if _golpes_cap < golpes_caparazon:
-		_poner_ojo(0.35 * float(_golpes_cap) / float(golpes_caparazon))   # se entreabre
-		return
+		return   # sigue cerrado hasta abrirse del todo (una apertura parcial recortaba el arte)
 	_estado = "caparazon_roto"
 	_poner_ojo(1.0)
 
