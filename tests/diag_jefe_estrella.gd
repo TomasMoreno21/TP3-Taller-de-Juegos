@@ -19,6 +19,10 @@ func _init() -> void:
 	player.god_mode = true
 	var encounter = get_first_node_in_group("encounter")
 	var boss = get_first_node_in_group("boss")
+	_check(boss.acoso_quieto > 0.0 and boss.intervalo_lanza_f2 > 0.0, "Acoso al quieto y lanzas en la F2 activados")
+	var acoso0: float = boss.acoso_quieto
+	boss.acoso_quieto = 999.0       # (el test mide cada ataque aislado: el acoso y las lanzas de la F2 se prueban aparte)
+	boss.intervalo_lanza_f2 = 0.0
 	var hud = scene.get_node("Hud")
 	_check(boss != null and encounter != null and boss.has_method("golpe_ojo"), "La arena carga la Estrella y el encuentro")
 	if boss == null or encounter == null:
@@ -125,6 +129,25 @@ func _init() -> void:
 	bs.golpe_proyectil = true
 	bs.take_damage(15, 120.0, 1)
 	_check(boss.health == hp_s and bs.get_node("Collision").disabled and not bs.apuntable(), "F1: el blanco del sónico está apagado (sin daño fuera de las ventanas)")
+	# Acoso: quieto en la F1, le cae una lanza encima antes del intervalo normal.
+	boss._lanza_t = 99.0
+	boss.acoso_quieto = acoso0
+	boss._acoso_cd = 0.0
+	boss._acoso_t = 0.0
+	player.velocity = Vector2.ZERO
+	var ids_antes: Array = get_nodes_in_group("ataque_jefe").map(func(n) -> int: return n.get_instance_id())
+	var acoso_ok := false
+	for _i in int((acoso0 + 0.4) * 60.0):
+		await physics_frame
+		for n in get_nodes_in_group("ataque_jefe"):
+			if n.get("rayo") == false and not ids_antes.has(n.get_instance_id()):
+				acoso_ok = true
+		if acoso_ok:
+			break
+	_check(acoso_ok, "Acoso: quieto %.1f s, le cae una lanza encima" % acoso0)
+	boss.acoso_quieto = 999.0
+	boss._limpiar_lanzas()
+	boss._lanza_t = boss.intervalo_lanza
 	_check(bs.ignora_melee and bs.is_in_group("blanco_sonico") and not boss.is_in_group("enemy"), "El blanco del sónico no cuenta para el melee ni entra al grupo enemy")
 	_check(boss.sonido_aparicion != null and boss.sonido_rebote != null, "Hay grito de aparición y sonido de rebote")
 
@@ -148,7 +171,7 @@ func _init() -> void:
 	_check(boss.ojos_raiz.get_child_count() == 0, "Los ojos cerrados se desvanecen")
 
 	# --- Nudo: el Humano no lo rompe, el Oso sí ---
-	_check(boss.marca_nudo.encendida and boss.marca_nudo.visible, "Nudo activo: late la marca de garra del Oso")
+	_check(boss.circulo_nudo.encendido and boss.circulo_nudo.visible and boss.circulo_nudo.icono == "oso", "Nudo activo: círculo de protección con la zarpa del Oso")
 	var nudo_pos: Vector2 = boss.nudo.global_position + Vector2(0, -100)
 	await _golpear(player, "heavy", nudo_pos, -1)
 	_check(boss.nudo.golpes == 0, "El golpe fuerte del Humano no daña el nudo")
@@ -159,7 +182,7 @@ func _init() -> void:
 		if boss.nudo.esta_roto():
 			break
 		await _golpear(player, "heavy", nudo_pos, -1)
-	_check(boss.nudo.esta_roto(), "El Oso rompe el nudo a golpes fuertes (%d golpes)" % boss.nudo.golpes)
+	_check(boss.nudo.esta_roto() and boss.nudo.golpes == 1, "Un golpe fuerte del Oso rompe el círculo del nudo (%d golpes)" % boss.nudo.golpes)
 	if not boss.nudo.esta_roto():
 		boss.nudo.romper_forzado()
 
@@ -171,12 +194,14 @@ func _init() -> void:
 	await _golpear(player, "attack", boss.hurtbox.global_position, 1)
 	_check(boss.health < hp1, "El Oso le pega al ojo en la ventana (%d -> %d)" % [hp1, boss.health])
 	boss.hurtbox.take_damage(1000, 0.0, 1, false)
+	_check(hp1 - boss.health <= boss.tope_dano_castigo and boss._estado != "castigo", "Tope de %d por castigo: la F1 pide varios ciclos (%d -> %d)" % [boss.tope_dano_castigo, hp1, boss.health])
+	boss._recibir_dano(1000)   # (para el test: directo al umbral)
 	_check(boss.health == 396, "El daño se frena en el umbral de la F2 (vida %d)" % boss.health)
 	var p0 = boss._puntas[boss.orden_puntas[0]]
 	var p1 = boss._puntas[boss.orden_puntas[1]]
 	var p2 = boss._puntas[boss.orden_puntas[2]]
 	_check(p0.dano == 1.0 and p1.dano == 1.0 and p2.dano > 0.3 and p2.dano < 0.45 and boss._puntas.all(func(pt) -> bool: return pt.visible and not pt.rota) and absf(boss.ojo.herida - 204.0 / 600.0) < 0.01, "Con 204 de daño se agrietan 2⅓ puntas sin partirse y el ojo tiene venas")
-	_check(not boss.marca_nudo.encendida, "Roto el nudo, la marca se apaga")
+	_check(not boss.circulo_nudo.encendido, "Roto el nudo, el círculo se apaga")
 
 	# --- Interludio de la F2: la Estrella se hunde, 2 oleadas y lanzas del pozo (desde la 2) ---
 	await _esperar_estado(boss, "interludio", 900)
@@ -243,13 +268,14 @@ func _init() -> void:
 	_check(absf(boss.techo.position.y - (boss._techo_y0 - boss.subida_techo)) < 1.0, "El techo sube %.0f px" % boss.subida_techo)
 	_check(absf(boss.cuerpo.scale.x - boss.escala_jefe_f2) < 0.01, "La Estrella crece (escala %.2f)" % boss.cuerpo.scale.x)
 	var plats: Array = boss.plataformas_raiz.get_children()
-	_check(plats.size() == 4 and plats.all(func(pl) -> bool: return pl.visible and not pl.get_node("Collision").disabled and pl.get_node("Collision").one_way_collision), "Aparecen 4 plataformas que se atraviesan desde abajo")
+	_check(plats.size() == 6 and plats.all(func(pl) -> bool: return pl.visible and not pl.get_node("Collision").disabled and pl.get_node("Collision").one_way_collision), "Aparecen 6 plataformas (cúpula) que se atraviesan desde abajo")
 	var mitad_vista: float = 960.0 / (0.93 * boss.escala_arena_f2)
 	for m in boss.puntos_f2.get_children():
 		_check(absf(m.position.x) < mitad_vista - 60.0 and -m.position.y < boss.subida_techo + 940.0 - 60.0, "Punto F2 %s dentro de la sala grande" % m.name)
-	var plat_max := 0.0
+	var plat_max := 0.0   # las cercanas al centro (|x| < 1000): desde ahí el Lobo no debe llegar al ojo
 	for pl in plats:
-		plat_max = maxf(plat_max, -pl.position.y)
+		if absf(pl.position.x) < 1000.0:
+			plat_max = maxf(plat_max, -pl.position.y)
 	var alcance_lobo := plat_max + 354.0 + 185.0
 	var techo_alto: float = 940.0 + boss.subida_techo
 	_check(boss.altura_ojo_aerea + 310.0 * boss.escala_jefe_f2 < techo_alto - 20.0, "En la ventana aérea la Estrella entra completa bajo el techo (%.0f < %.0f)" % [boss.altura_ojo_aerea + 310.0 * boss.escala_jefe_f2, techo_alto])
@@ -257,7 +283,11 @@ func _init() -> void:
 	_check(tope_vista > techo_alto, "La cámara muestra el techo de la sala grande (%.0f > %.0f)" % [tope_vista, techo_alto])
 	var alturas_plat: Array = plats.map(func(pl) -> float: return -pl.position.y)
 	alturas_plat.sort()
-	_check(alturas_plat[0] <= 170.0 and alturas_plat[-1] - alturas_plat[0] <= 170.0, "El Humano llega a las plataformas (%s)" % str(alturas_plat))
+	var escalon_max := 0.0
+	for k in range(1, alturas_plat.size()):
+		escalon_max = maxf(escalon_max, alturas_plat[k] - alturas_plat[k - 1])
+	_check(alturas_plat[0] <= 170.0 and escalon_max <= 190.0, "El Humano sube escalón por escalón (%s)" % str(alturas_plat))
+	_check(boss.altura_ojo_aerea == 1000.0, "La ventana aérea es más baja (1000)")
 	# Abajo: se baja de la plataforma (solo las del jefe están en el grupo), con el input real.
 	var pl1: Node2D = plats[0]
 	player.global_position = pl1.global_position + Vector2(0, -150)
@@ -271,7 +301,7 @@ func _init() -> void:
 	await _wait_frames(25)
 	var bajo: bool = sobre
 	_check(pl1.is_in_group("plataforma_bajable") and bajo and player.global_position.y + 143.0 > pl1.global_position.y + 30.0, "Abajo atraviesa la plataforma hacia abajo (pies %.0f bajo la plataforma %.0f)" % [player.global_position.y + 143.0, pl1.global_position.y])
-	_check(boss.altura_ojo_aerea - 100.0 * boss.escala_jefe_f2 > alcance_lobo, "La ventana aérea queda fuera del Lobo desde la plataforma más alta (%.0f > %.0f)" % [boss.altura_ojo_aerea - 100.0 * boss.escala_jefe_f2, alcance_lobo])
+	_check(boss.altura_ojo_aerea - 100.0 * boss.escala_jefe_f2 > alcance_lobo, "La ventana aérea queda fuera del Lobo desde las plataformas cercanas al centro (%.0f > %.0f)" % [boss.altura_ojo_aerea - 100.0 * boss.escala_jefe_f2, alcance_lobo])
 	var torres: Array = boss._ojos()
 	_check(torres.size() == 3, "Primer ciclo de la F2: tanda de 3 torretas (%d)" % torres.size())
 	var corazas := torres.filter(func(o) -> bool: return o.acorazado)
@@ -304,7 +334,7 @@ func _init() -> void:
 	boss._rayo_t = 1000.0   # aislar de los rayos chicos
 	await _wait_frames(240)
 	_check(_rayos_gruesos().is_empty(), "En el primer ciclo de la F2 no hay rayo grueso")
-	_check(boss._rampa(boss.rampa_tandas, 0) == 1.0 and boss._rampa(boss.rampa_rayo, 0) == 3.0, "Rampa del ciclo 1: 1 tanda, rayo cada 3 s")
+	_check(boss._rampa(boss.rampa_tandas, 0) == 1.0 and boss._rampa(boss.rampa_rayo, 0) == 2.3, "Rampa del ciclo 1: 1 tanda, rayo cada 2.3 s")
 	player.global_position = Vector2(boss.global_position.x - 900.0, piso_y - 143.0)
 	player.velocity = Vector2.ZERO
 	player.god_mode = false
@@ -379,12 +409,6 @@ func _init() -> void:
 	await _wait_frames(360)
 	_check(boss.ojos_raiz.get_child_count() == 0, "En la F3 no aparecen ojos")
 	_check(boss._sin_tallo and not boss.tallo.visible, "En la F3 se arrancó del tallo")
-	var hp_f3: int = boss.health
-	boss.blanco_sonico.golpe_proyectil = true
-	boss.blanco_sonico.take_damage(15, 120.0, 1)
-	_check(boss.health == hp_f3 - 15 and not boss.blanco_sonico.get_node("Collision").disabled and boss.blanco_sonico.apuntable(), "F3: el sónico le pega en cualquier momento (%d -> %d)" % [hp_f3, boss.health])
-	boss.blanco_sonico.take_damage(15, 0.0, 1, false)
-	_check(boss.health == hp_f3 - 15, "F3: el cuerpo a cuerpo no cuenta en el blanco del sónico")
 	var clavo := false
 	for _i in 1500:
 		if boss._estado in ["clavada", "caparazon", "escudo"]:
@@ -395,7 +419,15 @@ func _init() -> void:
 	boss._gen += 1   # corta el ciclo para probar cada ataque por separado
 	var g: int = boss._gen
 	boss._limpiar_lanzas()
+	boss._hurtbox_on(false)
+	boss._estado = "duelo"
 	await _wait_frames(2)
+	var hp_f3: int = boss.health
+	boss.blanco_sonico.golpe_proyectil = true
+	boss.blanco_sonico.take_damage(15, 120.0, 1)
+	_check(boss.health == hp_f3 - 15 and not boss.blanco_sonico.get_node("Collision").disabled and boss.blanco_sonico.apuntable(), "F3: el sónico le pega en cualquier momento (%d -> %d)" % [hp_f3, boss.health])
+	boss.blanco_sonico.take_damage(15, 0.0, 1, false)
+	_check(boss.health == hp_f3 - 15, "F3: el cuerpo a cuerpo no cuenta en el blanco del sónico")
 	await boss._picada(g)
 	_check(_barridos().size() >= 2, "La picada suelta ondas a los dos lados (%d)" % _barridos().size())
 	boss._limpiar_lanzas()
@@ -410,18 +442,7 @@ func _init() -> void:
 	boss.prob_diagonal = 0.0
 	await boss._embestida(g, false)
 	_check(player.health == vida_e - 18, "La embestida le pega 18 al Humano parado (%d -> %d)" % [vida_e, player.health])
-	await _wait_frames(10)
-	_check(player.health == vida_e - 18, "Tras el golpe del cuerpo, el rayo del blaster no suma (%d)" % player.health)
-	await _wait_frames(int(boss.duracion_rayo_blaster * 60.0) + 5)
-	_check(boss._blaster == null, "El rayo de la embestida se apaga")
-	player.curar(100)
-	player._invuln_timer = 0.0
-	var vida_b: int = player.health
-	var ini_b: Vector2 = player.global_position + Vector2(-500, 0)
-	boss._blaster_iniciar(ini_b, ini_b + Vector2(1000, 0))
-	await _wait_frames(3)
-	_check(player.health == vida_b - boss.dano_rayo_blaster, "El rayo del blaster daña %d a quien queda en la franja (%d -> %d)" % [boss.dano_rayo_blaster, vida_b, player.health])
-	await _wait_frames(int(boss.duracion_rayo_blaster * 60.0) + 5)
+	_check(boss.velocidad_embestida >= 1500.0 and not ("_blaster" in boss), "Embestida más rápida y sin estela blanca")
 	player.curar(100)
 	player._invuln_timer = 0.0
 	boss._orbes(g)
@@ -460,17 +481,16 @@ func _init() -> void:
 	boss._clavada(g)
 	await _wait_frames(5)
 	_check(boss._estado == "caparazon" and boss.ojo.apertura < 0.05 and not boss.hurtbox.get_node("Collision").disabled, "Clavada con el ojo cerrado (caparazón)")
-	_check(boss.marca_ojo.encendida, "El ojo cerrado muestra la marca de garra del Oso")
+	_check(boss.circulo_ojo.encendido, "El ojo clavado cerrado muestra el círculo de protección del Oso")
 	boss.hurtbox.take_damage(30, 0.0, 1, false)
 	_check(boss._golpes_cap == 0, "El Humano no abre el ojo cerrado")
 	player.energia = 100.0
 	player._transformar(2, true)
 	await _wait_frames(5)
-	for _i in 3:
-		boss.hurtbox.take_damage(30, 0.0, 1, false)
+	boss.hurtbox.take_damage(30, 0.0, 1, false)   # un solo golpe del Oso rompe el círculo
 	await _wait_frames(15)
-	_check(boss._estado == "clavada" and boss.ojo.apertura > 0.95 and not boss.hurtbox.get_node("Collision").disabled and absf(boss.cuerpo.position.y + boss.altura_agotada) < 2.0, "El Oso fuerza el ojo y queda abierto a tiro")
-	_check(not boss.marca_ojo.encendida, "Abierto el ojo, la marca se apaga")
+	_check(boss._estado == "clavada" and boss.ojo.apertura > 0.95 and not boss.hurtbox.get_node("Collision").disabled and absf(boss.cuerpo.position.y + boss.altura_agotada) < 2.0, "Un golpe del Oso rompe el círculo y el ojo queda abierto a tiro")
+	_check(not boss.circulo_ojo.encendido, "Roto el círculo, se apaga")
 	var hp_d: int = boss.health
 	boss.hurtbox.take_damage(30, 0.0, 1, false)
 	boss.hurtbox.take_damage(30, 0.0, 1, false)

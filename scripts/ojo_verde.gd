@@ -34,8 +34,7 @@ signal cerrado
 @export var sonido_cerrar: AudioStream = preload("res://assets/audio/sfx/gen/rompible_golpe.wav")
 @export var volumen_db := -6.0
 @export var sonido_rebote: AudioStream = preload("res://assets/audio/sfx/gen/rebote_coraza.wav")
-@export var marca_tamano := 46.0           ## marca de garra sobre la coraza (solo el Oso la parte)
-@export var marca_offset := Vector2.ZERO
+@export var color_murcielago := Color(0.62, 0.45, 0.9)   ## aro de los ojos altos: el sónico del Murciélago los cierra
 
 var energia := 12.0          # la fija el jefe al abrirlo
 var abierto := false
@@ -51,7 +50,6 @@ var _base_y := 0.0
 var _mirada := Vector2.ZERO
 var _tw: Tween
 var _saliendo := false
-var _marca: Node2D
 
 
 func _ready() -> void:
@@ -62,11 +60,6 @@ func _ready() -> void:
 		_apertura = 1.0   # en el editor se ve abierto para ubicarlo
 		return
 	add_to_group("ojo_verde")
-	_marca = preload("res://scripts/marca_garra.gd").new()
-	_marca.tamano = marca_tamano
-	_marca.position = marca_offset
-	_marca.z_index = 1
-	add_child(_marca)
 	if sonico_cierra:
 		add_to_group("cristal")   # el sónico del Murciélago lo persigue
 	collision_layer = 2
@@ -94,8 +87,6 @@ func _process(delta: float) -> void:
 		var p := get_tree().get_first_node_in_group("player") as Node2D
 		if p != null:
 			_mirada = _mirada.lerp((p.global_position - global_position).normalized() * radio * 0.28, 6.0 * delta)
-	if _marca != null:
-		_marca.encendida = acorazado and abierto and not _saliendo
 	queue_redraw()
 
 
@@ -187,8 +178,6 @@ func _salir() -> void:
 ## Golpe que no atraviesa la coraza: sacudida y chispa gris.
 func _rebotar() -> void:
 	Burst.emitir(self, global_position, color_coraza, 5, 0.6)
-	if acorazado and _marca != null:
-		_marca.destello()
 	var audio := get_node_or_null("/root/AudioManager")
 	if audio != null and sonido_rebote != null:
 		audio.play_sfx(sonido_rebote, volumen_db - 2.0, 0.1)
@@ -227,15 +216,9 @@ func _draw() -> void:
 	almendra.append(almendra[0])
 	draw_polyline(almendra, color_contorno, 4.0, true)
 	if acorazado and abierto:
-		draw_arc(Vector2.ZERO, w * 1.08, 0.0, TAU, 28, color_coraza, 9.0, true)
-		for i in 6:
-			var a := TAU * float(i) / 6.0
-			draw_circle(Vector2(cos(a), sin(a)) * w * 1.08, 6.0, color_coraza.lightened(0.3))
-		# Zarpa sobre la coraza: este ojo es del Oso.
-		var c := Vector2(0, -w * 1.08 - 26.0)
-		draw_circle(c + Vector2(0, 6), 11.0, color_coraza.lightened(0.45))
-		for dx in [-13.0, 0.0, 13.0]:
-			draw_circle(c + Vector2(dx, -10.0 - (3.0 if dx == 0.0 else 0.0)), 5.0, color_coraza.lightened(0.45))
+		CirculoProteccion.dibujar(self, Vector2.ZERO, w * 1.08, color_coraza, "oso")   # este ojo es del Oso
+	elif sonico_cierra and abierto:
+		CirculoProteccion.dibujar(self, Vector2.ZERO, w * 1.08, color_murcielago, "murcielago")   # lo cierra el sónico
 	# Párpado: trazo cian que atraviesa el ojo (como en el boceto); cerrado tapa todo.
 	var y_parpado := -h * 0.55 if _apertura > 0.5 else 0.0
 	draw_line(Vector2(-w * 1.15, y_parpado - 6.0), Vector2(w * 1.15, y_parpado + 4.0), color_parpado, 5.0, true)

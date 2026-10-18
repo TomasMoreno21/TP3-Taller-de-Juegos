@@ -60,7 +60,7 @@ enum Fase { UNO, DOS, TRES }
 @export var aviso_rayo := 0.7
 @export var ancho_rayo := 36.0
 @export var largo_rayo := 2600.0
-@export var intervalo_rayo_f1 := 2.4        ## convive con la lanza
+@export var intervalo_rayo_f1 := 2.1        ## convive con la lanza
 @export var primer_rayo := 2.0              ## s desde que abre la tanda (los ojos terminan de aparecer)
 @export var color_rayo := Color(0.55, 1.0, 0.45)
 @export var dano_reflejo := 30              ## rayo devuelto con parry: daño al ojo central
@@ -73,24 +73,33 @@ enum Fase { UNO, DOS, TRES }
 @export var tiempo_inclinarse := 0.6
 @export var respiro_tras_castigo := 1.5     ## s sin ataques después de cada castigo
 @export var espera_inicio := 1.2            ## s entre la entrada y el primer ciclo
+@export var golpes_nudo := 1               ## golpes fuertes del Oso para romper el círculo del nudo
+@export var tope_dano_castigo := 70         ## daño máximo por ventana de castigo (la F1 pide ~3 ciclos)
+@export var rampa_tandas_f1: Array[int] = [2, 3, 3]   ## tandas de llaves por ciclo (ciclo 1, 2, 3+)
 
 @export_group("Lanza")
 @export var dano_lanza := 15
+@export var dano_lanza_f1 := 10            ## en la F1 la lanza pega menos (convive con rayos y acoso)
 @export var aviso_lanza := 0.8
-@export var intervalo_lanza := 2.6          ## mientras hay llaves abiertas
-@export var intervalo_lanza_nudo := 3.4     ## mientras el Oso rompe el nudo
+@export var intervalo_lanza := 2.0          ## mientras hay llaves abiertas
+@export var intervalo_lanza_nudo := 2.4     ## mientras el Oso rompe el nudo
+@export var intervalo_lanza_f2 := 2.6       ## F2: también caen lanzas durante las torretas
+@export var anticipo_lanza := 0.35           ## la lanza apunta adelante del jugador si corre (× velocidad × aviso)
+@export var acoso_quieto := 1.6             ## s quieto (F1/F2) hasta que le cae una lanza encima
+@export var acoso_distancia := 120.0        ## px que tiene que moverse para no contar como quieto
+@export var acoso_min := 1.0                ## s mínimos entre lanzas de acoso
 @export var ancho_lanza := 70.0
 @export var empuje_lanza := 260.0
 
 @export_group("F2: torretas y ventana aérea")
 @export var dano_minimo_coraza := 24        ## golpe mínimo del Oso para cerrar la torreta acorazada
 @export var ventana_aerea := 7.0            ## s que el ojo queda elevado y golpeable
-@export var altura_ojo_aerea := 1110.0      ## px sobre el piso: fuera del Lobo desde la plataforma más alta (420 + 354 + 185 + radio)
+@export var altura_ojo_aerea := 1000.0      ## px sobre el piso: fuera del Lobo desde las plataformas cercanas al centro (330 + 354 + 185 + radio)
 @export var tiempo_elevarse := 0.7
 @export_subgroup("Rampa por ciclo (ciclo 1, 2, 3+)")
 @export var rampa_tandas: Array[int] = [1, 2, 2]          ## tandas de torretas por ciclo
 @export var rampa_ojos_max: Array[int] = [3, 3, 4]        ## ojos máximos por tanda
-@export var rampa_rayo: Array[float] = [3.0, 2.4, 2.0]    ## s entre rayos
+@export var rampa_rayo: Array[float] = [2.3, 1.9, 1.6]    ## s entre rayos
 @export var rampa_rayo_grueso: Array[float] = [0.0, 8.0, 7.0] ## s entre rayos gruesos del ojo (0 = sin)
 @export_subgroup("")
 @export var aviso_derrumbe := 1.2           ## s de temblor antes de que el piso central se rompa
@@ -116,6 +125,8 @@ enum Fase { UNO, DOS, TRES }
 @export var oleada2_cultistas := 2
 @export var oleada2_arqueros := 2
 @export var pausa_entre_oleadas := 1.5
+@export var escalonado_oleada := 0.35       ## s entre la entrada de un enemigo y el siguiente
+@export var separacion_oleada := 300.0      ## px entre filas de cultistas (no entran amontonados)
 @export var margen_spawn := 150.0           ## px desde el borde visible donde entran los enemigos
 @export var tiempo_hundirse := 1.2
 @export var tiempo_resurgir := 1.4
@@ -141,7 +152,7 @@ enum Fase { UNO, DOS, TRES }
 
 @export_group("F3: duelo")
 @export var altura_duelo := 650.0           ## altura del ojo mientras pelea
-@export var seguimiento_duelo := 1.2        ## qué tan rápido sigue al jugador en x entre ataques
+@export var seguimiento_duelo := 2.2        ## qué tan rápido sigue al jugador en x entre ataques
 @export var respiro_entre_ataques := 0.35
 @export var respiro_duelo := 0.5            ## después de cada ventana
 @export var ventana_duelo := 2.0            ## s clavada con el ojo vulnerable
@@ -156,12 +167,10 @@ enum Fase { UNO, DOS, TRES }
 @export var velocidad_onda_picada := 600.0
 @export var dano_embestida := 18
 @export var aviso_embestida := 0.8
-@export var velocidad_embestida := 1000.0
+@export var velocidad_embestida := 1500.0
 @export var hueco_embestida := 200.0        ## px libres bajo la estrella al embestir (Lobo y Murciélago pasan)
-@export var dano_rayo_blaster := 10        ## la embestida carga como un blaster: deja un rayo que daña en la franja
-@export var duracion_rayo_blaster := 0.3   ## s que queda el rayo tras la embestida
 @export var ancho_carga_blaster := 14.0    ## px de la franja mientras carga (al disparar se ensancha)
-@export var color_rayo_blaster := Color(1, 0.96, 0.96)
+@export var color_carga_blaster := Color(1, 0.96, 0.96)   ## destello de la franja al disparar
 @export var retroceso_blaster := 40.0      ## px que retrocede al cargar (retroceso del cañón)
 @export var prob_diagonal := 0.4
 @export var dano_orbe := 12
@@ -175,9 +184,9 @@ enum Fase { UNO, DOS, TRES }
 @export var color_roca := Color(0.3, 0.3, 0.34)   ## rocas y estalactitas (paleta de la cueva)
 @export var dano_estalactita := 15
 @export var estalactitas_cantidad := 3
-@export var aviso_estalactitas := 0.8       ## s que tiemblan en el techo (con la sombra en el piso) antes de caer
+@export var aviso_estalactitas := 1.3       ## s que tiemblan en el techo (con la sombra en el piso) antes de caer
 @export var caida_estalactita := 0.4
-@export var golpes_caparazon := 3           ## golpes fuertes del Oso para forzar el ojo cerrado
+@export var golpes_caparazon := 1           ## golpes fuertes del Oso para romper el círculo del ojo cerrado
 @export var tiempo_caparazon := 4.0         ## si no lo abre en este tiempo, se desclava sin ventana
 @export_range(0.0, 1.0, 0.05) var prob_caparazon := 0.4    ## a veces cae con el ojo cerrado
 @export_range(0.0, 1.0, 0.05) var prob_escudo_nino := 0.3   ## a veces usa al niño de escudo
@@ -228,6 +237,9 @@ var _gen := 0
 var _ciclo := 0
 var _llaves_vivas := 0
 var _lanza_t := 0.0
+var _acoso_pos := Vector2.ZERO
+var _acoso_t := 0.0
+var _acoso_cd := 0.0
 var _ventana_t := 0.0
 var _fase_pendiente := false
 var _altura_ojo := 550.0    # altura de reposo del ojo (posición de Cuerpo en la escena)
@@ -263,10 +275,6 @@ var _golpes_cap := 0
 var _dano_ventana := 0
 var _estalactitas: Array = []
 var _traidor: Node2D = null
-var _blaster: Line2D = null
-var _blaster_sigue := false
-var _blaster_t := 0.0
-var _blaster_pego := false
 
 @onready var tallo: Polygon2D = $Tallo
 @onready var cuerpo: Node2D = $Cuerpo
@@ -284,8 +292,8 @@ var _blaster_pego := false
 @onready var bordes_foso: StaticBody2D = $BordesFoso   # topes solo para enemigos (capa 3): no caen al pozo
 @onready var losa: StaticBody2D = $LosaCentral
 @onready var foso = $Foso   # foso_pinchos.gd
-@onready var marca_ojo = get_node_or_null("Cuerpo/MarcaGarra")   # marca_garra.gd: ojo cerrado (F3)
-@onready var marca_nudo = get_node_or_null("MarcaNudo")          # marca_garra.gd: nudo del tallo (F1)
+@onready var circulo_ojo = get_node_or_null("Cuerpo/CirculoOjo")   # circulo_proteccion.gd: ojo clavado cerrado (F3)
+@onready var circulo_nudo = get_node_or_null("CirculoNudo")         # circulo_proteccion.gd: nudo del tallo (F1)
 @onready var blanco_sonico = get_node_or_null("Cuerpo/BlancoSonico")   # blanco_sonico.gd
 
 
@@ -313,8 +321,12 @@ func _ready() -> void:
 	nudo.roto.connect(_on_nudo_roto)
 	if nudo.has_signal("rebotado"):
 		nudo.rebotado.connect(func() -> void:
-			if marca_nudo != null:
-				marca_nudo.destello())
+			if circulo_nudo != null:
+				circulo_nudo.rebote())
+	nudo.golpes_para_romper = golpes_nudo
+	nudo.roto.connect(func() -> void:
+		if circulo_nudo != null:
+			circulo_nudo.romper())
 	if blanco_sonico != null:
 		blanco_sonico.jefe = self
 	_sembrar()
@@ -355,7 +367,6 @@ func preparar_ola() -> void:
 	_limpiar_orbes()
 	_limpiar_estalactitas()
 	_limpiar_traidor()
-	_limpiar_blaster()
 	_contener_ataque(false)
 	if ojo != null:
 		ojo.nino_escudo = 0.0
@@ -435,7 +446,7 @@ func _ciclo_f1(gen: int) -> void:
 	_estado = "llaves"
 	_lanza_t = intervalo_lanza * 0.6
 	_rayo_t = primer_rayo
-	for _t in tandas_por_ciclo:
+	for _t in maxi(int(_rampa(rampa_tandas_f1, tandas_por_ciclo)), 1):
 		await _tanda(gen, false)
 		if not _sigue(gen) or _fase_pendiente:
 			break
@@ -463,6 +474,7 @@ func _ciclo_f1(gen: int) -> void:
 	if not _sigue(gen):
 		return
 	_hurtbox_on(true)
+	_dano_ventana = 0
 	_ventana_t = ventana_castigo
 	while _sigue(gen) and _estado == "castigo" and _ventana_t > 0.0:
 		await _esperar(0.1)
@@ -581,7 +593,6 @@ func _physics_process(delta: float) -> void:
 		_contacto(_contacto_dano)
 	if not _orbes_nodos.is_empty():
 		_orbes_tick(delta)
-	_blaster_tick(delta)
 	_mirar_jugador(delta)
 	if piedritas_pelea and _estado != "aparicion":
 		_piedritas_t -= delta
@@ -599,11 +610,20 @@ func _physics_process(delta: float) -> void:
 		if _grueso_t <= 0.0:
 			_rayo_grueso()
 			_grueso_t = _rampa(rampa_rayo_grueso, 7.0)
-	if _estado == "llaves" or _estado == "nudo":
+	if _estado == "llaves" or _estado == "nudo" or (_estado == "torretas" and intervalo_lanza_f2 > 0.0):
 		_lanza_t -= delta
-		if _lanza_t <= 0.0:
+		if _lanza_t <= 0.0 and _hay_rayo_chico():
+			_lanza_t = 0.4   # nunca lanza y rayo a la vez: espera a que pase el rayo
+		elif _lanza_t <= 0.0:
 			_lanzar_lanza()
-			_lanza_t = intervalo_lanza if _estado == "llaves" else intervalo_lanza_nudo
+			match _estado:
+				"llaves":
+					_lanza_t = intervalo_lanza
+				"nudo":
+					_lanza_t = intervalo_lanza_nudo
+				_:
+					_lanza_t = intervalo_lanza_f2
+	_acoso_tick(delta)
 
 
 # --- Ojos verdes por tandas ---
@@ -783,7 +803,17 @@ func golpe_ojo(cantidad: int, _dir: int, _critico: bool) -> void:
 		if not _muerto and _dano_ventana >= tope_dano_ventana and _estado == "clavada":
 			_estado = "fin_castigo"   # tope de la ventana: el ojo se cierra
 		return
-	if _estado != "castigo" and _estado != "ventana_aerea":
+	if _estado == "castigo":
+		var resto_c := tope_dano_castigo - _dano_ventana
+		if resto_c <= 0:
+			return
+		var c2 := mini(cantidad, resto_c)
+		_dano_ventana += c2
+		_recibir_dano(c2)
+		if not _muerto and _dano_ventana >= tope_dano_castigo and _estado == "castigo":
+			_estado = "fin_castigo"   # tope de la ventana: se levanta
+		return
+	if _estado != "ventana_aerea":
 		return
 	_recibir_dano(cantidad)
 
@@ -822,17 +852,24 @@ func _herida_ojo() -> void:
 			_puntas[idx].dano = clampf(perdida / por_punta - float(i), 0.0, 1.0)
 
 
-## Marcas de garra: se encienden solo cuando hace falta el Oso (nudo activo / ojo cerrado).
+## Círculos de protección: encendidos solo cuando hace falta el Oso (nudo activo / ojo clavado cerrado).
 func _marcas() -> void:
-	if marca_nudo != null:
-		marca_nudo.encendida = _activo and nudo.activo and not nudo.esta_roto()
-	if marca_ojo != null:
-		marca_ojo.encendida = _activo and _estado == "caparazon"
+	_circulo(circulo_nudo, _activo and nudo.activo and not nudo.esta_roto())
+	_circulo(circulo_ojo, _activo and _estado == "caparazon")
 	if blanco_sonico != null:
 		var cs := blanco_sonico.get_node_or_null("Collision") as CollisionShape2D
 		var on := _activo and fase == Fase.TRES
 		if cs != null and cs.disabled == on:
 			cs.set_deferred("disabled", not on)
+
+
+func _circulo(c: Node, on: bool) -> void:
+	if c == null:
+		return
+	if on:
+		c.encendido = true
+	elif not c.rompiendo:
+		c.encendido = false
 
 
 ## F3: el sónico del Murciélago le pega siempre (no solo en las ventanas), salvo cuando no está en juego.
@@ -936,11 +973,33 @@ func _color_fase() -> Color:
 
 # --- Lanza ---
 
-func _lanzar_lanza() -> void:
+## Quieto mucho tiempo en la F1/F2 (llaves, nudo, torretas): le cae una lanza justo encima.
+func _acoso_tick(delta: float) -> void:
+	_acoso_cd -= delta
+	var p := _obtener_player()
+	if p == null or not (_estado in ["llaves", "nudo", "torretas"]):
+		_acoso_t = 0.0
+		return
+	if p.global_position.distance_to(_acoso_pos) > acoso_distancia:
+		_acoso_pos = p.global_position
+		_acoso_t = 0.0
+		return
+	_acoso_t += delta
+	if _acoso_t >= acoso_quieto and _acoso_cd <= 0.0 and not _hay_rayo_chico():
+		_lanzar_lanza(false)
+		_acoso_t = 0.0
+		_acoso_cd = acoso_min
+
+
+## `anticipar`: apunta adelante del jugador si corre (quieto da igual).
+func _lanzar_lanza(anticipar: bool = true) -> void:
 	var p := _obtener_player()
 	if p == null:
 		return
-	var objetivo := Vector2(p.global_position.x, global_position.y)
+	var vx := 0.0
+	if anticipar and p.get("velocity") is Vector2:
+		vx = (p.get("velocity") as Vector2).x
+	var objetivo := Vector2(p.global_position.x + vx * aviso_lanza * anticipo_lanza, global_position.y)
 	# La punta inferior/lateral más cercana en x al jugador.
 	var mejor := Vector2.ZERO
 	var mejor_d := INF
@@ -958,7 +1017,7 @@ func _lanzar_lanza() -> void:
 	var l = LANZA_SCENE.instantiate()
 	l.desde = mejor
 	l.hasta = objetivo
-	l.dano = dano_lanza
+	l.dano = dano_lanza_f1 if fase == Fase.UNO else dano_lanza
 	l.aviso = aviso_lanza
 	l.ancho = ancho_lanza
 	l.empuje = empuje_lanza
@@ -1184,6 +1243,10 @@ func _oleada(gen: int, cultistas: int, arqueros: int) -> void:
 	_invocados_vivos = tipos.size()
 	for i in tipos.size():
 		_invocar(tipos[i], i)
+		if i < tipos.size() - 1:
+			await _esperar(escalonado_oleada)
+			if not _sigue(gen):
+				return
 	while _sigue(gen) and _invocados_vivos > 0:
 		_revisar_limbo()
 		await _esperar(0.2)
@@ -1196,10 +1259,19 @@ func _invocar(tipo: String, i: int) -> void:
 	e.set("spawn_telegrafiado", true)
 	var lado := -1.0 if i % 2 == 0 else 1.0
 	var fila := floori(i / 2.0)
-	var x := global_position.x + lado * (_mitad_vista() - margen_spawn - fila * 140.0)
+	var x := global_position.x + lado * (_mitad_vista() - margen_spawn - fila * separacion_oleada)
+	var y := global_position.y - 150.0
+	if tipo == "arquero":
+		# Los arqueros aparecen en las plataformas altas y disparan desde arriba.
+		for pl in plataformas_raiz.get_children():
+			var n2 := pl as Node2D
+			if n2.visible and n2.position.y < -450.0 and signf(n2.position.x) == lado:
+				x = n2.global_position.x
+				y = n2.global_position.y - 150.0
+				break
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	destino.add_child(e)
-	e.global_position = Vector2(x, global_position.y - 150.0)
+	e.global_position = Vector2(x, y)
 	if e.has_method("activar"):
 		e.activar()
 	if e.has_signal("died"):
@@ -1459,7 +1531,7 @@ func _picada(gen: int, clavar: bool = false) -> void:
 	cuerpo.position = Vector2(x, -altura_picada)
 	_x_base = x
 	_ajustar_tallo()
-	var sombra := _sombra_piso(x)
+	var sombra := _sombra_piso(x, aviso_picada)
 	if not headless:
 		create_tween().tween_property(cuerpo, "modulate:a", 1.0, 0.15)
 	await _esperar(aviso_picada)
@@ -1520,14 +1592,10 @@ func _embestida(gen: int, ida_y_vuelta: bool) -> void:
 	if not _sigue(gen):
 		return
 	_contacto_dano = dano_embestida
-	_blaster_iniciar(cuerpo.global_position, cuerpo.global_position, true)
 	await _ir_a(hasta, desde.distance_to(hasta) / maxf(velocidad_embestida, 1.0))
-	_blaster_soltar()
 	if ida_y_vuelta and _sigue(gen):
-		await _esperar(0.35)
-		_blaster_iniciar(cuerpo.global_position, cuerpo.global_position, true)
+		await _esperar(0.25)
 		await _ir_a(desde, desde.distance_to(hasta) / maxf(velocidad_embestida, 1.0))
-		_blaster_soltar()
 	_contacto_dano = 0
 	if not _sigue(gen):
 		return
@@ -1558,7 +1626,7 @@ func _carga_blaster(linea: Line2D, lado: float) -> void:
 		t += 0.03
 	cuerpo.rotation = 0.0
 	if is_instance_valid(linea):
-		linea.default_color = Color(color_rayo_blaster.r, color_rayo_blaster.g, color_rayo_blaster.b, 0.85)
+		linea.default_color = Color(color_carga_blaster.r, color_carga_blaster.g, color_carga_blaster.b, 0.85)
 		linea.create_tween().tween_property(linea, "width", ancho, 0.08).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_flash()
 	_rugido(8.0)
@@ -1567,61 +1635,6 @@ func _carga_blaster(linea: Line2D, lado: float) -> void:
 
 func _ancho_franja() -> float:
 	return (alto_cuerpo_arriba + alto_cuerpo_abajo) * cuerpo.scale.x * 0.5
-
-
-## Rayo del blaster entre dos puntos globales; con `sigue` la punta acompaña a la Estrella.
-func _blaster_iniciar(desde_g: Vector2, hasta_g: Vector2, sigue: bool = false) -> void:
-	_limpiar_blaster()
-	var l := Line2D.new()
-	l.width = _ancho_franja()
-	l.default_color = color_rayo_blaster
-	l.z_index = -4   # detrás de la Estrella (raíz en z -2, su cuerpo en -3): el rayo sale de ella
-	_destino().add_child(l)
-	l.points = PackedVector2Array([l.to_local(desde_g), l.to_local(hasta_g)])
-	_blaster = l
-	_blaster_sigue = sigue
-	_blaster_t = duracion_rayo_blaster
-	_blaster_pego = false
-
-
-## La Estrella llegó: el rayo queda un instante y se apaga.
-func _blaster_soltar() -> void:
-	if _blaster == null or not is_instance_valid(_blaster):
-		return
-	_blaster.set_point_position(1, _blaster.to_local(cuerpo.global_position))
-	_blaster_sigue = false
-	_blaster_t = duracion_rayo_blaster
-
-
-func _blaster_tick(delta: float) -> void:
-	if _blaster == null or not is_instance_valid(_blaster):
-		return
-	if _blaster_sigue:
-		_blaster.set_point_position(1, _blaster.to_local(cuerpo.global_position))
-	else:
-		_blaster_t -= delta
-		_blaster.modulate.a = clampf(_blaster_t / maxf(duracion_rayo_blaster, 0.01), 0.0, 1.0)
-		if _blaster_t <= 0.0:
-			_limpiar_blaster()
-			return
-	if _blaster_pego:
-		return
-	var p := _obtener_player()
-	if p == null or float(p.get("_invuln_timer") if p.get("_invuln_timer") != null else 0.0) > 0.0:
-		return
-	var a := _blaster.to_global(_blaster.points[0])
-	var b := _blaster.to_global(_blaster.points[1])
-	var cerca := Geometry2D.get_closest_point_to_segment(p.global_position, a, b)
-	if p.global_position.distance_to(cerca) < _blaster.width * 0.5:
-		_blaster_pego = true
-		p.take_damage(dano_rayo_blaster, 240.0, 1 if p.global_position.x >= cerca.x else -1)
-
-
-func _limpiar_blaster() -> void:
-	if _blaster != null and is_instance_valid(_blaster):
-		_blaster.queue_free()
-	_blaster = null
-	_blaster_sigue = false
 
 
 ## Roca de la cueva: polígono irregular con la paleta del nivel (no usa el arte del jefe).
@@ -1723,7 +1736,7 @@ func _lluvia_estalactitas(gen: int) -> void:
 		e.global_position = Vector2(to_global(Vector2(float(x), 0.0)).x, techo_y)
 		e.set_meta("x0", e.global_position.x)
 		_estalactitas.append(e)
-		sombras.append(_sombra_piso(float(x)))
+		sombras.append(_sombra_piso(float(x), aviso_estalactitas))
 		if DisplayServer.get_name() != "headless":
 			var tw := e.create_tween().set_loops(maxi(int(aviso_estalactitas / 0.08), 1))
 			tw.tween_property(e, "position:x", e.position.x + 6.0, 0.04)
@@ -1848,8 +1861,8 @@ func _golpe_caparazon(cantidad: int) -> void:
 	if not es_oso or cantidad < dano_minimo_coraza:
 		Burst.emitir(self, ojo.global_position, Color(0.55, 0.55, 0.6), 4, 0.5)   # rebote
 		_rugido(2.0)
-		if marca_ojo != null:
-			marca_ojo.destello()
+		if circulo_ojo != null:
+			circulo_ojo.rebote()
 		var audio := get_node_or_null("/root/AudioManager")
 		if audio != null and sonido_rebote != null:
 			audio.play_sfx(sonido_rebote, -4.0, 0.1)
@@ -1861,6 +1874,8 @@ func _golpe_caparazon(cantidad: int) -> void:
 	if _golpes_cap < golpes_caparazon:
 		return   # sigue cerrado hasta abrirse del todo (una apertura parcial recortaba el arte)
 	_estado = "caparazon_roto"
+	if circulo_ojo != null:
+		circulo_ojo.romper()
 	_poner_ojo(1.0)
 
 
@@ -1990,16 +2005,31 @@ func _ir_a(destino: Vector2, dur: float) -> void:
 	_x_base = destino.x
 
 
-func _sombra_piso(x: float) -> Node2D:
+## Aviso en el piso de lo que cae: mancha oscura + aro del color de la fase que late y se cierra
+## hacia el centro durante `dur` (se lee cuánto falta).
+func _sombra_piso(x: float, dur: float = 0.0) -> Node2D:
 	var s := Polygon2D.new()
 	var pts := PackedVector2Array()
-	for k in 20:
-		pts.append(Vector2(cos(TAU * k / 20.0) * 260.0, sin(TAU * k / 20.0) * 22.0))
+	for k in 24:
+		pts.append(Vector2(cos(TAU * k / 24.0) * 260.0, sin(TAU * k / 24.0) * 26.0))
 	s.polygon = pts
-	s.color = Color(0, 0, 0, 0.45)
+	s.color = Color(0, 0, 0, 0.6)
 	s.z_index = 3
+	var aro := Line2D.new()
+	var b := pts.duplicate()
+	b.append(pts[0])
+	aro.points = b
+	aro.width = 7.0
+	var col := _color_fase().lightened(0.25)
+	aro.default_color = Color(col.r, col.g, col.b, 0.95)
+	s.add_child(aro)
 	_destino().add_child(s)
 	s.global_position = to_global(Vector2(x, -6.0))
+	if dur > 0.0 and DisplayServer.get_name() != "headless":
+		aro.create_tween().tween_property(aro, "scale", Vector2(0.2, 0.2), dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		var tw := s.create_tween().set_loops(maxi(int(dur / 0.2), 1))
+		tw.tween_property(s, "modulate:a", 0.6, 0.1)
+		tw.tween_property(s, "modulate:a", 1.0, 0.1)
 	return s
 
 
@@ -2230,7 +2260,6 @@ func _morir() -> void:
 	_limpiar_orbes()
 	_limpiar_estalactitas()
 	_limpiar_traidor()
-	_limpiar_blaster()
 	_contener_ataque(false)
 	_contacto_dano = 0
 	_energia_jefe(false)

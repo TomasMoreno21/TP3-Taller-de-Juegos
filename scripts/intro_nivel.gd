@@ -17,7 +17,8 @@ signal terminada
 @export var seg_mantener_saltar := 1.0
 @export var seg_maximos := 40.0              ## red de seguridad: pasado este tiempo (desde que carga el nivel) la intro se corta y el jugador recupera el control
 @export var resplandor: CanvasItem            ## luz lejana: aparece con la intro y se apaga al entregar el control
-@export var velocidad_caminata := 0.35     ## fracción de la velocidad del jugador al caminar solo
+@export var velocidad_caminata := 0.35     ## fracción MÍNIMA de la velocidad del jugador al caminar solo (paso natural)
+@export var rampa_caminata := 0.4          ## s para arrancar / frenar la caminata (sin tirones)
 @export var inicio_x := -1400.0             ## el jugador arranca la intro en esta x (para que el paseo dure toda la charla)
 @export var distancia_max_inicio := 2000.0   ## si el jugador aparece más lejos de `inicio_x` (p. ej. probando otro tramo) la intro se omite
 @export var caminar_hasta_x := 0.0          ## el jugador se detiene al llegar a esta x (tope de seguridad)
@@ -47,6 +48,8 @@ var _mantenido := 0.0
 var _t := 0.0
 var _seguir := false
 var _camina := false
+var _vel_caminata := -1.0   # fracción constante de toda la caminata (se calcula una sola vez)
+var _dir_actual := 0.0
 var _escala_resplandor := 1.0
 var _titulo_listo := false
 
@@ -116,7 +119,11 @@ func _process(delta: float) -> void:
 		_cam.global_position = _cam.global_position.lerp(meta, 1.0 - exp(-3.5 * delta))
 	if _camina and _jugador.global_position.x >= caminar_hasta_x:
 		_camina = false
-		_jugador.set("cinematica_dir", 0.0)
+	# Velocidad constante con rampa al arrancar y al frenar (antes se recalculaba por plano: tirones).
+	var meta_dir := _vel_caminata if _camina else 0.0
+	if not is_equal_approx(_dir_actual, meta_dir):
+		_dir_actual = move_toward(_dir_actual, meta_dir, delta / maxf(rampa_caminata, 0.01))
+		_jugador.set("cinematica_dir", _dir_actual)
 	if resplandor != null:
 		resplandor.scale = Vector2.ONE * (_escala_resplandor + 0.1 * sin(_t * 2.2))   # la luz "respira"
 	if Input.is_action_pressed("dialog_skip"):
@@ -183,15 +190,16 @@ func _arrancar_plano(p: PlanoIntro) -> void:
 	_mostrar_cartela(p.cartela, p.duracion)
 	if p.camina and _jugador.global_position.x < caminar_hasta_x:
 		_camina = true
-		# Ritmo: el paseo cubre la distancia restante durante todos los planos que quedan (sin parar a mitad de charla).
-		var restante := 0.0
-		for q in _planos:
-			if q.devolver_control:
-				break
-			if _planos.find(q) >= _planos.find(p):
-				restante += q.duracion
-		var vel := (caminar_hasta_x - _jugador.global_position.x) / (600.0 * maxf(restante, 1.0)) * 0.9
-		_jugador.set("cinematica_dir", clampf(vel, 0.05, 1.0))
+		if _vel_caminata < 0.0:
+			# Ritmo: una sola velocidad para todo el paseo (cubre la distancia durante los planos que quedan).
+			var restante := 0.0
+			for q in _planos:
+				if q.devolver_control:
+					break
+				if _planos.find(q) >= _planos.find(p):
+					restante += q.duracion
+			var vel := (caminar_hasta_x - _jugador.global_position.x) / (600.0 * maxf(restante, 1.0)) * 0.9
+			_vel_caminata = clampf(vel, velocidad_caminata, 1.0)
 	if not p.globo.is_empty():
 		if p.retraso_globo > 0.0:
 			get_tree().create_timer(p.retraso_globo, false).timeout.connect(_decir.bind(p))
@@ -271,6 +279,7 @@ func _entregar_control() -> void:
 	_activa = false
 	_seguir = false
 	_camina = false
+	_dir_actual = 0.0
 	_jugador.set("cinematica_dir", 0.0)
 	set_process(false)
 	if _tw_cam != null and _tw_cam.is_valid():
