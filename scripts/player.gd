@@ -220,6 +220,9 @@ var _attack_anim_cola: Array[String] = []
 var _attack_anim_speed_scale := 1.0
 var _attack_frame_dur := PackedFloat32Array()   # tiempo planificado de cada frame de la animación de ataque en curso
 static var _tips_vistos: Dictionary = {}
+@export var recordar_muertes := 3          ## muertes en la misma zona para que el Amuleto recuerde las transformaciones
+@export var recordar_radio := 1200.0       ## px: "misma zona"
+@export var recordar_y_max_n2 := 3500.0    ## el recordatorio solo corre en N1 y en N2 hasta esta y (mitad del descenso)
 @export var tips_ayuda := true             ## muestra avisos de ayuda la primera vez (parry, energía)
 @export_group("Defensa")
 @export var bloqueo_costo_energia := 3.0  ## energía base que gasta cada golpe bloqueado (0 = gratis)
@@ -350,6 +353,7 @@ var _amb: Node                     # autoload Ambiente (cacheado)
 var _turn_prev_facing := 0
 var _base_sprite_scale := Vector2.ONE
 var _spawn_position := Vector2.ZERO
+var _ultima_pos_valida := Vector2.ZERO   # guardia anti-NaN (colisión degenerada en move_and_slide)
 var _tiene_checkpoint := false
 var _checkpoint_forma := Form.HUMAN
 var _checkpoint_vida := VIDA_MAX
@@ -505,6 +509,14 @@ func _ready() -> void:
 		forms.append(forma)
 	health = VIDA_MAX
 	_spawn_position = global_position
+	_ultima_pos_valida = global_position
+	var prog_ini := get_node_or_null("/root/Progresion")
+	if prog_ini != null:
+		if prog_ini.recordar_formas:
+			prog_ini.recordar_formas = false
+			_tips_vistos.erase("formas_recordar")
+			_tip_una_vez("formas_recordar", "tip_formas_recordar")
+		prog_ini.almas_pendientes.clear()   # nivel nuevo: lo pendiente del anterior ya es definitivo
 	_base_sprite_scale = Vector2(absf(visual.scale.x), visual.scale.y)
 	_visual_base_x = visual.position.x
 	_suave_s = global_position.y
@@ -600,6 +612,15 @@ func _tick_solape() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Guardia anti-NaN (misma que enemy.gd): una colisión degenerada en move_and_slide puede volver
+	# no-finitos velocity/posición y spamear warnings del motor (normalize/sample_baked) al infinito.
+	if not velocity.is_finite():
+		velocity = Vector2.ZERO
+	if not global_position.is_finite():
+		global_position = _ultima_pos_valida if _ultima_pos_valida != Vector2.ZERO else _spawn_position
+		velocity = Vector2.ZERO
+		return
+	_ultima_pos_valida = global_position
 	_tick_solape()
 	if current_form == Form.HUMAN and not _tips_vistos.has("bloqueo") and _en_combate():
 		_tip_una_vez("bloqueo", "tip_bloqueo")
@@ -2583,6 +2604,15 @@ func _update_animacion() -> void:
 			nuevo_x = obj_x
 		visual.position.x += nuevo_x - _trepar_off_x
 		_trepar_off_x = nuevo_x
+	# Bloqueo: el Humano se planta con la pose de guardia (sprite pintado) y el cuerpo vuelve a su eje.
+	if blocking and current_form == Form.HUMAN and visual.sprite_frames != null and visual.sprite_frames.has_animation("bloqueo"):
+		if visual.animation != "bloqueo":
+			visual.play("bloqueo")
+		visual.speed_scale = 1.0
+		var dbl := get_physics_process_delta_time()
+		visual.skew = lerpf(visual.skew, 0.0, minf(12.0 * dbl, 1.0))
+		visual.rotation = lerpf(visual.rotation, 0.0, minf(12.0 * dbl, 1.0))
+		return
 # Ataques del Humano con cola propia: la anim se estira (speed_scale) para
 	# durar exactamente la recuperación del golpe. Light -> attack1 (1-3),
 	# Heavy -> attack2 (4-6), Special/Combo -> attack_full (1-6).
@@ -2762,6 +2792,23 @@ func _update_animacion() -> void:
 		visual.position.y = lerpf(visual.position.y, _visual_base_y() + onda, minf(10.0 * dt, 1.0))
 
 
+func _registrar_muerte_zona(prog: Node) -> void:
+	var esc := get_tree().current_scene.scene_file_path if get_tree().current_scene != null else ""
+	var n1 := esc.ends_with("nivel1.tscn")
+	var n2 := esc.ends_with("nivel2.tscn") and global_position.y < recordar_y_max_n2
+	if not (n1 or n2):
+		return
+	var cerca := 0
+	for m in prog.muertes_zona:
+		if m["escena"] == esc and (m["pos"] as Vector2).distance_to(global_position) <= recordar_radio:
+			cerca += 1
+	prog.muertes_zona.append({"escena": esc, "pos": global_position})
+	if cerca + 1 >= recordar_muertes:
+		prog.recordar_formas = true
+		# Reinicia la cuenta de esta zona: el aviso vuelve a salir tras otras N muertes.
+		prog.muertes_zona = prog.muertes_zona.filter(func(m): return m["escena"] != esc or (m["pos"] as Vector2).distance_to(global_position) > recordar_radio)
+
+
 func _handle_death() -> void:
 	if health > 0 or god_mode or _derrota_activa:
 		return
@@ -2769,6 +2816,7 @@ func _handle_death() -> void:
 	var prog := get_node_or_null("/root/Progresion")
 	if prog != null:
 		prog.muertes += 1
+		_registrar_muerte_zona(prog)
 	if DisplayServer.get_name() == "headless" or muerte_duracion <= 0.0:
 		_mostrar_derrota()
 		return
@@ -2833,6 +2881,9 @@ func _reaparecer_ahora() -> void:
 	if is_instance_valid(_velo_muerte):
 		_velo_muerte.queue_free()
 	_velo_muerte = null
+	var prog_rep := get_node_or_null("/root/Progresion")
+	if prog_rep != null:
+		prog_rep.revertir_almas_pendientes()
 	if _tiene_checkpoint:
 		reaparecer_en_checkpoint()
 		var cam := get_viewport().get_camera_2d()
@@ -3147,6 +3198,9 @@ func curar(cantidad: int) -> void:
 
 func actualizar_checkpoint(pos: Vector2) -> void:
 	_spawn_position = pos
+	var prog_chk := get_node_or_null("/root/Progresion")
+	if prog_chk != null:
+		prog_chk.almas_pendientes.clear()   # lo recogido hasta acá ya no se pierde al morir
 	_checkpoint_forma = current_form
 	_checkpoint_vida = health
 	energia = ENERGIA_MAX   # cada checkpoint recarga toda la energía (y reaparecés con ella llena)

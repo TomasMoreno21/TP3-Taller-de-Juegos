@@ -81,12 +81,19 @@ func _ready() -> void:
 func _actualizar_estela() -> void:
 	if _estela == null:
 		return
+	# Sin esto, un punto no finito hace que el Line2D (con width_curve) spamee
+	# "Vector2 cannot be normalized" + "sample_baked: Offset is non-finite" cada frame.
+	if not global_position.is_finite():
+		return
 	_estela.add_point(global_position)
 	while _estela.get_point_count() > estela_puntos:
 		_estela.remove_point(0)
 
 
 func _physics_process(delta: float) -> void:
+	if not global_position.is_finite():
+		queue_free()
+		return
 	_t += delta
 	if _arte != null:
 		_arte.rotation = direction.angle()

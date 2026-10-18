@@ -47,6 +47,7 @@
 [ext_resource type="Texture2D" uid="uid://drautbu41glcv" path="res://Sprites/Jugador y Transformaciones/afk pj2.png" id="43_afk2"]
 [ext_resource type="Texture2D" uid="uid://bo2kxk5nhlqgr" path="res://Sprites/Jugador y Transformaciones/afk pj3.png" id="44_afk3"]
 [ext_resource type="Texture2D" uid="uid://3srm1i11vtgl" path="res://Sprites/Jugador y Transformaciones/afk pj4.png" id="45_afk4"]
+[ext_resource type="Texture2D" path="res://Sprites/Jugador y Transformaciones/pj bloqueo.png" id="46_bloqueo"]
 
 [resource]
 animations = [{
@@ -295,4 +296,12 @@ animations = [{
 "loop": 0,
 "name": &"salto",
 "speed": 7.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("46_bloqueo")
+}],
+"loop": 0,
+"name": &"bloqueo",
+"speed": 1.0
 }]

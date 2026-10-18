@@ -184,7 +184,7 @@ func _init() -> void:
 	var hp_sonico_i: int = boss.health
 	boss.blanco_sonico.golpe_proyectil = true
 	boss.blanco_sonico.take_damage(15, 120.0, 1)
-	_check(boss.health == hp_sonico_i and not boss.blanco_sonico.apuntable(), "F2 (interludio): el sónico no le pega")
+	_check(boss.health == hp_sonico_i and not boss.blanco_sonico.apuntable(), "Escondida (interludio) el sónico no le pega")
 	var hp_i: int = boss.health
 	boss.golpe_ojo(50, 1, false)
 	_check(boss.health == hp_i, "Escondida no recibe daño")
