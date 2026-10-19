@@ -1,3 +1,4 @@
+@tool
 extends Node2D
 ## Jefe final: la Estrella (el Arzobispo, líder del culto, transformado). Fija en el fondo, unida al piso por
 ## un tallo; NO daña por contacto. El origen del nodo es el piso de la arena, en la base del tallo.
@@ -27,6 +28,8 @@ const ATAQUE_SCENE := preload("res://scenes/ataque_jefe.tscn")
 const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 
 enum Fase { UNO, DOS, TRES }
+
+const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: las UV de Núcleo y puntas están en esta escala
 
 @export_group("Vida y daño")
 @export var vida_max := 600
@@ -140,7 +143,51 @@ enum Fase { UNO, DOS, TRES }
 @export var color_fase1 := Color(0.85, 0.25, 0.75)
 @export var color_fase2 := Color(0.6, 0.3, 0.9)
 @export var color_fase3 := Color(0.9, 0.2, 0.3)
+@export var cabeza_f3: SpriteFrames = preload("res://resources/jefe_cabeza_f3.tres")  ## arte de la cabeza al entrar a la F3 (segunda "personalidad"); null = sin cambio
+## zoom del arte de la F3 dentro de la Estrella (1 = calza el canvas; >1 = dibujo más grande)
+@export var arte_f3_escala := 1.0:
+	set(v):
+		arte_f3_escala = v
+		if Engine.is_editor_hint():
+			_refrescar_preview()
+## corrimiento del arte de la F3 (px del arte, desde el centro)
+@export var arte_f3_offset := Vector2.ZERO:
+	set(v):
+		arte_f3_offset = v
+		if Engine.is_editor_hint():
+			_refrescar_preview()
+## solo-editor: dibuja el arte de la F3 sobre la Estrella para acomodar escala/offset viendo el resultado en vivo
+@export var previsualizar_f3 := false:
+	set(v):
+		previsualizar_f3 = v
+		if Engine.is_editor_hint():
+			_refrescar_preview()
 @export var muerte_slowmo := 2.6
+@export_group("Ajuste F3 (editá con Previsualizar F3)")
+## mueve el dibujo de la cabeza (Estrella) en la F3
+@export var estrella_f3_offset := Vector2.ZERO:
+	set(v):
+		estrella_f3_offset = v
+		if Engine.is_editor_hint():
+			_refrescar_preview()
+## agranda el dibujo de la cabeza (Estrella) en la F3
+@export var estrella_f3_escala := 1.0:
+	set(v):
+		estrella_f3_escala = v
+		if Engine.is_editor_hint():
+			_refrescar_preview()
+## mueve el ojo en la F3
+@export var ojo_f3_offset := Vector2.ZERO:
+	set(v):
+		ojo_f3_offset = v
+		if Engine.is_editor_hint():
+			_refrescar_preview()
+## agranda el ojo en la F3 (los golpeables siguen al ojo)
+@export var ojo_f3_escala := 1.0:
+	set(v):
+		ojo_f3_escala = v
+		if Engine.is_editor_hint():
+			_refrescar_preview()
 @export_group("Claridad (tips del Amuleto y señales)")
 @export var aviso_cierre := 1.0             ## s finales de una ventana en que el ojo parpadea y la Estrella tiembla
 @export var temblor_cierre := 5.0           ## px de temblor de la Estrella antes de cerrar el ojo
@@ -263,6 +310,19 @@ var _ojos_vivos: Array = []   # ojos de la tanda actual (los cerrados se liberan
 var _rayo_t := 0.0
 var _ultimo_tirador: Node = null
 var _puntas: Array = []        # punta_estrella.gd, en orden Punta1..8
+var _cabeza_base: SpriteFrames
+var _uv_nucleo := PackedVector2Array()
+var _uv_puntas: Array = []     # UV base por punta (alineado con _puntas)
+var _preview_f3: Node2D = null  # solo-editor: contenedor de los clones del arte F3
+var _preview_transform := false  # solo-editor: el preview tiene aplicado el transform de F3
+var _estrella_pos0 := Vector2.ZERO
+var _estrella_scale0 := Vector2.ONE
+var _ojo_pos0 := Vector2.ZERO
+var _ojo_scale0 := Vector2.ONE
+var _abierta_offset0 := Vector2.ZERO
+var _hurt_col0 := Vector2.ONE
+var _blanco_col0 := Vector2.ONE
+var _circulo_radio0 := 0.0
 var _sin_tallo := false       # F3: se arrancó del tallo
 var _x_base := 0.0            # x del cuerpo que respeta el temblor del aviso de cierre
 var _temblando := false
@@ -279,8 +339,9 @@ var _traidor: Node2D = null
 @onready var tallo: Polygon2D = $Tallo
 @onready var cuerpo: Node2D = $Cuerpo
 @onready var estrella: Node2D = $Cuerpo/Estrella
-@onready var nucleo: Polygon2D = $Cuerpo/Estrella/Nucleo
+@onready var nucleo: Polygon2D = get_node_or_null("Cuerpo/Estrella/Nucleo")  # cabeza de polígonos (opcional: puede usarse el AnimatedSprite2D Cabeza)
 @onready var cabeza: AnimatedSprite2D = get_node_or_null("Cuerpo/Cabeza")   # arte de Micaela: fuente de los frames
+@onready var cabeza_f3_nodo: AnimatedSprite2D = get_node_or_null("Cuerpo/CabezaF3")   # cabeza de la F3 (sprite aparte)
 @onready var ojo = $Cuerpo/Ojo   # ojo_central.gd
 @onready var hurtbox = $Cuerpo/Hurtbox   # ojo_central_hurtbox.gd
 @onready var nudo = $Nudo   # nudo_tallo.gd
@@ -298,6 +359,11 @@ var _traidor: Node2D = null
 
 
 func _ready() -> void:
+	if Engine.is_editor_hint():
+		_capturar_arte_base()
+		_capturar_transforms()
+		_refrescar_preview()
+		return
 	add_to_group("boss")
 	health = vida_max
 	enemy_data = Enemigo.new()
@@ -312,11 +378,15 @@ func _ready() -> void:
 	hurtbox.collision_layer = 2
 	hurtbox.collision_mask = 0
 	_hurtbox_on(false)
-	for n in estrella.get_children():
-		if n.has_method("romper"):
-			_puntas.append(n)
-			n.color_grieta = color_grietas
-			n.grosor_grieta = grosor_grietas
+	_capturar_arte_base()
+	_capturar_transforms()
+	if nucleo != null:
+		nucleo.visible = true            # por si la escena quedó guardada con el preview F3 activo
+	for pt in _puntas:
+		(pt as CanvasItem).visible = true
+		pt.color_grieta = color_grietas
+		pt.grosor_grieta = grosor_grietas
+	_aplicar_transform_fase(false)        # F1: golpeables alineados al ojo
 	_pintar(color_fase1)
 	nudo.roto.connect(_on_nudo_roto)
 	if nudo.has_signal("rebotado"):
@@ -331,9 +401,11 @@ func _ready() -> void:
 		blanco_sonico.jefe = self
 	_sembrar()
 	if cabeza != null:
-		cabeza.visible = false
+		_cabeza_base = cabeza.sprite_frames
 		cabeza.frame_changed.connect(_sync_textura)
-		_sync_textura()
+	if cabeza_f3_nodo != null:
+		cabeza_f3_nodo.play("cabeza")
+	_aplicar_fase_cabeza(false)
 
 
 # --- API del Encounter (misma firma que enemy.gd) ---
@@ -351,6 +423,8 @@ func preparar_ola() -> void:
 	fase = Fase.UNO
 	_ciclo = 0
 	_pintar(color_fase1)
+	_poner_arte_base()
+	_aplicar_transform_fase(false)
 	_limpiar_lanzas()
 	_limpiar_ojos()
 	_llaves_vivas = 0
@@ -583,7 +657,7 @@ func _sigue(gen: int) -> bool:
 
 
 func _physics_process(delta: float) -> void:
-	if not _activo or _muerto:
+	if Engine.is_editor_hint() or not _activo or _muerto:
 		return
 	_aviso_cierre_tick()
 	_marcas()
@@ -907,6 +981,7 @@ func _transicion_fase(gen: int) -> void:
 	_fase_pendiente = false
 	_estado = "transicion"
 	fase = mini(fase + 1, Fase.TRES)
+	_aplicar_transform_fase(fase == Fase.TRES)
 	fase_cambio.emit(fase)
 	var col := _color_fase()
 	_pintar(col)
@@ -934,6 +1009,7 @@ func _transicion_fase(gen: int) -> void:
 		await _resurgir()
 		return
 	if fase == Fase.TRES:
+		_aplicar_fase_cabeza(true)
 		await _derrumbe_f3()
 		if not _sigue(gen):
 			return
@@ -1013,7 +1089,9 @@ func _lanzar_lanza(anticipar: bool = true) -> void:
 			mejor_d = d
 			mejor = punta
 	if mejor_d == INF:
-		return
+		# Sin puntas (cabeza de sprite): cae desde la cabeza.
+		var head := _nodo_head()
+		mejor = head.global_position if head != null else centro
 	var l = LANZA_SCENE.instantiate()
 	l.desde = mejor
 	l.hasta = objetivo
@@ -2090,14 +2168,20 @@ func _hurtbox_on(on: bool) -> void:
 ## Color de fase: el dibujo de Micaela sin tinte en la F1; en la F2/F3 se tiñe `tinte_fase`.
 func _pintar(col: Color) -> void:
 	var c := Color.WHITE if col == color_fase1 else Color.WHITE.lerp(col, tinte_fase)
-	nucleo.color = c
+	if nucleo != null:
+		nucleo.color = c
+	elif cabeza != null:
+		cabeza.modulate = c
+	if cabeza_f3_nodo != null:
+		cabeza_f3_nodo.modulate = c
 	for pt in _puntas:
 		pt.color = c
 
 
 ## Cada frame de la cabeza animada (arte de Micaela) se copia a las piezas texturizadas.
+## El arte base va tal cual (UV originales); el de la F3, de otro tamaño, se re-mapea para calzar en la Estrella.
 func _sync_textura() -> void:
-	if cabeza == null or cabeza.sprite_frames == null:
+	if nucleo == null or cabeza == null or cabeza.sprite_frames == null:
 		return
 	var tex := cabeza.sprite_frames.get_frame_texture(cabeza.animation, cabeza.frame)
 	if tex == null:
@@ -2105,6 +2189,223 @@ func _sync_textura() -> void:
 	nucleo.texture = tex
 	for pt in _puntas:
 		pt.texture = tex
+	var es_f3 := cabeza_f3 != null and cabeza.sprite_frames == cabeza_f3
+	nucleo.uv = _uv_para(_uv_nucleo, tex, es_f3)
+	for i in _puntas.size():
+		if i < _uv_puntas.size():
+			_puntas[i].uv = _uv_para(_uv_puntas[i], tex, es_f3)
+
+
+## UV de una pieza para la textura dada. Arte base: las UV originales. Arte de la F3: remapea su
+## canvas sobre el de la estrella (mismo encuadre que el arte base), con zoom y corrimiento editables.
+func _uv_para(base: PackedVector2Array, tex: Texture2D, es_f3: bool) -> PackedVector2Array:
+	if base.is_empty() or not es_f3:
+		return base
+	var tam := Vector2(float(tex.get_width()), float(tex.get_height()))
+	var s := tam / UV_REF * arte_f3_escala
+	var centro := tam * 0.5 + arte_f3_offset
+	var ref_c := UV_REF * 0.5
+	var out := PackedVector2Array()
+	for p in base:
+		out.append((p - ref_c) * s + centro)
+	return out
+
+
+## Vuelve al arte de la cabeza base (al reiniciar el intento).
+func _poner_arte_base() -> void:
+	_aplicar_fase_cabeza(false)
+
+
+## Muestra la cabeza base (F1/F2) o la de la F3. Con polígonos (legado) la Estrella se texturiza;
+## sin polígonos usa el sprite Cabeza (F1/F2) o el sprite aparte CabezaF3 (F3).
+func _aplicar_fase_cabeza(es_f3: bool) -> void:
+	if nucleo != null:
+		if cabeza_f3_nodo != null:
+			cabeza_f3_nodo.visible = false
+		if cabeza != null:
+			var frames: SpriteFrames = cabeza_f3 if (es_f3 and cabeza_f3 != null) else _cabeza_base
+			if frames != null and cabeza.sprite_frames != frames:
+				cabeza.sprite_frames = frames
+				cabeza.play("cabeza")
+			cabeza.visible = false
+			_sync_textura()
+		return
+	if cabeza != null:
+		cabeza.visible = not es_f3
+	if cabeza_f3_nodo != null:
+		cabeza_f3_nodo.visible = es_f3
+		if es_f3:
+			cabeza_f3_nodo.play("cabeza")
+
+
+## Captura (una vez) la lista de puntas y las UV base del arte, para reproducirlas con otro encuadre.
+func _capturar_arte_base() -> void:
+	_puntas.clear()
+	_uv_puntas.clear()
+	if estrella == null or nucleo == null:
+		return
+	for n in estrella.get_children():
+		if n.has_method("romper"):
+			_puntas.append(n)
+	_uv_nucleo = nucleo.uv.duplicate()
+	for pt in _puntas:
+		_uv_puntas.append((pt as Polygon2D).uv.duplicate())
+
+
+## Nodo que dibuja la cabeza: la Estrella (polígonos) o, si no existen, el AnimatedSprite2D Cabeza.
+func _nodo_head() -> Node2D:
+	if nucleo == null:
+		return cabeza
+	return estrella
+
+
+## Captura (una vez) las poses base del dibujo y del ojo para poder moverlos/escalarlos solo en la F3.
+func _capturar_transforms() -> void:
+	var head := _nodo_head()
+	if head != null:
+		_estrella_pos0 = head.position
+		_estrella_scale0 = head.scale
+	if ojo != null:
+		_ojo_pos0 = ojo.position
+		_ojo_scale0 = ojo.scale
+		_abierta_offset0 = ojo.abierta_offset
+	var hc: CollisionShape2D = null
+	if hurtbox != null:
+		hc = hurtbox.get_node_or_null("Collision") as CollisionShape2D
+	if hc != null:
+		_hurt_col0 = hc.scale
+	var bc: CollisionShape2D = null
+	if blanco_sonico != null:
+		bc = blanco_sonico.get_node_or_null("Collision") as CollisionShape2D
+	if bc != null:
+		_blanco_col0 = bc.scale
+	if circulo_ojo != null:
+		_circulo_radio0 = circulo_ojo.radio
+
+
+## Centro visual del ojo abierto (coordenadas de Cuerpo): donde debe pegarle el jugador.
+func _centro_ojo() -> Vector2:
+	if ojo == null:
+		return Vector2.ZERO
+	return (ojo.position as Vector2) + (ojo.scale as Vector2) * (ojo.abierta_offset as Vector2)
+
+
+## Aplica (F3) o restaura (F1/F2) la pose del dibujo de la cabeza y del ojo. Los golpeables
+## (Hurtbox, BlancoSonico, CirculoOjo) siguen al ojo para que los golpes calcen con lo que se ve.
+func _aplicar_transform_fase(es_f3: bool) -> void:
+	if nucleo != null and estrella != null:
+		estrella.position = _estrella_pos0 + (estrella_f3_offset if es_f3 else Vector2.ZERO)
+		estrella.scale = _estrella_scale0 * (estrella_f3_escala if es_f3 else 1.0)
+	if ojo != null:
+		ojo.position = _ojo_pos0 + (ojo_f3_offset if es_f3 else Vector2.ZERO)
+		ojo.scale = _ojo_scale0 * (ojo_f3_escala if es_f3 else 1.0)
+	_alinear_golpeables()
+
+
+func _alinear_golpeables() -> void:
+	if ojo == null:
+		return
+	var c := _centro_ojo()
+	var factor: float = (ojo.scale as Vector2).x / maxf(_ojo_scale0.x, 0.0001)
+	if hurtbox != null:
+		hurtbox.position = c
+		var hc := hurtbox.get_node_or_null("Collision") as CollisionShape2D
+		if hc != null:
+			hc.scale = _hurt_col0 * factor
+	if blanco_sonico != null:
+		blanco_sonico.position = c
+		var bc := blanco_sonico.get_node_or_null("Collision") as CollisionShape2D
+		if bc != null:
+			bc.scale = _blanco_col0 * factor
+	if circulo_ojo != null:
+		circulo_ojo.position = c
+		circulo_ojo.radio = _circulo_radio0 * factor
+
+
+# ---------------------------------------------------------------- preview en el editor (@tool)
+
+## Solo-editor: dibuja el arte de la F3 sobre la Estrella con clones que NO se guardan en la escena,
+## así se acomoda `arte_f3_escala` / `arte_f3_offset` viendo el encuadre real en vivo.
+func _refrescar_preview() -> void:
+	if not Engine.is_editor_hint() or not is_inside_tree():
+		return
+	if nucleo == null:
+		# Cabeza de sprite: el preview solo muestra/oculta el sprite aparte de la F3.
+		if cabeza_f3_nodo != null:
+			cabeza_f3_nodo.visible = previsualizar_f3
+			if previsualizar_f3:
+				cabeza_f3_nodo.play("cabeza")
+		if cabeza != null:
+			cabeza.visible = not previsualizar_f3
+		return
+	if estrella == null:
+		return
+	var tex: Texture2D = null
+	if previsualizar_f3 and cabeza_f3 != null and not _uv_nucleo.is_empty():
+		tex = cabeza_f3.get_frame_texture(&"cabeza", 0)
+	if tex == null:
+		if _preview_transform:
+			_aplicar_transform_fase(false)
+			_preview_transform = false
+		_limpiar_preview()
+		return
+	_aplicar_transform_fase(true)
+	_preview_transform = true
+	if _preview_f3 == null or not is_instance_valid(_preview_f3):
+		_preview_f3 = Node2D.new()
+		_preview_f3.name = "__preview_f3"
+		estrella.add_child(_preview_f3)
+		_preview_f3.owner = null
+	for c in _preview_f3.get_children():
+		_preview_f3.remove_child(c)
+		c.free()
+	_agregar_clon_preview(nucleo, _uv_nucleo, tex)
+	for i in _puntas.size():
+		if i < _uv_puntas.size():
+			_agregar_clon_preview(_puntas[i] as Polygon2D, _uv_puntas[i], tex)
+
+
+func _agregar_clon_preview(orig: Polygon2D, uv_base: PackedVector2Array, tex: Texture2D) -> void:
+	if orig == null:
+		return
+	var clon := Polygon2D.new()
+	clon.polygon = orig.polygon
+	clon.color = Color.WHITE
+	clon.texture = tex
+	clon.uv = _uv_para(uv_base, tex, true)
+	clon.owner = null
+	_preview_f3.add_child(clon)
+	orig.visible = false
+
+
+## Guarda/restaura el preview alrededor de guardar la escena, para no persistir el arte F3 en el editor.
+func _notification(what: int) -> void:
+	if not Engine.is_editor_hint():
+		return
+	if what == NOTIFICATION_EDITOR_PRE_SAVE:
+		if _preview_transform:
+			_aplicar_transform_fase(false)
+			_preview_transform = false
+		_limpiar_preview()
+	elif what == NOTIFICATION_EDITOR_POST_SAVE:
+		_refrescar_preview()
+
+
+func _limpiar_preview() -> void:
+	if _preview_f3 != null and is_instance_valid(_preview_f3):
+		for c in _preview_f3.get_children():
+			_preview_f3.remove_child(c)
+			c.free()
+		var padre := _preview_f3.get_parent()
+		if padre != null:
+			padre.remove_child(_preview_f3)
+		_preview_f3.free()
+		_preview_f3 = null
+	if nucleo != null:
+		nucleo.visible = true
+	for pt in _puntas:
+		if is_instance_valid(pt):
+			(pt as CanvasItem).visible = true
 
 
 ## Latido de la sala (zona del grupo `latido_jefe`) y luciérnagas con el color de la fase actual.

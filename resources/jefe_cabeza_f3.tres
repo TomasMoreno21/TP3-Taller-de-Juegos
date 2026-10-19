@@ -1,0 +1,22 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://bok300b1l5aik"]
+
+[ext_resource type="Texture2D" uid="uid://basa2seit8a00" path="res://Sprites/Enemigos/jefe_cabeza_f3_1.png" id="1_f1"]
+[ext_resource type="Texture2D" uid="uid://b6jp0exm0d73d" path="res://Sprites/Enemigos/jefe_cabeza_f3_2.png" id="2_f2"]
+[ext_resource type="Texture2D" uid="uid://q0jfk0vqu80q" path="res://Sprites/Enemigos/jefe_cabeza_f3_3.png" id="3_f3"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_f1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_f2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_f3")
+}],
+"loop": 1,
+"name": &"cabeza",
+"speed": 12.0
+}]

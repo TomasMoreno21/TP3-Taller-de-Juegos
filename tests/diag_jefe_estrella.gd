@@ -35,16 +35,22 @@ func _init() -> void:
 	# --- Estático: vida, cuerpo, puntos de aparición por franja ---
 	_check(boss.health == 600, "Vida inicial 600: %d" % boss.health)
 	_check(absf(piso_y - 1000.0) < 2.0, "El origen de la Estrella está en el piso (y=%.0f)" % piso_y)
-	_check(boss._puntas.size() == 7, "La Estrella tiene 7 puntas (las del dibujo de Micaela)")
 	var cab = boss.cabeza
-	_check(cab != null and not cab.visible, "El sprite de la cabeza queda oculto (es la fuente de frames)")
-	_check(boss.estrella.visible, "El dibujo de la cabeza (piezas de la Estrella) se ve")
-	_check(boss.ojo.position.length() < 2.0 and boss.get_node("Cuerpo/Hurtbox/Collision").position.length() < 2.0, "El ojo y su hurtbox quedan centrados en el núcleo del dibujo")
-	if cab != null:
+	var poligonal: bool = boss.nucleo != null
+	if poligonal:
+		_check(boss._puntas.size() == 7, "La Estrella tiene 7 puntas (las del dibujo de Micaela)")
+		_check(cab != null and not cab.visible, "El sprite de la cabeza queda oculto (es la fuente de frames)")
+		_check(boss.estrella.visible, "El dibujo de la cabeza (piezas de la Estrella) se ve")
+	else:
+		_check(cab != null and cab.visible, "La cabeza (AnimatedSprite2D) se ve")
+	var centro_ojo: Vector2 = boss.ojo.position + boss.ojo.scale * boss.ojo.abierta_offset
+	_check((boss.get_node("Cuerpo/Hurtbox").position - centro_ojo).length() < 2.0, "El hurtbox queda centrado en el ojo (núcleo del dibujo)")
+	if poligonal and cab != null:
 		cab.frame = 2
 		var tex2 = cab.sprite_frames.get_frame_texture(cab.animation, 2)
 		_check(boss.nucleo.texture == tex2 and boss._puntas.all(func(pt) -> bool: return pt.texture == tex2), "Las piezas usan el frame actual del dibujo")
-	_check(boss._puntas.all(func(pt) -> bool: return pt.vertice_local != Vector2.ZERO), "Cada punta tiene su vértice del dibujo")
+	if poligonal:
+		_check(boss._puntas.all(func(pt) -> bool: return pt.vertice_local != Vector2.ZERO), "Cada punta tiene su vértice del dibujo")
 	_check(not boss.cuerpo.visible, "Antes de la pelea la Estrella está escondida bajo el piso")
 	var franjas := [0, 0, 0, 0]
 	for m in boss.puntos_raiz.get_children():
@@ -118,8 +124,9 @@ func _init() -> void:
 		player.blocking = false
 		player.god_mode = true
 		_check(boss.health == hp_r - 30, "El parry devuelve el rayo al ojo central: -30 (%d -> %d)" % [hp_r, boss.health])
-		var primera = boss._puntas[boss.orden_puntas[0]]
-		_check(primera.dano > 0.3 and boss._puntas.all(func(pt) -> bool: return not pt.rota and pt.visible) and boss.ojo.herida > 0.04, "Grietas finas: la primera punta se agrieta sin partirse (dano %.2f, herida %.2f)" % [primera.dano, boss.ojo.herida])
+		if poligonal:
+			var primera = boss._puntas[boss.orden_puntas[0]]
+			_check(primera.dano > 0.3 and boss._puntas.all(func(pt) -> bool: return not pt.rota and pt.visible) and boss.ojo.herida > 0.04, "Grietas finas: la primera punta se agrieta sin partirse (dano %.2f, herida %.2f)" % [primera.dano, boss.ojo.herida])
 	rayo2 = null
 
 	# --- Sónico del Murciélago: en la F1 (y F2) solo cuenta en las ventanas, como antes ---
@@ -197,10 +204,11 @@ func _init() -> void:
 	_check(hp1 - boss.health <= boss.tope_dano_castigo and boss._estado != "castigo", "Tope de %d por castigo: la F1 pide varios ciclos (%d -> %d)" % [boss.tope_dano_castigo, hp1, boss.health])
 	boss._recibir_dano(1000)   # (para el test: directo al umbral)
 	_check(boss.health == 396, "El daño se frena en el umbral de la F2 (vida %d)" % boss.health)
-	var p0 = boss._puntas[boss.orden_puntas[0]]
-	var p1 = boss._puntas[boss.orden_puntas[1]]
-	var p2 = boss._puntas[boss.orden_puntas[2]]
-	_check(p0.dano == 1.0 and p1.dano == 1.0 and p2.dano > 0.3 and p2.dano < 0.45 and boss._puntas.all(func(pt) -> bool: return pt.visible and not pt.rota) and absf(boss.ojo.herida - 204.0 / 600.0) < 0.01, "Con 204 de daño se agrietan 2⅓ puntas sin partirse y el ojo tiene venas")
+	var p0 = boss._puntas[boss.orden_puntas[0]] if poligonal else null
+	var p1 = boss._puntas[boss.orden_puntas[1]] if poligonal else null
+	var p2 = boss._puntas[boss.orden_puntas[2]] if poligonal else null
+	if poligonal:
+		_check(p0.dano == 1.0 and p1.dano == 1.0 and p2.dano > 0.3 and p2.dano < 0.45 and boss._puntas.all(func(pt) -> bool: return pt.visible and not pt.rota) and absf(boss.ojo.herida - 204.0 / 600.0) < 0.01, "Con 204 de daño se agrietan 2⅓ puntas sin partirse y el ojo tiene venas")
 	_check(not boss.circulo_nudo.encendido, "Roto el nudo, el círculo se apaga")
 
 	# --- Interludio de la F2: la Estrella se hunde, 2 oleadas y lanzas del pozo (desde la 2) ---
@@ -399,6 +407,8 @@ func _init() -> void:
 	await _esperar_estado(boss, "torretas", 600)
 	await _wait_frames(3)
 	_check(boss.fase == 2, "Pasa a la fase 3 (fase=%d)" % boss.fase)
+	if not poligonal:
+		_check(boss.cabeza_f3_nodo != null and boss.cabeza_f3_nodo.visible and not boss.cabeza.visible, "En la F3 se ve el sprite aparte CabezaF3")
 	_check(boss.absorber_traidor and boss.traidor_frames != null and boss._traidor == null, "Al entrar a la F3 absorbe al traidor (el cultista arrepentido del N3)")
 	_check(boss.plataformas_raiz.get_children().all(func(pl) -> bool: return not pl.visible and pl.get_node("Collision").disabled), "En la F3 se caen las plataformas")
 	_check(not boss.foso.activo and not boss.losa.get_node("Collision").disabled and boss.losa.visible, "En la F3 el pozo se cierra")
