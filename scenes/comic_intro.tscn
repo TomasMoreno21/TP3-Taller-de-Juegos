@@ -1,7 +1,13 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/comic_intro.gd" id="1_comic"]
 [ext_resource type="Script" path="res://scripts/vineta.gd" id="2_vineta"]
+[ext_resource type="Texture2D" path="res://assets/comic/vineta1.png" id="t1"]
+[ext_resource type="Texture2D" path="res://assets/comic/vineta2.png" id="t2"]
+[ext_resource type="Texture2D" path="res://assets/comic/vineta3.png" id="t3"]
+[ext_resource type="Texture2D" path="res://assets/comic/vineta4.png" id="t4"]
+[ext_resource type="Texture2D" path="res://assets/comic/vineta5.png" id="t5"]
+[ext_resource type="Texture2D" path="res://assets/comic/vineta6.png" id="t6"]
 
 [node name="ComicIntro" type="Control"]
 layout_mode = 3
@@ -40,6 +46,7 @@ offset_bottom = 505.0
 mouse_filter = 2
 script = ExtResource("2_vineta")
 escena = 0
+textura = ExtResource("t1")
 forma = PackedVector2Array(0, 0, 750, 0, 695, 465, 0, 465)
 texto = "Los espíritus vivían en paz en el bosque… pero una sombra se acercaba."
 
@@ -52,8 +59,9 @@ offset_bottom = 505.0
 mouse_filter = 2
 script = ExtResource("2_vineta")
 escena = 1
+textura = ExtResource("t2")
 forma = PackedVector2Array(55, 0, 529, 0, 589, 465, 0, 465)
-texto = "Aquella tarde, padre e hijo solo querían estar juntos."
+texto = "Aquella noche, padre e hijo solo querían ver las estrellas juntos."
 
 [node name="Vineta3" type="Control" parent="Paginas"]
 layout_mode = 0
@@ -64,6 +72,7 @@ offset_bottom = 560.0
 mouse_filter = 2
 script = ExtResource("2_vineta")
 escena = 2
+textura = ExtResource("t3")
 forma = PackedVector2Array(0, 0, 564, 0, 564, 520, 60, 465)
 texto = "Hasta que unas voces extrañas llamaron al niño desde la espesura."
 cartela_pos = Vector2(34, 18)
@@ -77,6 +86,7 @@ offset_bottom = 1010.0
 mouse_filter = 2
 script = ExtResource("2_vineta")
 escena = 3
+textura = ExtResource("t4")
 forma = PackedVector2Array(0, 0, 470, 0, 420, 489, 0, 489)
 texto = "¡Hijo! ¿Dónde estás? ¡Hijo!"
 
@@ -89,6 +99,7 @@ offset_bottom = 1010.0
 mouse_filter = 2
 script = ExtResource("2_vineta")
 escena = 4
+textura = ExtResource("t5")
 forma = PackedVector2Array(50, 0, 864, 0, 804, 489, 0, 489)
 texto = "Sin pensarlo dos veces, se internó en el bosque para encontrarlo."
 
@@ -101,6 +112,7 @@ offset_bottom = 1010.0
 mouse_filter = 2
 script = ExtResource("2_vineta")
 escena = 5
+textura = ExtResource("t6")
 forma = PackedVector2Array(60, 0, 564, 55, 564, 489, 0, 489)
 hablante = "Amuleto"
 texto = "Humano… por fin alguien me encuentra. Juntos podremos salvarlo."

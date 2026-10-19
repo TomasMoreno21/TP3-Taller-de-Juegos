@@ -2329,6 +2329,16 @@ func _flash_transformacion(color: Color) -> void:
 func _suavizar_desnivel(delta: float) -> void:
 	var x := global_position.x
 	var y := global_position.y
+	# Un valor no finito (colisión degenerada contra un enemigo) se arrastraba para siempre: `absf(NaN) > x` es
+	# falso, el sprite quedaba en posición NaN (invisible, en todas las formas). Se reinicia el suavizado.
+	if not (is_finite(_suave_s) and is_finite(_hundido_rampa) and is_finite(_suave_entero) and is_finite(visual.position.y)):
+		_suave_s = y
+		_hundido_rampa = 0.0
+		_suave_entero = 0.0
+		_suave_y = 0.0
+		_suave_hist_x.clear()
+		_suave_hist_y.clear()
+		visual.position.y = _visual_base_y()
 	if absf(y - _suave_s) > suavizado_escalon_max * 2.0:
 		_suave_s = y   # teletransporte / caída larga: no hay nada que suavizar
 		_suave_hist_x.clear()
