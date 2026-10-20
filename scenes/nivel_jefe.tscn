@@ -20,6 +20,8 @@
 [ext_resource type="PackedScene" uid="uid://skni1dec001" path="res://scenes/decorativo.tscn" id="36_deco"]
 [ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="ck_1"]
 [ext_resource type="Script" uid="uid://b2knw64qxpag6" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
+[ext_resource type="Script" path="res://scripts/musica_jefe.gd" id="40_musica"]
+[ext_resource type="AudioStream" path="res://assets/audio/musica/jefe_vitral_sangre.ogg" id="41_tema"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
 size = Vector2(4900, 172)
@@ -281,6 +283,12 @@ visible = false
 [node name="TituloNivel" type="CanvasLayer" parent="." unique_id=537983969]
 script = ExtResource("titulo_niv")
 titulo = "El Santuario"
+
+[node name="MusicaJefe" type="AudioStreamPlayer" parent="." unique_id=1730559213]
+stream = ExtResource("41_tema")
+volume_db = -60.0
+bus = &"Musica"
+script = ExtResource("40_musica")
 
 [node name="Oleada1" type="Node2D" parent="." unique_id=1700000011]
 
