@@ -16,6 +16,11 @@ signal terminada
 @export var titulo_cierre := "SPIRIT KEEPER"
 @export var texto_cierre := "Gracias por jugar"
 @export var creditos_musica := "Música del jefe: «(Blood) Stained Glass» de FoxSynergy (CC-BY 3.0)"   ## atribución obligatoria
+@export_group("Música")
+@export var musica: AudioStream = preload("res://assets/audio/musica/jefe_vitral_sangre.ogg")   ## tema del jefe
+@export var volumen_musica_db := -8.0
+@export var fundido_musica := 8.0           ## s de entrada lenta
+@export var fundido_musica_salida := 1.0
 @export_group("Tiempos (s)")
 @export var entrada := 0.8
 @export var duracion_tarjeta := 4.0
@@ -28,6 +33,7 @@ signal terminada
 var tarjeta_actual := -1   # índice del integrante en pantalla (nombres.size() = cierre)
 var _saltar := false
 var _saliendo := false
+var _player_musica: AudioStreamPlayer
 
 @onready var tarjeta: Control = $Centro/Tarjeta
 @onready var icono = $Centro/Tarjeta/Icono   # form_icon.gd
@@ -42,7 +48,20 @@ func _ready() -> void:
 	get_tree().paused = false
 	icono.color_icono = color_texto
 	tarjeta.modulate.a = 0.0
+	_iniciar_musica()
 	_secuencia()
+
+
+func _iniciar_musica() -> void:
+	if musica == null:
+		return
+	_player_musica = AudioStreamPlayer.new()
+	_player_musica.stream = musica
+	_player_musica.volume_db = -60.0
+	_player_musica.bus = &"Musica" if AudioServer.get_bus_index(&"Musica") >= 0 else &"Master"
+	add_child(_player_musica)
+	_player_musica.play()
+	create_tween().tween_property(_player_musica, "volume_db", volumen_musica_db, fundido_musica).set_trans(Tween.TRANS_SINE)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -102,6 +121,8 @@ func _ir_al_menu() -> void:
 	if _saliendo:
 		return
 	_saliendo = true
+	if _player_musica != null:
+		create_tween().tween_property(_player_musica, "volume_db", -60.0, fundido_musica_salida)
 	if escena_siguiente.is_empty():
 		return
 	TransicionPantalla.de(get_tree()).cambiar_escena(escena_siguiente)

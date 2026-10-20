@@ -18,10 +18,10 @@
 [ext_resource type="Script" uid="uid://dotehvvuk7udf" path="res://scripts/latido_cueva.gd" id="33_latido"]
 [ext_resource type="Script" uid="uid://d3nihovco06v7" path="res://scripts/zona_latido.gd" id="34_zona"]
 [ext_resource type="PackedScene" uid="uid://skni1dec001" path="res://scenes/decorativo.tscn" id="36_deco"]
+[ext_resource type="Script" uid="uid://ds01y8utx3fen" path="res://scripts/musica_jefe.gd" id="40_musica"]
+[ext_resource type="AudioStream" uid="uid://b30l80if2klyx" path="res://assets/audio/musica/jefe_vitral_sangre.ogg" id="41_tema"]
 [ext_resource type="PackedScene" path="res://scenes/checkpoint.tscn" id="ck_1"]
 [ext_resource type="Script" uid="uid://b2knw64qxpag6" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
-[ext_resource type="Script" path="res://scripts/musica_jefe.gd" id="40_musica"]
-[ext_resource type="AudioStream" path="res://assets/audio/musica/jefe_vitral_sangre.ogg" id="41_tema"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
 size = Vector2(4900, 172)
@@ -30,7 +30,7 @@ size = Vector2(4900, 172)
 size = Vector2(3700, 200)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_techo_pasillo"]
-size = Vector2(3700, 760)
+size = Vector2(3427, 760)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_jefe"]
 size = Vector2(1600, 1000)
@@ -99,14 +99,19 @@ shape = SubResource("RectangleShape2D_piso_der")
 position = Vector2(1850, -320)
 
 [node name="Visual" type="Polygon2D" parent="TechoPasillo" unique_id=89171997]
+position = Vector2(-140.50009, 0)
+scale = Vector2(0.924054, 1)
 color = Color(0.1, 0.105, 0.11, 1)
-polygon = PackedVector2Array(-1850, -380, 1850, -380, 1850, 380, -1850, 380)
+polygon = PackedVector2Array(-1850, -380, 1850, -380, 1849.9999, -6.088806, 1850, 380, -1850, 380)
 
 [node name="Linea" type="Polygon2D" parent="TechoPasillo" unique_id=2004744105]
+position = Vector2(-139, 45.5)
+scale = Vector2(0.9248649, 0.875)
 color = Color(0.24, 0.25, 0.26, 1)
 polygon = PackedVector2Array(-1850, 364, 1850, 364, 1850, 380, -1850, 380)
 
 [node name="Collision" type="CollisionShape2D" parent="TechoPasillo" unique_id=1411522103]
+position = Vector2(-136.5, 0)
 shape = SubResource("RectangleShape2D_techo_pasillo")
 
 [node name="Latido" type="Node" parent="." unique_id=219887966]
@@ -210,7 +215,7 @@ sombra = false
 viento = false
 
 [node name="Estalactita3" parent="Decoracion" unique_id=1962443641 instance=ExtResource("36_deco")]
-position = Vector2(3400, 60)
+position = Vector2(3279, 60)
 tipo = 9
 escala = 3.2
 flip_h = true
@@ -287,7 +292,6 @@ titulo = "El Santuario"
 [node name="MusicaJefe" type="AudioStreamPlayer" parent="." unique_id=1730559213]
 stream = ExtResource("41_tema")
 volume_db = -60.0
-bus = &"Musica"
 script = ExtResource("40_musica")
 
 [node name="Oleada1" type="Node2D" parent="." unique_id=1700000011]
@@ -301,7 +305,7 @@ position = Vector2(4625, 972)
 spawn_telegrafiado = true
 
 [node name="Enemy4" parent="Oleada1" unique_id=19220022 instance=ExtResource("20_3bnyi")]
-position = Vector2(4437, 583)
+position = Vector2(4422, 643)
 tipo = "arquero"
 spawn_telegrafiado = true
 flotante = true
@@ -315,7 +319,7 @@ flotante = true
 [node name="Oleada2" type="Node2D" parent="." unique_id=1700000012]
 
 [node name="Enemy" parent="Oleada2" unique_id=1718331064 instance=ExtResource("20_3bnyi")]
-position = Vector2(5974, 582)
+position = Vector2(6059, 682)
 tipo = "arquero"
 spawn_telegrafiado = true
 flotante = true
@@ -328,7 +332,7 @@ spawn_telegrafiado = true
 position = Vector2(4400, 802)
 
 [node name="Enemy4" parent="Oleada2" unique_id=1343953589 instance=ExtResource("20_3bnyi")]
-position = Vector2(4638, 529)
+position = Vector2(4641, 655)
 tipo = "arquero"
 spawn_telegrafiado = true
 flotante = true

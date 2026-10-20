@@ -149,8 +149,9 @@ static func grieta(arbol: SceneTree, color: Color) -> void:
 	tw.tween_callback(capa.queue_free)
 
 
-## Destello blanco que cubre la pantalla y se va despacio (muerte del jefe).
-static func destello_final(arbol: SceneTree, retraso: float) -> void:
+## Destello blanco que cubre la pantalla y se va despacio (muerte del jefe). Con `queda_negro` sube
+## durante `subida` s y, al cubrir, pasa a negro y se queda (grupo "destello_final"): victoria_jefe.gd lo libera.
+static func destello_final(arbol: SceneTree, retraso: float, subida := 0.35, queda_negro := false) -> void:
 	if DisplayServer.get_name() == "headless" or arbol == null:
 		return
 	var capa := _capa(arbol, 99)
@@ -161,7 +162,11 @@ static func destello_final(arbol: SceneTree, retraso: float) -> void:
 	capa.add_child(velo)
 	var tw := _tween(capa)
 	tw.tween_interval(retraso)
-	tw.tween_property(velo, "color:a", 1.0, 0.35).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_property(velo, "color:a", 1.0, subida).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	if queda_negro:
+		capa.add_to_group("destello_final")
+		tw.tween_callback(func() -> void: velo.color = Color.BLACK)
+		return
 	tw.tween_interval(0.25)
 	tw.tween_property(velo, "color:a", 0.0, 1.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tw.tween_callback(capa.queue_free)

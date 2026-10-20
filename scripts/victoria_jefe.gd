@@ -1,16 +1,15 @@
 extends CanvasLayer
-## Por defecto: destello → negro total → cómic final (`escena_siguiente`). Con `con_hijo_en_arena`, lo de abajo.
 ## Cierre del juego (lo agrega nivel_jefe.gd al morir el Arzobispo y pausa el árbol; esta escena
-## corre igual con process_mode = ALWAYS). Secuencia: destello del estallido → el hijo aparece desde
-## la luz → globos del Humano y el Amuleto (guion A, ver docs/sesiones/final.md) → corte a negro →
-## frase final → vuelve al menú (más adelante: créditos; basta cambiar `escena_siguiente`).
-## Todo se edita desde el Inspector. El hijo es un PLACEHOLDER (silueta de luz): al tener arte,
-## asignar `textura_hijo` y la silueta se reemplaza.
+## corre igual con process_mode = ALWAYS). Secuencia: destello del estallido → negro total → líneas del
+## guion (Humano y Amuleto, ver docs/sesiones/final.md) como texto central, letra a letra y pesado →
+## frase final → créditos (`escena_siguiente`).
+## Todo se edita desde el Inspector. (El hijo placeholder ya no se muestra; sus @export quedan para cuando tenga arte.)
 
-signal terminada   ## la secuencia acabó (justo antes de cambiar de escena)
+const SONIDO_TECLA := preload("res://assets/audio/sfx/gen/dialogo_tecla.wav")
 
-@export var con_hijo_en_arena := false   ## false = resplandor y negro total; el diálogo con el hijo es el cómic final (`escena_siguiente`)
-@export_group("Guion (solo con el hijo en la arena)")
+signal terminada  ## la secuencia acabó (justo antes de cambiar de escena)
+
+@export_group("Guion")
 @export var lineas := PackedStringArray([
 	"[humano][susurro] Hijo…",
 	"El sello cede. Él está dentro, a salvo.",
@@ -27,9 +26,13 @@ signal terminada   ## la secuencia acabó (justo antes de cambiar de escena)
 @export var color_silueta := Color(0.07, 0.05, 0.08)
 @export var oscurecer_mundo := 0.6                        ## cuánto se apaga la arena detrás
 @export_group("Tiempos (s)")
-@export var destello := 1.0
 @export var aparicion_hijo := 2.4
 @export var pausa_tras_dialogo := 1.0
+@export var seg_por_letra := 0.055  ## ritmo del texto: más alto = más pesado
+@export var volumen_tipeo_db := -9.0   ## volumen del sonido de cada letra
+@export var tono_tipeo := 0.8          ## pitch del sonido de cada letra (grave = más pesado)
+@export var pausa_linea := 1.6       ## cuánto se sostiene cada línea completa
+@export var pausa_entre_lineas := 0.8
 @export var fundido_negro := 1.6
 @export var pausa_negro := 0.8
 @export var aparicion_frase := 1.6
@@ -42,9 +45,9 @@ signal terminada   ## la secuencia acabó (justo antes de cambiar de escena)
 @export var color_filete := Color(0.85, 0.72, 0.40)
 @export var largo_filete := 560.0
 @export_group("Después")
-@export_file("*.tscn") var escena_siguiente := "res://scenes/comic_final.tscn"   ## cómic final (y de ahí los créditos); vacío = no cambiar de escena (tests)
+@export_file("*.tscn") var escena_siguiente := "res://scenes/creditos_final.tscn"   ## vacío = no cambiar de escena (tests)
 
-var _luz := 0.0            ## intensidad de la luz del hijo (0..1)
+var _luz := 0.0           ## intensidad de la luz del hijo (0..1)
 var _t := 0.0
 var _saltar := false
 var _frase_activa := false
@@ -65,6 +68,9 @@ func _ready() -> void:
 	add_to_group("victoria")   # con la secuencia de cierre en juego no se puede pausar (pause.gd)
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 80   # bajo el diálogo (85): los globos se ven encima
+	var dlg := get_node_or_null("/root/Dialogo")
+	if dlg != null:
+		dlg.gema.visible = false   # el logo del Amuleto se quedaba fijo con el árbol pausado
 	resplandor.material = _material_suma()
 	resplandor.draw.connect(_dibujar_luz)
 	silueta.draw.connect(_dibujar_silueta)
@@ -108,7 +114,7 @@ func _posicion_inicial() -> Vector2:
 
 func _process(delta: float) -> void:
 	_t += delta
-	resplandor.queue_redraw()   # (la silueta no se anima por dibujo: se dibuja una vez)
+	resplandor.queue_redraw()
 
 
 func _espera(seg: float) -> void:
@@ -120,34 +126,20 @@ func _tween() -> Tween:
 
 
 func _correr() -> void:
-	# 1) Destello del estallido y el mundo se apaga.
-	flash.color.a = 1.0
-	var t1 := _tween()
-	t1.tween_property(flash, "color:a", 0.0, destello).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	t1.tween_property(velo, "color:a", oscurecer_mundo, destello * 1.5)
-	await _espera(destello * 0.6)
-	if not con_hijo_en_arena:
-		# Resplandor y la pantalla queda en negro: el diálogo con el hijo sigue en el cómic final.
-		var tn := _tween()
-		tn.tween_property(negro, "color:a", 1.0, fundido_negro).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		await _espera(fundido_negro + pausa_negro)
-		_terminar()
-		return
-	# 2) El hijo emerge de la luz.
-	var t2 := _tween()
-	t2.tween_property(self, "_luz", 1.0, aparicion_hijo).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	var objetivo: Node2D = hijo_sprite if textura_hijo != null else silueta
-	objetivo.position = Vector2(0, 70)
-	t2.tween_property(objetivo, "position:y", 0.0, aparicion_hijo).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	t2.tween_property(objetivo, "modulate:a", 1.0, aparicion_hijo * 0.7)
-	await _espera(aparicion_hijo * 0.5)
-	# 3) Globos del Humano y el Amuleto.
-	await _dialogo()
+	# 1) Espera a que el destello del jefe (JefeCine.destello_final) termine de cubrir la pantalla.
+	var velos := get_tree().get_nodes_in_group("destello_final")
+	while velos.any(func(c: Node) -> bool: return is_instance_valid(c) and c.get_child(0).color.r > 0.0):
+		await get_tree().process_frame
+	# 2) Corte seco a negro (queda bajo el velo, que se libera) y el diálogo sale como texto central, letra a letra.
+	negro.color.a = 1.0
+	for c in velos:
+		if is_instance_valid(c):
+			c.queue_free()
+	await _espera(pausa_negro)
+	for l in lineas:
+		await _linea(String(l))
 	await _espera(pausa_tras_dialogo)
-	# 4) Corte a negro y frase final.
-	var t3 := _tween()
-	t3.tween_property(negro, "color:a", 1.0, fundido_negro).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await _espera(fundido_negro + pausa_negro)
+	# 3) Frase final.
 	await _mostrar_frase()
 	_terminar()
 
@@ -159,28 +151,41 @@ func _terminar() -> void:
 	TransicionPantalla.de(get_tree()).cambiar_escena(escena_siguiente)
 
 
-func _dialogo() -> void:
-	var dlg := get_node_or_null("/root/Dialogo")
-	if dlg == null or lineas.is_empty():
-		return
-	dlg.mostrar(Array(lineas), hablante, false)
-	var t := 0.0
-	while not dlg.hay_narrativa() and t < 4.0:   # puede esperar un instante la calma
-		await get_tree().process_frame
-		t += get_process_delta_time()
-	t = 0.0
-	while dlg.hay_narrativa() and t < 90.0:
-		await get_tree().process_frame
-		t += get_process_delta_time()
+## Una línea del guion en el centro: aparece letra a letra, se sostiene y se apaga.
+func _linea(l: String) -> void:
+	var humano := l.begins_with("[humano]")
+	etiqueta.text = RegEx.create_from_string("^(\\[[^\\]]*\\]\\s*)+").sub(l, "")
+	etiqueta.add_theme_color_override("font_color", color_texto if humano else color_filete)
+	caja_frase.modulate.a = 1.0
+	for f in [filete_a, filete_b]:
+		f.custom_minimum_size.x = 0.0
+	await _escribir()
+	await _espera(pausa_linea)
+	var s := _tween()
+	s.tween_property(caja_frase, "modulate:a", 0.0, desaparicion_frase)
+	await _espera(desaparicion_frase + pausa_entre_lineas)
+
+
+## Letras pesadas: cada una cae despacio y los signos de pausa se sostienen.
+func _escribir() -> void:
+	etiqueta.visible_characters = 0
+	for i in etiqueta.text.length():
+		etiqueta.visible_characters = i + 1
+		var c := etiqueta.text[i]
+		if c != " " and c != "\n":
+			AudioManager.play_sfx(SONIDO_TECLA, volumen_tipeo_db, 0.05, tono_tipeo)
+		await _espera(seg_por_letra * (6.0 if c in "…,.;:" else 1.0))
 
 
 func _mostrar_frase() -> void:
 	_frase_activa = true
+	etiqueta.text = frase
+	etiqueta.add_theme_color_override("font_color", color_texto)
+	caja_frase.modulate.a = 1.0
 	var t := _tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	t.tween_property(caja_frase, "modulate:a", 1.0, aparicion_frase)
 	for f in [filete_a, filete_b]:
 		t.tween_property(f, "custom_minimum_size:x", largo_filete, aparicion_frase * 1.2)
-	await _espera(aparicion_frase)
+	await _escribir()
 	var resto := duracion_frase
 	while resto > 0.0 and not _saltar:   # Confirmar adelanta el final
 		await get_tree().process_frame

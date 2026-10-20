@@ -4,7 +4,7 @@ extends AudioStreamPlayer
 ## El tema, el volumen y los fundidos se cambian desde el Inspector.
 ## Tema actual: "(Blood) Stained Glass" de FoxSynergy (CC-BY 3.0) — ver assets/audio/musica/FUENTES.txt.
 
-@export var volumen_db := -8.0          ## volumen de la pelea ya entrada
+@export var volumen_db := -4.0         ## volumen de la pelea ya entrada
 @export var fundido_entrada := 2.0      ## s hasta llegar a volumen_db
 @export var fundido_salida := 3.0       ## s de apagado al morir el jefe
 @export var corte_reinicio := 0.6       ## s de apagado al reiniciarse la arena

@@ -33,10 +33,10 @@ enum Fase { UNO, DOS, TRES }
 const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: las UV de Núcleo y puntas están en esta escala
 
 @export_group("Vida y daño")
-@export var vida_max := 450
+@export var vida_max := 470
 @export var ola_asignada := 0               ## para el Encounter (enemigo manual)
-@export_range(0.0, 1.0, 0.01) var umbral_fase2 := 0.66   ## fracción de vida donde empieza la F2
-@export_range(0.0, 1.0, 0.01) var umbral_fase3 := 0.33
+@export_range(0.0, 1.0, 0.01) var umbral_fase2 := 0.67  ## fracción de vida donde empieza la F2
+@export_range(0.0, 1.0, 0.01) var umbral_fase3 := 0.29
 @export var curacion_fin_fase := 40         ## orbe de vida al cambiar de fase
 @export var distancia_orbe := 520.0         ## px del centro (del lado del jugador) donde aparece el orbe
 @export var mostrar_barra_hud := false      ## la vida se lee en el cuerpo (grietas finas + venas del ojo), no en el HUD
@@ -2710,7 +2710,7 @@ func _morir() -> void:
 	_sfx(sfx_muerte, 3.0)
 	if DisplayServer.get_name() != "headless":
 		_slowmo(muerte_slowmo, muerte_slowmo_escala)
-		JefeCine.destello_final(get_tree(), muerte_slowmo * 0.55)
+		JefeCine.destello_final(get_tree(), muerte_slowmo * 0.55, 4.0, true)
 		_poner_ojo(1.0)   # el ojo se abre del todo: el niño adentro (el final se arma en el paso 5)
 	died.emit()
 

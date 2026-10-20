@@ -14,7 +14,6 @@
 [ext_resource type="PackedScene" uid="uid://byj8hsa3b1hpe" path="res://scenes/barrera_bosque.tscn" id="15_5uo66"]
 [ext_resource type="Script" uid="uid://2touvx3gobc5" path="res://scripts/herramienta_nivel.gd" id="16_herramienta"]
 [ext_resource type="Script" uid="uid://cui53h2x6gwlf" path="res://scripts/enemigos/enemigo.gd" id="17_roi11"]
-[ext_resource type="Texture2D" uid="uid://c2u0aw4rfo5k4" path="res://Sprites/Elementos/liana.png" id="21_8xatx"]
 [ext_resource type="PackedScene" path="res://scenes/salida_nivel.tscn" id="30_salida"]
 [ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="31_pick"]
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="32_dtg"]
@@ -95,6 +94,9 @@ fill_to = Vector2(1, 0.5)
 offsets = PackedFloat32Array(0, 0.25, 0.75, 1)
 colors = PackedColorArray(0.72, 0.46, 1, 0, 0.72, 0.46, 1, 0.9, 0.72, 0.46, 1, 0.9, 0.72, 0.46, 1, 0)
 
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_6yr0y"]
+blend_mode = 1
+
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_8xatx"]
 blend_mode = 1
 
@@ -171,9 +173,6 @@ blend_mode = 1
 blend_mode = 1
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_k6334"]
-blend_mode = 1
-
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_m84f5"]
 blend_mode = 1
 
 [sub_resource type="Gradient" id="Gradient_motas_umbral"]
@@ -435,7 +434,6 @@ ancho = 63.0
 alto = 1600.0
 con_hojas = false
 color_tallo = Color(0.3, 0.23, 0.24, 1)
-textura = ExtResource("21_8xatx")
 
 [node name="Enredadera3" parent="." unique_id=1706938185 instance=ExtResource("13_o066t")]
 position = Vector2(12606, 5566)
@@ -443,7 +441,6 @@ ancho = 60.0
 alto = 1400.0
 con_hojas = false
 color_tallo = Color(0.3, 0.23, 0.24, 1)
-textura = ExtResource("21_8xatx")
 
 [node name="Enredadera4" parent="." unique_id=833828820 instance=ExtResource("13_o066t")]
 position = Vector2(11927, 4336)
@@ -451,7 +448,6 @@ ancho = 68.0
 alto = 1900.0
 con_hojas = false
 color_tallo = Color(0.3, 0.23, 0.24, 1)
-textura = ExtResource("21_8xatx")
 
 [node name="Encounter3" parent="." unique_id=1950576395 instance=ExtResource("11_stua6")]
 position = Vector2(5708, 5339)
@@ -497,7 +493,6 @@ ancho = 60.0
 alto = 1200.0
 con_hojas = false
 color_tallo = Color(0.3, 0.23, 0.24, 1)
-textura = ExtResource("21_8xatx")
 
 [node name="Enredadera6" parent="." unique_id=1133224779 instance=ExtResource("13_o066t")]
 position = Vector2(4317, 4994)
@@ -505,7 +500,6 @@ ancho = 60.0
 alto = 1200.0
 con_hojas = false
 color_tallo = Color(0.3, 0.23, 0.24, 1)
-textura = ExtResource("21_8xatx")
 
 [node name="Enredadera7" parent="." unique_id=1427689834 instance=ExtResource("13_o066t")]
 position = Vector2(6647, -1253)
@@ -513,7 +507,6 @@ ancho = 60.0
 alto = 1200.0
 con_hojas = false
 color_tallo = Color(0.3, 0.23, 0.24, 1)
-textura = ExtResource("21_8xatx")
 
 [node name="Enredadera8" parent="." unique_id=265072204 instance=ExtResource("13_o066t")]
 position = Vector2(7248, -6)
@@ -521,7 +514,6 @@ ancho = 89.0
 alto = 3200.0
 con_hojas = false
 color_tallo = Color(0.3, 0.23, 0.24, 1)
-textura = ExtResource("21_8xatx")
 
 [node name="BarreraBosque" parent="." unique_id=1383386149 instance=ExtResource("15_5uo66")]
 position = Vector2(-1444, 5473)
@@ -536,7 +528,6 @@ ancho = 65.0
 alto = 1700.0
 con_hojas = false
 color_tallo = Color(0.3, 0.23, 0.24, 1)
-textura = ExtResource("21_8xatx")
 
 [node name="Encounter4" parent="." unique_id=1498742733 instance=ExtResource("11_stua6")]
 position = Vector2(-3951, 5347)
@@ -1608,7 +1599,7 @@ z_index = -3
 
 [node name="Rayo1" type="Node2D" parent="EfectosCueva/Rayos" unique_id=2097578357]
 modulate = Color(1, 1, 1, 0.7432445)
-material = SubResource("CanvasItemMaterial_8xatx")
+material = SubResource("CanvasItemMaterial_6yr0y")
 position = Vector2(-5150, 6287)
 script = ExtResource("rayo_luz2")
 alto = 623.0
@@ -1620,7 +1611,7 @@ opacidad = 0.13
 
 [node name="Rayo3" type="Node2D" parent="EfectosCueva/Rayos" unique_id=610211760]
 modulate = Color(1, 1, 1, 0.66027015)
-material = SubResource("CanvasItemMaterial_bm4td")
+material = SubResource("CanvasItemMaterial_8xatx")
 position = Vector2(-4368, -698)
 script = ExtResource("rayo_luz2")
 alto = 790.0
@@ -1633,7 +1624,7 @@ semilla = 3
 
 [node name="Rayo4" type="Node2D" parent="EfectosCueva/Rayos" unique_id=167500508]
 modulate = Color(1, 1, 1, 0.72440064)
-material = SubResource("CanvasItemMaterial_bkpg8")
+material = SubResource("CanvasItemMaterial_bm4td")
 position = Vector2(-3637, 1375)
 script = ExtResource("rayo_luz2")
 alto = 881.0
@@ -1646,8 +1637,8 @@ semilla = 4
 
 [node name="Rayo6" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1466701066]
 modulate = Color(1, 1, 1, 0.86567414)
-material = SubResource("CanvasItemMaterial_txraw")
-position = Vector2(-3152, -602)
+material = SubResource("CanvasItemMaterial_bkpg8")
+position = Vector2(-3185, -638)
 script = ExtResource("rayo_luz2")
 alto = 653.0
 ancho_arriba = 83.0
@@ -1659,7 +1650,7 @@ semilla = 6
 
 [node name="Rayo8" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1489489205]
 modulate = Color(1, 1, 1, 0.75838214)
-material = SubResource("CanvasItemMaterial_xnc2f")
+material = SubResource("CanvasItemMaterial_txraw")
 position = Vector2(-1941, 6308)
 script = ExtResource("rayo_luz2")
 alto = 653.0
@@ -1672,7 +1663,7 @@ semilla = 8
 
 [node name="Rayo9" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1436263309]
 modulate = Color(1, 1, 1, 0.6803062)
-material = SubResource("CanvasItemMaterial_glrbb")
+material = SubResource("CanvasItemMaterial_xnc2f")
 position = Vector2(-1300, 1251)
 script = ExtResource("rayo_luz2")
 alto = 1100.0
@@ -1685,7 +1676,7 @@ semilla = 9
 
 [node name="Rayo10" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1771225451]
 modulate = Color(1, 1, 1, 0.6643183)
-material = SubResource("CanvasItemMaterial_6dauj")
+material = SubResource("CanvasItemMaterial_glrbb")
 position = Vector2(-656, 2901)
 script = ExtResource("rayo_luz2")
 alto = 668.0
@@ -1698,7 +1689,7 @@ semilla = 10
 
 [node name="Rayo11" type="Node2D" parent="EfectosCueva/Rayos" unique_id=67761633]
 modulate = Color(1, 1, 1, 0.7229805)
-material = SubResource("CanvasItemMaterial_agc5n")
+material = SubResource("CanvasItemMaterial_6dauj")
 position = Vector2(-467, -676)
 script = ExtResource("rayo_luz2")
 alto = 668.0
@@ -1711,7 +1702,7 @@ semilla = 11
 
 [node name="Rayo12" type="Node2D" parent="EfectosCueva/Rayos" unique_id=2078448057]
 modulate = Color(1, 1, 1, 0.81415147)
-material = SubResource("CanvasItemMaterial_0klxp")
+material = SubResource("CanvasItemMaterial_agc5n")
 position = Vector2(603, 1290)
 script = ExtResource("rayo_luz2")
 alto = 577.0
@@ -1723,7 +1714,7 @@ semilla = 12
 
 [node name="Rayo13" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1613729933]
 modulate = Color(1, 1, 1, 0.87189054)
-material = SubResource("CanvasItemMaterial_00bkp")
+material = SubResource("CanvasItemMaterial_0klxp")
 position = Vector2(1136, -670)
 script = ExtResource("rayo_luz2")
 alto = 668.0
@@ -1736,7 +1727,7 @@ semilla = 13
 
 [node name="Rayo14" type="Node2D" parent="EfectosCueva/Rayos" unique_id=412529746]
 modulate = Color(1, 1, 1, 0.8548142)
-material = SubResource("CanvasItemMaterial_sw5au")
+material = SubResource("CanvasItemMaterial_00bkp")
 position = Vector2(1834, 997)
 script = ExtResource("rayo_luz2")
 alto = 881.0
@@ -1749,7 +1740,7 @@ semilla = 14
 
 [node name="Rayo15" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1875280134]
 modulate = Color(1, 1, 1, 0.77644396)
-material = SubResource("CanvasItemMaterial_i7226")
+material = SubResource("CanvasItemMaterial_sw5au")
 position = Vector2(2434, 6155)
 script = ExtResource("rayo_luz2")
 alto = 592.0
@@ -1762,7 +1753,7 @@ semilla = 15
 
 [node name="Rayo16" type="Node2D" parent="EfectosCueva/Rayos" unique_id=632197600]
 modulate = Color(1, 1, 1, 0.6952895)
-material = SubResource("CanvasItemMaterial_1vwoq")
+material = SubResource("CanvasItemMaterial_i7226")
 position = Vector2(3120, 2709)
 script = ExtResource("rayo_luz2")
 alto = 942.0
@@ -1773,7 +1764,7 @@ semilla = 16
 
 [node name="Rayo17" type="Node2D" parent="EfectosCueva/Rayos" unique_id=273021079]
 modulate = Color(1, 1, 1, 0.6719393)
-material = SubResource("CanvasItemMaterial_7758k")
+material = SubResource("CanvasItemMaterial_1vwoq")
 position = Vector2(3972, 326)
 script = ExtResource("rayo_luz2")
 alto = 957.0
@@ -1786,7 +1777,7 @@ semilla = 17
 
 [node name="Rayo18" type="Node2D" parent="EfectosCueva/Rayos" unique_id=349320283]
 modulate = Color(1, 1, 1, 0.72462696)
-material = SubResource("CanvasItemMaterial_2ojkb")
+material = SubResource("CanvasItemMaterial_7758k")
 position = Vector2(4016, 6358)
 script = ExtResource("rayo_luz2")
 alto = 653.0
@@ -1799,7 +1790,7 @@ semilla = 18
 
 [node name="Rayo19" type="Node2D" parent="EfectosCueva/Rayos" unique_id=80542551]
 modulate = Color(1, 1, 1, 0.8158584)
-material = SubResource("CanvasItemMaterial_tonsb")
+material = SubResource("CanvasItemMaterial_2ojkb")
 position = Vector2(4848, -1450)
 script = ExtResource("rayo_luz2")
 alto = 577.0
@@ -1811,7 +1802,7 @@ semilla = 19
 
 [node name="Rayo20" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1233239765]
 modulate = Color(1, 1, 1, 0.8799074)
-material = SubResource("CanvasItemMaterial_444yh")
+material = SubResource("CanvasItemMaterial_tonsb")
 position = Vector2(5104, 1062)
 script = ExtResource("rayo_luz2")
 alto = 912.0
@@ -1824,7 +1815,7 @@ semilla = 20
 
 [node name="Rayo21" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1271083323]
 modulate = Color(1, 1, 1, 0.87101454)
-material = SubResource("CanvasItemMaterial_huegp")
+material = SubResource("CanvasItemMaterial_444yh")
 position = Vector2(6192, -1402)
 script = ExtResource("rayo_luz2")
 alto = 532.0
@@ -1837,7 +1828,7 @@ semilla = 21
 
 [node name="Rayo22" type="Node2D" parent="EfectosCueva/Rayos" unique_id=840432965]
 modulate = Color(1, 1, 1, 0.7969441)
-material = SubResource("CanvasItemMaterial_p60g2")
+material = SubResource("CanvasItemMaterial_huegp")
 position = Vector2(6387, 1115)
 script = ExtResource("rayo_luz2")
 alto = 532.0
@@ -1850,7 +1841,7 @@ semilla = 22
 
 [node name="Rayo24" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1975467119]
 modulate = Color(1, 1, 1, 0.68269944)
-material = SubResource("CanvasItemMaterial_764qq")
+material = SubResource("CanvasItemMaterial_p60g2")
 position = Vector2(9194, 4779)
 script = ExtResource("rayo_luz2")
 alto = 714.0
@@ -1863,7 +1854,7 @@ semilla = 24
 
 [node name="Rayo25" type="Node2D" parent="EfectosCueva/Rayos" unique_id=184773056]
 modulate = Color(1, 1, 1, 0.7289389)
-material = SubResource("CanvasItemMaterial_1h14d")
+material = SubResource("CanvasItemMaterial_764qq")
 position = Vector2(12738, 4851)
 script = ExtResource("rayo_luz2")
 alto = 881.0
@@ -1876,7 +1867,7 @@ semilla = 25
 
 [node name="Rayo26" type="Node2D" parent="EfectosCueva/Rayos" unique_id=19645345]
 modulate = Color(1, 1, 1, 0.81945366)
-material = SubResource("CanvasItemMaterial_d35i3")
+material = SubResource("CanvasItemMaterial_1h14d")
 position = Vector2(11983, 3445)
 script = ExtResource("rayo_luz2")
 alto = 1100.0
@@ -1889,7 +1880,7 @@ semilla = 26
 
 [node name="RayoArena1" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1376686004]
 modulate = Color(1, 1, 1, 0.9095404)
-material = SubResource("CanvasItemMaterial_w0wwb")
+material = SubResource("CanvasItemMaterial_d35i3")
 position = Vector2(5522, 22)
 script = ExtResource("rayo_luz2")
 alto = 760.0
@@ -1902,7 +1893,7 @@ semilla = 41
 
 [node name="RayoArena3" type="Node2D" parent="EfectosCueva/Rayos" unique_id=449821318]
 modulate = Color(1, 1, 1, 0.8666332)
-material = SubResource("CanvasItemMaterial_byskn")
+material = SubResource("CanvasItemMaterial_w0wwb")
 position = Vector2(1205, 991)
 script = ExtResource("rayo_luz2")
 alto = 896.0
@@ -1915,7 +1906,7 @@ semilla = 43
 
 [node name="RayoArena4" type="Node2D" parent="EfectosCueva/Rayos" unique_id=409999908]
 modulate = Color(1, 1, 1, 0.779008)
-material = SubResource("CanvasItemMaterial_eqnlt")
+material = SubResource("CanvasItemMaterial_byskn")
 position = Vector2(3869, 1237)
 script = ExtResource("rayo_luz2")
 alto = 638.0
@@ -1928,7 +1919,7 @@ semilla = 44
 
 [node name="RayoArena6" type="Node2D" parent="EfectosCueva/Rayos" unique_id=929622264]
 modulate = Color(1, 1, 1, 0.7523773)
-material = SubResource("CanvasItemMaterial_k6334")
+material = SubResource("CanvasItemMaterial_eqnlt")
 position = Vector2(6721, 4709)
 script = ExtResource("rayo_luz2")
 alto = 805.0
@@ -1941,7 +1932,7 @@ semilla = 46
 
 [node name="RayoArena8" type="Node2D" parent="EfectosCueva/Rayos" unique_id=1967341517]
 modulate = Color(1, 1, 1, 0.91918975)
-material = SubResource("CanvasItemMaterial_m84f5")
+material = SubResource("CanvasItemMaterial_k6334")
 position = Vector2(-2944, 5176)
 script = ExtResource("rayo_luz2")
 alto = 380.0
