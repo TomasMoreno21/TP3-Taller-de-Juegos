@@ -43,7 +43,7 @@ content_margin_left = 24.0
 content_margin_top = 10.0
 content_margin_right = 24.0
 content_margin_bottom = 10.0
-bg_color = Color(0.78, 0.22, 0.23, 1)
+bg_color = Color(0.9098, 0.9098, 0.9176, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -56,7 +56,7 @@ border_width_left = 3
 border_width_top = 3
 border_width_right = 3
 border_width_bottom = 3
-border_color = Color(0.78, 0.22, 0.23, 1)
+border_color = Color(0.9098, 0.9098, 0.9176, 1)
 
 [sub_resource type="StyleBoxFlat" id="sl_track"]
 bg_color = Color(0.04, 0.047, 0.063, 1)
@@ -69,12 +69,12 @@ content_margin_top = 8.0
 content_margin_bottom = 8.0
 
 [sub_resource type="StyleBoxFlat" id="sl_fill"]
-bg_color = Color(0.78, 0.22, 0.23, 1)
+bg_color = Color(0.9098, 0.9098, 0.9176, 1)
 content_margin_top = 8.0
 content_margin_bottom = 8.0
 
 [sub_resource type="Gradient" id="g_bone"]
-colors = PackedColorArray(0.93, 0.9, 0.84, 1, 0.93, 0.9, 0.84, 1)
+colors = PackedColorArray(0.42, 0.42, 0.44, 1, 0.42, 0.42, 0.44, 1)
 
 [sub_resource type="GradientTexture2D" id="t_grab"]
 gradient = SubResource("g_bone")
@@ -118,7 +118,7 @@ horizontal_alignment = 1
 [node name="Raya" type="ColorRect" parent="Panel/VBox"]
 custom_minimum_size = Vector2(0, 4)
 layout_mode = 2
-color = Color(0.78, 0.22, 0.23, 1)
+color = Color(0.9098, 0.9098, 0.9176, 1)
 
 [node name="FilaMusica" type="HBoxContainer" parent="Panel/VBox"]
 layout_mode = 2

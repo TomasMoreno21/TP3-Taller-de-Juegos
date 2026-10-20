@@ -3,11 +3,25 @@ extends CanvasLayer
 const SCENE_CONTROLES := "res://scenes/controls.tscn"
 const SCENE_MENU := "res://scenes/main_menu.tscn"
 const SCENE_OPCIONES := "res://scenes/opciones.tscn"
-const SCENE_AYUDA := "res://scripts/ayuda_panel.gd"   # panel armado por código
 const SCENE_MODO_PRUEBA := "res://scripts/modo_prueba_panel.gd"   # panel armado por código
 
 @export var duracion_fundido := 0.14   ## s del fundido al abrir/cerrar la pausa
 var _tween_fundido: Tween
+const AMULETO_X := 285.0      ## px a la derecha del centro de la pantalla (el panel mide 480 de ancho)
+const AMULETO_Y := 90.0       ## px bajo el centro: la gema; el globo crece hacia arriba
+const AMULETO_ANCHO := 400.0
+const TAM_GEMA := 96.0
+const COLA_GLOBO := 62.0     ## largo de la cola del globo (56) + aire
+
+@export var segundos_por_consejo := 6.0   ## cada cuánto cambia el consejo del Amuleto
+var _amuleto: Control
+var _retrato: Control
+var _gema: Control
+var _globo: Control
+var _tw_texto: Tween
+var _timer_consejo: Timer
+var _i_consejo := 0
+var _t_flota := 0.0
 var _open := false
 var _indice := 0
 var _controls: CanvasLayer
@@ -16,7 +30,6 @@ var _controls: CanvasLayer
 	$Panel/Margin/VBox/Reanudar,
 	$Panel/Margin/VBox/Controles,
 	$Panel/Margin/VBox/Opciones,
-	$Panel/Margin/VBox/Ayuda,
 	$Panel/Margin/VBox/ModoPrueba,
 	$Panel/Margin/VBox/Menu,
 	$Panel/Margin/VBox/VolverMenu,
@@ -39,6 +52,68 @@ func _ready() -> void:
 		botones[i].focus_entered.connect(_on_focus.bind(i))
 	$Panel.visible = false
 	dim.visible = false
+	_armar_amuleto()
+
+
+## El Amuleto, igual que en el juego (gema + globo de cómic con cola), flota al lado de la ventana
+## y va diciendo de a uno los consejos que ya mostró.
+func _armar_amuleto() -> void:
+	_amuleto = Control.new()
+	_amuleto.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_amuleto.visible = false
+	add_child(_amuleto)
+	_globo = (load("res://scripts/globo_dialogo.gd") as GDScript).new()
+	_globo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_amuleto.add_child(_globo)
+	_gema = Control.new()
+	_gema.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_gema.size = Vector2(TAM_GEMA, TAM_GEMA)
+	_amuleto.add_child(_gema)
+	_retrato = Control.new()
+	_retrato.set_script(load("res://scripts/amuleto_retrato.gd"))
+	_retrato.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_retrato.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_gema.add_child(_retrato)
+	_timer_consejo = Timer.new()
+	_timer_consejo.wait_time = segundos_por_consejo
+	_timer_consejo.timeout.connect(_siguiente_consejo)
+	add_child(_timer_consejo)
+
+
+## Ubica el grupo a la derecha de la ventana, centrado en vertical: la gema un poco bajo el medio y el globo encima.
+func _ubicar_amuleto() -> void:
+	var vp := get_viewport().get_visible_rect().size
+	_amuleto.position = Vector2(vp.x * 0.5 + AMULETO_X, vp.y * 0.5 + AMULETO_Y)
+	_gema.position = Vector2(AMULETO_ANCHO * 0.5 - TAM_GEMA * 0.5, 0.0)
+
+
+func _siguiente_consejo(primero := false) -> void:
+	var prog := get_node_or_null("/root/Progresion")
+	var lista: Array = [] if prog == null else Array(prog.ayuda_vista)
+	var texto := "Todavía no tengo consejos. Te iré avisando mientras avanzás."
+	if not lista.is_empty():
+		_i_consejo = 0 if primero else (_i_consejo + 1) % lista.size()
+		texto = str(lista[_i_consejo])
+	_globo.configurar(texto, "Amuleto", 0, 26, AMULETO_ANCHO)
+	_globo.cola_a = Vector2(_globo.size.x * 0.5, 0.0)   # la cola sale del centro del globo, sobre la gema
+	_globo.position = Vector2((AMULETO_ANCHO - _globo.size.x) * 0.5, -_globo.size.y - COLA_GLOBO)
+	if _tw_texto != null and _tw_texto.is_valid():
+		_tw_texto.kill()
+	if DisplayServer.get_name() == "headless":
+		_globo.set_ratio(1.0)
+		return
+	_retrato.set_hablando(true)
+	_globo.set_ratio(0.0)
+	var dur := clampf(texto.length() * 0.025, 0.4, 3.0)
+	_tw_texto = create_tween().set_ignore_time_scale(true).set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_tw_texto.tween_method(_globo.set_ratio, 0.0, 1.0, dur)
+	_tw_texto.tween_callback(_retrato.set_hablando.bind(false))
+
+
+func _process(delta: float) -> void:
+	if _open and _amuleto != null:
+		_t_flota += delta
+		_gema.position.y = sin(_t_flota * 2.0) * 7.0
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -95,6 +170,10 @@ func abrir() -> void:
 	_actualizar_ubicacion()
 	$Panel.visible = true
 	dim.visible = true
+	_amuleto.visible = true
+	_ubicar_amuleto()
+	_siguiente_consejo(true)
+	_timer_consejo.start()
 	get_tree().paused = true
 	_ui("ui_pausa")
 	botones[0].grab_focus.call_deferred()
@@ -105,6 +184,7 @@ func cerrar() -> void:
 	if not _open:
 		return
 	_open = false
+	_timer_consejo.stop()
 	get_tree().paused = false
 	Input.action_release("jump")   # el botón que confirmó (A / Espacio) no debe hacer saltar al volver
 	_fundido(false)
@@ -118,6 +198,7 @@ func _fundido(entra: bool) -> void:
 	if DisplayServer.get_name() == "headless":
 		panel.visible = entra
 		dim.visible = entra
+		_amuleto.visible = entra
 		panel.modulate.a = 1.0
 		dim.modulate.a = 1.0
 		return
@@ -129,14 +210,18 @@ func _fundido(entra: bool) -> void:
 		panel.scale = Vector2.ONE * 0.94
 		_tween_fundido.tween_property(panel, "modulate:a", 1.0, duracion_fundido)
 		_tween_fundido.tween_property(dim, "modulate:a", 1.0, duracion_fundido)
+		_amuleto.modulate.a = 0.0
+		_tween_fundido.tween_property(_amuleto, "modulate:a", 1.0, duracion_fundido)
 		_tween_fundido.tween_property(panel, "scale", Vector2.ONE, duracion_fundido).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	else:
 		_tween_fundido.tween_property(panel, "modulate:a", 0.0, duracion_fundido * 0.7)
 		_tween_fundido.tween_property(dim, "modulate:a", 0.0, duracion_fundido * 0.7)
+		_tween_fundido.tween_property(_amuleto, "modulate:a", 0.0, duracion_fundido * 0.7)
 		_tween_fundido.chain().tween_callback(func() -> void:
 			if not _open:
 				panel.visible = false
-				dim.visible = false)
+				dim.visible = false
+				_amuleto.visible = false)
 
 
 ## Al cerrar un panel el foco quedó huérfano: se lo devuelve al botón elegido (feedback con mando).
@@ -187,8 +272,6 @@ func _on_boton_pressed(i: int) -> void:
 			_abrir_controles()
 		&"Opciones":
 			_abrir_opciones()
-		&"Ayuda":
-			_abrir_ayuda()
 		&"ModoPrueba":
 			_abrir_modo_prueba()
 		&"Menu":
@@ -212,13 +295,6 @@ func _abrir_controles() -> void:
 
 func _abrir_opciones() -> void:
 	var c: CanvasLayer = (load(SCENE_OPCIONES) as PackedScene).instantiate()
-	_controls = c
-	c.tree_exited.connect(_refocar)
-	add_child(c)
-
-
-func _abrir_ayuda() -> void:
-	var c: CanvasLayer = (load(SCENE_AYUDA) as GDScript).new()
 	_controls = c
 	c.tree_exited.connect(_refocar)
 	add_child(c)

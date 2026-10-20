@@ -25,7 +25,7 @@ content_margin_left = 24.0
 content_margin_top = 12.0
 content_margin_right = 24.0
 content_margin_bottom = 12.0
-bg_color = Color(0, 0, 0, 0)
+bg_color = Color(0.0588, 0.0588, 0.0588, 1)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
@@ -47,16 +47,16 @@ content_margin_left = 24.0
 content_margin_top = 12.0
 content_margin_right = 24.0
 content_margin_bottom = 12.0
-bg_color = Color(1, 1, 1, 0.05)
+bg_color = Color(0.0588, 0.0588, 0.0588, 1)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
-shadow_color = Color(1, 1, 1, 0.1)
-shadow_size = 10
+shadow_color = Color(1, 1, 1, 0.35)
+shadow_size = 22
 
 [sub_resource type="StyleBoxFlat" id="btn_focus"]
-bg_color = Color(0, 0, 0, 0)
+bg_color = Color(0.0588, 0.0588, 0.0588, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -83,6 +83,57 @@ anchor_bottom = 1.0
 mouse_filter = 2
 texture = ExtResource("2_fondo")
 stretch_mode = 6
+
+[node name="Espiritus" type="Control" parent="." unique_id=771908018]
+anchors_preset = 0
+offset_left = 950.0
+offset_top = 470.0
+offset_right = 1550.0
+offset_bottom = 810.0
+mouse_filter = 2
+script = ExtResource("10_esp")
+
+[node name="Lobo" type="TextureRect" parent="Espiritus" unique_id=1733968884]
+layout_mode = 0
+offset_left = -950.0
+offset_top = -50.0
+offset_right = 300.0
+offset_bottom = 624.0
+mouse_filter = 2
+texture = ExtResource("11_lob1")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("3_anim")
+frames = Array[Texture2D]([ExtResource("11_lob1"), ExtResource("12_lob2"), ExtResource("13_lob3")])
+fps = 6.0
+
+[node name="Oso" type="TextureRect" parent="Espiritus" unique_id=620780283]
+layout_mode = 0
+offset_left = -831.0
+offset_top = -235.0
+offset_right = 754.0
+offset_bottom = 651.0
+mouse_filter = 2
+texture = ExtResource("14_oso1")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("3_anim")
+frames = Array[Texture2D]([ExtResource("14_oso1"), ExtResource("15_oso2"), ExtResource("16_oso3")])
+fps = 6.0
+
+[node name="Murcielago" type="TextureRect" parent="Espiritus" unique_id=776687260]
+layout_mode = 0
+offset_left = -240.0
+offset_top = -508.0
+offset_right = 1194.0
+offset_bottom = 628.0
+mouse_filter = 2
+texture = ExtResource("17_mur1")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("3_anim")
+frames = Array[Texture2D]([ExtResource("17_mur1"), ExtResource("18_mur2"), ExtResource("19_mur3")])
+fps = 6.0
 
 [node name="UI" type="Control" parent="." unique_id=248521589]
 layout_mode = 1
@@ -118,6 +169,7 @@ offset_left = 80.0
 offset_top = 360.0
 offset_right = 560.0
 offset_bottom = 780.0
+pivot_offset = Vector2(89, -115)
 
 [node name="Options" type="VBoxContainer" parent="UI/Menu" unique_id=548567392]
 layout_mode = 2
@@ -225,74 +277,13 @@ frames = Array[Texture2D]([ExtResource("4_tit1"), ExtResource("5_tit2"), ExtReso
 
 [node name="Subtitle" type="Label" parent="." unique_id=745846999]
 layout_mode = 0
-offset_left = 80.0
-offset_top = 245.0
-offset_right = 960.0
-offset_bottom = 279.0
+offset_left = 119.0
+offset_top = 264.0
+offset_right = 999.0
+offset_bottom = 298.0
 theme_override_colors/font_color = Color(0.78, 0.76, 0.7, 1)
 theme_override_font_sizes/font_size = 24
 text = "GUARDIÁN DEL BOSQUE"
-
-[node name="Raya" type="ColorRect" parent="." unique_id=1741979063]
-custom_minimum_size = Vector2(260, 4)
-layout_mode = 0
-offset_left = 80.0
-offset_top = 279.0
-offset_right = 340.0
-offset_bottom = 283.0
-size_flags_horizontal = 0
-color = Color(0.78, 0.22, 0.23, 1)
-
-[node name="Espiritus" type="Control" parent="." unique_id=771908018]
-anchors_preset = 0
-offset_left = 950.0
-offset_top = 470.0
-offset_right = 1550.0
-offset_bottom = 810.0
-mouse_filter = 2
-script = ExtResource("10_esp")
-
-[node name="Lobo" type="TextureRect" parent="Espiritus" unique_id=1733968884]
-layout_mode = 0
-offset_left = -950.0
-offset_top = -50.0
-offset_right = 300.0
-offset_bottom = 624.0
-mouse_filter = 2
-texture = ExtResource("11_lob1")
-expand_mode = 1
-stretch_mode = 5
-script = ExtResource("3_anim")
-frames = Array[Texture2D]([ExtResource("11_lob1"), ExtResource("12_lob2"), ExtResource("13_lob3")])
-fps = 6.0
-
-[node name="Oso" type="TextureRect" parent="Espiritus" unique_id=620780283]
-layout_mode = 0
-offset_left = -831.0
-offset_top = -235.0
-offset_right = 754.0
-offset_bottom = 651.0
-mouse_filter = 2
-texture = ExtResource("14_oso1")
-expand_mode = 1
-stretch_mode = 5
-script = ExtResource("3_anim")
-frames = Array[Texture2D]([ExtResource("14_oso1"), ExtResource("15_oso2"), ExtResource("16_oso3")])
-fps = 6.0
-
-[node name="Murcielago" type="TextureRect" parent="Espiritus" unique_id=776687260]
-layout_mode = 0
-offset_left = -240.0
-offset_top = -508.0
-offset_right = 1194.0
-offset_bottom = 628.0
-mouse_filter = 2
-texture = ExtResource("17_mur1")
-expand_mode = 1
-stretch_mode = 5
-script = ExtResource("3_anim")
-frames = Array[Texture2D]([ExtResource("17_mur1"), ExtResource("18_mur2"), ExtResource("19_mur3")])
-fps = 6.0
 
 [node name="Hint" type="Label" parent="." unique_id=308445458]
 layout_mode = 0
