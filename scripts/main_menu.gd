@@ -37,7 +37,11 @@ const SCENE_MODO_PRUEBA := "res://scripts/modo_prueba_panel.gd"   # panel armado
 	preload("res://Sprites/Menu/ojo/ojo-abierto2.png"),
 	preload("res://Sprites/Menu/ojo/ojo-abierto3.png"),
 ]   ## ojo abierto en loop
-@export var pausa_ojo_abierto := 1.0   ## s que se sostiene el ojo abierto
+@export var seg_cuadro_parpadeo := 0.04  ## s por cuadro en el parpadeo (más bajo = más rápido)
+@export var pausa_parpadeo := 0.05      ## s con el ojo cerrado en el parpadeo
+@export var pausa_tras_parpadeo := 0.75 ## s abierto después del parpadeo, antes de caer el negro
+@export var fundido_negro := 1.0        ## s que tarda en caer el negro mientras el ojo se cierra
+@export var pausa_ojo_abierto := 1.0  ## s que se sostiene el ojo abierto
 var _parpado: Sprite2D
 var _iris: Sprite2D
 var _pupila: Sprite2D
@@ -233,6 +237,46 @@ func _animar_ojo() -> void:
 	_parpado = sprite
 	if not rapido:
 		await get_tree().create_timer(pausa_ojo_abierto).timeout
+	# Un parpadeo más: se cierra y se vuelve a abrir.
+	await _cerrar_ojo(sprite, rapido, seg_cuadro_parpadeo)
+	if not rapido:
+		await get_tree().create_timer(pausa_parpadeo).timeout
+	await _abrir_ojo(sprite, rapido, seg_cuadro_parpadeo)
+	if not rapido:
+		await get_tree().create_timer(pausa_tras_parpadeo).timeout
+	# Cae el negro y, a la vez, el ojo se cierra del todo.
+	var negro := ColorRect.new()
+	negro.color = Color(0, 0, 0, 0)
+	negro.set_anchors_preset(Control.PRESET_FULL_RECT)
+	negro.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(negro)
+	if not rapido:
+		create_tween().tween_property(negro, "color:a", 1.0, fundido_negro)
+	await _cerrar_ojo(sprite, rapido)
+	if not rapido:
+		await get_tree().create_timer(maxf(fundido_negro - seg_cuadro_abre * (abre_cuadros.size() + 1), 0.0) + 0.3).timeout
+
+
+## El párpado se cierra (los cuadros de apertura al revés) hasta el ojo cerrado; iris y pupila se esconden.
+func _cerrar_ojo(sprite: Sprite2D, rapido: bool, seg := -1.0) -> void:
+	_parpado = null   # deja de ciclar el loop de ojo abierto
+	for i in range(abre_cuadros.size() - 1, -1, -1):
+		sprite.texture = abre_cuadros[i]
+		if not rapido:
+			await get_tree().create_timer(seg if seg > 0.0 else seg_cuadro_abre).timeout
+	_iris.visible = false
+	_pupila.visible = false
+	sprite.texture = ojo_cuadros.back()
+
+
+func _abrir_ojo(sprite: Sprite2D, rapido: bool, seg := -1.0) -> void:
+	_iris.visible = true
+	_pupila.visible = true
+	for c in abre_cuadros:
+		sprite.texture = c
+		if not rapido:
+			await get_tree().create_timer(seg if seg > 0.0 else seg_cuadro_abre).timeout
+	_parpado = sprite
 
 
 ## Sprite que cicla sus cuadros (ver `_process`), centrado en `pos`.
