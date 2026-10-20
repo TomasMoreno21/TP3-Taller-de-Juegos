@@ -1,30 +1,30 @@
-extends Control
+﻿extends Control
 
-const SCENE_JUEGO := "res://scenes/comic_intro.tscn"   # intro en viñetas; al terminar carga nivel1
+const SCENE_JUEGO := "res://scenes/comic_intro.tscn"   # intro en viÃ±etas; al terminar carga nivel1
 const SCENE_CONTROLES := "res://scenes/controls.tscn"
 const SCENE_OPCIONES := "res://scenes/opciones.tscn"
-const SCENE_CREDITOS := "res://scenes/creditos_final.tscn"   # los mismos créditos del final (Esc o al terminar vuelve al menú)
-const SCENE_MODO_PRUEBA := "res://scripts/modo_prueba_panel.gd"   # panel armado por código
+const SCENE_CREDITOS := "res://scenes/creditos_final.tscn"   # los mismos crÃ©ditos del final (Esc o al terminar vuelve al menÃº)
+const SCENE_MODO_PRUEBA := "res://scripts/modo_prueba_panel.gd"   # panel armado por cÃ³digo
 
 var _indice := 0
 var _controls: CanvasLayer
 
 @onready var botones: Array[Button] = [
-	$Center/VBox/Options/Jugar,
-	$Center/VBox/Options/Niveles,
-	$Center/VBox/Options/Controles,
-	$Center/VBox/Options/Opciones,
-	$Center/VBox/Options/Creditos,
-	$Center/VBox/Options/Salir,
+	$UI/Menu/Options/Jugar,
+	$UI/Menu/Options/Niveles,
+	$UI/Menu/Options/Controles,
+	$UI/Menu/Options/Opciones,
+	$UI/Menu/Options/Creditos,
+	$UI/Menu/Options/Salir,
 ]
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	var modo_prueba := get_node_or_null("/root/ModoPrueba")
-	if modo_prueba == null or not modo_prueba.habilitado:   # versión final: sin selector de nivel
-		botones.erase($Center/VBox/Options/Niveles)
-		$Center/VBox/Options/Niveles.hide()
+	if modo_prueba == null or not modo_prueba.habilitado:   # versiÃ³n final: sin selector de nivel
+		botones.erase($UI/Menu/Options/Niveles)
+		$UI/Menu/Options/Niveles.hide()
 	else:
 		_poner_version(modo_prueba.version_texto)
 	for i in botones.size():
@@ -40,9 +40,9 @@ func _precargar_juego() -> void:
 
 
 func _animar_entrada() -> void:
-	$Center.modulate.a = 0.0
+	$UI.modulate.a = 0.0
 	var t := create_tween()
-	t.tween_property($Center, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	t.tween_property($UI, "modulate:a", 1.0, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -70,7 +70,7 @@ func _on_focus(i: int) -> void:
 	_resaltar(i)
 
 
-## El botón con foco crece un poco y los demás vuelven a su tamaño (feedback de selección).
+## El botÃ³n con foco crece un poco y los demÃ¡s vuelven a su tamaÃ±o (feedback de selecciÃ³n).
 func _resaltar(i: int) -> void:
 	for k in botones.size():
 		var b := botones[k]
@@ -100,7 +100,7 @@ func _on_boton_pressed(i: int) -> void:
 			get_tree().quit()
 
 
-## Versión de la prueba, abajo a la derecha: los reportes de los testers dicen de qué build hablan.
+## VersiÃ³n de la prueba, abajo a la derecha: los reportes de los testers dicen de quÃ© build hablan.
 func _poner_version(texto: String) -> void:
 	var l := Label.new()
 	l.text = texto

@@ -1,188 +1,239 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=3 uid="uid://daaca14llkjtd"]
 
-[ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_menu"]
-
-[sub_resource type="Gradient" id="gradient"]
-colors = PackedColorArray(0.075, 0.085, 0.1, 1, 0.02, 0.024, 0.03, 1)
-
-[sub_resource type="GradientTexture2D" id="grad"]
-gradient = SubResource("gradient")
-width = 1920
-height = 1080
-fill_from = Vector2(0, 0)
-fill_to = Vector2(0, 1)
+[ext_resource type="Script" uid="uid://dldikwlmce8p2" path="res://scripts/main_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" uid="uid://dcufjn4tyidhh" path="res://Sprites/Fondos/Fondo_menu.png" id="2_fondo"]
+[ext_resource type="Script" uid="uid://dvs3515axf0d" path="res://scripts/anim_frames_ui.gd" id="3_anim"]
+[ext_resource type="Texture2D" uid="uid://c84sgyix8f1gx" path="res://Sprites/Menu/titulo/titulo-1.png" id="4_tit1"]
+[ext_resource type="Texture2D" uid="uid://cu0vmb6lhslbk" path="res://Sprites/Menu/titulo/titulo-2.png" id="5_tit2"]
+[ext_resource type="Texture2D" uid="uid://bgyhftey4y01w" path="res://Sprites/Menu/titulo/titulo-3.png" id="6_tit3"]
+[ext_resource type="Texture2D" uid="uid://b581qs276g7pa" path="res://Sprites/Menu/luna/luna-1.png" id="7_lun1"]
+[ext_resource type="Texture2D" uid="uid://7hmea4vfxnxf" path="res://Sprites/Menu/luna/luna-2.png" id="8_lun2"]
+[ext_resource type="Texture2D" uid="uid://8ulsoxn3uwvs" path="res://Sprites/Menu/luna/luna-3.png" id="9_lun3"]
 
 [sub_resource type="StyleBoxFlat" id="btn_normal"]
 content_margin_left = 24.0
 content_margin_top = 12.0
 content_margin_right = 24.0
 content_margin_bottom = 12.0
-bg_color = Color(0.075, 0.09, 0.115, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.45, 0.45, 0.45, 1)
+bg_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
 
 [sub_resource type="StyleBoxFlat" id="btn_hover"]
 content_margin_left = 24.0
 content_margin_top = 12.0
 content_margin_right = 24.0
 content_margin_bottom = 12.0
-bg_color = Color(0.12, 0.14, 0.17, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.93, 0.9, 0.84, 1)
+bg_color = Color(1, 1, 1, 0.05)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+shadow_color = Color(1, 1, 1, 0.1)
+shadow_size = 10
 
 [sub_resource type="StyleBoxFlat" id="btn_pressed"]
 content_margin_left = 24.0
 content_margin_top = 12.0
 content_margin_right = 24.0
 content_margin_bottom = 12.0
-bg_color = Color(0.78, 0.22, 0.23, 1)
+bg_color = Color(1, 1, 1, 0.6)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="btn_focus"]
+bg_color = Color(0, 0, 0, 0)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.93, 0.9, 0.84, 1)
+border_color = Color(1, 1, 1, 0.22)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
 
-[sub_resource type="StyleBoxFlat" id="btn_focus"]
-bg_color = Color(0, 0, 0, 0)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(0.78, 0.22, 0.23, 1)
-
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=662289646]
+layout_mode = 3
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("1_menu")
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="Background" type="TextureRect" parent="." unique_id=1016637740]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
-texture = SubResource("grad")
-stretch_mode = 5
+texture = ExtResource("2_fondo")
+stretch_mode = 6
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="UI" type="Control" parent="." unique_id=248521589]
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
-[node name="VBox" type="VBoxContainer" parent="Center"]
-custom_minimum_size = Vector2(640, 0)
-theme_override_constants/separation = 10
+[node name="Luna" type="TextureRect" parent="UI" unique_id=1867837079]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -651.0
+offset_top = 40.0
+offset_right = -91.0
+offset_bottom = 540.0
+grow_horizontal = 0
+mouse_filter = 2
+texture = ExtResource("7_lun1")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("3_anim")
+frames = Array[Texture2D]([ExtResource("7_lun1"), ExtResource("8_lun2"), ExtResource("9_lun3")])
+fps = 6.0
 
-[node name="Title" type="Label" parent="Center/VBox"]
-theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
-theme_override_colors/font_outline_color = Color(0.04, 0.047, 0.063, 1)
-theme_override_constants/outline_size = 10
-theme_override_font_sizes/font_size = 72
-text = "SPIRIT KEEPER"
-horizontal_alignment = 1
+[node name="Menu" type="VBoxContainer" parent="UI" unique_id=1029048230]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 360.0
+offset_right = 560.0
+offset_bottom = 780.0
 
-[node name="Subtitle" type="Label" parent="Center/VBox"]
-theme_override_colors/font_color = Color(0.78, 0.76, 0.7, 1)
-theme_override_font_sizes/font_size = 22
-text = "GUARDIÁN DEL BOSQUE"
-horizontal_alignment = 1
-
-[node name="Raya" type="ColorRect" parent="Center/VBox"]
-custom_minimum_size = Vector2(0, 4)
+[node name="Options" type="VBoxContainer" parent="UI/Menu" unique_id=548567392]
 layout_mode = 2
-color = Color(0.78, 0.22, 0.23, 1)
-
-[node name="Spacer" type="Control" parent="Center/VBox"]
-custom_minimum_size = Vector2(0, 30)
-
-[node name="Options" type="VBoxContainer" parent="Center/VBox"]
 theme_override_constants/separation = 12
 
-[node name="Jugar" type="Button" parent="Center/VBox/Options"]
+[node name="Jugar" type="Button" parent="UI/Menu/Options" unique_id=1341016820]
 custom_minimum_size = Vector2(480, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_styles/focus = SubResource("btn_focus")
-theme_override_styles/hover = SubResource("btn_hover")
-theme_override_styles/pressed = SubResource("btn_pressed")
 theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_focus")
 text = "JUGAR"
 
-[node name="Niveles" type="Button" parent="Center/VBox/Options"]
+[node name="Niveles" type="Button" parent="UI/Menu/Options" unique_id=981686831]
 custom_minimum_size = Vector2(480, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.85, 0.4, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_styles/focus = SubResource("btn_focus")
-theme_override_styles/hover = SubResource("btn_hover")
-theme_override_styles/pressed = SubResource("btn_pressed")
 theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_focus")
 text = "ELEGIR NIVEL (PRUEBA)"
 
-[node name="Controles" type="Button" parent="Center/VBox/Options"]
+[node name="Controles" type="Button" parent="UI/Menu/Options" unique_id=1386611052]
 custom_minimum_size = Vector2(480, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_styles/focus = SubResource("btn_focus")
-theme_override_styles/hover = SubResource("btn_hover")
-theme_override_styles/pressed = SubResource("btn_pressed")
 theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_focus")
 text = "CONTROLES"
 
-[node name="Opciones" type="Button" parent="Center/VBox/Options"]
+[node name="Opciones" type="Button" parent="UI/Menu/Options" unique_id=969472796]
 custom_minimum_size = Vector2(480, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_styles/focus = SubResource("btn_focus")
-theme_override_styles/hover = SubResource("btn_hover")
-theme_override_styles/pressed = SubResource("btn_pressed")
 theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_focus")
 text = "OPCIONES"
 
-[node name="Creditos" type="Button" parent="Center/VBox/Options"]
+[node name="Creditos" type="Button" parent="UI/Menu/Options" unique_id=1565770621]
 custom_minimum_size = Vector2(480, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_styles/focus = SubResource("btn_focus")
-theme_override_styles/hover = SubResource("btn_hover")
-theme_override_styles/pressed = SubResource("btn_pressed")
 theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_focus")
 text = "CRÉDITOS"
 
-[node name="Salir" type="Button" parent="Center/VBox/Options"]
+[node name="Salir" type="Button" parent="UI/Menu/Options" unique_id=460159262]
 custom_minimum_size = Vector2(480, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 24
-theme_override_styles/focus = SubResource("btn_focus")
-theme_override_styles/hover = SubResource("btn_hover")
-theme_override_styles/pressed = SubResource("btn_pressed")
 theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_styles/focus = SubResource("btn_focus")
 text = "SALIR"
 
-[node name="Hint" type="Label" parent="."]
+[node name="Titulo" type="VBoxContainer" parent="." unique_id=1036057492]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 70.0
+offset_right = 960.0
+offset_bottom = 291.0
+theme_override_constants/separation = 8
+
+[node name="Title" type="TextureRect" parent="." unique_id=1181652774]
+custom_minimum_size = Vector2(880, 126)
+layout_mode = 0
+offset_left = 80.0
+offset_top = 109.0
+offset_right = 960.0
+offset_bottom = 235.0
+texture = ExtResource("4_tit1")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("3_anim")
+frames = Array[Texture2D]([ExtResource("4_tit1"), ExtResource("5_tit2"), ExtResource("6_tit3")])
+
+[node name="Subtitle" type="Label" parent="." unique_id=745846999]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 245.0
+offset_right = 960.0
+offset_bottom = 279.0
+theme_override_colors/font_color = Color(0.78, 0.76, 0.7, 1)
+theme_override_font_sizes/font_size = 24
+text = "GUARDIÁN DEL BOSQUE"
+
+[node name="Raya" type="ColorRect" parent="." unique_id=1741979063]
+custom_minimum_size = Vector2(260, 4)
+layout_mode = 0
+offset_left = 80.0
+offset_top = 279.0
+offset_right = 340.0
+offset_bottom = 283.0
+size_flags_horizontal = 0
+color = Color(0.78, 0.22, 0.23, 1)
+
+[node name="Hint" type="Label" parent="." unique_id=308445458]
+layout_mode = 0
 anchor_left = 0.5
-anchor_right = 0.5
 anchor_top = 1.0
+anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -400.0
 offset_top = -64.0
