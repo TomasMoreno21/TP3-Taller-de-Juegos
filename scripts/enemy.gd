@@ -46,6 +46,7 @@ const TELEGRAFIA := preload("res://scripts/telegrafia_enemigo.gd")
 @export var frames_impacto := {"attack1": 3, "attack2": 2}   # frame de cada animación de ataque en el que cae el tajo (se sincroniza con el daño)
 @export var stun_anim := "idle"               # animación que sigue viva durante el stun ("" = la que corresponda al movimiento)
 @export var alcance_vertical_melee := 320.0     # diferencia de altura (px) máxima para pegar cuerpo a cuerpo; más allá está en otro piso
+@export var velocidad_separacion := 220.0    # px/s con que se despega si quedó metido dentro del jugador (0 = no se corre)
 @export var max_atacantes_melee := 2         # cuántos cuerpo a cuerpo pueden estar atacando a la vez (los demás esperan)
 @export var flash_aviso := Color(1.25, 1.2, 1.2)  # leve brillo al iniciar un ataque (aviso de lectura)
 @export_group("Anticipación del ataque")
@@ -682,10 +683,27 @@ func _physics_process(delta: float) -> void:
 			# Jugador justo encima/debajo (otro piso): se queda quieto en vez de temblar de lado a lado.
 			velocity.x = 0.0 if absf(player.global_position.x - global_position.x) < 30.0 else _dir * enemy_data.speed
 
+	_separar_si_encimado(player)
 	_update_animacion()
 	move_and_slide()
 	if is_on_floor() and velocity.y > 0:
 		velocity.y = 0
+
+
+## Quedó metido dentro del jugador (exentos de colisión por nacer/crecer encima): en vez de quedarse adentro,
+## se corre hacia afuera suave hasta despegarse; ahí `player._tick_solape` devuelve el choque normal.
+## No actúa durante la embestida del jugador (Lobo/Oso atraviesan a propósito).
+func _separar_si_encimado(player: Node2D) -> void:
+	if velocidad_separacion <= 0.0:
+		return
+	var exentos = player.get("_exentos_solape")
+	if not (exentos is Array) or not exentos.has(self) or float(player.get("_embestida_t")) > 0.0:
+		return
+	var dx := global_position.x - player.global_position.x
+	var lado := signf(dx) if absf(dx) > 1.0 else float(-_dir)
+	if is_on_wall() and get_wall_normal().x * lado < 0.0:
+		lado = -lado   # contra una pared: sale por el otro lado
+	velocity.x = lado * velocidad_separacion
 
 
 func _mirar_jugador() -> void:

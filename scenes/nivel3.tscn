@@ -424,6 +424,7 @@ difuminado_vertical = 200.0
 
 [node name="EcoHijo" parent="." unique_id=2125636868 instance=ExtResource("eco_hijo_1")]
 position = Vector2(9716, 2295)
+lado_derecho = false
 lineas_repeticion = Array[String](["[humano][susurro]Me tiemblan las manos... pero no paro.", "Entonces no pares. Falta poco."])
 
 [node name="Decoracion" type="Node2D" parent="." unique_id=1057198916]

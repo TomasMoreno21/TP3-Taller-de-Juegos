@@ -1,5 +1,11 @@
 # MEMORY.md — Spirit Keeper (ex proyecto Guardabosques / Espíritus del Bosque)
 
+## Sesión 20/10 — Pulido de combate y textos · SIN COMMIT
+- Alcances: quitada la escala oculta de `player.tscn` › `AttackHitbox` (×1.57/1.09). `.tres`: Humano 71/94/65, Lobo 152/147/117, Oso 190/166 + `lunge_light` 50 (ligero que no conectaba); Murciélago, pisotón y combos compensados ×1.2857 (mismo alcance que antes). Medición `tests/medir_alcance_anim.gd`, `tests/medir_oso_ligero.gd`; caso nuevo en `diag_golpe`.
+- `enemy.gd::_separar_si_encimado` + export `velocidad_separacion` 220: el enemigo metido en el jugador (exento) se despega solo. Caso D en `diag_solape`.
+- Textos: `n2_voladores` explica el chillido del Murciélago ({forma_arriba}/{special}); intros N1-N3 nuevas (aprobadas); `EcoHijo` de N3 con `lado_derecho = false`.
+- Fallos ajenos previos: `diag_sync_golpes` Lobo ×2; `diag_eco_hijo` «nivel1: hay EcoHijo» (se borró en `34d0fbf`, así que la escena larga del eco ahora corre en N3). NO probado con ventana.
+
 ## Sesión 19/10 — Jefe: más fácil + pulido (commit `af785bb` + cambios SIN COMMIT)
 - `af785bb`: F1 sin lanzas ni acoso (`lanzas_f1`), los ojos siguen con sus rayos; vida 450, menos daño, ventanas/avisos más largos, ritmo F2/F3 más lento. El diag lee los valores del jefe.
 - Sin commit: `ojo_verde` suelta vida (`prob_vida` 0.3, `curacion_vida` 15) que cae hasta `altura_orbe` 80, fuera del foso, y entra en el grupo `orbe_jefe`. Tips F1 `tip_nudo`/`tip_castigo` + Oso sugerido. 17 SFX del jefe (`generar_sfx.py jefe_ataques`, semilla 7310; grupo "Sonido de ataques" en el Inspector; la lanza/rayo los toca en `lanza_estrella._sonar`). Peso del golpe al ojo (`_impacto_ojo`: chispas, temblor; el golpe fuerte = hitstop + punch). En el diag los ojos no sueltan vida (`node_added` → `prob_vida` 0) salvo en la prueba propia. Sin música de jefe (pendiente). NO probado con ventana.
@@ -168,6 +174,7 @@ Normas prácticas para el asistente:
 
 
 ## Notas / Lecciones Aprendidas
+- **(19/10) Medir hitbox con `global_transform * shape.get_rect()`, nunca con `shape.size`:** `player.tscn` › `AttackHitbox` tenía `scale = (1.57, 1.09)` desde el 01/09 (editor): la hitbox real era 28 % más larga que `range + size.x/2` y pegaba atrás del jugador. Se quitó la escala; alcances re-medidos con `tests/medir_alcance_anim.gd` (punta visible del sprite vs fin de hitbox) y los golpes que no debían cambiar se compensaron ×1.2857 en los `.tres`. Un test que «pasa con los valores viejos» no discrimina: buscar por qué antes de confiar.
 - **(18/10) En `player.gd` (y scripts cargados por los tests) NO usar el identificador global del autoload (`Progresion.algo`)**: con `--headless --script res://tests/autotest.gd` los autoloads no se registran como identificador global y el script no compila (`Identifier not found: Progresion`), colgando el autotest. Usar siempre `get_node_or_null("/root/Progresion")` con guarda. Fue lo que rompió el merge del 18/10 (el remote traía `Progresion.recordar_formas`).
 - **(17/10, jefe) Antes de "el objeto se ve más chico/grande que el arte", medir el ZOOM de la cámara, no el tamaño del dibujo.** El ojo central se dibujaba a tamaño nativo del PNG (275×176) pero la cámara del juego trabaja a zoom < 1 según la forma (`player.gd::_sprint_zoom`, 0.83–0.93; `modo_arena` no lo pisa) y en F2 `escala_arena_f2 = 0.72`. Por eso "en pantalla se ve más chico que el PNG". Lección: el tamaño en pantalla = arte × zoom × escala del viewport; verificar el zoom antes de tocar la escala del arte. Se agregó `ojo_central.gd::escala` (un valor para agrandar todo el ojo).
 - **(17/10, rev. 18/10) El arte de la artista no se parte ni se deforma:** nada se desprende ni se recorta en piezas que vuelan; el usuario sí acepta grietas finas dibujadas encima. El estado del jefe se muestra en elementos propios (ojo, grietas, marcas, rocas). Antes de reusar el arte como «piezas», preguntar.

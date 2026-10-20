@@ -4,11 +4,11 @@
 
 [resource]
 script = ExtResource("1_forma")
-attack_range = 87.0
+attack_range = 71.0
 attack_size = Vector2(110, 80)
-heavy_range = 96.0
+heavy_range = 94.0
 heavy_size = Vector2(140, 100)
-special_range = 98.0
+special_range = 65.0
 combos = Array[Dictionary]([{
 "dano": 40,
 "descripcion": "Tajo giratorio: golpea al frente y a tu espalda.",
@@ -16,7 +16,7 @@ combos = Array[Dictionary]([{
 "mult_trasero": 0.75,
 "nombre": "Remate",
 "radio_trasero": 280.0,
-"rango": 126.0,
+"rango": 185.0,
 "secuencia": ["light", "heavy"],
 "tamano": Vector2(162, 114)
 }])

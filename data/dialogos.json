@@ -5,9 +5,9 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Humano… soy el Amuleto del bosque.",
-			"Se llevaron a tu hijo para llegar a mí.",
-			"Te presto mi fuerza. Alcanzará."
+			"[humano][grito]¡HIJO!",
+			"Se lo llevó la secta. Me buscan a mí.",
+			"[humano]Entonces dame lo que tengas."
 		]
 	},
 	"n1_combate": {
@@ -122,9 +122,9 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"La guarida. Huele a humo y a cera.",
-			"Hay huellas pequeñas: tu hijo caminó acá.",
-			"[susurro]Despacio. Las paredes oyen."
+			"[susurro]La guarida. Despacio.",
+			"[humano][susurro]Huellas chiquitas… estuvo acá.",
+			"[humano]Aguantá, ya llego."
 		]
 	},
 	"n2_aleteos": {
@@ -163,7 +163,8 @@
 		"una_vez": true,
 		"lineas": [
 			"[alerta]Arqueros flotando en un aura corrupta.",
-			"Tus golpes no llegan. Necesitás volar."
+			"Tus golpes no los tocan. Solo el chillido del Murciélago.",
+			"Transformate con {forma_arriba} y lanzalo con {special}."
 		]
 	},
 	"n2_pozo": {
@@ -224,9 +225,9 @@
 		"retraso": 0.6,
 		"una_vez": true,
 		"lineas": [
-			"Más hondo que la guarida. Esta roca es más vieja que la secta.",
-			"[humano]Esta tela… es de mi hijo.",
-			"Entonces vamos bien. No te detengas."
+			"[alerta]Esta roca late. Estamos cerca.",
+			"[humano]Su tela… está rota.",
+			"[humano]Ni un paso atrás."
 		]
 	},
 	"n3_oso": {

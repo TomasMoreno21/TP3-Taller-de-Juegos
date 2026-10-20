@@ -35,6 +35,31 @@ func _init() -> void:
 	_check(vio_danio, "Enemigo recibió daño: %d -> %d" % [hp0, enemy.health])
 	_check(vio_rojo, "Enemigo se tiñe de rojo al ser golpeado")
 
+	# Oso ligero: llega a un cultista frenado a 60 px del borde del cuerpo (antes alcanzaba solo 16 px).
+	enemy.queue_free()
+	await _wait_frames(30)
+	player.set("current_form", 2)
+	player.call("_apply_form")
+	await _wait_frames(40)
+	var oso = preload("res://scenes/enemy.tscn").instantiate()
+	oso.tipo = "cultista"
+	scene.add_child(oso)
+	await _wait_frames(2)
+	var medio_p: float = (player.get("collision_shape").shape as RectangleShape2D).size.x * 0.5
+	var medio_e: float = (oso.collide_shape.shape as RectangleShape2D).size.x * 0.5
+	oso.global_position = Vector2(player.global_position.x + medio_p + 60.0 + medio_e, player.global_position.y)
+	oso.set_physics_process(false)
+	player.facing = 1
+	await _wait_frames(3)
+	var hp_oso: int = oso.health
+	Input.action_press("attack")
+	await physics_frame
+	await physics_frame
+	Input.action_release("attack")
+	for i in range(30):
+		await physics_frame
+	_check(oso.health < hp_oso, "Oso ligero pega a un cultista a 60 px del cuerpo: %d -> %d" % [hp_oso, oso.health])
+
 	print("DIAG GOLPE: FALLOS = " + str(_failures))
 	if _failures == 0:
 		print("DIAG GOLPE: OK")

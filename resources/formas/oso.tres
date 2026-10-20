@@ -4,14 +4,15 @@
 
 [resource]
 script = ExtResource("1_forma")
-attack_range = 167.0
+attack_range = 190.0
 attack_size = Vector2(168, 132)
-heavy_range = 174.0
+heavy_range = 166.0
 heavy_size = Vector2(216, 156)
-special_range = 234.0
+special_range = 357.0
 special_size = Vector2(390, 210)
 special_knockback = 320.0
 heavy_knockback = 220.0
+lunge_light = 50.0
 combos = Array[Dictionary]([{
 "armadura": true,
 "atraviesa": false,
@@ -22,7 +23,7 @@ combos = Array[Dictionary]([{
 "invulnerable": false,
 "knockback": 360.0,
 "nombre": "Garra",
-"rango": 198.0,
+"rango": 296.0,
 "secuencia": ["light", "heavy"],
 "tamano": Vector2(288, 186)
 }])

@@ -106,7 +106,6 @@ collision_mask = 3
 monitoring = false
 
 [node name="AttackHitbox" type="CollisionShape2D" parent="AttackArea" unique_id=846182347]
-scale = Vector2(1.5714285, 1.0941176)
 shape = SubResource("RectangleShape2D_attack")
 disabled = true
 

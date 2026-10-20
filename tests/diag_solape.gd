@@ -75,5 +75,22 @@ func _init() -> void:
 			colgadas += 1
 	_chk(colgadas == 0, "sin excepciones de colisión colgadas (%d)" % colgadas)
 
+	# D) Enemigo metido dentro del jugador (exentos): se despega solo en < 1 s, no se queda adentro.
+	e2.queue_free()
+	_p.call("_transformar", 0, true)
+	await _esperar(20)
+	var e3 := _enemigo(Vector2(20, 0))
+	e3.activar()
+	await _esperar(2)
+	e3.global_position = _p.global_position + Vector2(20, 0)
+	_p.eximir_solape(e3)
+	var t_libre := -1
+	for i in 60:
+		await physics_frame
+		if not (_p.get("_exentos_solape") as Array).has(e3):
+			t_libre = i
+			break
+	_chk(t_libre >= 0, "enemigo encimado se despega solo (frames: %d)" % t_libre)
+
 	print("FALLOS: ", fallos)
 	quit(fallos)
