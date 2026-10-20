@@ -20,7 +20,7 @@ const COLA_FIJA := 56.0  ## largo de la cola (px); siempre vertical hacia abajo
 	"Hijo": {"papel": Color(0.80, 0.88, 0.97), "tinta": Color(0.04, 0.08, 0.22)},
 }
 ## Fuente del globo: Comic Neue Bold (OFL, en assets/fonts), embebida para no depender de la PC.
-@export var fuente: Font = preload("res://assets/fonts/ComicNeue-Bold.ttf")
+@export var fuente: Font = preload("res://assets/fonts/SegoePrint-Bold.ttf")
 @export var mayusculas := false   ## el cómic original iba todo en mayúsculas; apagado se lee mejor
 
 var _papel := PAPEL

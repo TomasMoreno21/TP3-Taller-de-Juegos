@@ -23,7 +23,7 @@ var _tw: Tween
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_fuente = preload("res://assets/fonts/ComicNeue-Bold.ttf")
+	_fuente = preload("res://assets/fonts/SegoePrint-Bold.ttf")
 	visible = false
 
 

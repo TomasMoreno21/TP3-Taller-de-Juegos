@@ -1,9 +1,7 @@
 extends Control
 
 const SCENE_JUEGO := "res://scenes/comic_intro.tscn"   # intro en viÃ±etas; al terminar carga nivel1
-const SCENE_CONTROLES := "res://scenes/controls.tscn"
 const SCENE_OPCIONES := "res://scenes/opciones.tscn"
-const SCENE_CREDITOS := "res://scenes/creditos_final.tscn"   # los mismos crÃ©ditos del final (Esc o al terminar vuelve al menÃº)
 const SCENE_MODO_PRUEBA := "res://scripts/modo_prueba_panel.gd"   # panel armado por cÃ³digo
 
 @export var ojo_cuadros: Array[Texture2D] = [
@@ -48,20 +46,19 @@ var _pupila: Sprite2D
 var _t_ojo := 0.0
 var _jugando := false
 var _indice := 0
+var _sonar := false   ## el foco inicial no suena
 var _controls: CanvasLayer
 
 @onready var botones: Array[Button] = [
 	$UI/Menu/Options/Jugar,
-	$UI/Menu/Options/Niveles,
-	$UI/Menu/Options/Controles,
 	$UI/Menu/Options/Opciones,
-	$UI/Menu/Options/Creditos,
 	$UI/Menu/Options/Salir,
+	$UI/Niveles,
 ]
 
 
 @export var musica: AudioStream = preload("res://assets/audio/menu/dark_cavern_ambient_001.ogg")
-@export var musica_volumen_db: float = -18.0
+@export var musica_volumen_db: float = -15.0
 
 
 func _ready() -> void:
@@ -75,14 +72,15 @@ func _ready() -> void:
 		mp.play()
 	var modo_prueba := get_node_or_null("/root/ModoPrueba")
 	if modo_prueba == null or not modo_prueba.habilitado:   # versiÃ³n final: sin selector de nivel
-		botones.erase($UI/Menu/Options/Niveles)
-		$UI/Menu/Options/Niveles.hide()
+		botones.erase($UI/Niveles)
+		$UI/Niveles.hide()
 	else:
 		_poner_version(modo_prueba.version_texto)
 	for i in botones.size():
 		botones[i].pressed.connect(_on_boton_pressed.bind(i))
 		botones[i].focus_entered.connect(_on_focus.bind(i))
 	botones[0].grab_focus.call_deferred()
+	set.call_deferred("_sonar", true)
 	_precargar_juego.call_deferred()
 	_animar_entrada()
 
@@ -120,12 +118,13 @@ func _refocar() -> void:
 func _navegar(dir: int) -> void:
 	if _jugando:
 		return
-	_ui("ui_mover")
 	_indice = (_indice + dir + botones.size()) % botones.size()
 	botones[_indice].grab_focus()
 
 
 func _on_focus(i: int) -> void:
+	if _sonar:
+		_ui("ui_mover")   # también con el foco nativo (ui_up/ui_down lo mueven antes de _unhandled_input)
 	_indice = i
 	_resaltar(i)
 
@@ -152,12 +151,8 @@ func _on_boton_pressed(i: int) -> void:
 			_jugar()
 		&"Niveles":
 			_abrir_niveles()
-		&"Controles":
-			_abrir_controles()
 		&"Opciones":
 			_abrir_panel(SCENE_OPCIONES)
-		&"Creditos":
-			TransicionPantalla.de(get_tree()).cambiar_escena(SCENE_CREDITOS)
 		&"Salir":
 			get_tree().quit()
 
@@ -303,10 +298,6 @@ func _process(delta: float) -> void:
 func _ir_al_juego() -> void:
 	get_node("/root/Progresion").reset()
 	TransicionPantalla.de(get_tree()).cambiar_escena(SCENE_JUEGO)
-
-
-func _abrir_controles() -> void:
-	_abrir_panel(SCENE_CONTROLES)
 
 
 func _abrir_panel(ruta: String) -> void:

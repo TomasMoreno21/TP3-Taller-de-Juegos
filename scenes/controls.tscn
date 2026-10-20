@@ -51,12 +51,12 @@ border_width_bottom = 2
 border_color = Color(0.93, 0.9, 0.84, 1)
 
 [sub_resource type="StyleBoxFlat" id="btn_focus"]
-bg_color = Color(0, 0, 0, 0)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(0.78, 0.22, 0.23, 1)
+bg_color = Color(0.93, 0.9, 0.84, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(1, 1, 1, 1)
 
 [node name="Controls" type="CanvasLayer"]
 layer = 100
@@ -73,10 +73,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -620.0
-offset_top = -350.0
-offset_right = 620.0
-offset_bottom = 350.0
+offset_left = -480.0
+offset_top = -300.0
+offset_right = 480.0
+offset_bottom = 300.0
 theme_override_styles/panel = SubResource("panel")
 
 [node name="Margin" type="MarginContainer" parent="Panel"]
@@ -100,61 +100,31 @@ color = Color(0.78, 0.22, 0.23, 1)
 
 [node name="Columns" type="HBoxContainer" parent="Panel/Margin/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 70
+theme_override_constants/separation = 60
 
 [node name="Teclado" type="RichTextLabel" parent="Panel/Margin/VBox/Columns"]
-custom_minimum_size = Vector2(520, 0)
+custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 24
-theme_override_font_sizes/bold_font_size = 26
+theme_override_font_sizes/normal_font_size = 28
+theme_override_font_sizes/bold_font_size = 28
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
-text = "[color=#e6554f][b]TECLADO[/b][/color]
-[color=#b8b4a6]Mover:[/color]  A / D
-[color=#b8b4a6]Saltar:[/color]  Espacio
-[color=#b8b4a6]Golpe:[/color]  J
-[color=#b8b4a6]Fuerte:[/color]  K
-[color=#b8b4a6]Especial / Interactuar:[/color]  L
-[color=#b8b4a6]Bloquear (Humano):[/color]  Shift
-[color=#b8b4a6]Parry (Humano):[/color]  Shift justo al recibir el golpe
-[color=#b8b4a6]Aleteo (Murciélago):[/color]  Espacio en el aire
-[color=#b8b4a6]Picada (Murciélago):[/color]  S en el aire
-[color=#e6554f][b]Transformar directo (1-4):[/b][/color]  [b]1 Humano · 2 Lobo · 3 Oso · 4 Murciélago[/b]
-[color=#b8b4a6]Elegir forma (anterior / siguiente):[/color]  Q / E
-[color=#b8b4a6]Transformar / volver a Humano:[/color]  T
-[color=#b8b4a6]Cámara:[/color]  Flechas
-[color=#b8b4a6]Adelantar diálogo:[/color]  Enter
-[color=#b8b4a6]Omitir cinemática / intro:[/color]  X (en la intro, mantener)
-[color=#b8b4a6]Pausa:[/color]  Esc"
+text = "[center][color=#e6554f][b]TECLADO[/b][/color][/center]
+[table=2][cell][color=#b8b4a6]Moverse[/color]   [/cell][cell][b]A / D[/b][/cell][cell][color=#b8b4a6]Saltar[/color]   [/cell][cell][b]Espacio[/b][/cell][cell][color=#b8b4a6]Golpe[/color]   [/cell][cell][b]J[/b][/cell][cell][color=#b8b4a6]Golpe fuerte[/color]   [/cell][cell][b]K[/b][/cell][cell][color=#b8b4a6]Especial[/color]   [/cell][cell][b]L[/b][/cell][cell][color=#b8b4a6]Bloquear[/color]   [/cell][cell][b]Shift[/b][/cell][cell][color=#b8b4a6]Transformarse[/color]   [/cell][cell][b]1 · 2 · 3 · 4[/b][/cell][cell][color=#b8b4a6]Pausa[/color]   [/cell][cell][b]Esc[/b][/cell][/table]"
 
 [node name="Mando" type="RichTextLabel" parent="Panel/Margin/VBox/Columns"]
-custom_minimum_size = Vector2(520, 0)
+custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 24
-theme_override_font_sizes/bold_font_size = 26
+theme_override_font_sizes/normal_font_size = 28
+theme_override_font_sizes/bold_font_size = 28
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
-text = "[color=#e6554f][b]MANDO[/b][/color]
-[color=#b8b4a6]Mover:[/color]  Stick
-[color=#b8b4a6]Saltar:[/color]  A
-[color=#b8b4a6]Golpe:[/color]  X
-[color=#b8b4a6]Fuerte:[/color]  Y
-[color=#b8b4a6]Especial / Interactuar:[/color]  B
-[color=#b8b4a6]Bloquear (Humano):[/color]  LB
-[color=#b8b4a6]Parry (Humano):[/color]  LB justo al recibir el golpe
-[color=#b8b4a6]Aleteo (Murciélago):[/color]  A en el aire
-[color=#b8b4a6]Picada (Murciélago):[/color]  Stick abajo en el aire
-[color=#e6554f][b]Transformar directo (Cruceta):[/b][/color]  [b]← Oso · → Lobo · ↑ Murciélago · ↓ Humano[/b]
-[color=#b8b4a6]Elegir forma (anterior / siguiente):[/color]  LT o Select / RT
-[color=#b8b4a6]Transformar / volver a Humano:[/color]  RB
-[color=#b8b4a6]Cámara:[/color]  Stick derecho
-[color=#b8b4a6]Adelantar diálogo:[/color]  L3 (clic del stick izquierdo)
-[color=#b8b4a6]Omitir cinemática / intro:[/color]  X (en la intro, mantener)
-[color=#b8b4a6]Pausa:[/color]  Start"
+text = "[center][color=#e6554f][b]MANDO[/b][/color][/center]
+[table=2][cell][color=#b8b4a6]Moverse[/color]   [/cell][cell][b]Stick[/b][/cell][cell][color=#b8b4a6]Saltar[/color]   [/cell][cell][b]A[/b][/cell][cell][color=#b8b4a6]Golpe[/color]   [/cell][cell][b]X[/b][/cell][cell][color=#b8b4a6]Golpe fuerte[/color]   [/cell][cell][b]Y[/b][/cell][cell][color=#b8b4a6]Especial[/color]   [/cell][cell][b]B[/b][/cell][cell][color=#b8b4a6]Bloquear[/color]   [/cell][cell][b]LB[/b][/cell][cell][color=#b8b4a6]Transformarse[/color]   [/cell][cell][b]Cruceta[/b][/cell][cell][color=#b8b4a6]Pausa[/color]   [/cell][cell][b]Start[/b][/cell][/table]"
 
 [node name="Volver" type="Button" parent="Panel/Margin/VBox"]
 custom_minimum_size = Vector2(240, 52)
@@ -163,6 +133,7 @@ theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
 theme_override_font_sizes/font_size = 24
+theme_override_colors/font_focus_color = Color(0.04, 0.047, 0.063, 1)
 theme_override_styles/focus = SubResource("btn_focus")
 theme_override_styles/hover = SubResource("btn_hover")
 theme_override_styles/pressed = SubResource("btn_pressed")
@@ -174,5 +145,5 @@ size_flags_horizontal = 4
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.68, 0.62, 1)
 theme_override_font_sizes/font_size = 24
-text = "Esc / Start / Volver para cerrar"
+text = "Esc / Start para volver"
 horizontal_alignment = 1

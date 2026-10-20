@@ -383,7 +383,7 @@ def generar():
     guardar("nivel_subido", pasabajos(mezclar((respira, 0.4), (triada, 0.6), (brillo, 0.06), (grave, 0.6)), 1300), 0.8)
 
     # --- Interfaz
-    guardar("ui_mover", mul(tono(0.05, 1500, 1400), env(n(0.05), 0.001, 0.012)), 0.4)
+    guardar("ui_mover", mul(mezclar((tono(0.11, 380, 300, "tri"), 1.0), (tono(0.11, 760, 600), 0.4)), env(n(0.11), 0.001, 0.035)), 0.8)
     guardar("ui_confirmar", arpegio([880, 1320], 0.06, 0.18, 0.05), 0.55)
     guardar("ui_pausa", mezclar((mul(tono(0.35, 440, 330, "tri"), env(n(0.35), 0.01, 0.1)), 1.0),
                                 (whoosh(0.3, 400, 1600, rng, 0.3), 0.4)), 0.5)

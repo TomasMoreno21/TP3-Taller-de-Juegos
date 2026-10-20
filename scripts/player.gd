@@ -1399,6 +1399,10 @@ func iniciar_embestida(combo: Dictionary) -> void:
 	var dist: float = combo.get("embestida_dist", 400.0)
 	_embestida_t = dur
 	_embestida_golpeados.clear()
+	if current_form == Form.OSO:
+		# Sin anim de zarpazo ni recuperación larga: solo la carrera, y el golpe termina con ella.
+		_cancelar_anim_ataque()
+		_attack_timer = dur
 	_hit_applied = true   # el golpe único normal no sale: pega el barrido
 	_lunge_t = dur
 	_lunge_vel = facing * dist / dur
@@ -2701,7 +2705,7 @@ func _update_animacion() -> void:
 		anim = "lobo_idle"
 	elif current_form == Form.LOBO and visual.sprite_frames.has_animation("lobo_run"):
 		anim = "lobo_run"
-	elif current_form == Form.OSO and _attacking and visual.sprite_frames.has_animation("oso_attack"):
+	elif current_form == Form.OSO and _attacking and _embestida_t <= 0.0 and visual.sprite_frames.has_animation("oso_attack"):   # en la embestida solo corre (oso_caminar)
 		anim = "oso_attack"
 	elif current_form == Form.OSO and quieto and visual.sprite_frames.has_animation("oso_idle"):
 		anim = "oso_idle"

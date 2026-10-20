@@ -76,11 +76,18 @@ func _ready() -> void:
 	_punta.color = color
 	_punta.scale = Vector2(0.0, 1.0)
 	add_child(_punta)
+	if rayo:
+		# El rayo se dibuja en _draw (plano, dos tonos).
+		_punta.visible = false
+		_linea.visible = false
+		_brillo.visible = false
 	_sonar(sonido_aviso)
 
 
 func _physics_process(delta: float) -> void:
 	_t += delta
+	if rayo:
+		queue_redraw()
 	if _t < aviso and rayo and fuente != null and (not is_instance_valid(fuente) or not fuente.get("abierto")):
 		queue_free()   # cerraron el ojo durante el aviso: el rayo no sale
 		return
@@ -120,6 +127,24 @@ func _physics_process(delta: float) -> void:
 	_marca.color.a = maxf(0.5 * (1.0 - r), 0.0)
 	if r >= 1.0:
 		queue_free()
+
+
+## Rayo: carga (línea fina) y haz plano de dos tonos.
+func _draw() -> void:
+	if not rayo:
+		return
+	var fin := Vector2(_largo, 0.0)
+	if _t < aviso:
+		var k := clampf(_t / maxf(aviso, 0.01), 0.0, 1.0)
+		draw_line(Vector2.ZERO, fin, Color(color.r, color.g, color.b, 0.2 + 0.2 * k), ancho_aviso, true)
+		return
+	var tg := _t - aviso
+	var env := 1.0 if tg <= activo else maxf(1.0 - (tg - activo) / maxf(retraer, 0.01), 0.0)
+	if env <= 0.0:
+		return
+	var w := ancho * env
+	draw_line(Vector2.ZERO, fin, color, w, true)
+	draw_line(Vector2.ZERO, fin, Color(1, 1, 1, 0.9), w * 0.35, true)
 
 
 func _sonar(stream: AudioStream) -> void:

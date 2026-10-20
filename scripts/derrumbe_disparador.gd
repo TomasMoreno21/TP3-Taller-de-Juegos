@@ -59,6 +59,12 @@ func _cinematica(jugador: Node2D) -> void:
 	var dlg := get_node_or_null("/root/Dialogo")
 	jugador.set("cinematica_dir", 0.0)
 	jugador.set("cinematica_activa", true)
+	var hud := get_tree().get_first_node_in_group("hud") as CanvasLayer
+	var hud_visible := hud != null and hud.visible
+	if hud != null:
+		hud.visible = false
+	if dlg != null:
+		dlg.lista_ocultar(true)
 	_construir_barras()
 	_mover_barras(true)
 	await get_tree().create_timer(pausa_antes, false).timeout
@@ -74,6 +80,10 @@ func _cinematica(jugador: Node2D) -> void:
 		await dlg.dialogo_terminado
 	await get_tree().create_timer(pausa_despues, false).timeout
 	_mover_barras(false)
+	if is_instance_valid(hud):
+		hud.visible = hud_visible
+	if dlg != null:
+		dlg.lista_ocultar(false, 0.8)
 	if is_instance_valid(jugador):
 		jugador.set("cinematica_activa", false)
 	await get_tree().create_timer(0.8, false).timeout

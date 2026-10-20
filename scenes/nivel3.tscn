@@ -1,7 +1,6 @@
 [gd_scene format=4 uid="uid://cddcm1b1r41q6"]
 
 [ext_resource type="PackedScene" path="res://scenes/plataforma_fragil_grande.tscn" id="33_ux8mh"]
-[ext_resource type="Texture2D" uid="uid://c2u0aw4rfo5k4" path="res://Sprites/Elementos/liana.png" id="38_3lan6"]
 [ext_resource type="PackedScene" path="res://scenes/atmosfera_nivel3.tscn" id="atm3"]
 [ext_resource type="PackedScene" uid="uid://byj8hsa3b1hpe" path="res://scenes/barrera_bosque.tscn" id="barrera"]
 [ext_resource type="Script" uid="uid://ev6br1e6r5g4" path="res://scripts/borde_miedo.gd" id="borde_miedo"]
@@ -640,7 +639,7 @@ escala = 2.47
 halo_color = Color(0.2, 0.9, 0.85, 1)
 
 [node name="D25" parent="Decoracion" unique_id=1744811374 instance=ExtResource("deco")]
-position = Vector2(7360, 5958)
+position = Vector2(7358, 5981)
 tipo = 10
 variante = 5
 escala = 3.07
@@ -904,13 +903,11 @@ tam_barrera = Vector2(220, 690)
 position = Vector2(20450, 2745)
 ancho = 41.0
 alto = 2400.0
-textura = ExtResource("38_3lan6")
 
 [node name="Enredadera2" parent="." unique_id=346851053 instance=ExtResource("vine")]
 position = Vector2(5926, 2848)
 ancho = 35.0
 alto = 1700.0
-textura = ExtResource("38_3lan6")
 
 [node name="Pinchos" parent="." unique_id=632868093 instance=ExtResource("pinchos")]
 z_index = -2
@@ -1017,34 +1014,28 @@ position = Vector2(18723, 5634)
 [node name="Enredadera3" parent="." unique_id=725139151 instance=ExtResource("vine")]
 position = Vector2(10333, 5455)
 alto = 1200.0
-textura = ExtResource("38_3lan6")
 
 [node name="Enredadera4" parent="." unique_id=1199450228 instance=ExtResource("vine")]
 position = Vector2(9618, 5302)
 alto = 800.0
-textura = ExtResource("38_3lan6")
 
 [node name="Enredadera5" parent="." unique_id=360436833 instance=ExtResource("vine")]
 position = Vector2(11481, 5325)
 alto = 1043.0
-textura = ExtResource("38_3lan6")
 
 [node name="Enredadera6" parent="." unique_id=2022152990 instance=ExtResource("vine")]
 position = Vector2(10923, 5178)
 alto = 700.0
-textura = ExtResource("38_3lan6")
 
 [node name="Enredadera7" parent="." unique_id=529532846 instance=ExtResource("vine")]
 position = Vector2(19387, 4369)
 ancho = 36.0
 alto = 1800.0
-textura = ExtResource("38_3lan6")
 
 [node name="Enredadera8" parent="." unique_id=1111108144 instance=ExtResource("vine")]
 position = Vector2(19901, 3821)
 ancho = 36.0
 alto = 1800.0
-textura = ExtResource("38_3lan6")
 
 [node name="BarreraBosque2" parent="." unique_id=460642777 instance=ExtResource("barrera")]
 position = Vector2(16746, 2631)

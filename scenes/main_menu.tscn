@@ -56,12 +56,12 @@ shadow_color = Color(1, 1, 1, 0.35)
 shadow_size = 22
 
 [sub_resource type="StyleBoxFlat" id="btn_focus"]
-bg_color = Color(0.0588, 0.0588, 0.0588, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(1, 1, 1, 0.22)
+bg_color = Color(0.93, 0.9, 0.84, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(1, 1, 1, 1)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
@@ -166,9 +166,9 @@ fps = 6.0
 [node name="Menu" type="VBoxContainer" parent="UI" unique_id=1029048230]
 layout_mode = 0
 offset_left = 80.0
-offset_top = 360.0
+offset_top = 470.0
 offset_right = 560.0
-offset_bottom = 780.0
+offset_bottom = 890.0
 pivot_offset = Vector2(89, -115)
 
 [node name="Options" type="VBoxContainer" parent="UI/Menu" unique_id=548567392]
@@ -185,34 +185,9 @@ theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("btn_normal")
 theme_override_styles/pressed = SubResource("btn_pressed")
 theme_override_styles/hover = SubResource("btn_hover")
+theme_override_colors/font_focus_color = Color(0.04, 0.047, 0.063, 1)
 theme_override_styles/focus = SubResource("btn_focus")
 text = "JUGAR"
-
-[node name="Niveles" type="Button" parent="UI/Menu/Options" unique_id=981686831]
-custom_minimum_size = Vector2(480, 60)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.85, 0.4, 1)
-theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("btn_normal")
-theme_override_styles/pressed = SubResource("btn_pressed")
-theme_override_styles/hover = SubResource("btn_hover")
-theme_override_styles/focus = SubResource("btn_focus")
-text = "ELEGIR NIVEL (PRUEBA)"
-
-[node name="Controles" type="Button" parent="UI/Menu/Options" unique_id=1386611052]
-custom_minimum_size = Vector2(480, 60)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
-theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("btn_normal")
-theme_override_styles/pressed = SubResource("btn_pressed")
-theme_override_styles/hover = SubResource("btn_hover")
-theme_override_styles/focus = SubResource("btn_focus")
-text = "CONTROLES"
 
 [node name="Opciones" type="Button" parent="UI/Menu/Options" unique_id=969472796]
 custom_minimum_size = Vector2(480, 60)
@@ -224,21 +199,9 @@ theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("btn_normal")
 theme_override_styles/pressed = SubResource("btn_pressed")
 theme_override_styles/hover = SubResource("btn_hover")
+theme_override_colors/font_focus_color = Color(0.04, 0.047, 0.063, 1)
 theme_override_styles/focus = SubResource("btn_focus")
 text = "OPCIONES"
-
-[node name="Creditos" type="Button" parent="UI/Menu/Options" unique_id=1565770621]
-custom_minimum_size = Vector2(480, 60)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
-theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("btn_normal")
-theme_override_styles/pressed = SubResource("btn_pressed")
-theme_override_styles/hover = SubResource("btn_hover")
-theme_override_styles/focus = SubResource("btn_focus")
-text = "CRÉDITOS"
 
 [node name="Salir" type="Button" parent="UI/Menu/Options" unique_id=460159262]
 custom_minimum_size = Vector2(480, 60)
@@ -250,6 +213,7 @@ theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("btn_normal")
 theme_override_styles/pressed = SubResource("btn_pressed")
 theme_override_styles/hover = SubResource("btn_hover")
+theme_override_colors/font_focus_color = Color(0.04, 0.047, 0.063, 1)
 theme_override_styles/focus = SubResource("btn_focus")
 text = "SALIR"
 
@@ -275,27 +239,21 @@ stretch_mode = 5
 script = ExtResource("3_anim")
 frames = Array[Texture2D]([ExtResource("4_tit1"), ExtResource("5_tit2"), ExtResource("6_tit3")])
 
-[node name="Subtitle" type="Label" parent="." unique_id=745846999]
+[node name="Niveles" type="Button" parent="UI" unique_id=981686831]
 layout_mode = 0
-offset_left = 119.0
-offset_top = 264.0
-offset_right = 999.0
-offset_bottom = 298.0
-theme_override_colors/font_color = Color(0.78, 0.76, 0.7, 1)
-theme_override_font_sizes/font_size = 24
-text = "GUARDIÁN DEL BOSQUE"
-
-[node name="Hint" type="Label" parent="." unique_id=308445458]
-layout_mode = 0
-anchor_left = 0.5
 anchor_top = 1.0
-anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -400.0
-offset_top = -64.0
-offset_right = 400.0
-offset_bottom = -24.0
-theme_override_colors/font_color = Color(0.7, 0.68, 0.62, 1)
-theme_override_font_sizes/font_size = 20
-text = "↑ ↓ mover · Enter / A elegir"
-horizontal_alignment = 1
+offset_left = 40.0
+offset_top = -90.0
+offset_right = 340.0
+offset_bottom = -40.0
+theme_override_colors/font_color = Color(0.95, 0.85, 0.4, 1)
+theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("btn_normal")
+theme_override_styles/pressed = SubResource("btn_pressed")
+theme_override_styles/hover = SubResource("btn_hover")
+theme_override_colors/font_focus_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_styles/focus = SubResource("btn_focus")
+text = "ELEGIR NIVEL (PRUEBA)"

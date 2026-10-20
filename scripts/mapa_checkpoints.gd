@@ -39,7 +39,7 @@ func _draw() -> void:
 	var area := size - Vector2.ONE * 72.0
 	var esc := minf(area.x / ext.x, area.y / ext.y)
 	var off := (size - ext * esc) * 0.5
-	var fuente := ThemeDB.fallback_font
+	var fuente := preload("res://assets/fonts/SegoePrint-Bold.ttf")
 	for i in puntos.size():
 		var c := off + (puntos[i] - mn) * esc
 		var col := color_activo if i < activados.size() and activados[i] else color_punto

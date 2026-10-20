@@ -1,0 +1,3296 @@
+{
+  "_opencode/flip_insert.py": {
+    "mtime": 1792287642.9752982,
+    "seen": 1792514823.355307,
+    "ast_hash": "3a69bdc460c920f57772337c738a9db9",
+    "semantic_hash": ""
+  },
+  "data/dialogos.json": {
+    "mtime": 1792494144.6181533,
+    "seen": 1792514823.3553126,
+    "ast_hash": "7d64740f4dc889d3552ae8058718e731",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/build.js": {
+    "mtime": 1792500078.9101198,
+    "seen": 1792514823.3553152,
+    "ast_hash": "ef35eef40e3b6c8528218dc20620877b",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/imgs.py": {
+    "mtime": 1792499863.2254016,
+    "seen": 1792514823.3553164,
+    "ast_hash": "b966f03c90a1b80475b8e488bdb2b2fb",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/package.json": {
+    "mtime": 1792430937.232931,
+    "seen": 1792514823.3553178,
+    "ast_hash": "1a20dcb7dc19782f849c70226098202b",
+    "semantic_hash": ""
+  },
+  "tests/nivel3_datos.json": {
+    "mtime": 1792287643.8302057,
+    "seen": 1792514823.3553188,
+    "ast_hash": "87fec930d3c0cff3110c162e41ca599f",
+    "semantic_hash": ""
+  },
+  "tests/verificar.ps1": {
+    "mtime": 1792287643.8468218,
+    "seen": 1792514823.3553197,
+    "ast_hash": "e3145ef2d32e08cb6bea0ddd0ca6afeb",
+    "semantic_hash": ""
+  },
+  "tools/generar_ambiente_cueva.py": {
+    "mtime": 1792287643.8478258,
+    "seen": 1792514823.355321,
+    "ast_hash": "8ae27ff5eaaf21793ae352abd4196970",
+    "semantic_hash": ""
+  },
+  "tools/generar_ambiente_nivel3.py": {
+    "mtime": 1792287643.8478258,
+    "seen": 1792514823.3553216,
+    "ast_hash": "99a043a246db48a0b7359403bb79a7f4",
+    "semantic_hash": ""
+  },
+  "tools/generar_fondo_cueva.py": {
+    "mtime": 1792287643.8488224,
+    "seen": 1792514823.3553226,
+    "ast_hash": "faadbea43d05162c1c50de74a2f438d6",
+    "semantic_hash": ""
+  },
+  "tools/generar_glitch_jefe.py": {
+    "mtime": 1792497246.3703208,
+    "seen": 1792514823.3553233,
+    "ast_hash": "1d6ca64ebdf0c77e1081919fd3d88e42",
+    "semantic_hash": ""
+  },
+  "tools/generar_sfx.py": {
+    "mtime": 1792514312.0451117,
+    "seen": 1792514823.355325,
+    "ast_hash": "edc1c64452b1b39df19abd783e6731a9",
+    "semantic_hash": ""
+  },
+  "tools/generar_vibracion_jefe.py": {
+    "mtime": 1792501286.8946974,
+    "seen": 1792514823.3553257,
+    "ast_hash": "0879375cf4ce82428902780e9081ac96",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1792349258.387158,
+    "seen": 1792514823.3553267,
+    "ast_hash": "19b6c98d8292508464ef5fee8fb02310",
+    "semantic_hash": ""
+  },
+  "Ideas a implementar en dise\u00f1o.txt": {
+    "mtime": 1792287641.7738562,
+    "seen": 1792514823.3553283,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "MEMORY.md": {
+    "mtime": 1792506560.6602862,
+    "seen": 1792514823.3553293,
+    "ast_hash": "6fc39124d84e958e25c75fdd1debf1a3",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1792287641.78689,
+    "seen": 1792514823.3553302,
+    "ast_hash": "d27b626ad98bfaa3153df7831c2b6455",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel1/FUENTES.txt": {
+    "mtime": 1792287643.0763357,
+    "seen": 1792514823.3553312,
+    "ast_hash": "178ea4bb98e9374cdbdb4f08ec7405d2",
+    "semantic_hash": ""
+  },
+  "assets/audio/musica/FUENTES.txt": {
+    "mtime": 1792506560.686841,
+    "seen": 1792514823.3553321,
+    "ast_hash": "8e9bc7b8b6ac09e07304ba25a4ffd924",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/FUENTES.txt": {
+    "mtime": 1792287643.1511166,
+    "seen": 1792514823.3553329,
+    "ast_hash": "5f3c183c46287ce1956a6893e19ed01e",
+    "semantic_hash": ""
+  },
+  "assets/fonts/OFL.txt": {
+    "mtime": 1792287643.2679882,
+    "seen": 1792514823.3553338,
+    "ast_hash": "6ea64233e2e17ca273b6a7beb958bc7e",
+    "semantic_hash": ""
+  },
+  "docs/GDD_PENDIENTES.md": {
+    "mtime": 1792500134.8785517,
+    "seen": 1792514823.355335,
+    "ast_hash": "83c059883c5ad36ae4ca5f1ea86e8e2f",
+    "semantic_hash": ""
+  },
+  "docs/GUIA_SPIRIT_KEEPER_30MIN.md": {
+    "mtime": 1792287643.2770114,
+    "seen": 1792514823.355337,
+    "ast_hash": "c1b0298a1b45513e45f4fc1e3a2f0c7b",
+    "semantic_hash": ""
+  },
+  "docs/INFORMES_BUGS_15-10.md": {
+    "mtime": 1792287643.2780118,
+    "seen": 1792514823.355338,
+    "ast_hash": "8b817414124ba347b29f429199195b2c",
+    "semantic_hash": ""
+  },
+  "docs/INFORMES_REVISION_16-10.md": {
+    "mtime": 1792287643.2780118,
+    "seen": 1792514823.3553388,
+    "ast_hash": "7d019a3e965665e3e61d179bc7ae19ad",
+    "semantic_hash": ""
+  },
+  "docs/MEMORY_HISTORIAL.md": {
+    "mtime": 1792287643.2810116,
+    "seen": 1792514823.3553395,
+    "ast_hash": "d847fc67e86d97a971c382b0377b1440",
+    "semantic_hash": ""
+  },
+  "docs/PLAN_DESARROLLO.md": {
+    "mtime": 1792287643.2810116,
+    "seen": 1792514823.3553405,
+    "ast_hash": "7a8bc6301bb42d17226e5381cae43870",
+    "semantic_hash": ""
+  },
+  "docs/_mock/lu.html": {
+    "mtime": 1792514694.3134067,
+    "seen": 1792514823.3553417,
+    "ast_hash": "366f284227d44a30573f42c2c4429fc0",
+    "semantic_hash": ""
+  },
+  "docs/_mock/m.html": {
+    "mtime": 1792513076.638754,
+    "seen": 1792514823.3553424,
+    "ast_hash": "e5b9d389e11cc6b890b4b00309721817",
+    "semantic_hash": ""
+  },
+  "docs/backups/MEMORY_antes_recorte_12-10.md": {
+    "mtime": 1792287643.283948,
+    "seen": 1792514823.3553433,
+    "ast_hash": "dddcd597b7a94053e09fe00a0f2fd41f",
+    "semantic_hash": ""
+  },
+  "docs/cajas_borradas.txt": {
+    "mtime": 1792287643.3025348,
+    "seen": 1792514823.355344,
+    "ast_hash": "0027ea678d2050b3c57554c3474b7fc3",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/LEEME.md": {
+    "mtime": 1792500134.8785517,
+    "seen": 1792514823.3553452,
+    "ast_hash": "e4da8b9973c5e56ec320b0283898e35c",
+    "semantic_hash": ""
+  },
+  "docs/jefe_referencias.md": {
+    "mtime": 1792287643.3974452,
+    "seen": 1792514823.355346,
+    "ast_hash": "5349553a3f847d80df304b910cd45e18",
+    "semantic_hash": ""
+  },
+  "docs/plan_combos_bloqueo.md": {
+    "mtime": 1792287643.3994462,
+    "seen": 1792514823.3553467,
+    "ast_hash": "0c9e00843e7257cd008f4bdac561c2c1",
+    "semantic_hash": ""
+  },
+  "docs/plan_dialogos.md": {
+    "mtime": 1792287643.3994462,
+    "seen": 1792514823.3553476,
+    "ast_hash": "826c70951e6f0f529e771403593aa285",
+    "semantic_hash": ""
+  },
+  "docs/plan_tutorial.md": {
+    "mtime": 1792287643.3994462,
+    "seen": 1792514823.3553486,
+    "ast_hash": "bada1b0f71900fca950ed00ebb17d857",
+    "semantic_hash": ""
+  },
+  "docs/puzzles_diseno.md": {
+    "mtime": 1792287643.4014807,
+    "seen": 1792514823.3553495,
+    "ast_hash": "872d256f089dbbb39e2261dc3dd532ec",
+    "semantic_hash": ""
+  },
+  "docs/sesiones/final.md": {
+    "mtime": 1792287643.4024854,
+    "seen": 1792514823.3553503,
+    "ast_hash": "02f553ca51179f494b02a90f418875d4",
+    "semantic_hash": ""
+  },
+  "graphify-out/converted/GDD Spirit Keeper_6e712cdc.md": {
+    "mtime": 1792514819.7164025,
+    "seen": 1792514823.355351,
+    "ast_hash": "248ddb243c462b04701f9b773e4c727d",
+    "semantic_hash": ""
+  },
+  "graphify-out/converted/GDD Spirit Keeper_e038fb15.md": {
+    "mtime": 1792514819.963442,
+    "seen": 1792514823.355352,
+    "ast_hash": "1f16b73239ac70c7e9fb3bf2899a9400",
+    "semantic_hash": ""
+  },
+  "tests/obsoletos/LEEME.txt": {
+    "mtime": 1792287643.8312078,
+    "seen": 1792514823.3553529,
+    "ast_hash": "24241cdccf3ee559beec0300c091bba1",
+    "semantic_hash": ""
+  },
+  "docs/Documento_de_Concepto_TP3_GRUPO9.pdf": {
+    "mtime": 1792287641.7723522,
+    "seen": 1792514823.3553536,
+    "ast_hash": "042da21357fb3fa95b4329a30aef150d",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_01.png": {
+    "mtime": 1792287642.4288502,
+    "seen": 1792514823.3553545,
+    "ast_hash": "63bb79aeaed94d39d5c3d509f0876fe7",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_02.png": {
+    "mtime": 1792287642.4298503,
+    "seen": 1792514823.3553565,
+    "ast_hash": "50e80c35528a0c3f43cdae3a075e8be1",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_03.png": {
+    "mtime": 1792287642.431354,
+    "seen": 1792514823.355357,
+    "ast_hash": "def8906ab8883f6ede5aa1cfc998c697",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_04.png": {
+    "mtime": 1792287642.4323595,
+    "seen": 1792514823.355358,
+    "ast_hash": "786d269f13d2e12e4b6589fa960a0bb9",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_05.png": {
+    "mtime": 1792287642.433863,
+    "seen": 1792514823.3553588,
+    "ast_hash": "88b62c765cf3e2809b2f168eb89b2b3d",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_06.png": {
+    "mtime": 1792287642.4348671,
+    "seen": 1792514823.3553596,
+    "ast_hash": "001b2242a72ef137478166fb47088c40",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_07.png": {
+    "mtime": 1792287642.435868,
+    "seen": 1792514823.3553603,
+    "ast_hash": "94029e8e1d22514435849c6a055c7cc2",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_08.png": {
+    "mtime": 1792287642.4368677,
+    "seen": 1792514823.355361,
+    "ast_hash": "33247b96b238fa5ca7f5aee678c903b3",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_09.png": {
+    "mtime": 1792287642.438867,
+    "seen": 1792514823.3553617,
+    "ast_hash": "1749a59c007c4211ad7c963af54488b2",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_10.png": {
+    "mtime": 1792287642.4398665,
+    "seen": 1792514823.3553627,
+    "ast_hash": "e5d34bfeac27dffa4e4a71d758383a12",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_11.png": {
+    "mtime": 1792287642.4398665,
+    "seen": 1792514823.3553636,
+    "ast_hash": "490371d146ec81aff8daf1b18032c45f",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_12.png": {
+    "mtime": 1792287642.4413693,
+    "seen": 1792514823.3553646,
+    "ast_hash": "aa6379536775af49f4d43918fb55d7c7",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_13.png": {
+    "mtime": 1792287642.4423733,
+    "seen": 1792514823.355365,
+    "ast_hash": "37efe671927b8182265ea224cc8d4099",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_14.png": {
+    "mtime": 1792287642.4443815,
+    "seen": 1792514823.355366,
+    "ast_hash": "72b19532f62d1fb2df01ea14bbe8b498",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_15.png": {
+    "mtime": 1792287642.4463859,
+    "seen": 1792514823.3553667,
+    "ast_hash": "d3c297445836fac35b240e8e2351bb7d",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_16.png": {
+    "mtime": 1792287642.4473867,
+    "seen": 1792514823.3553677,
+    "ast_hash": "835ae3630bb9d7c64f994d1b41a03dda",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_17.png": {
+    "mtime": 1792287642.4483862,
+    "seen": 1792514823.3553684,
+    "ast_hash": "b44a3960d9fc59fcd8a906226db78d31",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_18.png": {
+    "mtime": 1792287642.4493887,
+    "seen": 1792514823.3553693,
+    "ast_hash": "0f100241042bdd504a43d06eae54f59e",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_19.png": {
+    "mtime": 1792287642.4503863,
+    "seen": 1792514823.3553698,
+    "ast_hash": "70ab7bf2c5b41ad3e3ee0ea1e7e97908",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_20.png": {
+    "mtime": 1792287642.4513857,
+    "seen": 1792514823.3553705,
+    "ast_hash": "8f40a16bea0fc19571f3d1e2bfc80292",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_21.png": {
+    "mtime": 1792287642.4524405,
+    "seen": 1792514823.3553712,
+    "ast_hash": "154a792c6e3718cafe469af867f45c05",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_22.png": {
+    "mtime": 1792287642.4539444,
+    "seen": 1792514823.355372,
+    "ast_hash": "2f3910f7aeed9db5268a35cfc57d6115",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_23.png": {
+    "mtime": 1792287642.4549484,
+    "seen": 1792514823.355373,
+    "ast_hash": "6eb9b020a7efb3c089afbd0444fe00db",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_24.png": {
+    "mtime": 1792287642.4559503,
+    "seen": 1792514823.3553734,
+    "ast_hash": "9e82a087ffe26973601fbc0fd2e3369e",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_25.png": {
+    "mtime": 1792287642.4569478,
+    "seen": 1792514823.3553743,
+    "ast_hash": "c63c8de574cbd1bca774723bd450e806",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_26.png": {
+    "mtime": 1792287642.457948,
+    "seen": 1792514823.355375,
+    "ast_hash": "2108616b74f6096eae7626a1f2f742d4",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_27.png": {
+    "mtime": 1792287642.45995,
+    "seen": 1792514823.3553758,
+    "ast_hash": "72126f9820beb245d6a479563101f42a",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_28.png": {
+    "mtime": 1792287642.45995,
+    "seen": 1792514823.355377,
+    "ast_hash": "190f4f333bca56a7dc5fbdf03730fab6",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_29.png": {
+    "mtime": 1792287642.4624596,
+    "seen": 1792514823.355378,
+    "ast_hash": "6a691cd883d72b1394433c0367347304",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_30.png": {
+    "mtime": 1792287642.4624596,
+    "seen": 1792514823.3553784,
+    "ast_hash": "c3ba344c5cffd80260f6dee038fd8b23",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_31.png": {
+    "mtime": 1792287642.4639633,
+    "seen": 1792514823.355379,
+    "ast_hash": "71c62aede2f426e6b2f528469556bae7",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_32.png": {
+    "mtime": 1792287642.4649673,
+    "seen": 1792514823.35538,
+    "ast_hash": "4dcd6d2e69e1a6def686970e03db4b13",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_33.png": {
+    "mtime": 1792287642.466967,
+    "seen": 1792514823.3553808,
+    "ast_hash": "2855d4936dd87c947b72fd3ba7f08167",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_34.png": {
+    "mtime": 1792287642.4679673,
+    "seen": 1792514823.3553815,
+    "ast_hash": "7ec6d214b6f7351def651c513a7a838e",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_35.png": {
+    "mtime": 1792287642.4689677,
+    "seen": 1792514823.3553822,
+    "ast_hash": "d1748fc4faddb6bfc742e843a065f1aa",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_36.png": {
+    "mtime": 1792287642.469967,
+    "seen": 1792514823.3553832,
+    "ast_hash": "43b7d94d7a58853e089f7225315f8415",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_37.png": {
+    "mtime": 1792287642.4714696,
+    "seen": 1792514823.3553843,
+    "ast_hash": "75474c2e568a69e4fd3bbd8298687ff0",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_38.png": {
+    "mtime": 1792287642.4724727,
+    "seen": 1792514823.355385,
+    "ast_hash": "ffc98eb83d7be64f0d113e5814d0d786",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_39.png": {
+    "mtime": 1792287642.4739752,
+    "seen": 1792514823.3553858,
+    "ast_hash": "38c3e52cfdf5303cafad4fcb229da595",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_40.png": {
+    "mtime": 1792287642.4749827,
+    "seen": 1792514823.3553867,
+    "ast_hash": "0148132ec5c6f971fb58618539722074",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_41.png": {
+    "mtime": 1792287642.4759836,
+    "seen": 1792514823.355388,
+    "ast_hash": "9191a7b0a2f07a79fc4407ea0c27aaee",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_42.png": {
+    "mtime": 1792287642.4769835,
+    "seen": 1792514823.3553886,
+    "ast_hash": "f48a55d502624f14cf2f498cadee99a1",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_43.png": {
+    "mtime": 1792287642.4789808,
+    "seen": 1792514823.3553894,
+    "ast_hash": "21e55848f7b4e28c0c1294e058590039",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_44.png": {
+    "mtime": 1792287642.4799812,
+    "seen": 1792514823.3553905,
+    "ast_hash": "bb8937b988e1b3d47397aca0cf444932",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_45.png": {
+    "mtime": 1792287642.4813998,
+    "seen": 1792514823.355392,
+    "ast_hash": "e920b47ff7145b8fa23dbefed96ac445",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_46.png": {
+    "mtime": 1792287642.482407,
+    "seen": 1792514823.355393,
+    "ast_hash": "04b59db44629bdfaa59133ea98873976",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_47.png": {
+    "mtime": 1792287642.4849217,
+    "seen": 1792514823.355394,
+    "ast_hash": "f399eea3dafea12876ea138ba4c2691a",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_48.png": {
+    "mtime": 1792287642.4869206,
+    "seen": 1792514823.3553948,
+    "ast_hash": "fd06cc237889dfebd879bfe2bd0e698c",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_49.png": {
+    "mtime": 1792287642.4880207,
+    "seen": 1792514823.3553958,
+    "ast_hash": "477a1520f2b875296e78cbecea972b92",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_50.png": {
+    "mtime": 1792287642.4897628,
+    "seen": 1792514823.3553965,
+    "ast_hash": "d917619b3d62bf61da364bb7774c348d",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_51.png": {
+    "mtime": 1792287642.4913156,
+    "seen": 1792514823.3553975,
+    "ast_hash": "a26229e0b7096e4407ef0b4cc8f31bbf",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_52.png": {
+    "mtime": 1792287642.4933226,
+    "seen": 1792514823.3553982,
+    "ast_hash": "340824fb0f4f0a82ca9853934d8cd193",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_53.png": {
+    "mtime": 1792287642.495323,
+    "seen": 1792514823.355399,
+    "ast_hash": "b8d9899cc6237f1fb041aafb98121eef",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_54.png": {
+    "mtime": 1792287642.496326,
+    "seen": 1792514823.3553996,
+    "ast_hash": "887538ec63f72c52a7e159ada4c28fe9",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_55.png": {
+    "mtime": 1792287642.4983222,
+    "seen": 1792514823.3554006,
+    "ast_hash": "75f042c724a93cd857e32ef256aa3d2b",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_56.png": {
+    "mtime": 1792287642.5003228,
+    "seen": 1792514823.3554015,
+    "ast_hash": "ff9bd0db6d412fa0c783258cbd1c386d",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_57.png": {
+    "mtime": 1792287642.5023718,
+    "seen": 1792514823.3554022,
+    "ast_hash": "6538b39a93260126b2f1274d29030455",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_58.png": {
+    "mtime": 1792287642.5038786,
+    "seen": 1792514823.355403,
+    "ast_hash": "9aa38339eab3d2d6181889681e852741",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_59.png": {
+    "mtime": 1792287642.5058858,
+    "seen": 1792514823.3554037,
+    "ast_hash": "679d58a9e471e0ccd52b4fc928654fd7",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tile_60.png": {
+    "mtime": 1792287642.507887,
+    "seen": 1792514823.3554046,
+    "ast_hash": "f2bfcd560c8e9da093707bffc685921f",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/Tileset.png": {
+    "mtime": 1792287642.5088851,
+    "seen": 1792514823.3554053,
+    "ast_hash": "5782cd290f015e1ac2eab18ef4e4d3a0",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/1 Tiles/TilesetCueva.svg": {
+    "mtime": 1792287642.5098839,
+    "seen": 1792514823.355406,
+    "ast_hash": "b11b686ef132708fa5cf854e45804315",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/2 Background/Background.png": {
+    "mtime": 1792287642.512396,
+    "seen": 1792514823.3554068,
+    "ast_hash": "b2c135cf6136e92b9a367ff38c770b51",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/2 Background/Layers/1.png": {
+    "mtime": 1792287642.513903,
+    "seen": 1792514823.355408,
+    "ast_hash": "14802418b8a8a805b3f12c0ccdbfacfa",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/2 Background/Layers/2.png": {
+    "mtime": 1792287642.5159097,
+    "seen": 1792514823.3554084,
+    "ast_hash": "a652b2dc093b559aaa096828feb449ab",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/2 Background/Layers/3.png": {
+    "mtime": 1792287642.5169082,
+    "seen": 1792514823.3554094,
+    "ast_hash": "8002629432ce8430d47fd6597f11ce7d",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/2 Background/Layers/4.png": {
+    "mtime": 1792287642.517908,
+    "seen": 1792514823.35541,
+    "ast_hash": "06526874501feb7d825938e6e73ce8af",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/2 Background/Layers/5.png": {
+    "mtime": 1792287642.519909,
+    "seen": 1792514823.3554113,
+    "ast_hash": "bc170b03a45b1a3f242aeef1f99e90d8",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Boxes/1.png": {
+    "mtime": 1792287642.521413,
+    "seen": 1792514823.355412,
+    "ast_hash": "79d3b707e5bbb8aeef49274ce56c7df6",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Boxes/2.png": {
+    "mtime": 1792287642.5224192,
+    "seen": 1792514823.3554127,
+    "ast_hash": "f57acf1868ffe000a8bf420d0cb752d9",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Boxes/3.png": {
+    "mtime": 1792287642.5249279,
+    "seen": 1792514823.3554134,
+    "ast_hash": "4a8f142c4e11874181b46d45ceab8aeb",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Boxes/4.png": {
+    "mtime": 1792287642.5259278,
+    "seen": 1792514823.355415,
+    "ast_hash": "3ef6f567e084c91126435041662afefb",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Boxes/5.png": {
+    "mtime": 1792287642.526929,
+    "seen": 1792514823.3554165,
+    "ast_hash": "9f971758888b1af53483912bcdaf0e80",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Boxes/6.png": {
+    "mtime": 1792287642.5289283,
+    "seen": 1792514823.3554182,
+    "ast_hash": "b15cdd4d07a9ca9d04551bbd30c6742a",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Bushes/1.png": {
+    "mtime": 1792287642.5299282,
+    "seen": 1792514823.3554192,
+    "ast_hash": "3e30a2052a241a23034faea4b96b6d9d",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Bushes/2.png": {
+    "mtime": 1792287642.5314324,
+    "seen": 1792514823.3554204,
+    "ast_hash": "474fa547d7c1b6645f5508a3da4d0280",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Bushes/3.png": {
+    "mtime": 1792287642.532437,
+    "seen": 1792514823.3554218,
+    "ast_hash": "2ba7d3fa84cafe27aebdab5fece925b4",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Bushes/4.png": {
+    "mtime": 1792287642.5349488,
+    "seen": 1792514823.3554235,
+    "ast_hash": "daca1b69297d9a38953db33cc324ca7c",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Bushes/5.png": {
+    "mtime": 1792287642.5359464,
+    "seen": 1792514823.355425,
+    "ast_hash": "9b5da036303b238769565b34264995e3",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Bushes/6.png": {
+    "mtime": 1792287642.5369453,
+    "seen": 1792514823.3554256,
+    "ast_hash": "ae2352f48d8794a2e051b83f45643d7c",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Bushes/7.png": {
+    "mtime": 1792287642.5389469,
+    "seen": 1792514823.3554263,
+    "ast_hash": "d011b6e633d5977ca60449d23e361b47",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Bushes/8.png": {
+    "mtime": 1792287642.539945,
+    "seen": 1792514823.355427,
+    "ast_hash": "d1be8150c422a267dff86a5bc9d30267",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Bushes/9.png": {
+    "mtime": 1792287642.539945,
+    "seen": 1792514823.3554277,
+    "ast_hash": "32c61e6e2d6cc036723e7c7d71888634",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Fence/1.png": {
+    "mtime": 1792287642.5424554,
+    "seen": 1792514823.355429,
+    "ast_hash": "762697813cf753a1cfffaf7caca1057d",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Fence/2.png": {
+    "mtime": 1792287642.54447,
+    "seen": 1792514823.3554296,
+    "ast_hash": "0d943e92f9403de419355dfa0f6b779a",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Fence/3.png": {
+    "mtime": 1792287642.5464768,
+    "seen": 1792514823.3554304,
+    "ast_hash": "5a88209d7fb38b0bb614a64587ddafeb",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Grass/1.png": {
+    "mtime": 1792287642.5484776,
+    "seen": 1792514823.3554313,
+    "ast_hash": "5b65148799b8de7e3c27e8e8b2bf74bb",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Grass/10.png": {
+    "mtime": 1792287642.5504777,
+    "seen": 1792514823.3554323,
+    "ast_hash": "587c903f848ee07a0f96c4ee6f572a4b",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Grass/2.png": {
+    "mtime": 1792287642.5519817,
+    "seen": 1792514823.355433,
+    "ast_hash": "688172f83551d297fed04e00a24b0598",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Grass/3.png": {
+    "mtime": 1792287642.5529864,
+    "seen": 1792514823.3554337,
+    "ast_hash": "37807067f21cb1d8b45257adb9f4115d",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Grass/4.png": {
+    "mtime": 1792287642.5549867,
+    "seen": 1792514823.3554344,
+    "ast_hash": "c4eb32e6dc2362a3883229dc0064a90b",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Grass/5.png": {
+    "mtime": 1792287642.5569887,
+    "seen": 1792514823.3554354,
+    "ast_hash": "7d2604059463e246d130cec9eb1abfd4",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Grass/6.png": {
+    "mtime": 1792287642.558987,
+    "seen": 1792514823.3554363,
+    "ast_hash": "5ba4ddae4eb4b6b1ae37244c691a592a",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Grass/7.png": {
+    "mtime": 1792287642.567021,
+    "seen": 1792514823.3554373,
+    "ast_hash": "74895fef521c874840d4637f39a92b51",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Grass/8.png": {
+    "mtime": 1792287642.5725331,
+    "seen": 1792514823.355438,
+    "ast_hash": "331cd2363acb1ab8f6d6ca587a561446",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Grass/9.png": {
+    "mtime": 1792287642.5770514,
+    "seen": 1792514823.355439,
+    "ast_hash": "56ef39ce52110d5630caab398bb276fd",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Ladders/1.png": {
+    "mtime": 1792287642.5800529,
+    "seen": 1792514823.3554397,
+    "ast_hash": "e1ef541fe60426feebdd72f630e904db",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Ladders/2.png": {
+    "mtime": 1792287642.5850804,
+    "seen": 1792514823.3554406,
+    "ast_hash": "f241565c888fb234a48c0be84de4d622",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Ladders/3.png": {
+    "mtime": 1792287642.5895958,
+    "seen": 1792514823.3554413,
+    "ast_hash": "0b98ca3997daecf37331beaf377e7852",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Ladders/4.png": {
+    "mtime": 1792287642.5981295,
+    "seen": 1792514823.3554423,
+    "ast_hash": "2a993d9f42163ce705646b91f604bd61",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Ladders/5.png": {
+    "mtime": 1792287642.6061563,
+    "seen": 1792514823.355443,
+    "ast_hash": "f5ba6b42dfbdfb43c0976238fa96fa3b",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Ladders/6.png": {
+    "mtime": 1792287642.6132002,
+    "seen": 1792514823.3554437,
+    "ast_hash": "9c1504de8a7da6c4ddd6c36c5e31f4c1",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Pointers/1.png": {
+    "mtime": 1792287642.6182055,
+    "seen": 1792514823.3554444,
+    "ast_hash": "c11493284cd364d497373883201c5dec",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Pointers/2.png": {
+    "mtime": 1792287642.6192074,
+    "seen": 1792514823.3554454,
+    "ast_hash": "699ef6616905a839cae71cab1696e816",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Pointers/3.png": {
+    "mtime": 1792287642.6202073,
+    "seen": 1792514823.355446,
+    "ast_hash": "919c795cafeb22d08a6a62d5f0cf6563",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Pointers/4.png": {
+    "mtime": 1792287642.62171,
+    "seen": 1792514823.3554468,
+    "ast_hash": "4ec655dbf8cf1a4528d6e3b1da65a88a",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Pointers/5.png": {
+    "mtime": 1792287642.6227157,
+    "seen": 1792514823.3554475,
+    "ast_hash": "14ce6167d2b0978ae93c204d98800087",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Pointers/6.png": {
+    "mtime": 1792287642.625224,
+    "seen": 1792514823.3554482,
+    "ast_hash": "ad7e10253e6805aee2c4cd3738a9fdd9",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Pointers/7.png": {
+    "mtime": 1792287642.626224,
+    "seen": 1792514823.3554492,
+    "ast_hash": "c3136e5d5f33006ea1000f2a4cff262e",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Pointers/8.png": {
+    "mtime": 1792287642.6282265,
+    "seen": 1792514823.35545,
+    "ast_hash": "6b56c3d60b87679a62b7c40c10ae68b8",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Ridges/1.png": {
+    "mtime": 1792287642.6302254,
+    "seen": 1792514823.3554509,
+    "ast_hash": "3555e69c3775d8d9eda05f901896da46",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Ridges/2.png": {
+    "mtime": 1792287642.6417603,
+    "seen": 1792514823.3554513,
+    "ast_hash": "8fb907e186c30e0beb52ec244e37bd1a",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Ridges/3.png": {
+    "mtime": 1792287642.647831,
+    "seen": 1792514823.355452,
+    "ast_hash": "d13ca7e136d709c32a9d39eb263d4102",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Ridges/4.png": {
+    "mtime": 1792287642.6498299,
+    "seen": 1792514823.355453,
+    "ast_hash": "c9cf4aa661f56d84eb669ee9d887e8cc",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Ridges/5.png": {
+    "mtime": 1792287642.6523414,
+    "seen": 1792514823.3554537,
+    "ast_hash": "df9c7057997b9c7bb36bc429f20d3068",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Ridges/6.png": {
+    "mtime": 1792287642.6533408,
+    "seen": 1792514823.3554544,
+    "ast_hash": "438a5639259b8cd5ff765c0c23fc05c7",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Stones/1.png": {
+    "mtime": 1792287642.6553428,
+    "seen": 1792514823.3554552,
+    "ast_hash": "f47f66a6a24f8fc9a4d6405ed1085c74",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Stones/2.png": {
+    "mtime": 1792287642.657342,
+    "seen": 1792514823.355456,
+    "ast_hash": "4cd6f6393ebce3968929ae0b691e5c05",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Stones/3.png": {
+    "mtime": 1792287642.6593413,
+    "seen": 1792514823.3554568,
+    "ast_hash": "0abf9757a8fe1657632f8d036db5e724",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Stones/4.png": {
+    "mtime": 1792287642.6613405,
+    "seen": 1792514823.3554575,
+    "ast_hash": "37efba3e942744fe8b5b45d99bed1188",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Stones/5.png": {
+    "mtime": 1792287642.6628227,
+    "seen": 1792514823.3554583,
+    "ast_hash": "6f5f6c8797538947a04cf999d2dee208",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Trees/1.png": {
+    "mtime": 1792287642.6643283,
+    "seen": 1792514823.355459,
+    "ast_hash": "9712712ceb611bd4973f2fa8778bb932",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Trees/2.png": {
+    "mtime": 1792287642.6663344,
+    "seen": 1792514823.35546,
+    "ast_hash": "57599e5165f6a3e41a524fa82bc31f3c",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Trees/3.png": {
+    "mtime": 1792287642.6693335,
+    "seen": 1792514823.3554606,
+    "ast_hash": "7c661a8fa0108ad5055456abfb826a61",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Willows/1.png": {
+    "mtime": 1792287642.672434,
+    "seen": 1792514823.3554614,
+    "ast_hash": "b10397cff63f6fbfec0127001261c9c0",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Willows/2.png": {
+    "mtime": 1792287642.6739397,
+    "seen": 1792514823.3554623,
+    "ast_hash": "443e2ca2c733c41cf75d94195adc440b",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/3 Objects/Willows/3.png": {
+    "mtime": 1792287642.6759472,
+    "seen": 1792514823.355463,
+    "ast_hash": "c248155200869307be0e2fdf1411b968",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/4 Animated objects/Chest.png": {
+    "mtime": 1792287642.6779485,
+    "seen": 1792514823.3554637,
+    "ast_hash": "a2511c06caf948e48670fb2d7a810598",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/4 Animated objects/Coin.png": {
+    "mtime": 1792287642.6799474,
+    "seen": 1792514823.3554645,
+    "ast_hash": "3736aaf48817a27a241bb6510d59943a",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/4 Animated objects/Flag.png": {
+    "mtime": 1792287642.6824577,
+    "seen": 1792514823.355467,
+    "ast_hash": "f54ded020a385d3b79cddb18d47c0630",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/4 Animated objects/Key.png": {
+    "mtime": 1792287642.6850631,
+    "seen": 1792514823.3554678,
+    "ast_hash": "1dc5171ed931d23883ef829980c8c00f",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/4 Animated objects/Rune.png": {
+    "mtime": 1792287642.686064,
+    "seen": 1792514823.3554685,
+    "ast_hash": "0d706ba7ea5cf88f92d3a4511d956819",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/arbusto1.png": {
+    "mtime": 1792287642.7026694,
+    "seen": 1792514823.3554695,
+    "ast_hash": "a4a89651244173f72988ef3bdde75079",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/arbusto1_claro.png": {
+    "mtime": 1792287642.7051814,
+    "seen": 1792514823.3554702,
+    "ast_hash": "d7ffc97c65a38cd2dfaedd685f759927",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/arbusto2.png": {
+    "mtime": 1792287642.7071817,
+    "seen": 1792514823.355471,
+    "ast_hash": "37dc51522313802b19054706d61b2096",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/arbusto2_claro.png": {
+    "mtime": 1792287642.7091815,
+    "seen": 1792514823.3554716,
+    "ast_hash": "b8697b9be3d5b8dc3190af7f8408eadf",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/arbusto3.png": {
+    "mtime": 1792287642.7101808,
+    "seen": 1792514823.3554723,
+    "ast_hash": "f9bfe2b953edad72a71424f48f6b0974",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/arbusto3_claro.png": {
+    "mtime": 1792287642.7122142,
+    "seen": 1792514823.355473,
+    "ast_hash": "c6757f9037f7c5516ebca55255dcf219",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/arbusto_a.png": {
+    "mtime": 1792287642.7132149,
+    "seen": 1792514823.355474,
+    "ast_hash": "314d6cf6f8694a0fe24b90de113d8ad0",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/arbusto_b.png": {
+    "mtime": 1792287642.7152207,
+    "seen": 1792514823.3554747,
+    "ast_hash": "eea7ecbb4f885df8687b61591e0f2b68",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/arbusto_c.png": {
+    "mtime": 1792287642.7162201,
+    "seen": 1792514823.3554754,
+    "ast_hash": "b99b6c24f139381625fa79362a6b8b64",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/cadena.png": {
+    "mtime": 1792287642.71822,
+    "seen": 1792514823.3554761,
+    "ast_hash": "00e6579b01fa010813a19e7feb7157f3",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/cosito_frente2.png": {
+    "mtime": 1792287642.721221,
+    "seen": 1792514823.355477,
+    "ast_hash": "3b044cd5d081ab10d1984274ea1c6bce",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/liana.png": {
+    "mtime": 1792362313.233192,
+    "seen": 1792514823.3554778,
+    "ast_hash": "776b07cdc84dd5551dfb7504ab997d08",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/liana2.png": {
+    "mtime": 1792287642.7222693,
+    "seen": 1792514823.3554785,
+    "ast_hash": "3f7783d9aeb7f89c79be3d1f89c6ca30",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/lianaa.png": {
+    "mtime": 1792287642.7242715,
+    "seen": 1792514823.3554792,
+    "ast_hash": "31d681c07443dd649cd8abf6d4911602",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/palo.png": {
+    "mtime": 1792287642.7262702,
+    "seen": 1792514823.35548,
+    "ast_hash": "03bdde53243d5f02c7f32240886d5025",
+    "semantic_hash": ""
+  },
+  "Sprites/Elementos/palo2.png": {
+    "mtime": 1792287642.728269,
+    "seen": 1792514823.355481,
+    "ast_hash": "497bf4b1989ee0d4da592d695fc2f4b6",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/afk FLACO1.png": {
+    "mtime": 1792287642.7292693,
+    "seen": 1792514823.3554819,
+    "ast_hash": "260666b176146369613281f95e0249b3",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/afk FLACO2.png": {
+    "mtime": 1792287642.7312686,
+    "seen": 1792514823.3554826,
+    "ast_hash": "3772cda9c42f2cdc226e1fdc17c0c764",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/afk FLACO3.png": {
+    "mtime": 1792287642.7323244,
+    "seen": 1792514823.3554833,
+    "ast_hash": "7b5c49fc26d434f995d093ff2c48c8d4",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/afk GORDO1.png": {
+    "mtime": 1792287642.7353308,
+    "seen": 1792514823.3554842,
+    "ast_hash": "64623ca6843d615344f5629362a049c4",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/afk GORDO2.png": {
+    "mtime": 1792287642.7373319,
+    "seen": 1792514823.3554847,
+    "ast_hash": "e4f780184e0d954b42634cb2cb4762ec",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/afk GORDO3.png": {
+    "mtime": 1792287642.738331,
+    "seen": 1792514823.3554854,
+    "ast_hash": "6c1e2cccbac660d79dad4b3585b62654",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/afk GORDO4.png": {
+    "mtime": 1792287642.7403324,
+    "seen": 1792514823.3554862,
+    "ast_hash": "e4f780184e0d954b42634cb2cb4762ec",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene FLACO1.png": {
+    "mtime": 1792287642.7425501,
+    "seen": 1792514823.3554869,
+    "ast_hash": "710473d9344853614bf28a0dac401ff5",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene FLACO2.png": {
+    "mtime": 1792287642.7445614,
+    "seen": 1792514823.355488,
+    "ast_hash": "ba313b21358b41e68df13ffdba92f622",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene FLACO3.png": {
+    "mtime": 1792287642.745568,
+    "seen": 1792514823.3554885,
+    "ast_hash": "23187850653fcd1da0e54499efc0e0c5",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene FLACO4.png": {
+    "mtime": 1792287642.7475696,
+    "seen": 1792514823.3554893,
+    "ast_hash": "d5f9721d9989cc8c322a82d79dfe2bd8",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene FLACO5.png": {
+    "mtime": 1792287642.749569,
+    "seen": 1792514823.3554902,
+    "ast_hash": "8c878f95dd09342b2e00e2e3e361f9af",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene FLACO6.png": {
+    "mtime": 1792287642.751074,
+    "seen": 1792514823.3554912,
+    "ast_hash": "694a8aa177d4e6be327c1f67c492d1b6",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene FLACO7.png": {
+    "mtime": 1792287642.7530808,
+    "seen": 1792514823.3554919,
+    "ast_hash": "6f033fcea5405a24b7e39d6bf5a6c18f",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene FLACO8.png": {
+    "mtime": 1792287642.755082,
+    "seen": 1792514823.3554928,
+    "ast_hash": "3ffea84424572fe7b9a666b40612b63e",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene FLACO9.png": {
+    "mtime": 1792287642.7570834,
+    "seen": 1792514823.3554935,
+    "ast_hash": "867e69f3dd003e7889ac0496df547dff",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene GORDO1.png": {
+    "mtime": 1792287642.7580798,
+    "seen": 1792514823.3554945,
+    "ast_hash": "446cff926519a86dcaac46e4a31103b5",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene GORDO10.png": {
+    "mtime": 1792287642.7600799,
+    "seen": 1792514823.3554952,
+    "ast_hash": "15fcc350acdb50282ddf056740e25acf",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene GORDO2.png": {
+    "mtime": 1792287642.7615843,
+    "seen": 1792514823.355496,
+    "ast_hash": "53eac7722a47292995732c76cea628f3",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene GORDO3.png": {
+    "mtime": 1792287642.762592,
+    "seen": 1792514823.3554966,
+    "ast_hash": "802c13964071ac391502778924b1b327",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene GORDO4.png": {
+    "mtime": 1792287642.7651312,
+    "seen": 1792514823.3554974,
+    "ast_hash": "59abfb3a361a4fdd00773d67fbd90731",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene GORDO5.png": {
+    "mtime": 1792287642.7661326,
+    "seen": 1792514823.3554983,
+    "ast_hash": "51f703168e4f437bb656e0ced2cade20",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene GORDO6.png": {
+    "mtime": 1792287642.76813,
+    "seen": 1792514823.355499,
+    "ast_hash": "147c092427298cf8435eab07c04ecdea",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene GORDO7.png": {
+    "mtime": 1792287642.7701306,
+    "seen": 1792514823.3554997,
+    "ast_hash": "b84547f32b2d6d6d61257d90cac3b1ab",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene GORDO8.png": {
+    "mtime": 1792287642.771132,
+    "seen": 1792514823.3555005,
+    "ast_hash": "da789289ff57d88dacd7d2ed31b44a1f",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ataq ene GORDO9.png": {
+    "mtime": 1792287642.7740824,
+    "seen": 1792514823.3555014,
+    "ast_hash": "1784e3e9c5ee70959e1a2ccda6cdafc7",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/cam GORDO1.png": {
+    "mtime": 1792287642.776091,
+    "seen": 1792514823.3555021,
+    "ast_hash": "2dbbbe688c4e9742f36c1c0769a1e445",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/cam GORDO2.png": {
+    "mtime": 1792287642.778089,
+    "seen": 1792514823.3555028,
+    "ast_hash": "db7ef35d0b7fa17ae2e123cd4e7cf7b7",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/cam GORDO3.png": {
+    "mtime": 1792287642.7790895,
+    "seen": 1792514823.3555036,
+    "ast_hash": "c0016ca12eda9424a9ad0d83aeeb0bd5",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/cam GORDO4.png": {
+    "mtime": 1792287642.7810898,
+    "seen": 1792514823.3555043,
+    "ast_hash": "db7ef35d0b7fa17ae2e123cd4e7cf7b7",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/cam GORDO5.png": {
+    "mtime": 1792287642.783158,
+    "seen": 1792514823.3555055,
+    "ast_hash": "2dbbbe688c4e9742f36c1c0769a1e445",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/cam GORDO6.png": {
+    "mtime": 1792287642.7841606,
+    "seen": 1792514823.355506,
+    "ast_hash": "c2ca07f05b55c647c7bab0c7203102dd",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/cuelpo.png": {
+    "mtime": 1792287642.7861586,
+    "seen": 1792514823.3555067,
+    "ast_hash": "1903a3008bf897685b80c3a5447ee301",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/enemigo flaco1.png": {
+    "mtime": 1792287642.7871592,
+    "seen": 1792514823.3555074,
+    "ast_hash": "1bb8b563dae571b3ddcd2999914da83d",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/enemigo gordo1.png": {
+    "mtime": 1792287642.7891915,
+    "seen": 1792514823.3555086,
+    "ast_hash": "437dcf925bbe864258f7eabee0dc8f4f",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/estandarte.png": {
+    "mtime": 1792433119.9550486,
+    "seen": 1792514823.3555093,
+    "ast_hash": "8f932ed39894a5bd3f19e99139c8e7ba",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/jefe_cabeza1.png": {
+    "mtime": 1792349147.4376311,
+    "seen": 1792514823.35551,
+    "ast_hash": "b81eec88b61a904e3c71003e26dcf15f",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/jefe_cabeza2.png": {
+    "mtime": 1792349147.439632,
+    "seen": 1792514823.3555105,
+    "ast_hash": "735c59b8668ed1a4fadfd949a7dac34a",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/jefe_cabeza3.png": {
+    "mtime": 1792349147.4416318,
+    "seen": 1792514823.3555112,
+    "ast_hash": "51d7eb9b71f8f12d7bb6e8141205c6d7",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/jefe_cabeza_f3_1.png": {
+    "mtime": 1792433119.9590468,
+    "seen": 1792514823.3555124,
+    "ast_hash": "80e5a6ccb6289ae8aacef8c77d21bb83",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/jefe_cabeza_f3_2.png": {
+    "mtime": 1792433119.964067,
+    "seen": 1792514823.3555129,
+    "ast_hash": "f21fe1aa7266b45c109dc19a20e1bcf4",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/jefe_cabeza_f3_3.png": {
+    "mtime": 1792433119.968107,
+    "seen": 1792514823.3555136,
+    "ast_hash": "93884bdfd8a0c989bc8676a23cf941fa",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ojo_abierto.png": {
+    "mtime": 1792287642.7966373,
+    "seen": 1792514823.3555143,
+    "ast_hash": "f3f3894179eca5a0076aed9eaeda20a7",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ojo_cerrado.png": {
+    "mtime": 1792287642.7986436,
+    "seen": 1792514823.3555152,
+    "ast_hash": "69b2dd8af2c9ba93b291dafdac91358f",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ojo_frente.png": {
+    "mtime": 1792287642.8011482,
+    "seen": 1792514823.355516,
+    "ast_hash": "700883a477d091f6b644004fad2a5d66",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ojo_iris.png": {
+    "mtime": 1792287642.802154,
+    "seen": 1792514823.3555167,
+    "ast_hash": "4a665a2a77161b41a0e4fa5a0613e4f9",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ojo_verde_fondo.png": {
+    "mtime": 1792361025.4687624,
+    "seen": 1792514823.3555174,
+    "ast_hash": "530c4a5e8630126f9deefdbf7db0cbcd",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ojo_verde_frente.png": {
+    "mtime": 1792361025.4697657,
+    "seen": 1792514823.355518,
+    "ast_hash": "66fdb1a50a88ba29f31d1b9855025b47",
+    "semantic_hash": ""
+  },
+  "Sprites/Enemigos/ojo_verde_pupila.png": {
+    "mtime": 1792361025.470762,
+    "seen": 1792514823.355519,
+    "ast_hash": "b1245feeb329c59b764859519368bc59",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/1par. bosque.png": {
+    "mtime": 1792287642.8051598,
+    "seen": 1792514823.3555195,
+    "ast_hash": "9873d24eb3b3435c3f9e298e92b3eab0",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/2par. bosque.png": {
+    "mtime": 1792287642.8071587,
+    "seen": 1792514823.3555202,
+    "ast_hash": "4423c266a099f09b5c6313f77c1352cc",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/3par. bosque.png": {
+    "mtime": 1792287642.8091588,
+    "seen": 1792514823.355521,
+    "ast_hash": "d0f39042c5d16d1f34eec9a5fefa1197",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/4par. bosque.png": {
+    "mtime": 1792287642.8116627,
+    "seen": 1792514823.3555217,
+    "ast_hash": "33f5fa77910f5853946ccd78849cfa65",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/5par. bosque.png": {
+    "mtime": 1792287642.814174,
+    "seen": 1792514823.3555226,
+    "ast_hash": "83f927f05d92328e5d530079ca86477f",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/6par. bosque.png": {
+    "mtime": 1792287642.816181,
+    "seen": 1792514823.3555233,
+    "ast_hash": "7f7f63a0967a228bf20898713c82f50a",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/Boske1.png": {
+    "mtime": 1792287642.819182,
+    "seen": 1792514823.355524,
+    "ast_hash": "75bac2d5e84f25b748f245295cbf734b",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/Boske10.png": {
+    "mtime": 1792287642.8211796,
+    "seen": 1792514823.3555245,
+    "ast_hash": "c1a7cc8cd7b980a81f3cb1b91aebcb6f",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/Boske11.png": {
+    "mtime": 1792287642.8223944,
+    "seen": 1792514823.3555257,
+    "ast_hash": "ca5ec59e4c4fba0689e86ee7c5cdfc5d",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/Boske12.png": {
+    "mtime": 1792287642.824907,
+    "seen": 1792514823.3555264,
+    "ast_hash": "1f319d9bc9249ae171ef7cfe281c84f5",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/Boske2.png": {
+    "mtime": 1792287642.8269064,
+    "seen": 1792514823.3555272,
+    "ast_hash": "221b73a09dd0de206db4437066e8392e",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/Boske3.png": {
+    "mtime": 1792287642.828907,
+    "seen": 1792514823.3555279,
+    "ast_hash": "cbaaf178e9e0e5c2bd238d32fed7790b",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/Boske4.png": {
+    "mtime": 1792287642.831411,
+    "seen": 1792514823.3555286,
+    "ast_hash": "3fc87178bff8926a49c9d12a49f9989c",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/Boske5.png": {
+    "mtime": 1792287642.8339233,
+    "seen": 1792514823.3555293,
+    "ast_hash": "365afa38bcc978fc4dc3a5e81eb9d32c",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/Boske6.png": {
+    "mtime": 1792287642.8369308,
+    "seen": 1792514823.35553,
+    "ast_hash": "acb7c137ced2a441a19948cab788ff25",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/Boske7.png": {
+    "mtime": 1792287642.8399284,
+    "seen": 1792514823.3555307,
+    "ast_hash": "ff60ae2b3e32fa9a08c629718e069f00",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/Boske8.png": {
+    "mtime": 1792287642.84244,
+    "seen": 1792514823.3555315,
+    "ast_hash": "1bef8c3892df256374c6869e92e1dd4f",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/Boske9.png": {
+    "mtime": 1792287642.8444498,
+    "seen": 1792514823.3555322,
+    "ast_hash": "7aac736f7a6260b751495940cbec9edf",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Bosque/piso.png": {
+    "mtime": 1792287642.8459594,
+    "seen": 1792514823.3555334,
+    "ast_hash": "76d62f033544df2ef79bec32114fc7c6",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Cueva2/cercanas.png": {
+    "mtime": 1792287642.8489668,
+    "seen": 1792514823.355534,
+    "ast_hash": "d948dce9f80a704fef159f8eb7209bf7",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Cueva2/columnas_a.png": {
+    "mtime": 1792287642.8524806,
+    "seen": 1792514823.3555348,
+    "ast_hash": "dbc0f1cfd7997ded3ab98ffec08b692f",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Cueva2/columnas_b.png": {
+    "mtime": 1792287642.8549936,
+    "seen": 1792514823.3555355,
+    "ast_hash": "65147d072038f3eaf760e89d88eabb04",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Cueva2/lejanas.png": {
+    "mtime": 1792287642.8579924,
+    "seen": 1792514823.3555365,
+    "ast_hash": "ebe1260bab1c07940ad5f4908deabb06",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Cueva2/lejanas_piso.png": {
+    "mtime": 1792287642.8609931,
+    "seen": 1792514823.3555372,
+    "ast_hash": "e7a504f3aaa6a50e344a79dacf698b27",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Cueva2/lomas_a.png": {
+    "mtime": 1792287642.8630369,
+    "seen": 1792514823.355538,
+    "ast_hash": "89a3aa0a8646d605d6311fbb40cdb1e4",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Cueva2/lomas_b.png": {
+    "mtime": 1792287642.8660405,
+    "seen": 1792514823.3555384,
+    "ast_hash": "818336e56b2c37ada589989dea71f904",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Cueva2/medias.png": {
+    "mtime": 1792287642.868547,
+    "seen": 1792514823.355539,
+    "ast_hash": "66ce408f87e80cc998fe115299aad2bc",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Cueva2/pared.png": {
+    "mtime": 1792287642.872707,
+    "seen": 1792514823.3555403,
+    "ast_hash": "e21b226debbca073d80bb188ec1c0fcd",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Fondo_menu.png": {
+    "mtime": 1792494144.5550892,
+    "seen": 1792514823.355541,
+    "ast_hash": "c81dc95c97f466b520769410f6624f58",
+    "semantic_hash": ""
+  },
+  "Sprites/Fondos/Jefe/fondo1.png": {
+    "mtime": 1792349147.4446304,
+    "seen": 1792514823.3555415,
+    "ast_hash": "a71395342b2765cede9af0840800ab31",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/1lobo correr.png": {
+    "mtime": 1792287642.8802187,
+    "seen": 1792514823.3555424,
+    "ast_hash": "51ab21892ccd87cb0a6e287a7c14c31e",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/1lobo quieto.png": {
+    "mtime": 1792287642.8817227,
+    "seen": 1792514823.3555434,
+    "ast_hash": "ba15f1b593384513ea7b7ba3540555da",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/1murci volar.png": {
+    "mtime": 1792287642.882728,
+    "seen": 1792514823.355544,
+    "ast_hash": "8339760cea20c298f5ffa171e398dd87",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/1oso caminar.png": {
+    "mtime": 1792287642.8852823,
+    "seen": 1792514823.3555446,
+    "ast_hash": "72a7c05ac51aa01654441849b5db3897",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/1oso quieto.png": {
+    "mtime": 1792287642.8872771,
+    "seen": 1792514823.3555455,
+    "ast_hash": "3c9525084b6d767eda1a15479f57ab7b",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/2lobo correr.png": {
+    "mtime": 1792287642.889782,
+    "seen": 1792514823.355546,
+    "ast_hash": "17162bd186f6f14fff8cde4dff6c6f6e",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/2lobo quieto.png": {
+    "mtime": 1792287642.8913274,
+    "seen": 1792514823.355547,
+    "ast_hash": "5cd53dd37807c7bca9c104e242105f8f",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/2muci volar.png": {
+    "mtime": 1792287642.892839,
+    "seen": 1792514823.355548,
+    "ast_hash": "a2c4648e83d32113175605a74f25602b",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/2oso caminar.png": {
+    "mtime": 1792287642.8943458,
+    "seen": 1792514823.3555486,
+    "ast_hash": "d22b917443a94b202936fbf50f02e590",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/2oso quieto.png": {
+    "mtime": 1792287642.896353,
+    "seen": 1792514823.3555493,
+    "ast_hash": "1f88f085ac60717dadac02f6c81272ea",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/3lobo correr.png": {
+    "mtime": 1792287642.896353,
+    "seen": 1792514823.3555503,
+    "ast_hash": "1f0dccc2a469bfc28e454af0da638217",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/3lobo quieto.png": {
+    "mtime": 1792287642.8990977,
+    "seen": 1792514823.355551,
+    "ast_hash": "a9300b269fc4431c0dbefed14be76016",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/3murci volar.png": {
+    "mtime": 1792287642.9000974,
+    "seen": 1792514823.355552,
+    "ast_hash": "8862d614cd60a4484baab83bc1bcfa4c",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/3oso caminar.png": {
+    "mtime": 1792287642.90261,
+    "seen": 1792514823.3555527,
+    "ast_hash": "9488ec5872ae4fdc3ec05d3354101a91",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/3oso quieto.png": {
+    "mtime": 1792287642.9041164,
+    "seen": 1792514823.3555534,
+    "ast_hash": "95ef80c77abba2897c494f9aa95853f0",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/4lobo correr.png": {
+    "mtime": 1792287642.9051254,
+    "seen": 1792514823.355554,
+    "ast_hash": "68b5cd97640c6c6dfbad06426277d7b5",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/4lobo quieto.png": {
+    "mtime": 1792287642.907123,
+    "seen": 1792514823.355555,
+    "ast_hash": "5cd53dd37807c7bca9c104e242105f8f",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/4murci volar.png": {
+    "mtime": 1792287642.909127,
+    "seen": 1792514823.3555558,
+    "ast_hash": "d305118de92013e00d1241759f3c058e",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/4oso caminar.png": {
+    "mtime": 1792287642.9101243,
+    "seen": 1792514823.3555567,
+    "ast_hash": "ae217652c4e7b0e381b4dca77925c070",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/4oso quieto.png": {
+    "mtime": 1792287642.9121993,
+    "seen": 1792514823.3555574,
+    "ast_hash": "85f060c7d95cb385a24528da0a2a961c",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/5oso caminar.png": {
+    "mtime": 1792287642.9131994,
+    "seen": 1792514823.3555582,
+    "ast_hash": "cca85ec299b9909c25b6f26e3fdb790c",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/6oso caminar.png": {
+    "mtime": 1792287642.9151988,
+    "seen": 1792514823.3555589,
+    "ast_hash": "8423b09c2f0d2fb29596345288c1324b",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/Atq LOBO1.png": {
+    "mtime": 1792287642.9162009,
+    "seen": 1792514823.3555596,
+    "ast_hash": "f29e0b39442c7afec4714ad4df4d5e22",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/Atq LOBO2.png": {
+    "mtime": 1792287642.9191997,
+    "seen": 1792514823.3555608,
+    "ast_hash": "acc6121f0f508ac189ad4f7efe8f1cdf",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/Atq LOBO3.png": {
+    "mtime": 1792287642.920203,
+    "seen": 1792514823.3555615,
+    "ast_hash": "92207d9c6832672b16869376d6f1f291",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/Atq LOBO4.png": {
+    "mtime": 1792287642.9222589,
+    "seen": 1792514823.355562,
+    "ast_hash": "953b387130ded6ae457df5d4314f3b7c",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/Pj atq 1.png": {
+    "mtime": 1792287642.9242606,
+    "seen": 1792514823.355563,
+    "ast_hash": "2d6384b32f9980af062863d728c4a938",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/Pj atq 2.png": {
+    "mtime": 1792287642.9262605,
+    "seen": 1792514823.3555639,
+    "ast_hash": "51e2ec262a6a83186293d38a37e84f4c",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/Pj atq 3.png": {
+    "mtime": 1792287642.9272597,
+    "seen": 1792514823.3555644,
+    "ast_hash": "27db870c49e4d0c3091c6bf1cfc07e86",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/Pj atq 4.png": {
+    "mtime": 1792287642.9292588,
+    "seen": 1792514823.3555653,
+    "ast_hash": "8f69029874265d0abc5dddceac841165",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/Pj atq 5.png": {
+    "mtime": 1792287642.9312592,
+    "seen": 1792514823.355566,
+    "ast_hash": "f6dba8ce2f31fea1123c3c1e7cb36ca5",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/Pj atq 6.png": {
+    "mtime": 1792287642.9326684,
+    "seen": 1792514823.3555667,
+    "ast_hash": "ada6cd340228f22ac569ed8c1a9605e3",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/afk pj1.png": {
+    "mtime": 1792287642.9341755,
+    "seen": 1792514823.3555677,
+    "ast_hash": "a3b357d3754f7bd479609f3875033941",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/afk pj2.png": {
+    "mtime": 1792287642.9351828,
+    "seen": 1792514823.3555684,
+    "ast_hash": "22accf3f763e5adb49967bc4bbeea742",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/afk pj3.png": {
+    "mtime": 1792287642.936184,
+    "seen": 1792514823.3555691,
+    "ast_hash": "ca1019363ff1e8652d73d1dda8dd89df",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/afk pj4.png": {
+    "mtime": 1792287642.9381802,
+    "seen": 1792514823.3555698,
+    "ast_hash": "c0ccdedf167abb16a680b885921b01d9",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/ccorrer1.png": {
+    "mtime": 1792287642.939182,
+    "seen": 1792514823.3555708,
+    "ast_hash": "50e0da69aaf3dcec1b0b6aaac4f93d9a",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/ccorrer2.png": {
+    "mtime": 1792287642.9411788,
+    "seen": 1792514823.3555715,
+    "ast_hash": "6836d995e9122b59296a186cc3824bca",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/ccorrer3.png": {
+    "mtime": 1792287642.9423678,
+    "seen": 1792514823.3555722,
+    "ast_hash": "aab36ab3bd96171bdca4fc7986137eb3",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/ccorrer4.png": {
+    "mtime": 1792287642.9438727,
+    "seen": 1792514823.355573,
+    "ast_hash": "e5c020b24e2d42e42f29842830e52044",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/ccorrer5.png": {
+    "mtime": 1792287642.944376,
+    "seen": 1792514823.3555737,
+    "ast_hash": "d2f595b5cd8da378b2e9832c9771a83e",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/ccorrer6.png": {
+    "mtime": 1792287642.94638,
+    "seen": 1792514823.3555746,
+    "ast_hash": "ffdd98708d84f59e4cda358b8403935d",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/ctrepar1.png": {
+    "mtime": 1792287642.947381,
+    "seen": 1792514823.3555756,
+    "ast_hash": "e8b26f1c2ef63a9aeeed3b543ba34932",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/ctrepar2.png": {
+    "mtime": 1792287642.9483807,
+    "seen": 1792514823.3555763,
+    "ast_hash": "d92114c08b8bd09bd0860cb38e634fb4",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/lobo ojo1.png": {
+    "mtime": 1792287642.9493814,
+    "seen": 1792514823.355577,
+    "ast_hash": "46c16741828a78c99b9ea9d657350b63",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/lobo ojo2.png": {
+    "mtime": 1792287642.9513824,
+    "seen": 1792514823.355578,
+    "ast_hash": "ed58662f349ee3d4911e2df6f23bd15f",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/lobo ojo3.png": {
+    "mtime": 1792287642.952572,
+    "seen": 1792514823.3555787,
+    "ast_hash": "45ee7b79e69c182ce1ef68b718ae9e60",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/lobo ojo4.png": {
+    "mtime": 1792287642.9540763,
+    "seen": 1792514823.3555794,
+    "ast_hash": "6510c6a506e969a245b254d323d5686f",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/lobo salto.png": {
+    "mtime": 1792287642.9560814,
+    "seen": 1792514823.35558,
+    "ast_hash": "f8541b6ad60a0ad2709735065e6f6be9",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/oso atq1.png": {
+    "mtime": 1792361025.472762,
+    "seen": 1792514823.3555813,
+    "ast_hash": "7def8cd20ddfbd2c594a78485cfa9e2a",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/oso atq2.png": {
+    "mtime": 1792361025.4737625,
+    "seen": 1792514823.355582,
+    "ast_hash": "7d46550e704e0409072958271b529a9b",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/oso atq3.png": {
+    "mtime": 1792361025.4752676,
+    "seen": 1792514823.3555827,
+    "ast_hash": "b34604e4a6873f9fa5f6793fe949b59b",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/oso atq4.png": {
+    "mtime": 1792361025.4762745,
+    "seen": 1792514823.3555832,
+    "ast_hash": "54def1a6ff46b3ce4c77723fee457250",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/oso atq5.png": {
+    "mtime": 1792361025.478273,
+    "seen": 1792514823.355584,
+    "ast_hash": "b9e4844e31111e24d0e6bbd97a7d04d9",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/oso atq6.png": {
+    "mtime": 1792361025.4796932,
+    "seen": 1792514823.355585,
+    "ast_hash": "80eb679b442e19bef603061618634865",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/oso ojo1.png": {
+    "mtime": 1792287642.9570818,
+    "seen": 1792514823.3555858,
+    "ast_hash": "07f79650dbff3fb96aa3750503cc8549",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/oso ojo2.png": {
+    "mtime": 1792287642.959082,
+    "seen": 1792514823.3555865,
+    "ast_hash": "25cb1219a6a778e878b4cc0f1ce771ac",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/oso ojo3.png": {
+    "mtime": 1792287642.9600818,
+    "seen": 1792514823.3555872,
+    "ast_hash": "773a77805e87ba1f841e4d2f5962a357",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/oso ojo4.png": {
+    "mtime": 1792287642.961585,
+    "seen": 1792514823.3555882,
+    "ast_hash": "1cfd982087400915094295852df735ef",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/pj bloqueo.png": {
+    "mtime": 1792349147.4456306,
+    "seen": 1792514823.3555892,
+    "ast_hash": "ed3028f73b58eefe44355b8f0864fa98",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/pj ojo1.png": {
+    "mtime": 1792287642.9641168,
+    "seen": 1792514823.3555899,
+    "ast_hash": "b5d24fab77d97afd8f15e454660194d7",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/pj ojo2.png": {
+    "mtime": 1792287642.9651227,
+    "seen": 1792514823.3555906,
+    "ast_hash": "5dff8e410214156875f3b2b904504130",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/pj ojo3.png": {
+    "mtime": 1792287642.9681232,
+    "seen": 1792514823.3555915,
+    "ast_hash": "945997a7787523ac27bdd4dd816ce1cb",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/pj salto1.png": {
+    "mtime": 1792287642.9701233,
+    "seen": 1792514823.3555923,
+    "ast_hash": "f8289b2abbbd116bff1a9ad7802d58f8",
+    "semantic_hash": ""
+  },
+  "Sprites/Jugador y Transformaciones/pj salto2.png": {
+    "mtime": 1792287642.973293,
+    "seen": 1792514823.355593,
+    "ast_hash": "089443ec70b78c065aac805b61888e1c",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/lobo/lobo-menu-1.png": {
+    "mtime": 1792506560.6612864,
+    "seen": 1792514823.3555937,
+    "ast_hash": "8fe247608ac99e831091d720ba07fd10",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/lobo/lobo-menu-2.png": {
+    "mtime": 1792506560.665301,
+    "seen": 1792514823.3555944,
+    "ast_hash": "71718a8ef7b27e9739cc80e65504e6d4",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/lobo/lobo-menu-3.png": {
+    "mtime": 1792506560.668307,
+    "seen": 1792514823.3555956,
+    "ast_hash": "4e3e67dee3b830e57373c407e38d0ca6",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/luna/luna-1.png": {
+    "mtime": 1792494144.5580869,
+    "seen": 1792514823.3555963,
+    "ast_hash": "0198ed909c33b25d5aedb1b8300eb594",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/luna/luna-2.png": {
+    "mtime": 1792494144.5595906,
+    "seen": 1792514823.3555968,
+    "ast_hash": "233e08a3398ba6acdffed9a224dc773b",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/luna/luna-3.png": {
+    "mtime": 1792494144.5631447,
+    "seen": 1792514823.3555977,
+    "ast_hash": "a4c6ce00a44384e31ecb81fc725163d2",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/murcielago/murci-menu-1.png": {
+    "mtime": 1792506560.6713066,
+    "seen": 1792514823.3555987,
+    "ast_hash": "80a0856afcb558f04e175a7c41536bb9",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/murcielago/murci-menu-2.png": {
+    "mtime": 1792506560.673307,
+    "seen": 1792514823.3555994,
+    "ast_hash": "5bc63ed640485bbcd1cfe58de0cf74e4",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/murcielago/murci-menu-3.png": {
+    "mtime": 1792506560.6758115,
+    "seen": 1792514823.3556027,
+    "ast_hash": "bc1723daf099fcdc574e10ea6472e5c0",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/oso/oso-menu-1.png": {
+    "mtime": 1792506560.6788228,
+    "seen": 1792514823.3556037,
+    "ast_hash": "f064f65544bd8ff4c732d00ea31a013b",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/oso/oso-menu-2.png": {
+    "mtime": 1792506560.6808257,
+    "seen": 1792514823.3556044,
+    "ast_hash": "fda7afdfba7b4d564057a72c1a709439",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/oso/oso-menu-3.png": {
+    "mtime": 1792506560.6853328,
+    "seen": 1792514823.3556056,
+    "ast_hash": "458e7410ba80e327a5c826b46f04c0ad",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/titulo/titulo-1.png": {
+    "mtime": 1792494144.566146,
+    "seen": 1792514823.3556063,
+    "ast_hash": "7b18cdfd98dfb3e2b3d63e605fb69c21",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/titulo/titulo-2.png": {
+    "mtime": 1792494144.5701444,
+    "seen": 1792514823.355607,
+    "ast_hash": "c88b6629af3b3616d6c2b87cb55e8ebb",
+    "semantic_hash": ""
+  },
+  "Sprites/Menu/titulo/titulo-3.png": {
+    "mtime": 1792494144.5721445,
+    "seen": 1792514823.3556077,
+    "ast_hash": "eff9b65a48d409be991a1bc49af0918d",
+    "semantic_hash": ""
+  },
+  "assets/comic/vineta1.png": {
+    "mtime": 1792457550.766097,
+    "seen": 1792514823.3556085,
+    "ast_hash": "01f658886e167f0eb72a1b644d4b9967",
+    "semantic_hash": ""
+  },
+  "assets/comic/vineta2.png": {
+    "mtime": 1792457550.7670977,
+    "seen": 1792514823.3556094,
+    "ast_hash": "439fc819309f7beed9d25c7ed531e4d9",
+    "semantic_hash": ""
+  },
+  "assets/comic/vineta3.png": {
+    "mtime": 1792457550.7690973,
+    "seen": 1792514823.3556101,
+    "ast_hash": "5f79a9735bf86c871730cef30f352464",
+    "semantic_hash": ""
+  },
+  "assets/comic/vineta4.png": {
+    "mtime": 1792457550.770097,
+    "seen": 1792514823.3556108,
+    "ast_hash": "1e9733820d6521a67a379ba9ccad7cb6",
+    "semantic_hash": ""
+  },
+  "assets/comic/vineta5.png": {
+    "mtime": 1792457550.7720973,
+    "seen": 1792514823.3556116,
+    "ast_hash": "7b983546be5db292fee05daeed171a91",
+    "semantic_hash": ""
+  },
+  "assets/comic/vineta6.png": {
+    "mtime": 1792457550.7746098,
+    "seen": 1792514823.3556128,
+    "ast_hash": "8815e0f73e2551e8562e1dcf7cece2b1",
+    "semantic_hash": ""
+  },
+  "assets/vfx/hoja.png": {
+    "mtime": 1792287643.268988,
+    "seen": 1792514823.3556135,
+    "ast_hash": "f08b42e2d28e13faa7d991f156d29d29",
+    "semantic_hash": ""
+  },
+  "docs/_mock/mock.png": {
+    "mtime": 1792513156.3046598,
+    "seen": 1792514823.3556142,
+    "ast_hash": "60411935f97e64cad73fac9e90ed0159",
+    "semantic_hash": ""
+  },
+  "docs/_mock/t.png": {
+    "mtime": 1792513076.562201,
+    "seen": 1792514823.355615,
+    "ast_hash": "7b18cdfd98dfb3e2b3d63e605fb69c21",
+    "semantic_hash": ""
+  },
+  "docs/capturas/derrumbe_antes.png": {
+    "mtime": 1792287643.304039,
+    "seen": 1792514823.3556159,
+    "ast_hash": "515ba06ed3b13474cec7b18dba79db51",
+    "semantic_hash": ""
+  },
+  "docs/capturas/derrumbe_atmosfera.png": {
+    "mtime": 1792287643.3050435,
+    "seen": 1792514823.3556166,
+    "ast_hash": "cf5aa0141fe02f6d293c8e6ddd328473",
+    "semantic_hash": ""
+  },
+  "docs/capturas/derrumbe_despues.png": {
+    "mtime": 1792287643.307043,
+    "seen": 1792514823.3556175,
+    "ast_hash": "8462c5cf15738976ef7036cf90a9f3a0",
+    "semantic_hash": ""
+  },
+  "docs/capturas/liana_antes.png": {
+    "mtime": 1792287643.3080432,
+    "seen": 1792514823.3556182,
+    "ast_hash": "d0c2c7c6f1746c256838acc4aa7e5b7a",
+    "semantic_hash": ""
+  },
+  "docs/capturas/liana_despues.png": {
+    "mtime": 1792287643.310043,
+    "seen": 1792514823.355619,
+    "ast_hash": "525ceb1ce02b674d59ab5a4faa7c40b1",
+    "semantic_hash": ""
+  },
+  "docs/capturas_degradado/arenas.png": {
+    "mtime": 1792287643.3115463,
+    "seen": 1792514823.35562,
+    "ast_hash": "7a2138d5285f366635fe61f0d7e3b099",
+    "semantic_hash": ""
+  },
+  "docs/capturas_degradado/cerca_borde.png": {
+    "mtime": 1792287643.3140547,
+    "seen": 1792514823.3556206,
+    "ast_hash": "d691c969aa6f649071442d57be62556f",
+    "semantic_hash": ""
+  },
+  "docs/capturas_degradado/final_0.png": {
+    "mtime": 1792287643.3160596,
+    "seen": 1792514823.3556213,
+    "ast_hash": "9ce1bea9aa4308ff58e36f207b15f426",
+    "semantic_hash": ""
+  },
+  "docs/capturas_degradado/fuerte.png": {
+    "mtime": 1792287643.31906,
+    "seen": 1792514823.355622,
+    "ast_hash": "fad838088e3990c0b672c8341f218b3b",
+    "semantic_hash": ""
+  },
+  "docs/capturas_degradado/niebla.png": {
+    "mtime": 1792287643.3215635,
+    "seen": 1792514823.355623,
+    "ast_hash": "bc39792e1743695fba8f78967a052704",
+    "semantic_hash": ""
+  },
+  "docs/capturas_degradado/nivel3.png": {
+    "mtime": 1792287643.322571,
+    "seen": 1792514823.3556237,
+    "ast_hash": "30096bca10b6a57e63c31b73180e9e7b",
+    "semantic_hash": ""
+  },
+  "docs/capturas_degradado/suelo.png": {
+    "mtime": 1792287643.3255827,
+    "seen": 1792514823.3556244,
+    "ast_hash": "80ed172fffdbcf9b829ebe94f602e7d5",
+    "semantic_hash": ""
+  },
+  "docs/capturas_degradado/umbral_final.png": {
+    "mtime": 1792287643.3282635,
+    "seen": 1792514823.3556252,
+    "ast_hash": "1dbe6d85746709818e13d1a7a2d1af8e",
+    "semantic_hash": ""
+  },
+  "docs/capturas_degradado/zoom_antes_despues_0.png": {
+    "mtime": 1792287643.3292644,
+    "seen": 1792514823.3556259,
+    "ast_hash": "b4bf64784a41452351308e2e7409355f",
+    "semantic_hash": ""
+  },
+  "docs/capturas_degradado/zoom_antes_despues_1.png": {
+    "mtime": 1792287643.332318,
+    "seen": 1792514823.3556268,
+    "ast_hash": "9fb6a808ece8d6a3f27f05888afc3314",
+    "semantic_hash": ""
+  },
+  "docs/capturas_degradado/zoom_antes_despues_2.png": {
+    "mtime": 1792287643.3343227,
+    "seen": 1792514823.3556275,
+    "ast_hash": "45a9a5be9344f124d67bd037c09ee73c",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/controls_720.png": {
+    "mtime": 1792287643.337322,
+    "seen": 1792514823.3556283,
+    "ast_hash": "07c239ca059d9f03dbea410a05ccc5cf",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/controls_tinta.png": {
+    "mtime": 1792287643.339326,
+    "seen": 1792514823.355629,
+    "ast_hash": "7dc83a78cb45162c97c01ce34e237bc4",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/creditos_nuevo.png": {
+    "mtime": 1792287643.3403263,
+    "seen": 1792514823.35563,
+    "ast_hash": "4d43750df918c27c39841b7a58111cfa",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/derrota_nuevo.png": {
+    "mtime": 1792287643.3425314,
+    "seen": 1792514823.3556306,
+    "ast_hash": "fd23169c024a8f2dd26127a2f4c6a29e",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/hud_1280.png": {
+    "mtime": 1792287643.3440354,
+    "seen": 1792514823.3556314,
+    "ast_hash": "e3fae2448e57fa56e208b82c74dba34c",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/hud_1920.png": {
+    "mtime": 1792287643.3455427,
+    "seen": 1792514823.355632,
+    "ast_hash": "a1366c5fa776568d48b6b2e33f539ae1",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/main_menu_nuevo.png": {
+    "mtime": 1792287643.3465428,
+    "seen": 1792514823.3556328,
+    "ast_hash": "092bd84091dedb3035d38940f624a2ec",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/main_menu_tinta.png": {
+    "mtime": 1792287643.3485434,
+    "seen": 1792514823.355634,
+    "ast_hash": "14a31aeb4ed3b84cd06ecdb94ae6e652",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/menu_controls_1920.png": {
+    "mtime": 1792287643.3495426,
+    "seen": 1792514823.3556347,
+    "ast_hash": "86c218a91827f38d8edd1754f2bf143e",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/menu_derrota_1920.png": {
+    "mtime": 1792287643.3510456,
+    "seen": 1792514823.3556354,
+    "ast_hash": "027272986ac3679ba155c79b98c229bf",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/menu_main_menu_1920.png": {
+    "mtime": 1792287643.35305,
+    "seen": 1792514823.3556366,
+    "ast_hash": "6f48f055fc5d0290505e5648e6e327bd",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/menu_pause_1920.png": {
+    "mtime": 1792287643.3540506,
+    "seen": 1792514823.3556373,
+    "ast_hash": "05487028ab10494580698f329cf474eb",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/menu_victoria_1920.png": {
+    "mtime": 1792287643.3560498,
+    "seen": 1792514823.355638,
+    "ast_hash": "e5d9ce4fcf0a880f73082d57b1173bd8",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/menu_victoria_jefe_1920.png": {
+    "mtime": 1792287643.3570528,
+    "seen": 1792514823.3556387,
+    "ast_hash": "a1b62b3947e4937150496ff419b73a82",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/opciones_nuevo.png": {
+    "mtime": 1792287643.3590508,
+    "seen": 1792514823.3556397,
+    "ast_hash": "dba964a33f904b9c8463f4693bb342ed",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/pause_nuevo.png": {
+    "mtime": 1792287643.360052,
+    "seen": 1792514823.3556406,
+    "ast_hash": "df7c6d62549fd8f8c17d70a7a747dcf2",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/pause_tinta.png": {
+    "mtime": 1792287643.361555,
+    "seen": 1792514823.3556414,
+    "ast_hash": "88b2eda82e2587743df6284b4ce48e7d",
+    "semantic_hash": ""
+  },
+  "docs/capturas_menus/victoria_nuevo.png": {
+    "mtime": 1792287643.362559,
+    "seen": 1792514823.355642,
+    "ast_hash": "b73bad61e7850c1aecbd70526853daf9",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/banner.png": {
+    "mtime": 1792499863.678613,
+    "seen": 1792514823.3556428,
+    "ast_hash": "b4d408a83329140da64563b9cca7c50c",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/boss1.png": {
+    "mtime": 1792499851.32419,
+    "seen": 1792514823.3556435,
+    "ast_hash": "70a63ef58052389e6f003698e99fac01",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/boss2.png": {
+    "mtime": 1792499851.5835142,
+    "seen": 1792514823.3556442,
+    "ast_hash": "d7b61f0b7a122041030f76c3be27775c",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/comic1.png": {
+    "mtime": 1792499851.7555819,
+    "seen": 1792514823.355645,
+    "ast_hash": "1611918a412e82d9d241ad2922fd910d",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/comic2.png": {
+    "mtime": 1792499851.9186103,
+    "seen": 1792514823.3556457,
+    "ast_hash": "6699f78266ceb8b4c8a1083f72e20259",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/coreloop.png": {
+    "mtime": 1792499863.7442331,
+    "seen": 1792514823.3556464,
+    "ast_hash": "3aee94c7ca8e24f8750a91c9c3a0f8a6",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/f_bosque.png": {
+    "mtime": 1792499863.4713542,
+    "seen": 1792514823.3556473,
+    "ast_hash": "cdde0b5b52a811824754916ae265783b",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/f_cueva.png": {
+    "mtime": 1792499863.5370598,
+    "seen": 1792514823.355648,
+    "ast_hash": "d128f5cb02ed6334de7dc63c5187ab3b",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/f_pared.png": {
+    "mtime": 1792499863.6554492,
+    "seen": 1792514823.3556488,
+    "ast_hash": "b68c5b462eee360d4ab4f91ef5d1f0b9",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/flujo.png": {
+    "mtime": 1792499863.7141764,
+    "seen": 1792514823.3556495,
+    "ast_hash": "dd48d85214782133c2b08ffa92eced18",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/g_ctrl.png": {
+    "mtime": 1792499851.0859756,
+    "seen": 1792514823.3556502,
+    "ast_hash": "7c3390a4189aef26fa91c200f03ba1e6",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/g_n1.png": {
+    "mtime": 1792499848.5482175,
+    "seen": 1792514823.3556511,
+    "ast_hash": "05bb8ae3bd2c4cb4de7e23b1d134ef91",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/g_n2.png": {
+    "mtime": 1792499849.0674977,
+    "seen": 1792514823.3556519,
+    "ast_hash": "c0a63044f498935e02c5714c03e83983",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/g_n3.png": {
+    "mtime": 1792499849.3062966,
+    "seen": 1792514823.3556526,
+    "ast_hash": "caed3e5592cba1b214a42ba2abc273bd",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/g_t1.png": {
+    "mtime": 1792499849.626141,
+    "seen": 1792514823.3556533,
+    "ast_hash": "d0278ecce898f36472a3c7c4db972990",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/g_t2.png": {
+    "mtime": 1792499850.3603833,
+    "seen": 1792514823.3556545,
+    "ast_hash": "b74a1e918634c429463a7ac220dbbf8a",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/g_t3.png": {
+    "mtime": 1792499850.9283278,
+    "seen": 1792514823.3556552,
+    "ast_hash": "14a0ea2b0c70460d4996deb479e82db7",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/hud.png": {
+    "mtime": 1792499852.0100212,
+    "seen": 1792514823.3556557,
+    "ast_hash": "44795cd9f6161724f49dc6c85e808c1c",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/menu.png": {
+    "mtime": 1792499851.0026226,
+    "seen": 1792514823.3556566,
+    "ast_hash": "0438a5b781cd619faae5349739bd367a",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/s_arquero.png": {
+    "mtime": 1792499863.4265535,
+    "seen": 1792514823.355657,
+    "ast_hash": "8daff1aa9a0ccea730d40cacc3e1d6a6",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/s_cultista.png": {
+    "mtime": 1792499863.4230447,
+    "seen": 1792514823.355658,
+    "ast_hash": "fe2ae131ae4d6a68e203cb9b27e7381b",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/s_humano.png": {
+    "mtime": 1792499863.399207,
+    "seen": 1792514823.3556588,
+    "ast_hash": "3418cc4d85427150c1268e6c61ddaa1e",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/s_jefe.png": {
+    "mtime": 1792499863.4470747,
+    "seen": 1792514823.3556595,
+    "ast_hash": "befc54920b14cacc328c69c774143e51",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/s_lobo.png": {
+    "mtime": 1792499863.4057293,
+    "seen": 1792514823.3556602,
+    "ast_hash": "9600047fd09ccea8b6a38176aa5efef1",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/s_murci.png": {
+    "mtime": 1792499863.4172425,
+    "seen": 1792514823.3556612,
+    "ast_hash": "8db4495072721b2648ee36a3cea962b0",
+    "semantic_hash": ""
+  },
+  "docs/gdd_fuente/s_oso.png": {
+    "mtime": 1792499863.4127305,
+    "seen": 1792514823.355662,
+    "ast_hash": "1445ad8efd081aaf0ec5eb8cd486a58d",
+    "semantic_hash": ""
+  },
+  "docs/jefe_boceto.jpg": {
+    "mtime": 1792287643.3954415,
+    "seen": 1792514823.3556628,
+    "ast_hash": "ad1e6e7cdda6a2934d645a6606fd4779",
+    "semantic_hash": ""
+  },
+  "docs/nivel3_mapa_ruta.png": {
+    "mtime": 1792287643.3984458,
+    "seen": 1792514823.3556635,
+    "ast_hash": "244c81da05ef9f9b7409b38ec42b4b5d",
+    "semantic_hash": ""
+  },
+  "icon.svg": {
+    "mtime": 1792287643.4024854,
+    "seen": 1792514823.3556645,
+    "ast_hash": "a16f2eed1b4496c4abf03d329708ba09",
+    "semantic_hash": ""
+  },
+  "resources/tile_bloques_n1.png": {
+    "mtime": 1792287643.4203486,
+    "seen": 1792514823.3556652,
+    "ast_hash": "660f56cba3a47fc4c8a2b653bbf61b3b",
+    "semantic_hash": ""
+  },
+  "resources/tile_bloques_n2.png": {
+    "mtime": 1792287643.4213488,
+    "seen": 1792514823.355666,
+    "ast_hash": "32f2367993bee753666e01166fdd5f03",
+    "semantic_hash": ""
+  },
+  "resources/tile_bloques_n3.png": {
+    "mtime": 1792287643.422398,
+    "seen": 1792514823.3556666,
+    "ast_hash": "c2c73b33ae6d19cbe7d2ffb396d9339d",
+    "semantic_hash": ""
+  },
+  "resources/tile_profundo.png": {
+    "mtime": 1792287643.4239018,
+    "seen": 1792514823.3556674,
+    "ast_hash": "d831cda2e15d48364e07fe2ed3b8f79e",
+    "semantic_hash": ""
+  },
+  "tests/cap_controles.png": {
+    "mtime": 1792287643.6896875,
+    "seen": 1792514823.3556683,
+    "ast_hash": "21e049f4f932cba158eb2be630308448",
+    "semantic_hash": ""
+  },
+  "tests/cap_menu.png": {
+    "mtime": 1792287643.6921997,
+    "seen": 1792514823.355669,
+    "ast_hash": "a8373957ee202853a8a5db07b7b2a0a4",
+    "semantic_hash": ""
+  },
+  "tests/cap_pausa.png": {
+    "mtime": 1792287643.6921997,
+    "seen": 1792514823.35567,
+    "ast_hash": "750e41b8259ee9507bf638c7012da1a0",
+    "semantic_hash": ""
+  },
+  "tests/captura.png": {
+    "mtime": 1792287643.6947093,
+    "seen": 1792514823.3556705,
+    "ast_hash": "bfc88bb550269ccdd85bf168c41eaecd",
+    "semantic_hash": ""
+  },
+  "tests/prueba.png": {
+    "mtime": 1792287643.8448162,
+    "seen": 1792514823.3556714,
+    "ast_hash": "ba12019b6d5fee9f384be9400dc72afd",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel1/01_windy_night_forest_ambience.mp3": {
+    "mtime": 1792287643.0124376,
+    "seen": 1792514823.3556724,
+    "ast_hash": "579c6d7d4f61efca019a75ffee5649ca",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel1/02_forest_at_night_ambience.mp3": {
+    "mtime": 1792287643.0224614,
+    "seen": 1792514823.355673,
+    "ast_hash": "a9ae916410dea8646ed3f630a2807c40",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel1/03_cricket_sound_at_night.mp3": {
+    "mtime": 1792287643.049039,
+    "seen": 1792514823.3556738,
+    "ast_hash": "3d935def5ec51c10a3b3fa486cf3c6bc",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel1/04_owl_hoot.mp3": {
+    "mtime": 1792287643.0522346,
+    "seen": 1792514823.3556745,
+    "ast_hash": "2687bb0a83bf96c8d20acd5b66844398",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel1/05_wolf_howl.mp3": {
+    "mtime": 1792287643.0562403,
+    "seen": 1792514823.3556755,
+    "ast_hash": "4495d10c905dcad43671eaafef495280",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel1/06_wind_through_trees.mp3": {
+    "mtime": 1792287643.0743363,
+    "seen": 1792514823.3556762,
+    "ast_hash": "6f838815dca694d0e960144454644990",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel2/cueva_gota_lejana.wav": {
+    "mtime": 1792287643.0813353,
+    "seen": 1792514823.355677,
+    "ast_hash": "3716863a7df10403b2a5e1373e96ff9d",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel2/cueva_goteo_loop.wav": {
+    "mtime": 1792287643.0911577,
+    "seen": 1792514823.3556776,
+    "ast_hash": "8a50aa263dc5156c777042c7520df4f2",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel2/cueva_rumor.wav": {
+    "mtime": 1792287643.094376,
+    "seen": 1792514823.3556788,
+    "ast_hash": "ada4f968a24d86a61c5caeaae4f77c3b",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel2/cueva_viento_hueco_loop.wav": {
+    "mtime": 1792287643.0998933,
+    "seen": 1792514823.3556795,
+    "ast_hash": "c716313ef4f9b54092b4b73512b585be",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel2/cueva_viento_loop.wav": {
+    "mtime": 1792287643.1099572,
+    "seen": 1792514823.3556802,
+    "ast_hash": "df0d641473611c63bab25dfd2b01a32d",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel2/cueva_zumbido_grave_loop.wav": {
+    "mtime": 1792287643.114978,
+    "seen": 1792514823.355681,
+    "ast_hash": "8f389e071539a0e1da3b5e7762453241",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel3/aliento_cueva.wav": {
+    "mtime": 1792287643.1199765,
+    "seen": 1792514823.355682,
+    "ast_hash": "70f4712138a76a6d895a606ad0a0341e",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel3/canto_lejano.wav": {
+    "mtime": 1792287643.1239889,
+    "seen": 1792514823.3556826,
+    "ast_hash": "04a1caf33099b257bf18a6e82a016bc0",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel3/cristal_resuena.wav": {
+    "mtime": 1792287643.1279943,
+    "seen": 1792514823.3556833,
+    "ast_hash": "e33c1a906b151679e3f6c537ca6254fd",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel3/cueva_pulso_loop.wav": {
+    "mtime": 1792287643.1340067,
+    "seen": 1792514823.355684,
+    "ast_hash": "2aa8680eb17e2eee09c248a0cbeca637",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel3/gota_eco.wav": {
+    "mtime": 1792287643.1370118,
+    "seen": 1792514823.3556848,
+    "ast_hash": "cd5615b77b526c81f4a5ab67e69f1093",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel3/latido_pum1.wav": {
+    "mtime": 1792287643.1390123,
+    "seen": 1792514823.3556857,
+    "ast_hash": "18cefda946c1b7c275ea058a63fcc70a",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel3/latido_pum2.wav": {
+    "mtime": 1792287643.141012,
+    "seen": 1792514823.3556864,
+    "ast_hash": "a427e8d857c6673d483fcd1f7c7a62cc",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel3/piedra_cruje.wav": {
+    "mtime": 1792287643.1430762,
+    "seen": 1792514823.3556871,
+    "ast_hash": "3ca6f4a031b65bb8972ac57dd0e4122a",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel3/piedritas.wav": {
+    "mtime": 1792287643.1456113,
+    "seen": 1792514823.3556879,
+    "ast_hash": "a6a1fd87f8cc2457a954b0d47274c1b9",
+    "semantic_hash": ""
+  },
+  "assets/audio/ambiente_nivel3/polvo_cae.wav": {
+    "mtime": 1792287643.1486127,
+    "seen": 1792514823.3556888,
+    "ast_hash": "e4d0b61de85c6b16e181834956249bcb",
+    "semantic_hash": ""
+  },
+  "assets/audio/menu/dark_cavern_ambient_001.ogg": {
+    "mtime": 1792494696.4029264,
+    "seen": 1792514823.3556895,
+    "ast_hash": "2cfd489e05c728194d8ec728bdeac2bc",
+    "semantic_hash": ""
+  },
+  "assets/audio/menu/dark_cavern_ambient_002.ogg": {
+    "mtime": 1792494699.1769402,
+    "seen": 1792514823.3556902,
+    "ast_hash": "330c34b3aaddedb7e097873a0972c4bf",
+    "semantic_hash": ""
+  },
+  "assets/audio/musica/jefe_vitral_sangre.ogg": {
+    "mtime": 1792506560.7074432,
+    "seen": 1792514823.355691,
+    "ast_hash": "5602e21274838206e483fe90b330c8f9",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/aleteo_1.wav": {
+    "mtime": 1792287643.1521235,
+    "seen": 1792514823.3556917,
+    "ast_hash": "e31116308bf74638bc2b7da552361b90",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/aleteo_2.wav": {
+    "mtime": 1792287643.1541238,
+    "seen": 1792514823.3556929,
+    "ast_hash": "d8684f73bb31bac92c3aadd418bf7773",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/aleteo_3.wav": {
+    "mtime": 1792287643.1551242,
+    "seen": 1792514823.3556933,
+    "ast_hash": "1c6561a31f7755218ae0de5a35f14035",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/arena_inicio.wav": {
+    "mtime": 1792287643.1571243,
+    "seen": 1792514823.355694,
+    "ast_hash": "af4f95d920694ba90dc49c7f1e5b1861",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/arquero_disparo.wav": {
+    "mtime": 1792287643.1591218,
+    "seen": 1792514823.3556948,
+    "ast_hash": "8841effb35279ea6b7cdfe35e9ec54b9",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/aterrizaje_fuerte.wav": {
+    "mtime": 1792287643.160122,
+    "seen": 1792514823.3556957,
+    "ast_hash": "a6d9a0a3e1948a0c3341d6145a53b2dc",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/aterrizaje_suave.wav": {
+    "mtime": 1792287643.1616313,
+    "seen": 1792514823.3556964,
+    "ast_hash": "e1c53cfacbd1436792e62c243157d778",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/bloqueo.wav": {
+    "mtime": 1792287643.163634,
+    "seen": 1792514823.3556972,
+    "ast_hash": "19ec5f85e5a97d737c9fe724b0bd2c29",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/checkpoint.wav": {
+    "mtime": 1792287643.165355,
+    "seen": 1792514823.355698,
+    "ast_hash": "fe846f729e14bdb93aa91713f8b34a29",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/dano_jugador.wav": {
+    "mtime": 1792287643.16636,
+    "seen": 1792514823.355699,
+    "ast_hash": "e67fc314ccfddab1d77ce9f305650d86",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/derrape.wav": {
+    "mtime": 1792287643.167362,
+    "seen": 1792514823.3556998,
+    "ast_hash": "4ccac309546e4456ed0cd9a515da4b58",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/dialogo_tecla.wav": {
+    "mtime": 1792287643.1693594,
+    "seen": 1792514823.3557005,
+    "ast_hash": "2a59c30316699bdf94a417111c433ea3",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/doble_salto.wav": {
+    "mtime": 1792287643.1703596,
+    "seen": 1792514823.355701,
+    "ast_hash": "889c5f96a23cf4d37bf2e97a1d2cabbe",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/enemigo_muerte.wav": {
+    "mtime": 1792287643.171359,
+    "seen": 1792514823.355702,
+    "ast_hash": "ff7bb11dabf7950b6ab9dbbdda326e64",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/energia_agotada.wav": {
+    "mtime": 1792287643.1741023,
+    "seen": 1792514823.3557029,
+    "ast_hash": "da02c287c45815e36e1238c686e8e630",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/energia_baja.wav": {
+    "mtime": 1792287643.175108,
+    "seen": 1792514823.3557034,
+    "ast_hash": "f172ee38d91f7f26e0164abf5b49429f",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/fragil_crujir.wav": {
+    "mtime": 1792287643.1761074,
+    "seen": 1792514823.355704,
+    "ast_hash": "3f3a081f2a41162d146d8bfe6c68c434",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/fragil_romper.wav": {
+    "mtime": 1792287643.1781073,
+    "seen": 1792514823.355705,
+    "ast_hash": "fe9e3ac3b55d840d68788ae4f35e05a0",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/grito_papa.wav": {
+    "mtime": 1792287643.1791072,
+    "seen": 1792514823.3557057,
+    "ast_hash": "055f62e04b59df2259d6f7baf65dd081",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/impacto_liviano_1.wav": {
+    "mtime": 1792287643.1801107,
+    "seen": 1792514823.3557067,
+    "ast_hash": "92ba7a1bc8b0dedf00aed18c6e2a7c5c",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/impacto_liviano_2.wav": {
+    "mtime": 1792287643.1811078,
+    "seen": 1792514823.3557072,
+    "ast_hash": "6912dd7d8aa1e65cec1d1ecc85582e94",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/impacto_liviano_3.wav": {
+    "mtime": 1792287643.1839955,
+    "seen": 1792514823.355708,
+    "ast_hash": "538c4a95f055763fb248347d1e36be31",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/impacto_pesado_1.wav": {
+    "mtime": 1792287643.185002,
+    "seen": 1792514823.3557086,
+    "ast_hash": "84dcca405a8c6bd67d924223721081b2",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/impacto_pesado_2.wav": {
+    "mtime": 1792287643.1870022,
+    "seen": 1792514823.3557096,
+    "ast_hash": "c9f751b49fb5b4ecbb4bb9e5b409b8c6",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_embestida.wav": {
+    "mtime": 1792494144.575144,
+    "seen": 1792514823.3557103,
+    "ast_hash": "e657da9994be0743e4beeaca862d7dd5",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_embestida_carga.wav": {
+    "mtime": 1792494144.577145,
+    "seen": 1792514823.355711,
+    "ast_hash": "a1598c14f76f8362b809ba51c948fec0",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_estalactita_caida.wav": {
+    "mtime": 1792494144.5791445,
+    "seen": 1792514823.355712,
+    "ast_hash": "c5f363b45e5a30fd47004edf7ac14ede",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_estalactita_crujido.wav": {
+    "mtime": 1792494144.5811439,
+    "seen": 1792514823.3557127,
+    "ast_hash": "11b7db9e7c1d4120606cf7330f9cc334",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_fase.wav": {
+    "mtime": 1792494144.5841446,
+    "seen": 1792514823.3557136,
+    "ast_hash": "b3f2fd2d6a9cb88d6ebbb25452aacf0f",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_glitch.wav": {
+    "mtime": 1792497246.6702664,
+    "seen": 1792514823.3557143,
+    "ast_hash": "c79eb74291865070694cf87b7674ff77",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_grito.wav": {
+    "mtime": 1792287643.1890013,
+    "seen": 1792514823.355715,
+    "ast_hash": "8e5f35d6e7758f60cd4623e70c355acc",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_lanza_aviso.wav": {
+    "mtime": 1792494144.5861452,
+    "seen": 1792514823.3557158,
+    "ast_hash": "9739d2cdd56ca7927efdb45c3d28fe32",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_lanza_impacto.wav": {
+    "mtime": 1792494144.5871456,
+    "seen": 1792514823.3557167,
+    "ast_hash": "574888834928b2959b2284a8a0701c63",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_muerte.wav": {
+    "mtime": 1792494144.5911436,
+    "seen": 1792514823.3557174,
+    "ast_hash": "0c5c910a778e7c8b51ee7026186bf64b",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_ojo_golpe.wav": {
+    "mtime": 1792494144.5931425,
+    "seen": 1792514823.3557181,
+    "ast_hash": "0269ff86044a3bce14b75521c091943d",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_ojo_golpe_fuerte.wav": {
+    "mtime": 1792494144.594143,
+    "seen": 1792514823.3557189,
+    "ast_hash": "560db13cb854893bafbb6ef5941104b9",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_picada_impacto.wav": {
+    "mtime": 1792494144.5971448,
+    "seen": 1792514823.3557196,
+    "ast_hash": "6669b03b8aec65b987992c986b5ce2a4",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_rayo_carga.wav": {
+    "mtime": 1792494144.600143,
+    "seen": 1792514823.3557205,
+    "ast_hash": "c14267354b947155ff0fee7bac78945b",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_rayo_disparo.wav": {
+    "mtime": 1792494144.603143,
+    "seen": 1792514823.3557212,
+    "ast_hash": "74b046b173a8683d211872a5c15d65e3",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_rayo_grueso.wav": {
+    "mtime": 1792494144.6081462,
+    "seen": 1792514823.355722,
+    "ast_hash": "9a8528ef910e5677f1397bf3a687090f",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_rayo_grueso_carga.wav": {
+    "mtime": 1792494144.6111512,
+    "seen": 1792514823.3557227,
+    "ast_hash": "26f2b9bc376b5ac192e147837a3abd28",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_rocas.wav": {
+    "mtime": 1792494144.6141536,
+    "seen": 1792514823.3557236,
+    "ast_hash": "28fbadd3fb6f0459fa568141af85d18b",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/jefe_vibracion.wav": {
+    "mtime": 1792501287.1796546,
+    "seen": 1792514823.3557243,
+    "ast_hash": "ee28498aeb19f59ede0a28e92787a4fc",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/latido_dub.wav": {
+    "mtime": 1792287643.191002,
+    "seen": 1792514823.355725,
+    "ast_hash": "e8646bf7e4153cbf300881736fee930c",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/latido_lub.wav": {
+    "mtime": 1792287643.1925125,
+    "seen": 1792514823.3557258,
+    "ast_hash": "aeab127f0f6de9095e8ccbf23c37491c",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/liana_agarrar.wav": {
+    "mtime": 1792287643.1940463,
+    "seen": 1792514823.3557265,
+    "ast_hash": "de71f5dd3d5c90f9409cdcb511ce4ba2",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/liana_deslizar_loop.wav": {
+    "mtime": 1792287643.1960506,
+    "seen": 1792514823.3557277,
+    "ast_hash": "1d3d0b1b5cd05030c24bd32f24c8ebd4",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/liana_soltar.wav": {
+    "mtime": 1792287643.1970522,
+    "seen": 1792514823.3557284,
+    "ast_hash": "273075d28cae7a89ae20d0715490edf9",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/liana_trepar_1.wav": {
+    "mtime": 1792287643.1980531,
+    "seen": 1792514823.355729,
+    "ast_hash": "95261fa61a9a033140b06c746f94e10a",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/liana_trepar_2.wav": {
+    "mtime": 1792287643.1995592,
+    "seen": 1792514823.3557298,
+    "ast_hash": "46ba04bd2f69cf61fd3cb05dd2159afc",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/liana_trepar_3.wav": {
+    "mtime": 1792287643.2020981,
+    "seen": 1792514823.3557308,
+    "ast_hash": "253c743d2eb764ef5658a18889d663f9",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/muerte_jugador.wav": {
+    "mtime": 1792287643.2041008,
+    "seen": 1792514823.3557312,
+    "ast_hash": "912638c70c4af42d2f56a2b95214938f",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/nivel_subido.wav": {
+    "mtime": 1792287643.2071004,
+    "seen": 1792514823.3557322,
+    "ast_hash": "8de33ef8e0abbeabc45b4081634dc6ab",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/ojo_aparecer.wav": {
+    "mtime": 1792494144.617151,
+    "seen": 1792514823.355733,
+    "ast_hash": "6cd95b6a6a23566c78caae89d80a9243",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/paso_humano_1.wav": {
+    "mtime": 1792287643.2081034,
+    "seen": 1792514823.3557339,
+    "ast_hash": "003753cd77a18baa6572c85d31c74423",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/paso_humano_2.wav": {
+    "mtime": 1792287643.2101004,
+    "seen": 1792514823.3557346,
+    "ast_hash": "6f38358e163830c06a0435f9ee55920d",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/paso_humano_3.wav": {
+    "mtime": 1792287643.2116046,
+    "seen": 1792514823.3557353,
+    "ast_hash": "007294befd569e1909d038e922234996",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/paso_humano_4.wav": {
+    "mtime": 1792287643.2126088,
+    "seen": 1792514823.355736,
+    "ast_hash": "77d994ad25b53809aad7339960618028",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/paso_lobo_1.wav": {
+    "mtime": 1792287643.2141132,
+    "seen": 1792514823.3557367,
+    "ast_hash": "b121956f85a16eee219a63caf3c7639f",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/paso_lobo_2.wav": {
+    "mtime": 1792287643.2151184,
+    "seen": 1792514823.3557377,
+    "ast_hash": "372f7fabd28cfc76632767dcb408da50",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/paso_lobo_3.wav": {
+    "mtime": 1792287643.217121,
+    "seen": 1792514823.3557384,
+    "ast_hash": "b63ffd840b26cdbefb8ecaec57fc408e",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/paso_lobo_4.wav": {
+    "mtime": 1792287643.21812,
+    "seen": 1792514823.355739,
+    "ast_hash": "9db429f952da71b4f722759bfde118d7",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/paso_oso_1.wav": {
+    "mtime": 1792287643.22012,
+    "seen": 1792514823.3557398,
+    "ast_hash": "985fff13e8855c28dd156dfd739a90aa",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/paso_oso_2.wav": {
+    "mtime": 1792287643.2211187,
+    "seen": 1792514823.3557408,
+    "ast_hash": "40c004bb72ce73477f74eabfb3d9ce06",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/paso_oso_3.wav": {
+    "mtime": 1792287643.2223804,
+    "seen": 1792514823.3557415,
+    "ast_hash": "741936e067dd481809161333ad7a9056",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/paso_oso_4.wav": {
+    "mtime": 1792287643.223885,
+    "seen": 1792514823.3557422,
+    "ast_hash": "72e091a64e8db7b2005b40065073aad2",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/pickup.wav": {
+    "mtime": 1792287643.2258897,
+    "seen": 1792514823.3557427,
+    "ast_hash": "0492d01866af13171273e67de33d6cdd",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/pinchos.wav": {
+    "mtime": 1792287643.2268894,
+    "seen": 1792514823.3557434,
+    "ast_hash": "bd158192826e5e3fc6bee659e4cd76c0",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/proyectil_disparo.wav": {
+    "mtime": 1792287643.2288895,
+    "seen": 1792514823.3557444,
+    "ast_hash": "f22760c5c0543d5fe123971cc02ae9de",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/proyectil_impacto.wav": {
+    "mtime": 1792287643.2298884,
+    "seen": 1792514823.355745,
+    "ast_hash": "d907601453b6af286c0a74acf0fa8746",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/rebote_coraza.wav": {
+    "mtime": 1792287643.2313957,
+    "seen": 1792514823.3557458,
+    "ast_hash": "af62c9757b52bef4e9dc9169e209fcaa",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/rompible_golpe.wav": {
+    "mtime": 1792287643.232401,
+    "seen": 1792514823.3557467,
+    "ast_hash": "7ed0cbaae15fa437a22bc22cea845624",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/rompible_romper.wav": {
+    "mtime": 1792287643.234912,
+    "seen": 1792514823.3557472,
+    "ast_hash": "986033bc443764bbd40195fb8caf1f8c",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/salto_humano.wav": {
+    "mtime": 1792287643.235911,
+    "seen": 1792514823.3557484,
+    "ast_hash": "69b9c2d5737076096134a3f37eb5eed3",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/salto_lobo.wav": {
+    "mtime": 1792287643.237913,
+    "seen": 1792514823.3557491,
+    "ast_hash": "9fa97420c468dcc34b8297569c5f0930",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/salto_oso.wav": {
+    "mtime": 1792287643.2389104,
+    "seen": 1792514823.3557498,
+    "ast_hash": "0e8ef1bd54aa3cf8407a6c6ec17359e5",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/swing_1.wav": {
+    "mtime": 1792287643.2399123,
+    "seen": 1792514823.3557506,
+    "ast_hash": "5a65c9b130206d879aa7ddedae7f8a05",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/swing_2.wav": {
+    "mtime": 1792287643.2414165,
+    "seen": 1792514823.3557518,
+    "ast_hash": "940abe1571ec2f9ce078faf90823e463",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/swing_3.wav": {
+    "mtime": 1792287643.2424214,
+    "seen": 1792514823.3557525,
+    "ast_hash": "27db9959e36853e6c2a8a3bb5a46dd8d",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/swing_pesado.wav": {
+    "mtime": 1792287643.2444289,
+    "seen": 1792514823.3557532,
+    "ast_hash": "8ce354cb461e75558cd6df0f0bc3d574",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/tension_loop.wav": {
+    "mtime": 1792287643.2489426,
+    "seen": 1792514823.355754,
+    "ast_hash": "24e1b5242f0036cb8db10cbdd0f11acf",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/transformacion_bloqueada.wav": {
+    "mtime": 1792287643.249943,
+    "seen": 1792514823.3557549,
+    "ast_hash": "f9721dc2baf190f31cd58ab1f8fd7f7e",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/ui_confirmar.wav": {
+    "mtime": 1792287643.251448,
+    "seen": 1792514823.3557556,
+    "ast_hash": "37e6e1e688becd175080d3fbb1576569",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/ui_mover.wav": {
+    "mtime": 1792514312.3572783,
+    "seen": 1792514823.3557563,
+    "ast_hash": "0973cc366c57fdbcd54adc07764311df",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/ui_pausa.wav": {
+    "mtime": 1792287643.253957,
+    "seen": 1792514823.355757,
+    "ast_hash": "01d52e7b79293e57af80734d116e1f76",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/gen/zona_despejada.wav": {
+    "mtime": 1792287643.255963,
+    "seen": 1792514823.3557577,
+    "ast_hash": "af1a49b476dc41f3ccd45515bf0a1dce",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/golpe_enemigo.mp3": {
+    "mtime": 1792287643.2569618,
+    "seen": 1792514823.3557587,
+    "ast_hash": "13397e796fe265e557c8ed8589283501",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/golpe_liviano_jugador.mp3": {
+    "mtime": 1792287643.2579608,
+    "seen": 1792514823.3557594,
+    "ast_hash": "3488093a776c4dd243604f09eb07ce3b",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/golpe_pesado_jugador.mp3": {
+    "mtime": 1792287643.259962,
+    "seen": 1792514823.35576,
+    "ast_hash": "9ecfcff43e9c22e35f2b93fe1447063e",
+    "semantic_hash": ""
+  },
+  "assets/audio/sfx/transformacion.mp3": {
+    "mtime": 1792287643.2639825,
+    "seen": 1792514823.3557608,
+    "ast_hash": "5e8a4e2df0f67d7cd700a739a22b3cec",
+    "semantic_hash": ""
+  },
+  "docs/final_secuencia.mp4": {
+    "mtime": 1792507753.5319493,
+    "seen": 1792514823.3557618,
+    "ast_hash": "1ff01066514f171364aa7f0af12c01be",
+    "semantic_hash": ""
+  },
+  "docs/intro_jefe.mp4": {
+    "mtime": 1792501387.0813866,
+    "seen": 1792514823.3557625,
+    "ast_hash": "8714c3318c004b6fa63148323c24664b",
+    "semantic_hash": ""
+  },
+  "docs/muerte_jefe_glitch.mp4": {
+    "mtime": 1792497268.8482766,
+    "seen": 1792514823.3557632,
+    "ast_hash": "244b468bd616aa4ae3fa527d95565e3b",
+    "semantic_hash": ""
+  },
+  "docs/titulo_jefe.mp4": {
+    "mtime": 1792499891.3053708,
+    "seen": 1792514823.3557642,
+    "ast_hash": "8fea665c379bb447e2408b136b249663",
+    "semantic_hash": ""
+  }
+}

@@ -56,6 +56,14 @@ func _init() -> void:
 	]
 
 
+@export var ligero_mult_recuperacion := 1.75   ## recuperación del golpe ligero (× 0.28 s): más alto = más cooldown entre ligeros
+
+func mult_recuperacion_para(tipo: String, step: int) -> float:
+	if tipo == "light":
+		return ligero_mult_recuperacion
+	return super.mult_recuperacion_para(tipo, step)
+
+
 ## Proyectil sónico: más rápido y de mucho más alcance que el disparo base (cruza la pantalla y más).
 @export var proyectil_velocidad := 1150.0   ## px/s
 @export var proyectil_alcance := 2300.0     ## px que recorre antes de disiparse

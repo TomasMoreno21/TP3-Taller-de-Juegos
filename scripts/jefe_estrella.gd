@@ -1967,7 +1967,10 @@ func _caer_estalactita(e: Polygon2D) -> void:
 	tw.tween_method(paso, 0.0, 1.0, caida_estalactita)
 	tw.tween_callback(func() -> void:
 		_sfx(sfx_estalactita, -3.0)   # al tocar el piso
-		JuiceFx.escombros(get_tree(), Vector2(x, global_position.y - 20.0), color_roca, 10, 1.0)
+		JuiceFx.escombros(get_tree(), Vector2(x, global_position.y - 20.0), color_roca, 12, 1.1)
+		var cam := get_viewport().get_camera_2d()
+		if cam != null and cam.has_method("shake"):
+			cam.shake(5.0, 0.2)
 		if is_instance_valid(e):
 			e.visible = false)
 
@@ -2710,7 +2713,7 @@ func _morir() -> void:
 	_sfx(sfx_muerte, 3.0)
 	if DisplayServer.get_name() != "headless":
 		_slowmo(muerte_slowmo, muerte_slowmo_escala)
-		JefeCine.destello_final(get_tree(), muerte_slowmo * 0.55, 4.0, true)
+		JefeCine.destello_final(get_tree(), muerte_slowmo * 0.5, 2.8, true)
 		_poner_ojo(1.0)   # el ojo se abre del todo: el niño adentro (el final se arma en el paso 5)
 	died.emit()
 

@@ -343,7 +343,7 @@ func _draw() -> void:
 	if cooldown > 0.0:
 		var f := clampf(cooldown / maxf(cooldown_total, 0.01), 0.0, 1.0)
 		draw_arc(c, r_in - 7.0, -PI * 0.5, -PI * 0.5 + TAU * f, 48, color_cooldown, 4.0, true)
-		var fuente := ThemeDB.fallback_font
+		var fuente := preload("res://assets/fonts/SegoePrint-Bold.ttf")
 		var txt := "%d" % int(ceil(cooldown))
 		var ancho := fuente.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 30).x
 		draw_string(fuente, c + Vector2(-ancho * 0.5, 10.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 30, color_tinta)

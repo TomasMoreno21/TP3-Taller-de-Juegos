@@ -37,6 +37,10 @@ window/stretch/mode="viewport"
 
 enabled=PackedStringArray("res://addons/herramienta_nivel/plugin.cfg")
 
+[gui]
+
+theme/custom_font="res://assets/fonts/SegoePrint-Bold.ttf"
+
 [input]
 
 move_left={

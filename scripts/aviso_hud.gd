@@ -6,7 +6,7 @@ extends PanelContainer
 @export var seg_minimo := 3.5            ## tiempo mínimo en pantalla
 @export var seg_por_caracter := 0.045    ## tiempo extra por letra (textos largos duran más)
 @export var margen_abajo := 120.0
-@export var fuente: Font = preload("res://assets/fonts/ComicNeue-Bold.ttf")
+@export var fuente: Font = preload("res://assets/fonts/SegoePrint-Bold.ttf")
 @export var tam_fuente := 24
 @export var color_fondo := Color(0.05, 0.06, 0.08, 0.84)
 @export var color_borde := Color(0.82, 0.72, 0.42, 0.9)

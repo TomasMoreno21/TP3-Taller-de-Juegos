@@ -8,8 +8,9 @@ var _cerrando := false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	layer = 100
+	layer = maxi(layer, 100)
 	volver.pressed.connect(cerrar)
+	volver.pressed.connect(get_node("/root/AudioManager").play_ui.bind("ui_confirmar"))
 	volver.grab_focus.call_deferred()
 	panel.modulate.a = 0.0
 	var t := create_tween()

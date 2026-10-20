@@ -9,6 +9,7 @@ var _indice := 0
 var _slots: Array[PanelContainer] = []
 var _estilo_normal: StyleBoxFlat
 var _es_joypad := false
+var _stick_dir := 0
 
 @export var pausar_al_abrir := true  # pausa el juego mientras se elige (off en los autotest)
 @export var entrada_duracion := 0.28   ## animación de entrada del panel (escala + fundido)
@@ -20,8 +21,10 @@ var _es_joypad := false
 @onready var options_row: HBoxContainer = $Panel/Margin/VBox/Options
 @onready var combo_nombre: Label = $Panel/Margin/VBox/ComboInfo/ComboNombre
 @onready var combo_funcion: Label = $Panel/Margin/VBox/ComboInfo/ComboFuncion
-@onready var combo_como: Label = $Panel/Margin/VBox/ComboInfo/ComboComo
-@onready var hint: Label = $Panel/Margin/VBox/Hint
+@onready var teclas: HBoxContainer = $Panel/Margin/VBox/ComboInfo/Teclas
+
+const TINTA := Color(0.04, 0.047, 0.063)   # silueta de los íconos, igual que el dial del HUD
+const CREMA := Color(0.93, 0.9, 0.84)
 
 
 func _ready() -> void:
@@ -100,11 +103,22 @@ func _input(event: InputEvent) -> void:
 		_es_joypad = true
 	elif event is InputEventKey:
 		_es_joypad = false
+	var dir := 0
 	if event.is_action_pressed("move_up") or event.is_action_pressed("ui_up") or event.is_action_pressed("ui_left"):
-		_mover_indice(-1)
-		get_viewport().set_input_as_handled()
+		dir = -1
 	elif event.is_action_pressed("move_down") or event.is_action_pressed("ui_down") or event.is_action_pressed("ui_right"):
-		_mover_indice(1)
+		dir = 1
+	if event is InputEventJoypadMotion:
+		# El stick manda un evento por cada microcambio: un paso por empujón (hay que volver al centro).
+		if dir == 0:
+			if absf(event.axis_value) < 0.4:
+				_stick_dir = 0
+		elif dir == _stick_dir:
+			dir = 0
+		else:
+			_stick_dir = dir
+	if dir != 0:
+		_mover_indice(dir)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("menu_confirm"):
 		_confirmar()
@@ -183,30 +197,30 @@ func _reconstruir_slots() -> void:
 			_estilo_normal = slot.get_theme_stylebox("panel") as StyleBoxFlat
 		var icon: Control = slot.get_node("VBox/Icon") as Control
 		icon.set("forma", op["form_index"])
-		icon.set("color_icono", op["color"])
-		icon.set("bloqueado", op["bloqueada"])
+		icon.set("color_disco", op["color"])
+		icon.set("color_icono", TINTA)
+		icon.set("color_detalle", TINTA)   # sin caras: silueta lisa como en el HUD
 		(slot.get_node("VBox/Nombre") as Label).text = op["nombre"]
+		slot.modulate.a = 0.4 if op["bloqueada"] else 1.0
 		slot.resized.connect(func() -> void: slot.pivot_offset = slot.size / 2.0)
 		_slots.append(slot)
 
 
 func _render() -> void:
-	title.text = "¡NIVEL %d!" % get_node("/root/Progresion").nivel
+	title.text = "NIVEL %d" % get_node("/root/Progresion").nivel
 	for i in range(_slots.size()):
 		var slot: PanelContainer = _slots[i]
+		var nombre := slot.get_node("VBox/Nombre") as Label
 		if i == _indice and _estilo_normal != null:
 			var sel := _estilo_normal.duplicate() as StyleBoxFlat
-			sel.border_color = Color(0.95, 0.85, 0.4, 1)
-			sel.border_width_left = 3
-			sel.border_width_top = 3
-			sel.border_width_right = 3
-			sel.border_width_bottom = 3
-			sel.bg_color = Color(0.2, 0.17, 0.06, 0.9)
+			sel.border_color = Color.WHITE
+			sel.set_border_width_all(5)
+			sel.bg_color = CREMA
 			slot.add_theme_stylebox_override("panel", sel)
-			slot.scale = Vector2(1.08, 1.08)
+			nombre.add_theme_color_override("font_color", TINTA)
 		else:
 			slot.remove_theme_stylebox_override("panel")
-			slot.scale = Vector2.ONE
+			nombre.add_theme_color_override("font_color", CREMA)
 	_render_detalle_combo()
 
 
@@ -214,30 +228,66 @@ func _render_detalle_combo() -> void:
 	var op: Dictionary = _opciones[_indice]
 	var prog: Node = get_node("/root/Progresion")
 	var player := get_tree().get_first_node_in_group("player")
+	_vaciar_teclas()
 	if op["bloqueada"]:
-		combo_nombre.text = "Forma bloqueada"
-		combo_funcion.text = "Subí de nivel para desbloquearla."
-		combo_como.text = ""
+		combo_nombre.text = "Espíritu dormido"
+		combo_funcion.text = "Subí de nivel para despertarlo."
 		return
 	if player == null or player.forms.size() <= op["form_index"]:
-		combo_nombre.text = "Forma desbloqueada"
+		combo_nombre.text = "Espíritu despierto"
 		combo_funcion.text = ""
-		combo_como.text = ""
 		return
 	var forma: Forma = player.forms[op["form_index"]]
 	var desbloqueados: int = prog.combos_desbloqueados_forma(op["form_index"])
 	if desbloqueados >= forma.combos.size():
-		combo_nombre.text = "Forma desbloqueada"
+		combo_nombre.text = "Espíritu despierto"
 		combo_funcion.text = "Ya tiene todos sus combos."
-		combo_como.text = ""
 		return
 	var c: Dictionary = forma.combos[desbloqueados]
-	combo_nombre.text = "Combo: %s" % str(c.get("nombre", "Combo"))
-	combo_funcion.text = str(c.get("descripcion", "Es un ataque más fuerte."))
-	combo_como.text = "%s" % _secuencia_texto(c.get("secuencia", []))
+	var nombre := str(c.get("nombre", "Combo"))
+	var desc := str(c.get("descripcion", "Es un ataque más fuerte."))
+	if desc.begins_with(nombre + ": "):   # la descripción repite el nombre del combo
+		desc = desc.substr(nombre.length() + 2)
+		desc = desc.left(1).to_upper() + desc.substr(1)
+	combo_nombre.text = nombre
+	combo_funcion.text = desc
+	_mostrar_teclas(_secuencia_teclas(c.get("secuencia", [])))
 
 
-func _secuencia_texto(secuencia: Array) -> String:
+func _vaciar_teclas() -> void:
+	for n in teclas.get_children():
+		n.queue_free()
+		teclas.remove_child(n)
+
+
+## Una "tecla" (recuadro plano) por paso del combo, separadas por "+".
+func _mostrar_teclas(partes: PackedStringArray) -> void:
+	for i in range(partes.size()):
+		if i > 0:
+			teclas.add_child(_label_tecla("+"))
+		var caja := PanelContainer.new()
+		var st := StyleBoxFlat.new()
+		st.bg_color = Color(0, 0, 0, 0)
+		st.border_color = CREMA
+		st.set_border_width_all(2)
+		st.set_content_margin_all(8)
+		caja.add_theme_stylebox_override("panel", st)
+		caja.custom_minimum_size = Vector2(54, 54)
+		caja.add_child(_label_tecla(partes[i]))
+		teclas.add_child(caja)
+
+
+func _label_tecla(texto: String) -> Label:
+	var l := Label.new()
+	l.text = texto
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.add_theme_font_size_override("font_size", 28)
+	l.add_theme_color_override("font_color", CREMA)
+	return l
+
+
+func _secuencia_teclas(secuencia: Array) -> PackedStringArray:
 	var partes: PackedStringArray = []
 	for paso in secuencia:
 		var label := "?"
@@ -249,7 +299,7 @@ func _secuencia_texto(secuencia: Array) -> String:
 			"special":
 				label = "B" if _es_joypad else "L"
 		partes.append(label)
-	return " + ".join(partes)
+	return partes
 
 
 func _confirmar() -> void:

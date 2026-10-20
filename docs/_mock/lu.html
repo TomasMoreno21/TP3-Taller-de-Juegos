@@ -1,0 +1,47 @@
+<meta charset=utf-8><style>
+body{margin:0;width:1920px;height:1080px;background:radial-gradient(#1b2030,#07080c);color:#ece6d6;font-family:'Segoe Print';font-weight:bold;position:relative;overflow:hidden}
+.p{position:absolute;left:410px;top:150px;width:1100px;height:780px;box-sizing:border-box;border:2px solid #737373;background:#131720ee;text-align:center}
+.sub{margin-top:30px;font-size:20px;letter-spacing:6px;color:#8a8d96;font-weight:normal}
+h1{margin:6px 0 0;font-size:56px;letter-spacing:6px}
+.row{display:flex;justify-content:center;gap:24px;margin-top:34px}
+.c{width:210px;height:250px;box-sizing:border-box;border:2px solid #737373;background:#131720;padding-top:26px;font-size:28px;letter-spacing:2px;position:relative}
+.c svg{width:130px;height:130px;display:block;margin:0 auto 14px}
+.c small{display:block;font-size:15px;letter-spacing:3px;font-weight:normal;color:#8a8d96;margin-top:4px}
+.sel{background:#ece6d6;border:5px solid #fff;color:#0a0c10;padding-top:22px}
+.sel small{color:#4a4a40}
+.lock{opacity:.4;border-style:dashed}
+.info{margin:34px 90px 0;border-top:2px solid #737373;padding-top:24px}
+.n{font-size:40px;letter-spacing:3px}
+.d{font-size:23px;margin:10px 0 20px;font-weight:normal;color:#c9c3b3}
+.k{display:inline-block;min-width:54px;height:54px;line-height:48px;box-sizing:border-box;border:2px solid #ece6d6;font-size:28px;padding:0 10px}
+.pl{font-size:28px;margin:0 10px}
+.h{position:absolute;bottom:26px;width:100%;font-size:18px;font-weight:normal;color:#8a8d96;letter-spacing:2px}
+</style>
+<div class=p>
+<div class=sub>EL ESPÍRITU DESPIERTA</div>
+<h1>NIVEL 2</h1>
+<div class=row id=row></div>
+<div class=info>
+<div class=n>Embestida</div>
+<div class=d>Embestida: atraviesa a los enemigos de una pasada.</div>
+<span class=k>J</span><span class=pl>+</span><span class=k>K</span>
+</div>
+<div class=h></div>
+</div>
+<script>
+const P=(u,e)=>u.map(p=>[(e?-p[0]:p[0]),p[1]]);
+const poly=(u,c,e)=>`<polygon points="${P(u,e).map(p=>p.join(',')).join(' ')}" fill="${c}"/>`;
+const par=(u,c)=>poly(u,c,0)+poly(u,c,1);
+const el=(cx,cy,rx,ry,c)=>`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${c}"/>`;
+const ci=(cx,cy,r,c)=>`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${c}"/>`;
+const D='#0a0c10';
+const icons={
+Humano:c=>`<path d="M-.72,.95 A.72,.8 0 0 1 .72,.95 Z" fill="${c}"/>`+el(0,-.42,.34,.38,c)+el(0,.2,.3,.07,D),
+Lobo:c=>par([[-.12,-.3],[-.34,-.92],[-.62,-.1]],c)+poly([[-.5,-.1],[-.45,.3],[-.16,.58],[0,.7],[.16,.58],[.45,.3],[.5,-.1],[.3,-.34],[-.3,-.34]],c)+par([[-.14,-.16],[-.34,-.06],[-.12,0]],D)+poly([[-.1,.5],[.1,.5],[0,.62]],D),
+Oso:c=>ci(-.5,-.46,.24,c)+ci(.5,-.46,.24,c)+ci(-.5,-.46,.11,D)+ci(.5,-.46,.11,D)+el(0,.04,.66,.6,c)+ci(-.26,-.1,.08,D)+ci(.26,-.1,.08,D)+el(0,.3,.28,.2,D)+el(0,.22,.1,.07,c),
+Murciélago:c=>par([[.06,-.12],[.88,-.5],[.82,-.05],[.64,.12],[.56,.4],[.36,.2],[.18,.46],[.1,.2]],c)+par([[.04,-.22],[.2,-.6],[.24,-.18]],c)+el(0,.02,.24,.34,c)+ci(-.09,-.08,.05,D)+ci(.09,-.08,.05,D)};
+const cols={Humano:'#6b9e5c',Lobo:'#94a3bf',Oso:'#8c6638',Murciélago:'#85669e'};
+const st={Humano:'DESPIERTO',Lobo:'ELIGE',Oso:'DORMIDO',Murciélago:'DORMIDO'};
+document.getElementById('row').innerHTML=['Humano','Lobo','Oso','Murciélago'].map((n,i)=>
+`<div class="c ${i==1?'sel':''} ${i>1?'lock':''}"><svg viewBox="-1.05 -1 2.1 2.1"><circle cx='0' cy='.05' r='1' fill='${cols[n]}'/><g transform='translate(0 .05) scale(.72)'>${icons[n](D)}</g></svg>${n}</div>`).join('');
+</script>

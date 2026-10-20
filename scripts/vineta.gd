@@ -41,7 +41,7 @@ var _ultimo_blip := 0
 
 
 func _ready() -> void:
-	_fuente = preload("res://assets/fonts/ComicNeue-Bold.ttf")
+	_fuente = preload("res://assets/fonts/SegoePrint-Bold.ttf")
 	_forma = forma
 	if _forma.size() < 3:
 		_forma = PackedVector2Array([Vector2.ZERO, Vector2(size.x, 0), size, Vector2(0, size.y)])

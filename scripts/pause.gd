@@ -1,7 +1,5 @@
 extends CanvasLayer
 
-const SCENE_CONTROLES := "res://scenes/controls.tscn"
-const SCENE_MENU := "res://scenes/main_menu.tscn"
 const SCENE_OPCIONES := "res://scenes/opciones.tscn"
 const SCENE_MODO_PRUEBA := "res://scripts/modo_prueba_panel.gd"   # panel armado por código
 
@@ -24,15 +22,14 @@ var _i_consejo := 0
 var _t_flota := 0.0
 var _open := false
 var _indice := 0
+var _sonar := false   ## el foco inicial no suena
 var _controls: CanvasLayer
 
 @onready var botones: Array[Button] = [
 	$Panel/Margin/VBox/Reanudar,
-	$Panel/Margin/VBox/Controles,
 	$Panel/Margin/VBox/Opciones,
 	$Panel/Margin/VBox/ModoPrueba,
 	$Panel/Margin/VBox/Menu,
-	$Panel/Margin/VBox/VolverMenu,
 	$Panel/Margin/VBox/Salir,
 ]
 @onready var dim: ColorRect = $Dim
@@ -176,7 +173,9 @@ func abrir() -> void:
 	_timer_consejo.start()
 	get_tree().paused = true
 	_ui("ui_pausa")
+	_sonar = false
 	botones[0].grab_focus.call_deferred()
+	set.call_deferred("_sonar", true)
 	_fundido(true)
 
 
@@ -231,12 +230,13 @@ func _refocar() -> void:
 
 
 func _navegar(dir: int) -> void:
-	_ui("ui_mover")
 	_indice = (_indice + dir + botones.size()) % botones.size()
 	botones[_indice].grab_focus()
 
 
 func _on_focus(i: int) -> void:
+	if _sonar:
+		_ui("ui_mover")
 	_indice = i
 	for k in botones.size():
 		var b := botones[k]
@@ -268,29 +268,18 @@ func _on_boton_pressed(i: int) -> void:
 	match botones[i].name:
 		&"Reanudar":
 			cerrar()
-		&"Controles":
-			_abrir_controles()
 		&"Opciones":
 			_abrir_opciones()
 		&"ModoPrueba":
 			_abrir_modo_prueba()
 		&"Menu":
 			_reiniciar_nivel()
-		&"VolverMenu":
-			_volver_menu()
 		&"Salir":
 			get_tree().quit()
 
 
 func _reiniciar_nivel() -> void:
 	TransicionPantalla.de(get_tree()).recargar()
-
-
-func _abrir_controles() -> void:
-	var c: CanvasLayer = (load(SCENE_CONTROLES) as PackedScene).instantiate()
-	_controls = c
-	c.tree_exited.connect(_refocar)
-	add_child(c)
 
 
 func _abrir_opciones() -> void:
@@ -307,10 +296,6 @@ func _abrir_modo_prueba() -> void:
 	_controls = c
 	c.tree_exited.connect(_refocar)
 	add_child(c)
-
-
-func _volver_menu() -> void:
-	TransicionPantalla.de(get_tree()).cambiar_escena(SCENE_MENU)
 
 
 func _ui(nombre: String) -> void:

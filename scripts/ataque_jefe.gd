@@ -16,7 +16,7 @@ var _t := 0.0
 var _activo := false
 var _golpeo := false
 var _recorrido := 0.0
-var _poly: Polygon2D
+var _alfa := 0.25               # opacidad del dibujo (aviso parpadeante / activo)
 
 
 var _forma: CollisionShape2D
@@ -34,12 +34,7 @@ func _ready() -> void:
 	caja.size = tamano
 	forma.shape = caja
 	add_child(forma)
-	_poly = Polygon2D.new()
-	var m := tamano * 0.5
-	_poly.polygon = PackedVector2Array([Vector2(-m.x, m.y), Vector2(-m.x * 0.3, -m.y), Vector2(m.x, -m.y * 0.6), Vector2(m.x, m.y)]) if dir > 0 \
-		else PackedVector2Array([Vector2(m.x, m.y), Vector2(m.x * 0.3, -m.y), Vector2(-m.x, -m.y * 0.6), Vector2(-m.x, m.y)])
-	_poly.color = Color(color.r, color.g, color.b, 0.25)
-	add_child(_poly)
+	_alfa = 0.25
 	body_entered.connect(_on_body_entered)
 
 
@@ -48,12 +43,14 @@ func _physics_process(delta: float) -> void:
 	if not _activo:
 		# Aviso: parpadeo cada vez más rápido hasta activarse.
 		var f := 18.0 + 24.0 * (_t / maxf(aviso, 0.01))
-		_poly.color.a = 0.18 + 0.2 * (0.5 + 0.5 * sin(_t * f))
+		_alfa = 0.18 + 0.2 * (0.5 + 0.5 * sin(_t * f))
+		queue_redraw()
 		if _t >= aviso:
 			_activo = true
-			_poly.color = Color(color.r, color.g, color.b, 0.9)
+			_alfa = 0.9
 			monitoring = true
 		return
+	queue_redraw()
 	var paso := velocidad * delta
 	global_position.x += dir * paso
 	_recorrido += paso
@@ -73,4 +70,19 @@ func _on_body_entered(body: Node2D) -> void:
 	if body.has_method("take_damage"):
 		_golpeo = true   # un solo golpe por ataque
 		body.take_damage(dano, empuje, dir)
-		_poly.color.a = 0.35
+		_alfa = 0.35
+
+
+## Ola de choque: una cresta curva plana que rompe hacia delante.
+func _draw() -> void:
+	var m := tamano * 0.5
+	var d := float(dir)
+	var perfil := PackedVector2Array()
+	for i in 9:
+		var u := float(i) / 8.0
+		perfil.append(Vector2(lerpf(-d * m.x, d * m.x * 0.7, u), lerpf(m.y, -m.y, pow(u, 2.2))))
+	perfil.append(Vector2(d * m.x, -m.y * 0.5))
+	var forma := perfil.duplicate()
+	forma.append(Vector2(d * m.x, m.y))
+	draw_colored_polygon(forma, Color(color.r, color.g, color.b, _alfa))
+	draw_polyline(perfil, Color(color.lightened(0.5), _alfa), 3.0, true)

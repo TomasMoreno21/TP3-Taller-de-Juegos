@@ -56,19 +56,19 @@ func _init() -> void:
 	await _tap(JOY_BUTTON_DPAD_DOWN)
 	var f2 := root.gui_get_focus_owner()
 	_check(f2 != null and f2 != f1, "cruceta abajo mueve el foco (%s)" % [f2.name if f2 else null])
-	# ir a Controles (el 3.º) y abrirlo con A
-	while root.gui_get_focus_owner() == null or root.gui_get_focus_owner().name != &"Controles":
+	# ir a Opciones y abrirlo con A
+	while root.gui_get_focus_owner() == null or root.gui_get_focus_owner().name != &"Opciones":
 		await _tap(JOY_BUTTON_DPAD_DOWN)
 	await _tap(JOY_BUTTON_A)
 	for _i in 8:
 		await process_frame
 	var fo := root.gui_get_focus_owner()
-	_check(fo != null and fo.name == &"Volver", "A abre Controles y el foco queda en Volver (%s)" % [fo.name if fo else null])
+	_check(fo != null and fo.name == &"Controles", "A abre Opciones; foco en Controles (%s)" % [fo.name if fo else null])
 	await _tap(JOY_BUTTON_B)
 	await create_timer(0.5).timeout
 	for _i in 3:
 		await process_frame
-	_check(not is_instance_valid(menu.get("_controls")) or menu.get("_controls") == null, "B cierra Controles")
+	_check(not is_instance_valid(menu.get("_controls")) or menu.get("_controls") == null, "B cierra Opciones")
 	var fo2 := root.gui_get_focus_owner()
 	_check(fo2 != null, "tras cerrar, el menú tiene foco (%s)" % [fo2])
 	print("FALLOS: %d" % fallos)

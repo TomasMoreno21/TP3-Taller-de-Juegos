@@ -450,7 +450,7 @@ con_hojas = false
 color_tallo = Color(0.3, 0.23, 0.24, 1)
 
 [node name="Encounter3" parent="." unique_id=1950576395 instance=ExtResource("11_stua6")]
-position = Vector2(5708, 5339)
+position = Vector2(5895, 5339)
 
 [node name="Enemy" parent="Encounter3" unique_id=1597108656 instance=ExtResource("12_wnw5i")]
 position = Vector2(-561, 217)
@@ -633,7 +633,7 @@ sombra = false
 viento = false
 
 [node name="D10" parent="Decoracion" unique_id=626019134 instance=ExtResource("60_deco")]
-position = Vector2(5101, 5584)
+position = Vector2(5288, 5584)
 tipo = 8
 variante = 10
 escala = 3.09
@@ -644,7 +644,7 @@ sombra = false
 viento = false
 
 [node name="D12" parent="Decoracion" unique_id=1450437262 instance=ExtResource("60_deco")]
-position = Vector2(6341, 5584)
+position = Vector2(6528, 5584)
 tipo = 8
 escala = 3.8
 neutralizar = 0.9
@@ -1168,7 +1168,7 @@ amount = 18
 emission_rect_extents = Vector2(2000, 150)
 
 [node name="NieblaCueva6" parent="Atmosfera" unique_id=1927237790 instance=ExtResource("niebla_cueva2")]
-position = Vector2(5700, 5490)
+position = Vector2(5887, 5490)
 amount = 13
 emission_rect_extents = Vector2(1500, 150)
 
@@ -2137,8 +2137,9 @@ color_estaca = Color(0.8, 0.78, 0.93, 1)
 
 [node name="Pinchos7" parent="." unique_id=790182354 instance=ExtResource("9_4hvoh")]
 z_index = -2
-position = Vector2(4591.9995, 5708)
+position = Vector2(4571, 5717)
 rotation = -0.67304826
+cantidad = 5
 color_estaca = Color(0.8, 0.78, 0.93, 1)
 
 [node name="Pinchos8" parent="." unique_id=2024155050 instance=ExtResource("9_4hvoh")]
