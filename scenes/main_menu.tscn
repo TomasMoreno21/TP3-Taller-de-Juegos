@@ -9,6 +9,16 @@
 [ext_resource type="Texture2D" uid="uid://b581qs276g7pa" path="res://Sprites/Menu/luna/luna-1.png" id="7_lun1"]
 [ext_resource type="Texture2D" uid="uid://7hmea4vfxnxf" path="res://Sprites/Menu/luna/luna-2.png" id="8_lun2"]
 [ext_resource type="Texture2D" uid="uid://8ulsoxn3uwvs" path="res://Sprites/Menu/luna/luna-3.png" id="9_lun3"]
+[ext_resource type="Script" uid="uid://hjppjykmoybm" path="res://scripts/espiritus_menu.gd" id="10_esp"]
+[ext_resource type="Texture2D" uid="uid://dkjk1hfcvkaoi" path="res://Sprites/Menu/lobo/lobo-menu-1.png" id="11_lob1"]
+[ext_resource type="Texture2D" uid="uid://77f8leh45uus" path="res://Sprites/Menu/lobo/lobo-menu-2.png" id="12_lob2"]
+[ext_resource type="Texture2D" uid="uid://mt5xdk8kft8r" path="res://Sprites/Menu/lobo/lobo-menu-3.png" id="13_lob3"]
+[ext_resource type="Texture2D" uid="uid://ddx7xy57su37f" path="res://Sprites/Menu/oso/oso-menu-1.png" id="14_oso1"]
+[ext_resource type="Texture2D" uid="uid://tjulxqp51dwq" path="res://Sprites/Menu/oso/oso-menu-2.png" id="15_oso2"]
+[ext_resource type="Texture2D" uid="uid://dc6nw1e8jhu4f" path="res://Sprites/Menu/oso/oso-menu-3.png" id="16_oso3"]
+[ext_resource type="Texture2D" uid="uid://b4wg57viqq10x" path="res://Sprites/Menu/murcielago/murci-menu-1.png" id="17_mur1"]
+[ext_resource type="Texture2D" uid="uid://dd7hvsxqksb4m" path="res://Sprites/Menu/murcielago/murci-menu-2.png" id="18_mur2"]
+[ext_resource type="Texture2D" uid="uid://chr0fc3crwd45" path="res://Sprites/Menu/murcielago/murci-menu-3.png" id="19_mur3"]
 
 [sub_resource type="StyleBoxFlat" id="btn_normal"]
 content_margin_left = 24.0
@@ -16,6 +26,17 @@ content_margin_top = 12.0
 content_margin_right = 24.0
 content_margin_bottom = 12.0
 bg_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="btn_pressed"]
+content_margin_left = 24.0
+content_margin_top = 12.0
+content_margin_right = 24.0
+content_margin_bottom = 12.0
+bg_color = Color(1, 1, 1, 0.6)
 corner_radius_top_left = 14
 corner_radius_top_right = 14
 corner_radius_bottom_right = 14
@@ -34,17 +55,6 @@ corner_radius_bottom_left = 14
 shadow_color = Color(1, 1, 1, 0.1)
 shadow_size = 10
 
-[sub_resource type="StyleBoxFlat" id="btn_pressed"]
-content_margin_left = 24.0
-content_margin_top = 12.0
-content_margin_right = 24.0
-content_margin_bottom = 12.0
-bg_color = Color(1, 1, 1, 0.6)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
-
 [sub_resource type="StyleBoxFlat" id="btn_focus"]
 bg_color = Color(0, 0, 0, 0)
 border_width_left = 2
@@ -62,6 +72,8 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_menu")
 
 [node name="Background" type="TextureRect" parent="." unique_id=1016637740]
@@ -86,11 +98,12 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -651.0
-offset_top = 40.0
-offset_right = -91.0
-offset_bottom = 540.0
+offset_left = -559.9999
+offset_top = 70.0
+offset_right = 0.00012207031
+offset_bottom = 570.0
 grow_horizontal = 0
+scale = Vector2(0.84000003, 0.84000003)
 mouse_filter = 2
 texture = ExtResource("7_lun1")
 expand_mode = 1
@@ -113,8 +126,8 @@ theme_override_constants/separation = 12
 [node name="Jugar" type="Button" parent="UI/Menu/Options" unique_id=1341016820]
 custom_minimum_size = Vector2(480, 60)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.93, 0.9, 0.84, 1)
-theme_override_colors/font_pressed_color = Color(0.04, 0.047, 0.063, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.039215688, 0.047058824, 0.0627451, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("btn_normal")
@@ -203,6 +216,7 @@ offset_left = 80.0
 offset_top = 109.0
 offset_right = 960.0
 offset_bottom = 235.0
+pivot_offset = Vector2(1189, 539)
 texture = ExtResource("4_tit1")
 expand_mode = 1
 stretch_mode = 5
@@ -228,6 +242,57 @@ offset_right = 340.0
 offset_bottom = 283.0
 size_flags_horizontal = 0
 color = Color(0.78, 0.22, 0.23, 1)
+
+[node name="Espiritus" type="Control" parent="." unique_id=771908018]
+anchors_preset = 0
+offset_left = 950.0
+offset_top = 470.0
+offset_right = 1550.0
+offset_bottom = 810.0
+mouse_filter = 2
+script = ExtResource("10_esp")
+
+[node name="Lobo" type="TextureRect" parent="Espiritus" unique_id=1733968884]
+layout_mode = 0
+offset_left = -950.0
+offset_top = -50.0
+offset_right = 300.0
+offset_bottom = 624.0
+mouse_filter = 2
+texture = ExtResource("11_lob1")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("3_anim")
+frames = Array[Texture2D]([ExtResource("11_lob1"), ExtResource("12_lob2"), ExtResource("13_lob3")])
+fps = 6.0
+
+[node name="Oso" type="TextureRect" parent="Espiritus" unique_id=620780283]
+layout_mode = 0
+offset_left = -831.0
+offset_top = -235.0
+offset_right = 754.0
+offset_bottom = 651.0
+mouse_filter = 2
+texture = ExtResource("14_oso1")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("3_anim")
+frames = Array[Texture2D]([ExtResource("14_oso1"), ExtResource("15_oso2"), ExtResource("16_oso3")])
+fps = 6.0
+
+[node name="Murcielago" type="TextureRect" parent="Espiritus" unique_id=776687260]
+layout_mode = 0
+offset_left = -240.0
+offset_top = -508.0
+offset_right = 1194.0
+offset_bottom = 628.0
+mouse_filter = 2
+texture = ExtResource("17_mur1")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("3_anim")
+frames = Array[Texture2D]([ExtResource("17_mur1"), ExtResource("18_mur2"), ExtResource("19_mur3")])
+fps = 6.0
 
 [node name="Hint" type="Label" parent="." unique_id=308445458]
 layout_mode = 0
