@@ -2,7 +2,6 @@
 
 [ext_resource type="Texture2D" uid="uid://1f5olrp41cj0" path="res://Sprites/Enemigos/afk FLACO1.png" id="1_akfl1"]
 [ext_resource type="Texture2D" uid="uid://6l4mxlb680en" path="res://Sprites/Enemigos/ataq ene FLACO1.png" id="1_atq1"]
-[ext_resource type="Texture2D" uid="uid://cdm52qmr4qnjp" path="res://Sprites/Enemigos/enemigo flaco1.png" id="1_flaco"]
 [ext_resource type="Texture2D" uid="uid://cbg677odpi71f" path="res://Sprites/Enemigos/afk FLACO2.png" id="2_akfl2"]
 [ext_resource type="Texture2D" uid="uid://dgvnwe6u7q3a1" path="res://Sprites/Enemigos/ataq ene FLACO2.png" id="2_atq2"]
 [ext_resource type="Texture2D" uid="uid://c548187nbuj0o" path="res://Sprites/Enemigos/afk FLACO3.png" id="3_akfl3"]
@@ -18,7 +17,7 @@
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_flaco")
+"texture": ExtResource("1_akfl1")
 }],
 "loop": 0,
 "name": &"attack1",
@@ -83,7 +82,7 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_flaco")
+"texture": ExtResource("1_akfl1")
 }],
 "loop": 1,
 "name": &"run",

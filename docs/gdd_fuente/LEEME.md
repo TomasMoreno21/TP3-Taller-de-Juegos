@@ -3,5 +3,6 @@ Regenerar el Word: `npm install docx` (una vez) y `node build.js` en esta carpet
 - `imgs.py`: regenera banner, diagrama de flujo, core loop y sprites (lee `Sprites/`). Necesita Pillow.
 - `g_n1/n2/n3.png` (niveles) y `g_t1/t2/t3.png` (tótems): capturas del juego, hechas con `tests/captura_nivel.gd`:
   `godot --path . --resolution 1920x1080 --script res://tests/captura_nivel.gd -- res://scenes/nivel1.tscn <dir> "x,y,1"` (posiciones usadas: N1 9517,802 y 25700,2374; N2 -3680,-61 y 600,-91; N3 -266,1760 y 331,4866).
-- `hud.png`, `menu.png`, `g_ctrl.png`: de `docs/capturas_menus/`.
+- `hud.png`, `menu.png`, `g_ctrl.png`, `comic1/2.png`, `boss1/2.png`: capturas del 20/10 con `tests/captura_escena.gd` (menús y cómics), `tests/captura_nivel.gd` (HUD) y `tests/captura_jefe.gd` (jefe).
+- Tras regenerar, copiar el .docx a `docs/` y revisar los números del índice (`idx`) abriéndolo en Word.
 Ver pendientes para el cierre del proyecto en `../GDD_PENDIENTES.md`.

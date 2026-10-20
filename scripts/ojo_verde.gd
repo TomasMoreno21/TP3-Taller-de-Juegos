@@ -193,9 +193,13 @@ func _soltar_vida() -> void:
 			if absf(dx) < margen:
 				destino_pos.x = piso.global_position.x + (margen if dx >= 0.0 else -margen)
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_tree().root   # nunca dentro de OjosRaiz
+	_colocar_orbe.call_deferred(orbe, destino, destino_pos, global_position)   # se suelta desde un callback de física
+
+
+func _colocar_orbe(orbe: Node2D, destino: Node, destino_pos: Vector2, origen: Vector2) -> void:
 	destino.add_child(orbe)
-	orbe.global_position = global_position
-	if DisplayServer.get_name() == "headless" or destino_pos.distance_to(global_position) < 4.0:
+	orbe.global_position = origen
+	if DisplayServer.get_name() == "headless" or destino_pos.distance_to(origen) < 4.0:
 		orbe.global_position = destino_pos
 		return
 	var tw := orbe.create_tween()

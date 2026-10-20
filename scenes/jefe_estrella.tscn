@@ -15,7 +15,6 @@
 [ext_resource type="Script" uid="uid://2evt507mwee1" path="res://scripts/borde_musgo.gd" id="21_musgo"]
 [ext_resource type="Script" uid="uid://dunjj0k7rceq2" path="res://scripts/circulo_proteccion.gd" id="23_marca"]
 [ext_resource type="Script" uid="uid://bu3uvg5bfhqsy" path="res://scripts/blanco_sonico.gd" id="24_blanco"]
-[ext_resource type="PackedScene" path="res://scenes/estandarte.tscn" id="25_estandarte"]
 [ext_resource type="SpriteFrames" uid="uid://bok300b1l5aik" path="res://resources/jefe_cabeza_f3.tres" id="26_cabeza_f3"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_hurt"]
@@ -168,7 +167,7 @@ z_index_detras = 0
 [node name="LosaCentral" type="StaticBody2D" parent="." unique_id=567625182]
 
 [node name="Collision" type="CollisionShape2D" parent="LosaCentral" unique_id=2018772081]
-position = Vector2(0, 100)
+position = Vector2(0, 101)
 shape = SubResource("RectangleShape2D_losa")
 
 [node name="Visual" type="Polygon2D" parent="LosaCentral" unique_id=616896970]

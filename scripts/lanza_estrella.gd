@@ -32,6 +32,9 @@ var _marca: Polygon2D
 var _brillo: Polygon2D
 
 
+var _forma: CollisionShape2D
+
+
 func _ready() -> void:
 	collision_layer = 0
 	collision_mask = 4   # solo el jugador
@@ -43,6 +46,7 @@ func _ready() -> void:
 	_largo = v.length()
 	rotation = v.angle()
 	var forma := CollisionShape2D.new()
+	_forma = forma
 	var caja := RectangleShape2D.new()
 	caja.size = Vector2(_largo, ancho)
 	forma.shape = caja
@@ -102,6 +106,8 @@ func _physics_process(delta: float) -> void:
 		if not _golpeo:
 			for b in get_overlapping_bodies():
 				if b.is_in_group("player") and b.has_method("take_damage"):
+					if b.has_method("toca_cuerpo") and not b.toca_cuerpo(_forma.shape, _forma.global_transform):
+						continue   # solo rozó las patas invisibles
 					if float(b.get("_invuln_timer") if b.get("_invuln_timer") != null else 0.0) > 0.0:
 						continue   # invulnerable ahora: el golpe no se gasta, sigue intentando mientras esté activo
 					_golpeo = true   # un solo golpe por lanza

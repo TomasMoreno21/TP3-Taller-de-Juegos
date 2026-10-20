@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" path="res://scenes/levelup.tscn" id="10_levelup"]
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="12_dialog"]
 [ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="14_pick"]
+[ext_resource type="PackedScene" uid="uid://bxsawwmlxb7mt" path="res://scenes/enemy.tscn" id="20_3bnyi"]
 [ext_resource type="PackedScene" path="res://scenes/noche_profunda.tscn" id="31_noche"]
 [ext_resource type="PackedScene" path="res://scenes/atmosfera_nivel3.tscn" id="32_atm"]
 [ext_resource type="Script" uid="uid://dotehvvuk7udf" path="res://scripts/latido_cueva.gd" id="33_latido"]
@@ -23,7 +24,7 @@
 [ext_resource type="AudioStream" path="res://assets/audio/musica/jefe_vitral_sangre.ogg" id="41_tema"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso"]
-size = Vector2(4900, 200)
+size = Vector2(4900, 172)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_piso_der"]
 size = Vector2(3700, 200)
@@ -69,8 +70,10 @@ emitting = false
 position = Vector2(4600, 1100)
 
 [node name="PisoVisual" type="Polygon2D" parent="Piso" unique_id=323803502]
+position = Vector2(4029.225, 178)
+scale = Vector2(1.8759184, 2.78)
 color = Color(0.1, 0.105, 0.11, 1)
-polygon = PackedVector2Array(-4600, -100, 300, -100, 300, 100, -4600, 100)
+polygon = PackedVector2Array(-4600, -100, 300, -100, 299.99988, -0.989563, 300, 100, -4600, 100)
 
 [node name="PisoVisualDer" type="Polygon2D" parent="Piso" unique_id=1983532723]
 color = Color(0.1, 0.105, 0.11, 1)
@@ -85,7 +88,7 @@ color = Color(0.24, 0.25, 0.26, 1)
 polygon = PackedVector2Array(900, -100, 4600, -100, 4600, -84, 900, -84)
 
 [node name="PisoCollision" type="CollisionShape2D" parent="Piso" unique_id=855132670]
-position = Vector2(-2150, 1)
+position = Vector2(-2150, -13)
 shape = SubResource("RectangleShape2D_piso")
 
 [node name="PisoCollisionDer" type="CollisionShape2D" parent="Piso" unique_id=1302475963]
@@ -151,15 +154,6 @@ visible = false
 [node name="Decoracion" type="Node2D" parent="." unique_id=239755062]
 z_index = -5
 
-[node name="Hongos1" parent="Decoracion" unique_id=1763146811 instance=ExtResource("36_deco")]
-position = Vector2(900, 1000)
-tipo = 21
-escala = 3.0
-flip_h = true
-color_noche = Color(0.5, 0.7, 0.8, 1)
-sombra = false
-viento = false
-
 [node name="Piedra1" parent="Decoracion" unique_id=414911935 instance=ExtResource("36_deco")]
 position = Vector2(1600, 1000)
 tipo = 4
@@ -179,14 +173,6 @@ position = Vector2(2600, 1000)
 tipo = 8
 escala = 3.8
 flip_h = true
-color_noche = Color(0.5, 0.7, 0.8, 1)
-sombra = false
-viento = false
-
-[node name="Hongos2" parent="Decoracion" unique_id=808064847 instance=ExtResource("36_deco")]
-position = Vector2(3100, 1000)
-tipo = 21
-escala = 3.0
 color_noche = Color(0.5, 0.7, 0.8, 1)
 sombra = false
 viento = false
@@ -215,14 +201,6 @@ color_noche = Color(0.5, 0.7, 0.8, 1)
 sombra = false
 viento = false
 
-[node name="Estalactita2" parent="Decoracion" unique_id=1876497867 instance=ExtResource("36_deco")]
-position = Vector2(1950, 60)
-tipo = 9
-escala = 3.8
-color_noche = Color(0.5, 0.7, 0.8, 1)
-sombra = false
-viento = false
-
 [node name="Raices2" parent="Decoracion" unique_id=418382318 instance=ExtResource("36_deco")]
 position = Vector2(2700, 60)
 tipo = 22
@@ -240,20 +218,15 @@ color_noche = Color(0.5, 0.7, 0.8, 1)
 sombra = false
 viento = false
 
-[node name="Estatua" parent="Decoracion" groups=["destruible_f2"] unique_id=70345146 instance=ExtResource("36_deco")]
-position = Vector2(4100, 1000)
-tipo = 20
-escala = 3.0
-
 [node name="DialogoIntro" parent="." unique_id=2086547178 instance=ExtResource("12_dialog")]
 position = Vector2(500, 900)
 dialogo_id = "jefe_intro"
 
 [node name="PickupCalma1" parent="." unique_id=1639011544 instance=ExtResource("14_pick")]
-position = Vector2(750, 940)
+position = Vector2(833, 896)
 
 [node name="PickupCalma2" parent="." unique_id=314348362 instance=ExtResource("14_pick")]
-position = Vector2(1050, 940)
+position = Vector2(1268, 896)
 
 [node name="Encounter" parent="." unique_id=1219823109 instance=ExtResource("5_enc")]
 position = Vector2(5200, 970)
@@ -262,6 +235,31 @@ antesala_silencio = 0.3
 
 [node name="JefeEstrella" parent="Encounter/Enemies" parent_id_path=PackedInt32Array(1219823109, 223207692) index="0" unique_id=641933076 instance=ExtResource("7_jefe")]
 position = Vector2(0, 30)
+sonido_vibracion = null
+
+[node name="Punto1" parent="Encounter/Enemies/JefeEstrella/PuntosOjos" parent_id_path=PackedInt32Array(641933076, 282036340) index="0" unique_id=294438267]
+position = Vector2(-799, -284.4322)
+
+[node name="Punto2" parent="Encounter/Enemies/JefeEstrella/PuntosOjos" parent_id_path=PackedInt32Array(641933076, 282036340) index="1" unique_id=1836450268]
+position = Vector2(801, -277.2959)
+
+[node name="Punto1" parent="Encounter/Enemies/JefeEstrella/PuntosOjosF2" parent_id_path=PackedInt32Array(641933076, 398620381) index="0" unique_id=1301263797]
+position = Vector2(-801, -284.4322)
+
+[node name="Punto2" parent="Encounter/Enemies/JefeEstrella/PuntosOjosF2" parent_id_path=PackedInt32Array(641933076, 398620381) index="1" unique_id=1075936025]
+position = Vector2(804, -281.37378)
+
+[node name="Punto9" parent="Encounter/Enemies/JefeEstrella/PuntosOjosF2" parent_id_path=PackedInt32Array(641933076, 398620381) index="8" unique_id=1059420695]
+position = Vector2(-215, -976.6525)
+
+[node name="Punto10" parent="Encounter/Enemies/JefeEstrella/PuntosOjosF2" parent_id_path=PackedInt32Array(641933076, 398620381) index="9" unique_id=537802824]
+position = Vector2(314, -990.9252)
+
+[node name="Punto11" parent="Encounter/Enemies/JefeEstrella/PuntosOjosF2" parent_id_path=PackedInt32Array(641933076, 398620381) index="10" unique_id=886059624]
+position = Vector2(-890, -995.00305)
+
+[node name="Punto12" parent="Encounter/Enemies/JefeEstrella/PuntosOjosF2" parent_id_path=PackedInt32Array(641933076, 398620381) index="11" unique_id=1242723717]
+position = Vector2(861, -1020.4898)
 
 [node name="ArenaShape" parent="Encounter/Arena" index="0"]
 position = Vector2(0, -440)
@@ -270,11 +268,8 @@ shape = SubResource("RectangleShape2D_arena_jefe")
 [node name="ArenaVisual" parent="Encounter/Arena" index="1"]
 position = Vector2(-5200, -969)
 
-[node name="CheckpointInicio" parent="." unique_id=1234388143 instance=ExtResource("ck_1")]
-position = Vector2(1300, 970)
-
 [node name="CheckpointPreJefe" parent="." unique_id=576380468 instance=ExtResource("ck_1")]
-position = Vector2(3375, 933)
+position = Vector2(3080, 844)
 
 [node name="Hud" parent="." unique_id=2014128999 instance=ExtResource("8_hud")]
 visible = false
@@ -295,6 +290,50 @@ volume_db = -60.0
 bus = &"Musica"
 script = ExtResource("40_musica")
 
+[node name="Oleada1" type="Node2D" parent="." unique_id=1700000011]
+
+[node name="Enemy2" parent="Oleada1" unique_id=1337798018 instance=ExtResource("20_3bnyi")]
+position = Vector2(6278, 967)
+spawn_telegrafiado = true
+
+[node name="Enemy3" parent="Oleada1" unique_id=1600894757 instance=ExtResource("20_3bnyi")]
+position = Vector2(4625, 972)
+spawn_telegrafiado = true
+
+[node name="Enemy4" parent="Oleada1" unique_id=19220022 instance=ExtResource("20_3bnyi")]
+position = Vector2(4437, 583)
+tipo = "arquero"
+spawn_telegrafiado = true
+flotante = true
+
+[node name="Enemy5" parent="Oleada1" unique_id=1564126589 instance=ExtResource("20_3bnyi")]
+position = Vector2(6385, 491)
+tipo = "arquero"
+spawn_telegrafiado = true
+flotante = true
+
+[node name="Oleada2" type="Node2D" parent="." unique_id=1700000012]
+
+[node name="Enemy" parent="Oleada2" unique_id=1718331064 instance=ExtResource("20_3bnyi")]
+position = Vector2(5974, 582)
+tipo = "arquero"
+spawn_telegrafiado = true
+flotante = true
+
+[node name="Enemy2" parent="Oleada2" unique_id=1560214214 instance=ExtResource("20_3bnyi")]
+position = Vector2(5667, 1003)
+spawn_telegrafiado = true
+
+[node name="Enemy3" parent="Oleada2" unique_id=916668812 instance=ExtResource("20_3bnyi")]
+position = Vector2(4400, 802)
+
+[node name="Enemy4" parent="Oleada2" unique_id=1343953589 instance=ExtResource("20_3bnyi")]
+position = Vector2(4638, 529)
+tipo = "arquero"
+spawn_telegrafiado = true
+flotante = true
+
 [editable path="NocheProfunda"]
 [editable path="AtmosferaNivel3"]
 [editable path="Encounter"]
+[editable path="Encounter/Enemies/JefeEstrella"]

@@ -18,7 +18,6 @@ signal terminado
 ]
 @export var lineas_determinacion: Array[String] = [
 	"Está cerca. Lo sentí.",
-	"[humano]No me voy a detener.",
 ]
 @export var lineas_repeticion: Array[String] = []   ## cuando ya se oyó antes (sin bloquear al jugador)
 @export_group("Animación")

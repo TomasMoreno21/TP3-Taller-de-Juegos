@@ -143,7 +143,7 @@ func _lados_cola(base: Vector2, punta: Vector2, ancho_base: float) -> Array:
 	var der := PackedVector2Array()
 	var n := dir / maxf(largo, 0.001)
 	var perp := Vector2(-n.y, n.x)
-	var curva := clampf(largo * (0.08 if tono == Tono.GRITO else 0.16), 3.0, 20.0) * (1.0 if dir.x >= 0.0 else -1.0)   # la panza se abre hacia afuera del globo
+	var curva := clampf(largo * 0.08, 3.0, 20.0) if tono == Tono.GRITO else 0.0   # solo el grito se quiebra; las demás colas van rectas
 	var control := base + dir * 0.5 + perp * curva
 	var pasos := 14
 	for k in pasos + 1:

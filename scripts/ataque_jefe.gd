@@ -19,6 +19,9 @@ var _recorrido := 0.0
 var _poly: Polygon2D
 
 
+var _forma: CollisionShape2D
+
+
 func _ready() -> void:
 	collision_layer = 0
 	collision_mask = 4   # solo el jugador
@@ -26,6 +29,7 @@ func _ready() -> void:
 	z_index = 5
 	add_to_group("ataque_jefe")
 	var forma := CollisionShape2D.new()
+	_forma = forma
 	var caja := RectangleShape2D.new()
 	caja.size = tamano
 	forma.shape = caja
@@ -55,11 +59,17 @@ func _physics_process(delta: float) -> void:
 	_recorrido += paso
 	if _recorrido >= recorrido_max:
 		queue_free()
+		return
+	if not _golpeo:
+		for b in get_overlapping_bodies():   # body_entered no se repite: si primero entraron solo las patas, hay que seguir mirando
+			_on_body_entered(b)
 
 
 func _on_body_entered(body: Node2D) -> void:
 	if _golpeo or not _activo:
 		return
+	if body.has_method("toca_cuerpo") and not body.toca_cuerpo(_forma.shape, _forma.global_transform):
+		return   # solo rozó las patas invisibles (se reevalúa cada frame en _physics_process)
 	if body.has_method("take_damage"):
 		_golpeo = true   # un solo golpe por ataque
 		body.take_damage(dano, empuje, dir)

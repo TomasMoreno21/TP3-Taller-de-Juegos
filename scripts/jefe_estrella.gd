@@ -141,7 +141,7 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 @export_group("Apariencia")
 @export var nombre_jefe := "EL ARZOBISPO"   ## nombre en las barras de cine ("" = solo barras)
 @export var intro_cine := true
-@export var intro_duracion := 2.6
+@export var intro_duracion := 4.6
 @export var giro_velocidad := 0.12          ## rad/s que gira la estrella en reposo
 @export var color_fase1 := Color(0.85, 0.25, 0.75)
 @export var color_fase2 := Color(0.6, 0.3, 0.9)
@@ -166,6 +166,7 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 		if Engine.is_editor_hint():
 			_refrescar_preview()
 @export var muerte_slowmo := 2.6
+@export var muerte_glitch := 2.4             ## s de caos (sonido cortado + jefe glitcheando) tras el golpe final
 @export_group("Ajuste F3 (editá con Previsualizar F3)")
 ## mueve el dibujo de la cabeza (Estrella) en la F3
 @export var estrella_f3_offset := Vector2.ZERO:
@@ -272,6 +273,8 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 @export var sfx_estalactita: AudioStream = preload("res://assets/audio/sfx/gen/jefe_estalactita_caida.wav")
 @export var sfx_rocas: AudioStream = preload("res://assets/audio/sfx/gen/jefe_rocas.wav")
 @export var sfx_muerte: AudioStream = preload("res://assets/audio/sfx/gen/jefe_muerte.wav")
+@export var sonido_vibracion: AudioStream = preload("res://assets/audio/sfx/gen/jefe_vibracion.wav")   ## vibración macabra durante el zoom lento de la aparición
+@export var sonido_glitch: AudioStream = preload("res://assets/audio/sfx/gen/jefe_glitch.wav")   ## suena (único sonido) durante el glitch de la muerte
 
 @export_group("Peso del golpe al ojo")
 @export var temblor_golpe_ojo := 3.0        ## px de temblor de cámara por golpe al ojo
@@ -294,9 +297,13 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 
 @export_group("Aparición (estilo Cult of the Lamb)")
 @export var aparicion_cine := true          ## sube desde el suelo con temblor la primera vez
-@export var aparicion_temblor := 2.0        ## s de temblor creciente antes de salir
-@export var aparicion_subida := 0.6         ## s que tarda en salir del piso
+@export var aparicion_temblor := 2.8        ## s de temblor creciente antes de salir
+@export var aparicion_subida := 1.5         ## s que tarda en salir del piso
 @export var aparicion_shake_max := 12.0
+@export var aparicion_calma := 1.3          ## s de silencio absoluto tras el temblor (el corazón se corta)
+@export var aparicion_acecho := 1.9         ## s en que algo asoma lento, en silencio, antes de explotar
+@export var aparicion_asomo := 0.4          ## 0..1: cuánto sube durante el acecho (0.4 = solo las puntas)
+@export var aparicion_acercamiento := 1.1   ## zoom lento de la cámara durante la espera (1 = sin)
 @export var sonido_aparicion: AudioStream = preload("res://assets/audio/sfx/gen/jefe_grito.wav")   ## grito al salir del piso
 @export var volumen_aparicion_db := 0.0
 @export_group("")
@@ -353,6 +360,7 @@ var _abierta_offset0 := Vector2.ZERO
 var _hurt_col0 := Vector2.ONE
 var _blanco_col0 := Vector2.ONE
 var _circulo_radio0 := 0.0
+var _plantillas: Array = []   # [[ [tipo, pos_global], ... ] x oleada] leídas de Oleada1/Oleada2
 var _sin_tallo := false       # F3: se arrancó del tallo
 var _x_base := 0.0            # x del cuerpo que respeta el temblor del aviso de cierre
 var _temblando := false
@@ -389,6 +397,17 @@ var _traidor: Node2D = null
 
 
 func _ready() -> void:
+	# Enemigos de las oleadas puestos a mano: se leen como plantillas y se borran (se invocan en su momento).
+	for n in ["Oleada1", "Oleada2"]:
+		var lista: Array = []
+		var nivel := get_tree().current_scene
+		var raiz := nivel.get_node_or_null(n) if nivel != null else null   # viven en la escena del nivel
+		if raiz != null:
+			for c in raiz.get_children():
+				lista.append([str(c.get("tipo")), (c as Node2D).global_position, c])
+				raiz.remove_child(c)   # queda como molde (fuera del árbol): se clona con sus propiedades del Inspector
+			raiz.queue_free()
+		_plantillas.append(lista)
 	if Engine.is_editor_hint():
 		_capturar_arte_base()
 		_capturar_transforms()
@@ -528,6 +547,7 @@ func _bucle() -> void:
 	_gen += 1
 	var gen := _gen
 	await _aparicion(gen)
+	_hud_visible(true)
 	if not _sigue(gen):
 		return
 	_energia_jefe(true)
@@ -1371,24 +1391,30 @@ func _resurgir() -> void:
 ## Mientras está escondida no ataca: solo 2 oleadas de enemigos comunes (respiro y curación).
 func _interludio(gen: int) -> void:
 	_estado = "interludio"
-	await _oleada(gen, oleada1_cultistas, 0)
+	await _oleada(gen, 0, oleada1_cultistas, 0)
 	if not _sigue(gen):
 		return
 	await _esperar(pausa_entre_oleadas)
 	if not _sigue(gen):
 		return
-	await _oleada(gen, oleada2_cultistas, oleada2_arqueros)
+	await _oleada(gen, 1, oleada2_cultistas, oleada2_arqueros)
 
 
-func _oleada(gen: int, cultistas: int, arqueros: int) -> void:
+## Si `Oleada1`/`Oleada2` tienen enemigos puestos en el editor, esos mandan (tipo + posición); si no, los contadores.
+func _oleada(gen: int, idx: int, cultistas: int, arqueros: int) -> void:
 	var tipos: Array = []
-	for _i in cultistas:
-		tipos.append("cultista")
-	for _i in arqueros:
-		tipos.append("arquero")
+	var plant: Array = _plantillas[idx]
+	if plant.is_empty():
+		for _i in cultistas:
+			tipos.append("cultista")
+		for _i in arqueros:
+			tipos.append("arquero")
+	else:
+		for t in plant:
+			tipos.append(t[0])
 	_invocados_vivos = tipos.size()
 	for i in tipos.size():
-		_invocar(tipos[i], i)
+		_invocar(tipos[i], i, plant[i][1] if not plant.is_empty() else null, plant[i][2] if not plant.is_empty() else null)
 		if i < tipos.size() - 1:
 			await _esperar(escalonado_oleada)
 			if not _sigue(gen):
@@ -1399,15 +1425,18 @@ func _oleada(gen: int, cultistas: int, arqueros: int) -> void:
 
 
 ## Entran alternando costados, desde el borde visible menos `margen_spawn` (los topes del pozo no los dejan caer).
-func _invocar(tipo: String, i: int) -> void:
-	var e = ENEMY_SCENE.instantiate()
+func _invocar(tipo: String, i: int, pos_local = null, molde: Node = null) -> void:
+	var e = molde.duplicate() if molde != null else ENEMY_SCENE.instantiate()
 	e.set("tipo", tipo)
 	e.set("spawn_telegrafiado", true)
 	var lado := -1.0 if i % 2 == 0 else 1.0
 	var fila := floori(i / 2.0)
 	var x := global_position.x + lado * (_mitad_vista() - margen_spawn - fila * separacion_oleada)
 	var y := global_position.y - 150.0
-	if tipo == "arquero":
+	if pos_local != null:
+		x = pos_local.x
+		y = pos_local.y
+	elif tipo == "arquero":
 		# Los arqueros aparecen en la plataforma más alta de su lado y disparan desde arriba.
 		var alto := INF
 		for pl in plataformas_raiz.get_children():
@@ -1436,7 +1465,7 @@ func _on_invocado_muerto(e: Node) -> void:
 ## Anti soft-lock: un invocado que quedó fuera de la sala cuenta como muerto.
 func _revisar_limbo() -> void:
 	for e in _invocados:
-		if is_instance_valid(e) and not e.has_meta("contado") and (e as Node2D).global_position.y > global_position.y + 400.0:
+		if is_instance_valid(e) and not e.has_meta("contado") and ((e as Node2D).global_position.y > global_position.y + 400.0 or absf((e as Node2D).global_position.x - global_position.x) > _mitad_vista() * 2.0):
 			if e.has_method("matar_por_caida"):
 				e.matar_por_caida()
 			_on_invocado_muerto(e)
@@ -2520,8 +2549,7 @@ func _energia_jefe(on: bool) -> void:
 ## ruge (el ojo se abre de golpe) y entran las barras con el nombre. Solo la primera vez.
 func _aparicion(gen: int) -> void:
 	if not aparicion_cine or _aparicion_vista:
-		_grito(volumen_aparicion_db - 6.0)
-		_cine_entrada()
+		_grito(volumen_aparicion_db - 6.0)   # reintento: el jefe ya está ahí, sin barras ni nombre
 		return
 	_aparicion_vista = true
 	_estado = "aparicion"
@@ -2532,19 +2560,34 @@ func _aparicion(gen: int) -> void:
 	var headless := DisplayServer.get_name() == "headless"
 	if headless:
 		cuerpo.visible = true
-		nudo.visible = true
+		nudo.visible = nudo.mostrar_arte
 		cuerpo.position.y = -_altura_reposo
 		_ajustar_tallo()
 		if p != null:
 			p.set("cinematica_activa", false)
 		return
 	_silencio(true)
+	_hud_visible(false)   # cinemática limpia; se devuelve al terminar la aparición (en _bucle)
 	var cam := get_viewport().get_camera_2d()
+	var zona0 := get_tree().get_first_node_in_group("latido_jefe")
+	var frec0: float = zona0.get("frecuencia") if zona0 != null else 1.0
+	var escala_cam: float = cam.get("_escala_arena") if cam != null and "_escala_arena" in cam else 1.0
+	# Cine desde el primer segundo: barras + viñeta; el nombre llega recién cuando el jefe ya salió.
+	var retraso := aparicion_temblor + aparicion_calma + aparicion_acecho + aparicion_subida + 0.5
+	if intro_cine:
+		JefeCine.entrada(get_tree(), nombre_jefe, color_fase1, retraso + 4.4, retraso)
+	var dur_zoom := aparicion_temblor + aparicion_calma + aparicion_acecho
+	JefeCine.lente(get_tree(), dur_zoom)   # bordes negros que vibran mientras la cámara se acerca
+	_sfx(sonido_vibracion, -6.0)
+	if cam != null and cam.has_method("escala_arena"):
+		cam.escala_arena(escala_cam * aparicion_acercamiento, aparicion_temblor + aparicion_calma + aparicion_acecho)   # empuje lento hacia el suelo
 	var t := 0.0
 	while t < aparicion_temblor:
 		if gen != _gen:
 			return
 		var k := t / maxf(aparicion_temblor, 0.01)
+		if zona0 != null:
+			zona0.set("frecuencia", frec0 * (1.0 + 1.6 * k))   # el corazón se acelera
 		if cam != null and cam.has_method("shake"):
 			cam.shake(2.0 + k * aparicion_shake_max * 0.6, 0.3)
 		JuiceFx.escombros(get_tree(), global_position + Vector2(randf_range(-260.0, 260.0), -10.0), Color(0.42, 0.3, 0.55), 4 + int(k * 8.0), 0.8)
@@ -2553,9 +2596,28 @@ func _aparicion(gen: int) -> void:
 		t += 0.25
 	if gen != _gen:
 		return
+	# Calma: todo se detiene de golpe. Sin latido, sin polvo. Algo asoma despacio, en silencio.
+	if zona0 != null:
+		zona0.set("frecuencia", frec0)
+		if zona0.has_method("silenciar"):
+			zona0.silenciar(aparicion_calma + aparicion_acecho + 0.2)
+	await _esperar(aparicion_calma)
+	if gen != _gen:
+		return
 	cuerpo.visible = true
-	nudo.visible = true
+	nudo.visible = nudo.mostrar_arte
 	cuerpo.position.y = profundidad_escondida
+	if DisplayServer.get_name() != "headless":
+		_tw_cuerpo = create_tween().set_parallel(true)
+		_tw_cuerpo.tween_property(cuerpo, "position:y", lerpf(profundidad_escondida, -_altura_reposo, aparicion_asomo), aparicion_acecho * 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_tw_cuerpo.tween_method(func(_v: float) -> void: _ajustar_tallo(), 0.0, 1.0, aparicion_acecho * 0.7)
+	await _esperar(aparicion_acecho)
+	if gen != _gen:
+		return
+	if cam != null and cam.has_method("escala_arena"):
+		cam.escala_arena(escala_cam, 0.35)   # la cámara retrocede de golpe
+	if zona0 != null and zona0.has_method("sobresaltar"):
+		zona0.sobresaltar(1.0)
 	_grito(volumen_aparicion_db)
 	JuiceFx.escombros(get_tree(), global_position + Vector2(0, -30), Color(0.42, 0.3, 0.55), 26, 1.5)
 	if cam != null and cam.has_method("shake"):
@@ -2567,7 +2629,7 @@ func _aparicion(gen: int) -> void:
 		return
 	if cam != null and cam.has_method("punch"):
 		cam.punch(1.08)
-	_slowmo(0.35, 0.4)
+	_slowmo(0.25, 0.9)
 	var zona := get_tree().get_first_node_in_group("latido_jefe")
 	if zona != null:
 		zona.set("intensidad", latido_pico_aparicion)   # el corazón de la sala "golpea" al salir
@@ -2578,10 +2640,9 @@ func _aparicion(gen: int) -> void:
 		tw.tween_property(cuerpo, "position:x", 7.0, 0.04)
 		tw.tween_property(cuerpo, "position:x", -7.0, 0.04)
 	tw.tween_property(cuerpo, "position:x", 0.0, 0.04)
-	await _esperar(0.6)
-	_poner_ojo(0.0)
-	_cine_entrada()
 	await _esperar(0.8)
+	_poner_ojo(0.0)
+	await _esperar(1.9)
 	_silencio(false)
 	if p != null and is_instance_valid(p):
 		p.set("cinematica_activa", false)
@@ -2592,6 +2653,12 @@ func _grito(volumen_db: float) -> void:
 	var audio := get_node_or_null("/root/AudioManager")
 	if audio != null and sonido_aparicion != null:
 		audio.play_sfx(sonido_aparicion, volumen_db)
+
+
+func _hud_visible(on: bool) -> void:
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud != null:
+		hud.set("visible", on)
 
 
 func _silencio(on: bool) -> void:
@@ -2616,12 +2683,6 @@ func _rugido(fuerza: float) -> void:
 		cam.shake(fuerza, 0.35)
 
 
-func _cine_entrada() -> void:
-	if not intro_cine or DisplayServer.get_name() == "headless":
-		return
-	JefeCine.entrada(get_tree(), nombre_jefe, color_fase1, intro_duracion)
-
-
 func _morir() -> void:
 	if _muerto:
 		return
@@ -2642,6 +2703,10 @@ func _morir() -> void:
 	_energia_jefe(false)
 	_ambiente_combate(false)
 	_rugido(14.0)
+	if DisplayServer.get_name() != "headless":
+		# Golpe final: silencio total y el jefe se "glitchea" y estalla en caos antes del destello.
+		_slowmo(muerte_glitch + 0.3, 0.12)
+		await JefeCine.glitch_muerte(get_tree(), self, cuerpo, cuerpo.global_position, color_fase3, muerte_glitch, sonido_glitch).terminado
 	_sfx(sfx_muerte, 3.0)
 	if DisplayServer.get_name() != "headless":
 		_slowmo(muerte_slowmo, muerte_slowmo_escala)

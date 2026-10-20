@@ -14,6 +14,13 @@ var _proximo := 0.0
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Los ui_* de este proyecto no traen botones de mando para aceptar/volver/cruceta lateral: se agregan acá.
+	for par in [["ui_accept", JOY_BUTTON_A], ["ui_cancel", JOY_BUTTON_B],
+			["ui_left", JOY_BUTTON_DPAD_LEFT], ["ui_right", JOY_BUTTON_DPAD_RIGHT]]:
+		var e := InputEventJoypadButton.new()
+		e.button_index = par[1]
+		if not InputMap.action_has_event(par[0], e):
+			InputMap.action_add_event(par[0], e)
 
 
 func _en_menu() -> bool:

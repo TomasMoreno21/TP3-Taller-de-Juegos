@@ -1,5 +1,5 @@
 # GDD — qué actualizar al final del proyecto
-Documento: `docs/GDD Spirit Keeper.docx` (fuente en `docs/gdd_fuente/`). Estado: redactado con el prototipo del 13/10.
+Documento: `docs/GDD Spirit Keeper.docx` (fuente en `docs/gdd_fuente/`). Estado: actualizado el 20/10 (capturas nuevas, controles, jefe 450 de vida, cómics, logo real, índice con páginas reales).
 
 ## Datos a confirmar / actualizar
 - Autores: Franco Hereñú sin DNI (solo está en el concepto TP3); completar.
