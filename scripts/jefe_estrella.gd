@@ -32,11 +32,11 @@ enum Fase { UNO, DOS, TRES }
 const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: las UV de Núcleo y puntas están en esta escala
 
 @export_group("Vida y daño")
-@export var vida_max := 600
+@export var vida_max := 450
 @export var ola_asignada := 0               ## para el Encounter (enemigo manual)
 @export_range(0.0, 1.0, 0.01) var umbral_fase2 := 0.66   ## fracción de vida donde empieza la F2
 @export_range(0.0, 1.0, 0.01) var umbral_fase3 := 0.33
-@export var curacion_fin_fase := 25         ## orbe de vida al cambiar de fase
+@export var curacion_fin_fase := 40         ## orbe de vida al cambiar de fase
 @export var distancia_orbe := 520.0         ## px del centro (del lado del jugador) donde aparece el orbe
 @export var mostrar_barra_hud := false      ## la vida se lee en el cuerpo (grietas finas + venas del ojo), no en el HUD
 @export var orden_puntas: Array[int] = [5, 0, 3, 1, 2, 6, 4]   ## en qué orden se agrietan las puntas (nunca se rompen)
@@ -59,8 +59,8 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 @export var semilla := 0                    ## 0 = al azar; fija = tandas repetibles (tests)
 
 @export_group("Rayo de los ojos")
-@export var dano_rayo := 10
-@export var aviso_rayo := 0.7
+@export var dano_rayo := 7
+@export var aviso_rayo := 0.9
 @export var ancho_rayo := 36.0
 @export var largo_rayo := 2600.0
 @export var intervalo_rayo_f1 := 2.1        ## convive con la lanza
@@ -70,7 +70,7 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 
 @export_group("F1: llaves, nudo y castigo")
 @export var energia_por_ojo := 12.0         ## energía que da cerrar un ojo verde
-@export var ventana_castigo := 4.5          ## s que el ojo queda bajo y golpeable
+@export var ventana_castigo := 6.0          ## s que el ojo queda bajo y golpeable
 @export var altura_ojo_castigo := 200.0     ## px sobre el piso a los que baja el ojo al inclinarse
 @export var inclinacion_castigo := 0.3      ## rad que se ladea al inclinarse
 @export var tiempo_inclinarse := 0.6
@@ -81,12 +81,13 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 @export var rampa_tandas_f1: Array[int] = [2, 3, 3]   ## tandas de llaves por ciclo (ciclo 1, 2, 3+)
 
 @export_group("Lanza")
-@export var dano_lanza := 15
+@export var dano_lanza := 10
+@export var lanzas_f1 := false             ## F1 más fácil: el jefe no tira lanzas (ni de acoso); los ojos siguen con sus rayos
 @export var dano_lanza_f1 := 10            ## en la F1 la lanza pega menos (convive con rayos y acoso)
-@export var aviso_lanza := 0.8
+@export var aviso_lanza := 1.0
 @export var intervalo_lanza := 2.0          ## mientras hay llaves abiertas
 @export var intervalo_lanza_nudo := 2.4     ## mientras el Oso rompe el nudo
-@export var intervalo_lanza_f2 := 2.6       ## F2: también caen lanzas durante las torretas
+@export var intervalo_lanza_f2 := 3.4       ## F2: también caen lanzas durante las torretas
 @export var anticipo_lanza := 0.35           ## la lanza apunta adelante del jugador si corre (× velocidad × aviso)
 @export var acoso_quieto := 1.6             ## s quieto (F1/F2) hasta que le cae una lanza encima
 @export var acoso_distancia := 120.0        ## px que tiene que moverse para no contar como quieto
@@ -96,19 +97,19 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 
 @export_group("F2: torretas y ventana aérea")
 @export var dano_minimo_coraza := 24        ## golpe mínimo del Oso para cerrar la torreta acorazada
-@export var ventana_aerea := 7.0            ## s que el ojo queda elevado y golpeable
+@export var ventana_aerea := 9.0            ## s que el ojo queda elevado y golpeable
 @export var altura_ojo_aerea := 1000.0      ## px sobre el piso: fuera del Lobo desde las plataformas cercanas al centro (330 + 354 + 185 + radio)
 @export var tiempo_elevarse := 0.7
 @export_subgroup("Rampa por ciclo (ciclo 1, 2, 3+)")
 @export var rampa_tandas: Array[int] = [1, 2, 2]          ## tandas de torretas por ciclo
 @export var rampa_ojos_max: Array[int] = [3, 3, 4]        ## ojos máximos por tanda
-@export var rampa_rayo: Array[float] = [2.3, 1.9, 1.6]    ## s entre rayos
-@export var rampa_rayo_grueso: Array[float] = [0.0, 8.0, 7.0] ## s entre rayos gruesos del ojo (0 = sin)
+@export var rampa_rayo: Array[float] = [2.8, 2.4, 2.1]    ## s entre rayos
+@export var rampa_rayo_grueso: Array[float] = [0.0, 11.0, 10.0] ## s entre rayos gruesos del ojo (0 = sin)
 @export_subgroup("")
 @export var aviso_derrumbe := 1.2           ## s de temblor antes de que el piso central se rompa
 
 @export_group("Rayo grueso del ojo (F2)")
-@export var dano_rayo_grueso := 25
+@export var dano_rayo_grueso := 18
 @export var aviso_rayo_grueso := 1.3        ## s que marca la dirección (franja translúcida) antes de disparar
 @export var ancho_rayo_grueso := 70.0
 @export var primer_rayo_grueso := 3.0       ## s desde que se abren las torretas
@@ -200,27 +201,27 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 @export_group("F3: duelo")
 @export var altura_duelo := 650.0           ## altura del ojo mientras pelea
 @export var seguimiento_duelo := 2.2        ## qué tan rápido sigue al jugador en x entre ataques
-@export var respiro_entre_ataques := 0.35
+@export var respiro_entre_ataques := 0.6
 @export var respiro_duelo := 0.5            ## después de cada ventana
-@export var ventana_duelo := 2.0            ## s clavada con el ojo vulnerable
+@export var ventana_duelo := 3.0            ## s clavada con el ojo vulnerable
 @export var altura_agotada := 220.0         ## clavada: el ojo a esta altura (lo alcanza cualquier forma parada)
 @export var ancho_cuerpo := 360.0           ## media anchura del cuerpo para el daño por contacto (× escala)
 @export var alto_cuerpo_arriba := 330.0     ## px del cuerpo sobre el ojo (× escala)
 @export var alto_cuerpo_abajo := 311.0      ## px del cuerpo bajo el ojo (× escala)
-@export var dano_picada := 20
-@export var aviso_picada := 0.75
+@export var dano_picada := 14
+@export var aviso_picada := 0.95
 @export var altura_picada := 1000.0         ## desde dónde cae
-@export var dano_onda_picada := 12
+@export var dano_onda_picada := 8
 @export var velocidad_onda_picada := 600.0
-@export var dano_embestida := 18
-@export var aviso_embestida := 0.8
+@export var dano_embestida := 12
+@export var aviso_embestida := 1.0
 @export var velocidad_embestida := 1500.0
 @export var hueco_embestida := 200.0        ## px libres bajo la estrella al embestir (Lobo y Murciélago pasan)
 @export var ancho_carga_blaster := 14.0    ## px de la franja mientras carga (al disparar se ensancha)
 @export var color_carga_blaster := Color(1, 0.96, 0.96)   ## destello de la franja al disparar
 @export var retroceso_blaster := 40.0      ## px que retrocede al cargar (retroceso del cañón)
 @export var prob_diagonal := 0.4
-@export var dano_orbe := 12
+@export var dano_orbe := 8
 @export var orbes_cantidad := 3            ## rocas que arranca del piso y hace girar
 @export var orbe_radio := 60.0
 @export var orbes_radio_ini := 300.0
@@ -229,12 +230,12 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 @export var orbes_aviso := 0.7            ## s que tardan en subir del piso (no dañan)
 @export var orbes_giro := 2.4               ## rad/s
 @export var color_roca := Color(0.3, 0.3, 0.34)   ## rocas y estalactitas (paleta de la cueva)
-@export var dano_estalactita := 15
+@export var dano_estalactita := 10
 @export var estalactitas_cantidad := 3
 @export var aviso_estalactitas := 1.3       ## s que tiemblan en el techo (con la sombra en el piso) antes de caer
 @export var caida_estalactita := 0.4
 @export var golpes_caparazon := 1           ## golpes fuertes del Oso para romper el círculo del ojo cerrado
-@export var tiempo_caparazon := 4.0         ## si no lo abre en este tiempo, se desclava sin ventana
+@export var tiempo_caparazon := 5.5         ## si no lo abre en este tiempo, se desclava sin ventana
 @export_range(0.0, 1.0, 0.05) var prob_caparazon := 0.4    ## a veces cae con el ojo cerrado
 @export_range(0.0, 1.0, 0.05) var prob_escudo_nino := 0.3   ## a veces usa al niño de escudo
 @export var duracion_escudo := 1.0
@@ -684,7 +685,7 @@ func _physics_process(delta: float) -> void:
 		if _grueso_t <= 0.0:
 			_rayo_grueso()
 			_grueso_t = _rampa(rampa_rayo_grueso, 7.0)
-	if _estado == "llaves" or _estado == "nudo" or (_estado == "torretas" and intervalo_lanza_f2 > 0.0):
+	if (fase != Fase.UNO or lanzas_f1) and (_estado == "llaves" or _estado == "nudo" or (_estado == "torretas" and intervalo_lanza_f2 > 0.0)):
 		_lanza_t -= delta
 		if _lanza_t <= 0.0 and _hay_rayo_chico():
 			_lanza_t = 0.4   # nunca lanza y rayo a la vez: espera a que pase el rayo
@@ -1053,7 +1054,7 @@ func _color_fase() -> Color:
 func _acoso_tick(delta: float) -> void:
 	_acoso_cd -= delta
 	var p := _obtener_player()
-	if p == null or not (_estado in ["llaves", "nudo", "torretas"]):
+	if p == null or not (_estado in ["llaves", "nudo", "torretas"]) or (fase == Fase.UNO and not lanzas_f1):
 		_acoso_t = 0.0
 		return
 	if p.global_position.distance_to(_acoso_pos) > acoso_distancia:

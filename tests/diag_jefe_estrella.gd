@@ -33,7 +33,7 @@ func _init() -> void:
 	var piso_y: float = boss.global_position.y
 
 	# --- Estático: vida, cuerpo, puntos de aparición por franja ---
-	_check(boss.health == 600, "Vida inicial 600: %d" % boss.health)
+	_check(boss.health == boss.vida_max, "Vida inicial %d: %d" % [boss.vida_max, boss.health])
 	_check(absf(piso_y - 1000.0) < 2.0, "El origen de la Estrella está en el piso (y=%.0f)" % piso_y)
 	var cab = boss.cabeza
 	var poligonal: bool = boss.nucleo != null
@@ -108,7 +108,7 @@ func _init() -> void:
 		player._invuln_timer = 0.0
 		var vida0: int = player.health
 		await _wait_frames(70)
-		_check(player.health == vida0 - 10, "El rayo hace 10 de daño (%d -> %d)" % [vida0, player.health])
+		_check(player.health == vida0 - boss.dano_rayo, "El rayo hace %d de daño (%d -> %d)" % [boss.dano_rayo, vida0, player.health])
 		player.god_mode = true
 		player.curar(100)
 	# Parry del rayo (Humano, de frente) → -30 al ojo central; la cabeza no se agrieta, el ojo sí.
@@ -137,6 +137,8 @@ func _init() -> void:
 	bs.take_damage(15, 120.0, 1)
 	_check(boss.health == hp_s and bs.get_node("Collision").disabled and not bs.apuntable(), "F1: el blanco del sónico está apagado (sin daño fuera de las ventanas)")
 	# Acoso: quieto en la F1, le cae una lanza encima antes del intervalo normal.
+	# (por defecto la F1 no tira lanzas: se habilita solo para probar la mecánica)
+	boss.lanzas_f1 = true
 	boss._lanza_t = 99.0
 	boss.acoso_quieto = acoso0
 	boss._acoso_cd = 0.0
@@ -144,7 +146,7 @@ func _init() -> void:
 	player.velocity = Vector2.ZERO
 	var ids_antes: Array = get_nodes_in_group("ataque_jefe").map(func(n) -> int: return n.get_instance_id())
 	var acoso_ok := false
-	for _i in int((acoso0 + 0.4) * 60.0):
+	for _i in int((acoso0 + 1.5) * 60.0):   # margen: el acoso espera a que pase el rayo chico
 		await physics_frame
 		for n in get_nodes_in_group("ataque_jefe"):
 			if n.get("rayo") == false and not ids_antes.has(n.get_instance_id()):
@@ -153,6 +155,7 @@ func _init() -> void:
 			break
 	_check(acoso_ok, "Acoso: quieto %.1f s, le cae una lanza encima" % acoso0)
 	boss.acoso_quieto = 999.0
+	boss.lanzas_f1 = false
 	boss._limpiar_lanzas()
 	boss._lanza_t = boss.intervalo_lanza
 	_check(bs.ignora_melee and bs.is_in_group("blanco_sonico") and not boss.is_in_group("enemy"), "El blanco del sónico no cuenta para el melee ni entra al grupo enemy")
@@ -203,12 +206,12 @@ func _init() -> void:
 	boss.hurtbox.take_damage(1000, 0.0, 1, false)
 	_check(hp1 - boss.health <= boss.tope_dano_castigo and boss._estado != "castigo", "Tope de %d por castigo: la F1 pide varios ciclos (%d -> %d)" % [boss.tope_dano_castigo, hp1, boss.health])
 	boss._recibir_dano(1000)   # (para el test: directo al umbral)
-	_check(boss.health == 396, "El daño se frena en el umbral de la F2 (vida %d)" % boss.health)
+	_check(boss.health == int(boss.vida_max * boss.umbral_fase2), "El daño se frena en el umbral de la F2 (vida %d)" % boss.health)
 	var p0 = boss._puntas[boss.orden_puntas[0]] if poligonal else null
 	var p1 = boss._puntas[boss.orden_puntas[1]] if poligonal else null
 	var p2 = boss._puntas[boss.orden_puntas[2]] if poligonal else null
 	if poligonal:
-		_check(p0.dano == 1.0 and p1.dano == 1.0 and p2.dano > 0.3 and p2.dano < 0.45 and boss._puntas.all(func(pt) -> bool: return pt.visible and not pt.rota) and absf(boss.ojo.herida - 204.0 / 600.0) < 0.01, "Con 204 de daño se agrietan 2⅓ puntas sin partirse y el ojo tiene venas")
+		_check(p0.dano == 1.0 and p1.dano == 1.0 and p2.dano > 0.3 and p2.dano < 0.45 and boss._puntas.all(func(pt) -> bool: return pt.visible and not pt.rota) and absf(boss.ojo.herida - 204.0 / float(boss.vida_max)) < 0.01, "Con 204 de daño se agrietan 2⅓ puntas sin partirse y el ojo tiene venas")
 	_check(not boss.circulo_nudo.encendido, "Roto el nudo, el círculo se apaga")
 
 	# --- Interludio de la F2: la Estrella se hunde, 2 oleadas y lanzas del pozo (desde la 2) ---
@@ -342,7 +345,7 @@ func _init() -> void:
 	boss._rayo_t = 1000.0   # aislar de los rayos chicos
 	await _wait_frames(240)
 	_check(_rayos_gruesos().is_empty(), "En el primer ciclo de la F2 no hay rayo grueso")
-	_check(boss._rampa(boss.rampa_tandas, 0) == 1.0 and boss._rampa(boss.rampa_rayo, 0) == 2.3, "Rampa del ciclo 1: 1 tanda, rayo cada 2.3 s")
+	_check(boss._rampa(boss.rampa_tandas, 0) == 1.0 and boss._rampa(boss.rampa_rayo, 0) == boss.rampa_rayo[0], "Rampa del ciclo 1: 1 tanda, rayo cada %.1f s" % boss.rampa_rayo[0])
 	player.global_position = Vector2(boss.global_position.x - 900.0, piso_y - 143.0)
 	player.velocity = Vector2.ZERO
 	player.god_mode = false
@@ -353,10 +356,10 @@ func _init() -> void:
 	await _wait_frames(30)
 	var gruesos := _rayos_gruesos()
 	_check(boss.ojo.apertura > 0.5, "El ojo se abre para el rayo grueso")
-	_check(gruesos.size() == 1 and gruesos[0].dano == 25 and absf(gruesos[0].ancho - 70.0) < 0.1 and gruesos[0].aviso >= 1.3, "Rayo grueso: 70 de ancho, aviso 1.3 s, 25 de daño")
+	_check(gruesos.size() == 1 and gruesos[0].dano == boss.dano_rayo_grueso and absf(gruesos[0].ancho - 70.0) < 0.1 and gruesos[0].aviso >= 1.3, "Rayo grueso: 70 de ancho, aviso 1.3 s, %d de daño" % boss.dano_rayo_grueso)
 	_check(_rayos().size() == 1, "Durante el rayo grueso no sale ningún rayo chico")
 	await _wait_frames(90)
-	_check(player.health == vida_g - 25, "El rayo grueso pega 25 (%d -> %d)" % [vida_g, player.health])
+	_check(player.health == vida_g - boss.dano_rayo_grueso, "El rayo grueso pega %d (%d -> %d)" % [boss.dano_rayo_grueso, vida_g, player.health])
 	# Golpe que toca al jugador invulnerable: no se gasta y pega cuando vuelve el daño (dentro de su ventana).
 	await _wait_frames(60)
 	player.curar(100)
@@ -366,7 +369,7 @@ func _init() -> void:
 	boss._rayo_grueso()
 	player._invuln_timer = 1.72   # invulnerable al empezar el golpe (0.3 + 1.3 s), vulnerable a mitad
 	await _wait_frames(130)
-	_check(player.health == vida_i - 25, "Un golpe que toca invulnerable no se pierde (%d -> %d)" % [vida_i, player.health])
+	_check(player.health == vida_i - boss.dano_rayo_grueso, "Un golpe que toca invulnerable no se pierde (%d -> %d)" % [vida_i, player.health])
 	player.god_mode = true
 	player.curar(100)
 	boss._rayo_t = 2.0
@@ -451,7 +454,7 @@ func _init() -> void:
 	var vida_e: int = player.health
 	boss.prob_diagonal = 0.0
 	await boss._embestida(g, false)
-	_check(player.health == vida_e - 18, "La embestida le pega 18 al Humano parado (%d -> %d)" % [vida_e, player.health])
+	_check(player.health == vida_e - boss.dano_embestida, "La embestida le pega %d al Humano parado (%d -> %d)" % [boss.dano_embestida, vida_e, player.health])
 	_check(boss.velocidad_embestida >= 1500.0 and not ("_blaster" in boss), "Embestida más rápida y sin estela blanca")
 	player.curar(100)
 	player._invuln_timer = 0.0
@@ -465,7 +468,7 @@ func _init() -> void:
 		player.global_position = boss._orbes_nodos[0].global_position
 		player.velocity = Vector2.ZERO
 		await physics_frame
-	_check(player.health == vida_o - 12, "Un orbe daña 12 (%d -> %d)" % [vida_o, player.health])
+	_check(player.health == vida_o - boss.dano_orbe, "Un orbe daña %d (%d -> %d)" % [boss.dano_orbe, vida_o, player.health])
 	await _wait_frames(int(boss.orbes_duracion * 60.0) + 10)
 	player.curar(100)
 	player._invuln_timer = 0.0
@@ -477,7 +480,7 @@ func _init() -> void:
 	await _wait_frames(3)
 	_check(boss._estalactitas.size() == 3 and boss._estalactitas.all(func(c) -> bool: return c.texture == null), "Estalactitas: 3 tiemblan en el techo")
 	await _wait_frames(int((boss.aviso_estalactitas + boss.caida_estalactita) * 60.0) + 20)
-	_check(player.health == vida_c - 15, "Una estalactita pega 15 (%d -> %d)" % [vida_c, player.health])
+	_check(player.health == vida_c - boss.dano_estalactita, "Una estalactita pega %d (%d -> %d)" % [boss.dano_estalactita, vida_c, player.health])
 	player.god_mode = true
 	player.curar(100)
 	await _wait_frames(40)
@@ -516,7 +519,7 @@ func _init() -> void:
 	# --- Reinicio: vida, puntas, ojos y piso vuelven ---
 	encounter.reiniciar()
 	await _wait_frames(5)
-	_check(boss.health == 600 and boss.fase == 0 and not boss._activo, "Al reiniciar la arena la Estrella vuelve a cero")
+	_check(boss.health == boss.vida_max and boss.fase == 0 and not boss._activo, "Al reiniciar la arena la Estrella vuelve a cero")
 	_check(boss.ojo.herida == 0.0 and boss._puntas.all(func(pt) -> bool: return pt.visible and not pt.rota and pt.dano == 0.0), "Al reiniciar el ojo sana y la cabeza sigue entera")
 	_check(boss._ojos().is_empty(), "Al reiniciar no quedan ojos")
 	_check(boss._invocados.is_empty() and boss.cuerpo.visible, "Al reiniciar no quedan enemigos invocados y la Estrella se ve (sin repetir la aparición)")

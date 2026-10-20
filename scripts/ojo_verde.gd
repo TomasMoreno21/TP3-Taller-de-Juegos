@@ -8,6 +8,8 @@ extends StaticBody2D
 
 signal cerrado
 
+const ORBE_VIDA_SCENE := preload("res://scenes/pickup_vida.tscn")
+
 @export var color_coraza := Color(0.55, 0.55, 0.6)
 @export var radio := 42.0:
 	set(v):
@@ -34,6 +36,8 @@ signal cerrado
 @export var sonido_cerrar: AudioStream = preload("res://assets/audio/sfx/gen/rompible_golpe.wav")
 @export var volumen_db := -6.0
 @export var sonido_rebote: AudioStream = preload("res://assets/audio/sfx/gen/rebote_coraza.wav")
+@export_range(0.0, 1.0, 0.01) var prob_vida := 0.3   ## chance de soltar un orbe de vida al cerrarlo
+@export var curacion_vida := 15                       ## cuánto cura ese orbe
 @export var color_murcielago := Color(0.62, 0.45, 0.9)   ## aro de los ojos altos: el sónico del Murciélago los cierra
 @export_group("Arte (ojos)")
 @export var textura_fondo: Texture2D                  ## ojo1: blanco del ojo (atrás)
@@ -161,8 +165,18 @@ func take_damage(_cantidad: int, _kb: float = 0.0, _dir: int = 1, _critico: bool
 	var audio := get_node_or_null("/root/AudioManager")
 	if audio != null and sonido_cerrar != null:
 		audio.play_sfx(sonido_cerrar, volumen_db, 0.1)
+	if randf() < prob_vida:
+		_soltar_vida()
 	cerrado.emit()
 	_salir()
+
+
+func _soltar_vida() -> void:
+	var orbe: Node2D = ORBE_VIDA_SCENE.instantiate()
+	orbe.set("curacion", curacion_vida)
+	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_tree().root   # nunca dentro de OjosRaiz
+	destino.add_child(orbe)
+	orbe.global_position = global_position
 
 
 ## Cierra el párpado, se achica y se libera.
