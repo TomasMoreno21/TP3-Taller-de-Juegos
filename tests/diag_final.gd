@@ -24,7 +24,13 @@ func _init() -> void:
 	var esc: PackedScene = load("res://scenes/victoria_jefe.tscn")
 	_check(esc != null, "Final: la escena carga")
 	var v: CanvasLayer = esc.instantiate()
-	_check(String(v.escena_siguiente) == "res://scenes/main_menu.tscn", "Final: al terminar vuelve al menú")
+	_check(String(v.escena_siguiente) == "res://scenes/comic_final.tscn", "Final: al terminar sigue el cómic final")
+	_check(not v.con_hijo_en_arena, "Final: resplandor y negro total (el hijo habla en el cómic)")
+	var comic: Control = load("res://scenes/comic_final.tscn").instantiate()
+	var vs := comic.get_node("Paginas").get_children()
+	_check(vs.size() == 6 and String(comic.escena_siguiente) == "res://scenes/creditos_final.tscn", "Cómic final: 6 viñetas y después los créditos")
+	_check(vs[1].hablante == "Hijo" and vs[2].hablante == "Humano" and vs[4].hablante == "Amuleto", "Cómic final: hablan el hijo, el padre y el Amuleto")
+	comic.free()
 	_check(v.lineas.size() == 4 and String(v.lineas[0]).begins_with("[humano]"), "Final: guion A (4 líneas, abre el Humano)")
 	_check(String(v.frase).begins_with("Lo que el bosque se llevó"), "Final: frase final del guion A")
 	_check(v.textura_hijo == null, "Final: el hijo es placeholder (sin textura)")
@@ -48,7 +54,7 @@ func _init() -> void:
 		if dlg.hay_narrativa():
 			estado["vio_narrativa"] = true
 	paused = false
-	_check(bool(estado["vio_narrativa"]), "Final: los globos se muestran (con el árbol pausado)")
+	_check(not bool(estado["vio_narrativa"]), "Final: sin globos sobre la arena (el diálogo es el cómic)")
 	_check(bool(estado["fin"]), "Final: la secuencia termina (%.1f s)" % t)
 	_check(not dlg.hay_narrativa(), "Final: no queda diálogo pendiente")
 	print("DIAG_FINAL: FALLOS = ", fallos)

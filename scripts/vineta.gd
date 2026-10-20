@@ -5,7 +5,7 @@ extends Control
 ## el arte se recorta a esa forma con `clip_children`. Se coloca y se edita en `comic_intro.tscn`.
 ## Si se asigna `textura`, se dibuja esa ilustración en lugar del dibujo por código.
 
-enum Escena { ESPIRITUS, PICNIC, ATRAIDO, BUSCA, ENTRA, AMULETO }
+enum Escena { ESPIRITUS, PICNIC, ATRAIDO, BUSCA, ENTRA, AMULETO, ESTALLIDO, HIJO_LUZ, ABRAZO, CONFESION }   ## las 4 últimas: cómic del final
 
 @export var escena: Escena = Escena.ESPIRITUS
 @export var textura: Texture2D
@@ -202,6 +202,10 @@ func _dibujar_fija() -> void:
 		Escena.BUSCA: _fija_busca()
 		Escena.ENTRA: _fija_entra()
 		Escena.AMULETO: _fija_amuleto()
+		Escena.ESTALLIDO: _fija_estallido()
+		Escena.HIJO_LUZ: _fija_hijo_luz()
+		Escena.ABRAZO: _fija_abrazo()
+		Escena.CONFESION: _fija_confesion()
 
 
 func _dibujar_anim() -> void:
@@ -215,6 +219,9 @@ func _dibujar_anim() -> void:
 		Escena.BUSCA: _anim_busca()
 		Escena.ENTRA: _anim_entra()
 		Escena.AMULETO: _anim_amuleto()
+		Escena.ESTALLIDO: _anim_estallido()
+		Escena.HIJO_LUZ: _anim_hijo_luz()
+		Escena.ABRAZO: _anim_abrazo()
 
 
 # ---- helpers de tinta
@@ -689,3 +696,89 @@ func _anim_amuleto() -> void:
 	for i in 10:
 		var p := Vector2(c.x + sin(i * 2.3 + _t) * 90.0, c.y - fmod(_t * 34.0 + i * 37.0, 190.0))
 		_c.draw_circle(p, 2.5, PAPEL)
+
+
+# ---- Final 1) La estrella estalla en luz
+
+func _fija_estallido() -> void:
+	var w := size.x
+	var h := size.y
+	var c := Vector2(w * 0.5, h * 0.48)
+	_c.draw_rect(Rect2(Vector2.ZERO, size), TINTA)
+	for i in 18:   # rayos de luz que salen de las grietas
+		var a := i * TAU / 18.0 + 0.1
+		var largo := maxf(w, h) * (0.55 + (i % 3) * 0.12)
+		_c.draw_colored_polygon(PackedVector2Array([c + Vector2(cos(a - 0.05), sin(a - 0.05)) * 60.0, c + Vector2(cos(a), sin(a)) * largo,
+				c + Vector2(cos(a + 0.05), sin(a + 0.05)) * 60.0]), GRIS_CLARO if i % 2 == 0 else PAPEL)
+	_poli(_estrella(c, 120.0, 55.0, 7, -PI * 0.5), PAPEL, TINTA, 4.0)
+	for i in 7:   # grietas de la estrella
+		var a := i * TAU / 7.0 - PI * 0.5
+		_c.draw_polyline(PackedVector2Array([c, c + Vector2(cos(a + 0.2), sin(a + 0.2)) * 45.0, c + Vector2(cos(a), sin(a)) * 105.0]), TINTA, 3.0)
+	for i in 9:   # pedazos que salen volando
+		var a := i * TAU / 9.0 + 0.4
+		var p := c + Vector2(cos(a), sin(a)) * (190.0 + (i % 3) * 40.0)
+		_poli(PackedVector2Array([p + Vector2(-12, -6), p + Vector2(10, -10), p + Vector2(6, 12)]), PAPEL, TINTA, 2.5)
+
+
+func _anim_estallido() -> void:
+	var c := Vector2(size.x * 0.5, size.y * 0.48)
+	var k := 0.5 + 0.5 * sin(_t * 3.0)
+	_c.draw_circle(c, 40.0 + 18.0 * k, Color(PAPEL, 0.9))
+	_c.draw_arc(c, 150.0 + fmod(_t * 120.0, 220.0), 0.0, TAU, 40, Color(PAPEL, 0.5), 3.0)
+
+
+# ---- Final 2) El hijo entre la luz
+
+func _fija_hijo_luz() -> void:
+	var w := size.x
+	var h := size.y
+	_c.draw_rect(Rect2(Vector2.ZERO, size), TINTA)
+	var c := Vector2(w * 0.5, h * 0.62)
+	for i in 5:   # halo en anillos
+		_c.draw_circle(c, 260.0 - i * 45.0, PAPEL.lerp(GRIS, 0.75 - i * 0.18))
+	_persona(Vector2(w * 0.5, h * 0.94), 230.0, PAPEL, 1, false, false, 1.0, TINTA, TINTA, true)
+
+
+func _anim_hijo_luz() -> void:
+	var w := size.x
+	var h := size.y
+	for i in 12:   # motas de luz que suben
+		var p := Vector2(w * 0.5 + sin(i * 1.7 + _t * 0.8) * 160.0, h * 0.95 - fmod(_t * 40.0 + i * 41.0, h * 0.8))
+		_c.draw_circle(p, 3.0, PAPEL)
+
+
+# ---- Final 3) Padre e hijo abrazados
+
+func _fija_abrazo() -> void:
+	var w := size.x
+	var h := size.y
+	_c.draw_rect(Rect2(Vector2.ZERO, size), GRIS_OSC)
+	_c.draw_circle(Vector2(w * 0.5, h * 0.55), minf(w, h) * 0.42, GRIS)
+	_rayado(Rect2(0, h * 0.86, w, h * 0.14), 12.0, 16.0, TINTA, 1.5)
+	_persona(Vector2(w * 0.44, h * 0.9), 300.0, TINTA, 1, true, false, 1.0, PAPEL, TINTA, false, true)
+	_persona(Vector2(w * 0.6, h * 0.9), 200.0, PAPEL, 1, false, false, -1.0, TINTA, TINTA, true)
+	# brazos del padre rodeando al hijo
+	_c.draw_arc(Vector2(w * 0.58, h * 0.6), 70.0, PI * 0.9, PI * 2.1, 16, PAPEL, 12.0, true)
+	_c.draw_arc(Vector2(w * 0.58, h * 0.6), 70.0, PI * 0.9, PI * 2.1, 16, TINTA, 8.0, true)
+
+
+func _anim_abrazo() -> void:
+	var c := Vector2(size.x * 0.52, size.y * 0.3)
+	for i in 3:   # trazos de emoción
+		var a := -PI * 0.5 + (i - 1) * 0.5
+		var r := 40.0 + 6.0 * sin(_t * 4.0 + i)
+		_c.draw_line(c + Vector2(cos(a), sin(a)) * r, c + Vector2(cos(a), sin(a)) * (r + 26.0), PAPEL, 4.0)
+
+
+# ---- Final 4) El hijo cuenta lo que pasó
+
+func _fija_confesion() -> void:
+	var w := size.x
+	var h := size.y
+	_c.draw_rect(Rect2(Vector2.ZERO, size), PAPEL)
+	for i in 6:   # el bosque, de fondo
+		_pino(30.0 + i * w / 5.5, h * 0.7, 170.0 + (i % 3) * 40.0, GRIS_CLARO, GRIS)
+	_colina(h * 0.72, 8.0, 0.02, 2.0, GRIS_CLARO)
+	_persona(Vector2(w * 0.68, h * 0.92), 250.0, TINTA, 1, true, false, -1.0, TINTA, TINTA, false, true)
+	_persona(Vector2(w * 0.36, h * 0.92), 190.0, PAPEL, 1, false, false, 1.0, TINTA, TINTA, true)
+

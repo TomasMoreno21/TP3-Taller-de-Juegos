@@ -3,7 +3,7 @@ extends Control
 const SCENE_JUEGO := "res://scenes/comic_intro.tscn"   # intro en viñetas; al terminar carga nivel1
 const SCENE_CONTROLES := "res://scenes/controls.tscn"
 const SCENE_OPCIONES := "res://scenes/opciones.tscn"
-const SCENE_CREDITOS := "res://scenes/creditos.tscn"
+const SCENE_CREDITOS := "res://scenes/creditos_final.tscn"   # los mismos créditos del final (Esc o al terminar vuelve al menú)
 const SCENE_MODO_PRUEBA := "res://scripts/modo_prueba_panel.gd"   # panel armado por código
 
 var _indice := 0
@@ -95,7 +95,7 @@ func _on_boton_pressed(i: int) -> void:
 		&"Opciones":
 			_abrir_panel(SCENE_OPCIONES)
 		&"Creditos":
-			_abrir_panel(SCENE_CREDITOS)
+			TransicionPantalla.de(get_tree()).cambiar_escena(SCENE_CREDITOS)
 		&"Salir":
 			get_tree().quit()
 

@@ -32,6 +32,25 @@ func _init() -> void:
 	boss._sembrar()
 	var piso_y: float = boss.global_position.y
 
+	# Orbe de vida de un ojo alto: cae hasta `altura_orbe` sobre el piso y queda en "orbe_jefe".
+	var ojo_t = load("res://scenes/ojo_verde.tscn").instantiate()
+	ojo_t.prob_vida = 1.0
+	ojo_t.position = Vector2(-600.0, -700.0)
+	boss.ojos_raiz.add_child(ojo_t)
+	ojo_t.aparecer(0.0, false, 0.0)
+	await process_frame
+	ojo_t.take_damage(10)
+	var orbes_t := get_nodes_in_group("orbe_jefe")
+	_check(orbes_t.size() == 1 and absf(orbes_t[0].global_position.y - (piso_y - ojo_t.altura_orbe)) < 2.0, "El ojo alto suelta vida a altura del jugador (%d)" % orbes_t.size())
+	call_group("orbe_jefe", "queue_free")
+	if is_instance_valid(ojo_t):
+		ojo_t.queue_free()
+	await process_frame
+	# El resto mide daños exactos: los ojos no sueltan vida al azar.
+	node_added.connect(func(n: Node) -> void:
+		if n.get("prob_vida") != null and n.has_signal("cerrado"):
+			n.set("prob_vida", 0.0))
+
 	# --- Estático: vida, cuerpo, puntos de aparición por franja ---
 	_check(boss.health == boss.vida_max, "Vida inicial %d: %d" % [boss.vida_max, boss.health])
 	_check(absf(piso_y - 1000.0) < 2.0, "El origen de la Estrella está en el piso (y=%.0f)" % piso_y)
@@ -229,7 +248,8 @@ func _init() -> void:
 	_check(ola1.size() == 3 and ola1.all(func(e) -> bool: return e.tipo == "cultista"), "Oleada 1: 3 cultistas (%d)" % ola1.size())
 	_check(ola1.all(func(e) -> bool: return absf(e.global_position.x - boss.global_position.x) > 400.0), "Los enemigos entran lejos del foso")
 	_check(ola1.any(func(e) -> bool: return e.global_position.x < boss.global_position.x) and ola1.any(func(e) -> bool: return e.global_position.x > boss.global_position.x), "Los enemigos entran por los dos costados")
-	_check(boss.bordes_foso.collision_layer == 4 and boss.bordes_foso.get_children().all(func(c) -> bool: return not c.disabled), "Topes del pozo activos (solo enemigos, capa 3)")
+	if boss.romper_piso_f2:
+		_check(boss.bordes_foso.collision_layer == 4 and boss.bordes_foso.get_children().all(func(c) -> bool: return not c.disabled), "Topes del pozo activos (solo enemigos, capa 3)")
 	var hubo_ataque := false
 	for _i in 300:
 		if not get_nodes_in_group("ataque_jefe").is_empty():
@@ -238,9 +258,10 @@ func _init() -> void:
 		await physics_frame
 	_check(not hubo_ataque, "Respiro: en la oleada 1 no hay luces ni lanzas")
 	var caido = ola1[0]
-	caido.global_position = boss.global_position + Vector2(0, 20)
-	await _wait_frames(10)
-	_check(caido.health <= 0, "Un enemigo que cae al foso muere")
+	if boss.romper_piso_f2:
+		caido.global_position = boss.global_position + Vector2(0, 20)
+		await _wait_frames(10)
+		_check(caido.health <= 0, "Un enemigo que cae al foso muere")
 	for e in _vivos(boss):
 		e.take_damage(9999, 0.0, 1, false)
 	for _i in 400:
@@ -270,16 +291,19 @@ func _init() -> void:
 	var luc = get_first_node_in_group("luciernagas_ambiente")
 	_check(luc != null and luc.color == boss.luciernagas_color_fase[1], "Las luciérnagas toman el color de la F2")
 	_check(_hay_orbe_vida(), "Al cambiar de fase aparece un orbe de vida")
-	_check(boss.foso.activo and boss.losa.get_node("Collision").disabled, "El piso central se rompe y queda el foso")
+	if boss.romper_piso_f2:
+		_check(boss.foso.activo and boss.losa.get_node("Collision").disabled, "El piso central se rompe y queda el foso")
+	else:
+		_check(not boss.foso.activo and not boss.losa.get_node("Collision").disabled and boss.losa.visible, "Sin pozo: el piso de la F2 queda entero (sin pinchos)")
 	var d2 := get_nodes_in_group("destruible_f2")
-	_check(d2.size() == 5 and d2.all(func(n) -> bool: return not n.visible), "En la F2 se rompen braseros, velas, huesos y la estatua (%d)" % d2.size())
+	_check(d2.all(func(n) -> bool: return not n.visible), "En la F2 se rompe la decoración que queda (%d)" % d2.size())
 	var cam = scene.get_node("Camara")
 	_check(absf(cam._escala_arena - boss.escala_arena_f2) < 0.01, "La cámara se aleja en la F2 (escala %.2f)" % cam._escala_arena)
 	_check(cam._fija_pos.distance_to(boss.global_position + boss.centro_camara_f2) < 1.0, "La cámara sube al centro de la sala grande")
 	_check(absf(boss.techo.position.y - (boss._techo_y0 - boss.subida_techo)) < 1.0, "El techo sube %.0f px" % boss.subida_techo)
 	_check(absf(boss.cuerpo.scale.x - boss.escala_jefe_f2) < 0.01, "La Estrella crece (escala %.2f)" % boss.cuerpo.scale.x)
 	var plats: Array = boss.plataformas_raiz.get_children()
-	_check(plats.size() == 6 and plats.all(func(pl) -> bool: return pl.visible and not pl.get_node("Collision").disabled and pl.get_node("Collision").one_way_collision), "Aparecen 6 plataformas (cúpula) que se atraviesan desde abajo")
+	_check(plats.size() == 2 and plats.all(func(pl) -> bool: return pl.visible and not pl.get_node("Collision").disabled and pl.get_node("Collision").one_way_collision), "Aparecen 2 plataformas (una por lado) que se atraviesan desde abajo")
 	var mitad_vista: float = 960.0 / (0.93 * boss.escala_arena_f2)
 	for m in boss.puntos_f2.get_children():
 		_check(absf(m.position.x) < mitad_vista - 60.0 and -m.position.y < boss.subida_techo + 940.0 - 60.0, "Punto F2 %s dentro de la sala grande" % m.name)
@@ -298,7 +322,7 @@ func _init() -> void:
 	for k in range(1, alturas_plat.size()):
 		escalon_max = maxf(escalon_max, alturas_plat[k] - alturas_plat[k - 1])
 	_check(alturas_plat[0] <= 170.0 and escalon_max <= 190.0, "El Humano sube escalón por escalón (%s)" % str(alturas_plat))
-	_check(boss.altura_ojo_aerea == 1000.0, "La ventana aérea es más baja (1000)")
+	_check(boss.altura_ojo_aerea >= alcance_lobo + 100.0, "La ventana aérea queda fuera del Lobo (%.0f >= %.0f)" % [boss.altura_ojo_aerea, alcance_lobo + 100.0])
 	# Abajo: se baja de la plataforma (solo las del jefe están en el grupo), con el input real.
 	var pl1: Node2D = plats[0]
 	player.global_position = pl1.global_position + Vector2(0, -150)
@@ -319,7 +343,7 @@ func _init() -> void:
 	_check(corazas.size() == 1 and boss._franja(corazas[0].position) == 0, "Una torreta baja acorazada")
 	_check(torres.any(func(o) -> bool: return o.position.x < -300.0) and torres.any(func(o) -> bool: return o.position.x > 300.0), "Torretas a los dos lados del foso")
 
-	# Foso: caer pincha (10) y devuelve al borde.
+	# Foso: caer pincha (10) y devuelve al borde (solo si el piso se rompe).
 	player._transformar(0, true)
 	await _wait_frames(10)
 	player._invuln_timer = 0.0
@@ -329,8 +353,11 @@ func _init() -> void:
 	player.global_position = Vector2(boss.global_position.x - 120.0, piso_y - 300.0)
 	player.velocity = Vector2.ZERO
 	await _wait_frames(40)
-	_check(player.health <= vida_f - 10, "Caer al foso hace daño (%d -> %d)" % [vida_f, player.health])
-	_check(absf(player.global_position.x - boss.global_position.x) > 300.0, "Caer al foso devuelve al jugador al borde")
+	if boss.romper_piso_f2:
+		_check(player.health <= vida_f - 10, "Caer al foso hace daño (%d -> %d)" % [vida_f, player.health])
+		_check(absf(player.global_position.x - boss.global_position.x) > 300.0, "Caer al foso devuelve al jugador al borde")
+	else:
+		_check(player.health == vida_f, "Sin pozo: el centro de la F2 no daña (%d -> %d)" % [vida_f, player.health])
 	player.god_mode = true
 
 	# Transformarse no da invulnerabilidad (con 1-4 se encadenaba).
@@ -416,7 +443,7 @@ func _init() -> void:
 	_check(boss.plataformas_raiz.get_children().all(func(pl) -> bool: return not pl.visible and pl.get_node("Collision").disabled), "En la F3 se caen las plataformas")
 	_check(not boss.foso.activo and not boss.losa.get_node("Collision").disabled and boss.losa.visible, "En la F3 el pozo se cierra")
 	var d3 := get_nodes_in_group("destruible_f3")
-	_check(d3.size() >= 2 and d3.all(func(n) -> bool: return not n.visible), "En la F3 se rompe lo que queda (%d)" % d3.size())
+	_check(d3.all(func(n) -> bool: return not n.visible), "En la F3 se rompe lo que queda (%d)" % d3.size())
 
 	# --- F3: duelo directo (sin ojos) ---
 	await _wait_frames(360)

@@ -419,5 +419,132 @@ def generar_jefe():
                                      (mul(tono(0.2, 410), env(n(0.2), 0.001, 0.04)), 0.4)), 0.7)
 
 
+def crujido_piedra(seg, rng, densidad=0.006, lo=500, hi=2600):
+    """Crujido de piedra: ráfaga irregular de chasquidos graves filtrados."""
+    largo = n(seg)
+    x = [0.0] * largo
+    i = 0
+    while i < largo:
+        if rng.random() < densidad:
+            amp = rng.uniform(0.3, 1.0)
+            for k in range(min(n(0.012), largo - i)):
+                x[i + k] += amp * rng.uniform(-1, 1) * math.exp(-k / n(0.003))
+        i += 1
+    return banda(x, lo, hi)
+
+
+def guardar_jefe(nombre, x, _pico=None, rms_obj=-15.0, pico_max=0.7):
+    """Como `guardar`, pero iguala la sonoridad (RMS de la ventana de 100 ms más fuerte) con el resto
+    de los SFX del juego y corta el subgrave (< 40 Hz): antes saturaban al superponerse."""
+    x = pasaaltos(fade(list(x)), 40)
+    v = 4410
+    mejor = max((sum(a * a for a in x[k:k + v]) / v for k in range(0, max(len(x) - v, 1), v // 2)), default=1e-9)
+    rms = math.sqrt(mejor) or 1e-9
+    g = (10 ** (rms_obj / 20.0)) / rms
+    pico = max(abs(a) for a in x) * g
+    if pico > pico_max:
+        g *= pico_max / pico
+    x = [a * g for a in x]
+    ruta = os.path.join(SALIDA, nombre + ".wav")
+    with wave.open(ruta, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(SR)
+        w.writeframes(b"".join(struct.pack("<h", int(max(-1, min(1, a)) * 32767)) for a in x))
+    print("  ", nombre)
+
+
+def chisporroteo(seg, rng, d0, d1, lo, hi):
+    """Chispas eléctricas: chasquidos muy cortos cuya densidad crece de `d0` a `d1` (prob. por muestra)."""
+    largo = n(seg)
+    x = [0.0] * largo
+    for i in range(largo):
+        if rng.random() < d0 + (d1 - d0) * (i / largo) ** 2:
+            amp = rng.uniform(0.4, 1.0)
+            for k in range(min(n(0.004), largo - i)):
+                x[i + k] += amp * rng.uniform(-1, 1) * math.exp(-k / n(0.0008))
+    return banda(x, lo, hi)
+
+
+def trueno(seg, rng, retumbe=0.3, chispas=0.3, rodar=False):
+    """Rayo de tormenta: chasquido de banda ancha (5 ms) + cola de chispas + retumbe grave."""
+    largo = n(seg)
+    chasquido = mul(pasaaltos(ruido(seg, rng), 300), env(largo, 0.0005, 0.004))
+    cola = mul(chisporroteo(seg, rng, 0.008, 0.0, 1500, 7000), env(largo, 0.001, chispas))
+    grave = pasabajos(ruido(seg, rng), 150)
+    if rodar:   # el trueno "rueda": ondulación lenta de la intensidad
+        grave = mul(grave, [0.55 + 0.45 * math.sin(2 * math.pi * 3.2 * k / SR + 1.0) for k in range(largo)])
+    grave = mul(grave, env(largo, 0.02, retumbe))
+    return mezclar((chasquido, 1.0), (cola, 0.6), (grave, 1.6))
+
+
+def generar_jefe_ataques():
+    """Ataques del jefe final (secos y tensos, nada brillante). Semilla propia: no altera el resto.
+    Uso suelto:  python tools/generar_sfx.py jefe_ataques"""
+    r = random.Random(7310)
+    # (consume el azar de las recetas viejas del rayo: así los demás sonidos quedan idénticos)
+    for seg in (0.9, 0.35, 0.35, 1.4, 0.9, 0.9):
+        ruido(seg, r)
+    rr = random.Random(7311)
+    # Rayo de los ojos: como un rayo de tormenta, no un láser (nada de tonos que suben).
+    # Carga: chisporroteo eléctrico cada vez más denso sobre un zumbido grave fijo con trémolo.
+    carga = mezclar((chisporroteo(0.9, rr, 0.0004, 0.006, 1800, 7000), 1.0),
+                    (mul(mul(tono(0.9, 55, None, "tri"), [0.6 + 0.4 * math.sin(2 * math.pi * 11 * k / SR) for k in range(n(0.9))]),
+                         env(n(0.9), 0.7, 0.1, 2.0)), 0.35))
+    guardar_jefe("jefe_rayo_carga", carga)
+    # Disparo: trueno seco (chasquido de banda ancha + chispas + retumbe grave corto).
+    guardar_jefe("jefe_rayo_disparo", trueno(0.6, rr, retumbe=0.25, chispas=0.25))
+    # Rayo grueso: misma familia, más larga, y un trueno que rueda.
+    carga_g = mezclar((chisporroteo(1.4, rr, 0.0003, 0.008, 900, 6000), 1.0),
+                      (mul(mul(tono(1.4, 42, None, "tri"), [0.55 + 0.45 * math.sin(2 * math.pi * 7 * k / SR) for k in range(n(1.4))]),
+                           env(n(1.4), 1.2, 0.1, 2.2)), 0.5))
+    guardar_jefe("jefe_rayo_grueso_carga", carga_g)
+    guardar_jefe("jefe_rayo_grueso", trueno(1.4, rr, retumbe=0.8, chispas=0.5, rodar=True))
+    # Lanza: silbido grave que cae y estaca que se clava en piedra.
+    guardar_jefe("jefe_lanza_aviso", whoosh(0.6, 400, 1800, r, pico_en=0.9), 0.4)
+    guardar_jefe("jefe_lanza_impacto", mezclar((golpe_seco(0.45, 140, 50, 0.1, r, crujido=0.8, crujido_banda=(900, 3500)), 1.0),
+                                          (crujido_piedra(0.4, r, 0.004), 0.5)), 0.75)
+    # Golpe al ojo: carnoso y apagado; el fuerte (cierra la ventana) más grave y largo.
+    guardar_jefe("jefe_ojo_golpe", mezclar((golpe_seco(0.25, 170, 70, 0.06, r, crujido=0.35, crujido_banda=(400, 1500)), 1.0),
+                                      (mul(pasabajos(ruido(0.25, r), 900), env(n(0.25), 0.001, 0.04)), 0.5)), 0.75)
+    guardar_jefe("jefe_ojo_golpe_fuerte", mezclar((golpe_seco(0.7, 120, 38, 0.22, r, crujido=0.5, crujido_banda=(300, 1400)), 1.0),
+                                             (mul(pasabajos(ruido(0.7, r), 400), env(n(0.7), 0.002, 0.25)), 0.7)), 0.85)
+    # Cambio de fase: estallido grave + grieta de piedra + retumbe que se apaga.
+    fase = mezclar((golpe_seco(2.2, 70, 26, 0.6, r), 1.0),
+                   (crujido_piedra(1.4, r, 0.01, 300, 2200), 0.7),
+                   (mul(pasabajos(ruido(2.2, r), 140), env(n(2.2), 0.05, 0.9)), 0.9))
+    guardar_jefe("jefe_fase", fase, 0.9)
+    # Embestida: carga (rumor que sube) y paso (soplo grave y pesado).
+    guardar_jefe("jefe_embestida_carga", mul(mezclar((tono(0.9, 45, 110, "tri"), 1.0), (pasabajos(ruido(0.9, r), 300), 0.8)),
+                                        env(n(0.9), 0.8, 0.08, 2.0)), 0.7)
+    guardar_jefe("jefe_embestida", mezclar((whoosh(0.8, 200, 900, r, pico_en=0.3), 1.0),
+                                      (mul(tono(0.8, 70, 40, "tri"), env(n(0.8), 0.05, 0.3)), 0.6)), 0.8)
+    # Picada: impacto muy pesado contra el piso con escombros.
+    guardar_jefe("jefe_picada_impacto", mezclar((golpe_seco(1.2, 85, 28, 0.35, r, crujido=0.6, crujido_banda=(600, 2500)), 1.0),
+                                           (desplazar(crujido_piedra(0.8, r, 0.008), 0.05), 0.6),
+                                           (mul(pasabajos(ruido(1.2, r), 160), env(n(1.2), 0.01, 0.5)), 0.7)), 0.9)
+    # Estalactitas: crujido en el techo (aviso) y rotura al caer.
+    guardar_jefe("jefe_estalactita_crujido", mul(crujido_piedra(1.2, r, 0.003, 400, 2000), env(n(1.2), 0.9, 0.15, 1.5)), 0.6)
+    guardar_jefe("jefe_estalactita_caida", mezclar((golpe_seco(0.5, 200, 70, 0.08, r, crujido=1.0, crujido_banda=(1200, 5000)), 1.0),
+                                              (crujido_piedra(0.45, r, 0.012, 800, 4000), 0.6)), 0.75)
+    # Rocas que se arrancan del piso y giran: rumor de piedra.
+    guardar_jefe("jefe_rocas", mezclar((crujido_piedra(0.9, r, 0.008, 300, 1800), 0.8),
+                                  (mul(pasabajos(ruido(0.9, r), 200), env(n(0.9), 0.3, 0.3)), 1.0)), 0.7)
+    # Ojo verde que aparece: "plop" seco y apagado (sin brillo).
+    guardar_jefe("ojo_aparecer", mezclar((golpe_seco(0.18, 320, 160, 0.04, r), 1.0),
+                                    (mul(pasabajos(ruido(0.18, r), 1200), env(n(0.18), 0.002, 0.03)), 0.3)), 0.5)
+    # Muerte: grieta larga, estallido y derrumbe que se apaga.
+    muerte = mezclar((crujido_piedra(1.0, r, 0.012, 300, 2400), 0.7),
+                     (desplazar(golpe_seco(2.8, 60, 22, 0.9, r, crujido=0.4, crujido_banda=(400, 1800)), 0.8), 1.0),
+                     (desplazar(mul(pasabajos(ruido(3.0, r), 180), env(n(3.0), 0.1, 1.2)), 0.8), 0.9),
+                     (desplazar(crujido_piedra(2.0, r, 0.004, 500, 2600), 1.2), 0.4))
+    guardar_jefe("jefe_muerte", muerte, 0.9)
+
+
 if __name__ == "__main__":
-    generar()
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "jefe_ataques":
+        generar_jefe_ataques()
+    else:
+        generar()
+        generar_jefe_ataques()

@@ -8,6 +8,7 @@ signal terminado
 
 @export_file("*.tscn") var escena_siguiente := "res://scenes/nivel1.tscn"
 @export var cambiar_escena_al_terminar := true
+@export var texto_ultima := "Clic para empezar la aventura"   ## pista en la última viñeta
 
 var _vinetas: Array[Control] = []
 var _indice := -1   # última viñeta revelada
@@ -78,7 +79,7 @@ func _actualizar_pista() -> void:
 	var ultima := _indice >= _vinetas.size() - 1
 	var dlg := get_node_or_null("/root/Dialogo")
 	var tecla_omitir: String = dlg.nombre_accion("dialog_skip") if dlg != null else "Esc"
-	pista.text = ("Clic para empezar la aventura" if ultima else "Clic para continuar") + "   ·   %s: omitir" % tecla_omitir
+	pista.text = (texto_ultima if ultima else "Clic para continuar") + "   ·   %s: omitir" % tecla_omitir
 
 
 func _terminar() -> void:

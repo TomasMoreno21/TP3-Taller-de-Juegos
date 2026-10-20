@@ -98,7 +98,7 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 @export_group("F2: torretas y ventana aérea")
 @export var dano_minimo_coraza := 24        ## golpe mínimo del Oso para cerrar la torreta acorazada
 @export var ventana_aerea := 9.0            ## s que el ojo queda elevado y golpeable
-@export var altura_ojo_aerea := 1000.0      ## px sobre el piso: fuera del Lobo desde las plataformas cercanas al centro (330 + 354 + 185 + radio)
+@export var altura_ojo_aerea := 900.0       ## px sobre el piso: fuera del Lobo desde las plataformas (170 + 354 + 185 + radio)
 @export var tiempo_elevarse := 0.7
 @export_subgroup("Rampa por ciclo (ciclo 1, 2, 3+)")
 @export var rampa_tandas: Array[int] = [1, 2, 2]          ## tandas de torretas por ciclo
@@ -106,6 +106,7 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 @export var rampa_rayo: Array[float] = [2.8, 2.4, 2.1]    ## s entre rayos
 @export var rampa_rayo_grueso: Array[float] = [0.0, 11.0, 10.0] ## s entre rayos gruesos del ojo (0 = sin)
 @export_subgroup("")
+@export var romper_piso_f2 := false         ## true = al entrar a la F2 el piso central se rompe (pozo con pinchos)
 @export var aviso_derrumbe := 1.2           ## s de temblor antes de que el piso central se rompa
 
 @export_group("Rayo grueso del ojo (F2)")
@@ -116,9 +117,9 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 @export var color_rayo_grueso := Color(0.75, 0.9, 1.0)
 
 @export_group("F2: sala más grande")
-@export var escala_arena_f2 := 0.72         ## multiplica el zoom de la forma (< 1 = la cámara se aleja)
-@export var centro_camara_f2 := Vector2(0, -746)   ## centro de la cámara en la F2, relativo al origen (piso)
-@export var subida_techo := 580.0           ## px que sube el techo de raíces
+@export var escala_arena_f2 := 0.82         ## multiplica el zoom de la forma (< 1 = la cámara se aleja)
+@export var centro_camara_f2 := Vector2(0, -600)   ## centro de la cámara en la F2, relativo al origen (piso)
+@export var subida_techo := 350.0           ## px que sube el techo de raíces
 @export var escala_jefe_f2 := 1.15
 @export var altura_ojo_f2 := 650.0          ## altura de reposo del ojo en la F2
 @export var duracion_agrandar := 1.5
@@ -193,6 +194,8 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 @export var aviso_cierre := 1.0             ## s finales de una ventana en que el ojo parpadea y la Estrella tiembla
 @export var temblor_cierre := 5.0           ## px de temblor de la Estrella antes de cerrar el ojo
 @export var tip_ojos := "¡Cerrá sus ojos! Lo debilitan."           ## primera tanda de la F2
+@export var tip_nudo := "¡El nudo del tallo! Rompelo con el Oso."   ## primera vez que se abre el nudo (F1)
+@export var tip_castigo := "¡Bajó el ojo! Pegale ahora."            ## primera ventana de castigo (F1)
 @export var tip_coraza := "Ese ojo tiene coraza… solo el Oso la parte."   ## primer ojo acorazado
 @export var tip_ventana := "¡Abrió el ojo! Volale encima, rápido."    ## primera ventana aérea
 @export var tip_amuleto := "¡El amuleto arde! Tus formas aguantan más."   ## al empezar la pelea
@@ -249,6 +252,31 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 @export var aparicion_traidor := 0.9
 @export var forcejeo_traidor := 0.9         ## s que se resiste antes de ser arrastrado
 @export var duracion_absorcion := 1.8
+
+@export_group("Sonido de ataques")
+@export var volumen_sfx := -10.0            ## volumen base de los sonidos de la pelea (dB; igual que los enemigos)
+@export var sfx_rayo_carga: AudioStream = preload("res://assets/audio/sfx/gen/jefe_rayo_carga.wav")
+@export var sfx_rayo: AudioStream = preload("res://assets/audio/sfx/gen/jefe_rayo_disparo.wav")
+@export var sfx_rayo_grueso_carga: AudioStream = preload("res://assets/audio/sfx/gen/jefe_rayo_grueso_carga.wav")
+@export var sfx_rayo_grueso: AudioStream = preload("res://assets/audio/sfx/gen/jefe_rayo_grueso.wav")
+@export var sfx_lanza_aviso: AudioStream = preload("res://assets/audio/sfx/gen/jefe_lanza_aviso.wav")
+@export var sfx_lanza: AudioStream = preload("res://assets/audio/sfx/gen/jefe_lanza_impacto.wav")
+@export var sfx_ojo_golpe: AudioStream = preload("res://assets/audio/sfx/gen/jefe_ojo_golpe.wav")
+@export var sfx_ojo_golpe_fuerte: AudioStream = preload("res://assets/audio/sfx/gen/jefe_ojo_golpe_fuerte.wav")   ## golpe que cierra la ventana o llega al umbral de fase
+@export var sfx_fase: AudioStream = preload("res://assets/audio/sfx/gen/jefe_fase.wav")
+@export var sfx_embestida_carga: AudioStream = preload("res://assets/audio/sfx/gen/jefe_embestida_carga.wav")
+@export var sfx_embestida: AudioStream = preload("res://assets/audio/sfx/gen/jefe_embestida.wav")
+@export var sfx_picada: AudioStream = preload("res://assets/audio/sfx/gen/jefe_picada_impacto.wav")
+@export var sfx_estalactita_crujido: AudioStream = preload("res://assets/audio/sfx/gen/jefe_estalactita_crujido.wav")
+@export var sfx_estalactita: AudioStream = preload("res://assets/audio/sfx/gen/jefe_estalactita_caida.wav")
+@export var sfx_rocas: AudioStream = preload("res://assets/audio/sfx/gen/jefe_rocas.wav")
+@export var sfx_muerte: AudioStream = preload("res://assets/audio/sfx/gen/jefe_muerte.wav")
+
+@export_group("Peso del golpe al ojo")
+@export var temblor_golpe_ojo := 3.0        ## px de temblor de cámara por golpe al ojo
+@export var hitstop_golpe_fuerte := 0.08    ## s de congelado en el golpe que cierra la ventana
+@export var punch_golpe_fuerte := 1.04      ## zoom de impacto de ese golpe (1 = sin)
+@export var chispas_golpe_ojo := 8          ## partículas por golpe al ojo
 
 @export_group("Ambiente por fase (latido de la sala y luciérnagas)")
 @export var latido_color_fase: Array[Color] = [Color(0.68, 0.7, 0.94), Color(0.66, 0.56, 0.92), Color(0.86, 0.56, 0.62)]
@@ -537,6 +565,8 @@ func _ciclo_f1(gen: int) -> void:
 	_lanza_t = maxf(_lanza_t, 1.2)
 	_poner_ojo(1.0)
 	nudo.activar()
+	_tip_una_vez("nudo", tip_nudo)
+	_sugerir_forma(2, 6.0)   # el nudo es del Oso
 	while _sigue(gen) and not nudo.esta_roto():
 		await _esperar(0.1)
 	if not _sigue(gen):
@@ -549,6 +579,7 @@ func _ciclo_f1(gen: int) -> void:
 	if not _sigue(gen):
 		return
 	_hurtbox_on(true)
+	_tip_una_vez("castigo", tip_castigo)
 	_dano_ventana = 0
 	_ventana_t = ventana_castigo
 	while _sigue(gen) and _estado == "castigo" and _ventana_t > 0.0:
@@ -823,6 +854,9 @@ func _disparar_rayo() -> void:
 	r.ancho = ancho_rayo
 	r.empuje = 180.0
 	r.color = color_rayo
+	r.sonido_aviso = sfx_rayo_carga
+	r.sonido_golpe = sfx_rayo
+	r.volumen_db = volumen_sfx   # (el trueno es picudo: su RMS ya es más bajo que el resto)
 	r.devuelto.connect(_on_rayo_devuelto)
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	destino.add_child(r)
@@ -900,6 +934,8 @@ func _recibir_dano(cantidad: int) -> void:
 	salud_cambio.emit(health, vida_max)
 	_herida_ojo()
 	_flash()
+	_impacto_ojo(health <= piso or (_estado == "castigo" and _dano_ventana >= tope_dano_castigo) \
+			or (_estado == "clavada" and _dano_ventana >= tope_dano_ventana))
 	if health <= 0:
 		_morir()
 		return
@@ -908,6 +944,24 @@ func _recibir_dano(cantidad: int) -> void:
 		_fase_pendiente = true
 		if _estado == "castigo" or _estado == "ventana_aerea":
 			_estado = "fin_castigo"
+
+
+## Peso del golpe al ojo: sonido, chispas y temblor; el que cierra la ventana (o llega al umbral)
+## congela un instante y hace punch de cámara.
+func _impacto_ojo(fuerte: bool) -> void:
+	_sfx(sfx_ojo_golpe_fuerte if fuerte else sfx_ojo_golpe, 1.0 if fuerte else 0.0)
+	if DisplayServer.get_name() == "headless" or health <= 0:
+		return
+	Burst.emitir(self, ojo.global_position, _color_fase().lightened(0.4), chispas_golpe_ojo * (2 if fuerte else 1), 1.0)
+	var cam := get_viewport().get_camera_2d()
+	if cam != null and cam.has_method("shake"):
+		cam.shake(temblor_golpe_ojo * (3.0 if fuerte else 1.0), 0.15)
+	if fuerte:
+		if cam != null and cam.has_method("punch") and punch_golpe_fuerte > 1.0:
+			cam.punch(punch_golpe_fuerte)
+		var hs := get_node_or_null("/root/Hitstop")
+		if hs != null and hs.has_method("freeze") and hitstop_golpe_fuerte > 0.0:
+			hs.freeze(hitstop_golpe_fuerte)
 
 
 ## La vida se lee en el ojo: las venas crecen con la vida perdida y la pupila se encoge con cada golpe.
@@ -988,6 +1042,7 @@ func _transicion_fase(gen: int) -> void:
 	_pintar(col)
 	_ambiente_fase()
 	_rugido(10.0)
+	_sfx(sfx_fase, 2.0)
 	if DisplayServer.get_name() != "headless":
 		JefeCine.grieta(get_tree(), col)
 		_slowmo(0.5, 0.35)
@@ -995,7 +1050,11 @@ func _transicion_fase(gen: int) -> void:
 	_ciclo = 0
 	if fase == Fase.DOS:
 		_destruir_grupo("destruible_f2")
-		await _romper_piso()
+		if romper_piso_f2:
+			await _romper_piso()
+		else:
+			nudo.activo = false
+			nudo.visible = false
 		if not _sigue(gen):
 			return
 		await _hundirse()
@@ -1101,6 +1160,9 @@ func _lanzar_lanza(anticipar: bool = true) -> void:
 	l.ancho = ancho_lanza
 	l.empuje = empuje_lanza
 	l.color = _color_fase().lightened(0.2)
+	l.sonido_aviso = sfx_lanza_aviso
+	l.sonido_golpe = sfx_lanza
+	l.volumen_db = volumen_sfx - 2.0
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	destino.add_child(l)
 
@@ -1182,6 +1244,9 @@ func _rayo_grueso() -> void:
 	r.ancho_aviso = ancho_rayo_grueso
 	r.empuje = 320.0
 	r.color = color_rayo_grueso
+	r.sonido_aviso = sfx_rayo_grueso_carga
+	r.sonido_golpe = sfx_rayo_grueso
+	r.volumen_db = volumen_sfx
 	r.devuelto.connect(_on_rayo_devuelto)
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	destino.add_child(r)
@@ -1341,13 +1406,14 @@ func _invocar(tipo: String, i: int) -> void:
 	var x := global_position.x + lado * (_mitad_vista() - margen_spawn - fila * separacion_oleada)
 	var y := global_position.y - 150.0
 	if tipo == "arquero":
-		# Los arqueros aparecen en las plataformas altas y disparan desde arriba.
+		# Los arqueros aparecen en la plataforma más alta de su lado y disparan desde arriba.
+		var alto := INF
 		for pl in plataformas_raiz.get_children():
 			var n2 := pl as Node2D
-			if n2.visible and n2.position.y < -450.0 and signf(n2.position.x) == lado:
+			if n2.visible and signf(n2.position.x) == lado and n2.position.y < alto:
+				alto = n2.position.y
 				x = n2.global_position.x
 				y = n2.global_position.y - 150.0
-				break
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
 	destino.add_child(e)
 	e.global_position = Vector2(x, y)
@@ -1626,6 +1692,7 @@ func _picada(gen: int, clavar: bool = false) -> void:
 	if not _sigue(gen):
 		return
 	_rugido(14.0 if clavar else 10.0)
+	_sfx(sfx_picada, 1.0 if clavar else 0.0)
 	if not headless:
 		JuiceFx.escombros(get_tree(), to_global(Vector2(x, -10)), Color(0.32, 0.32, 0.36), 14, 1.2)
 	for d in [-1, 1]:
@@ -1671,9 +1738,11 @@ func _embestida(gen: int, ida_y_vuelta: bool) -> void:
 	if not _sigue(gen):
 		return
 	_contacto_dano = dano_embestida
+	_sfx(sfx_embestida)
 	await _ir_a(hasta, desde.distance_to(hasta) / maxf(velocidad_embestida, 1.0))
 	if ida_y_vuelta and _sigue(gen):
 		await _esperar(0.25)
+		_sfx(sfx_embestida, -2.0)
 		await _ir_a(desde, desde.distance_to(hasta) / maxf(velocidad_embestida, 1.0))
 	_contacto_dano = 0
 	if not _sigue(gen):
@@ -1684,6 +1753,7 @@ func _embestida(gen: int, ida_y_vuelta: bool) -> void:
 ## Gaster Blaster (Sans, Undertale): la franja nace fina y parpadea mientras la Estrella retrocede y
 ## tiembla con el ojo abierto; al final se ensancha de golpe en blanco (el disparo).
 func _carga_blaster(linea: Line2D, lado: float) -> void:
+	_sfx(sfx_embestida_carga)
 	if DisplayServer.get_name() == "headless":
 		await _esperar(aviso_embestida)
 		return
@@ -1741,6 +1811,7 @@ func _roca(radio: float) -> Polygon2D:
 func _orbes(gen: int) -> void:
 	_estado = "orbes"
 	_limpiar_orbes()
+	_sfx(sfx_rocas)
 	for i in orbes_cantidad:
 		var o := _roca(orbe_radio)
 		var piso := to_global(Vector2(cuerpo.position.x + (float(i) - (orbes_cantidad - 1) * 0.5) * 260.0, -orbe_radio))
@@ -1796,6 +1867,7 @@ func _lluvia_estalactitas(gen: int) -> void:
 	if p == null:
 		return
 	_rugido(5.0)
+	_sfx(sfx_estalactita_crujido)
 	var lim := _limite_x() + 300.0
 	var xs: Array = [clampf(to_local(p.global_position).x, -lim, lim)]
 	var intentos := 0
@@ -1863,6 +1935,7 @@ func _caer_estalactita(e: Polygon2D) -> void:
 	var tw := e.create_tween()
 	tw.tween_method(paso, 0.0, 1.0, caida_estalactita)
 	tw.tween_callback(func() -> void:
+		_sfx(sfx_estalactita, -3.0)   # al tocar el piso
 		JuiceFx.escombros(get_tree(), Vector2(x, global_position.y - 20.0), color_roca, 10, 1.0)
 		if is_instance_valid(e):
 			e.visible = false)
@@ -2567,6 +2640,7 @@ func _morir() -> void:
 	_energia_jefe(false)
 	_ambiente_combate(false)
 	_rugido(14.0)
+	_sfx(sfx_muerte, 3.0)
 	if DisplayServer.get_name() != "headless":
 		_slowmo(muerte_slowmo, muerte_slowmo_escala)
 		JefeCine.destello_final(get_tree(), muerte_slowmo * 0.55)
@@ -2582,6 +2656,12 @@ func _obtener_player() -> Node2D:
 
 func _esperar(t: float) -> void:
 	await get_tree().create_timer(t, false).timeout   # respeta la pausa
+
+
+func _sfx(stream: AudioStream, extra_db: float = 0.0) -> void:
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null and stream != null:
+		audio.play_sfx(stream, volumen_sfx + extra_db, 0.06)
 
 
 func _slowmo(duracion: float, escala: float) -> void:

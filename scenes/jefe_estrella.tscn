@@ -216,80 +216,10 @@ polygon = PackedVector2Array(-2000, 244, 2000, 244, 2000, 260, -2000, 260)
 position = Vector2(-2093, -146)
 shape = SubResource("RectangleShape2D_techo")
 
-[node name="Estandarte1" parent="TechoArena" unique_id=1371002377 instance=ExtResource("25_estandarte")]
-z_index = -1
-position = Vector2(-950, 400)
-scale = Vector2(0.66, 0.66)
-
-[node name="Estandarte2" parent="TechoArena" unique_id=1148046378 instance=ExtResource("25_estandarte")]
-z_index = -1
-position = Vector2(950, 400)
-scale = Vector2(-0.66, 0.66)
-
 [node name="PlataformasF2" type="Node2D" parent="." unique_id=1323560123]
 
-[node name="Plataforma1" type="StaticBody2D" parent="PlataformasF2" unique_id=775338297 groups=["plataforma_bajable"]]
-position = Vector2(-1200, -160)
-
-[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma1" unique_id=1961038723]
-position = Vector2(0, 15)
-shape = SubResource("RectangleShape2D_plat")
-one_way_collision = true
-
-[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma1" unique_id=325597973]
-visible = false
-color = Color(0.2, 0.18, 0.27, 1)
-polygon = PackedVector2Array(-130, 0, 130, 0, 118, 30, -118, 30)
-
-[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma1" unique_id=701650798]
-visible = false
-color = Color(0.42, 0.3, 0.55, 1)
-polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
-
-[node name="Musgo" type="Node2D" parent="PlataformasF2/Plataforma1" unique_id=1110430269]
-script = ExtResource("21_musgo")
-color_pasto = Color(0.2, 0.25, 0.29, 1)
-color_veta = Color(0.52, 0.6, 0.64, 1)
-color_raiz = Color(0.13, 0.16, 0.19, 1)
-alto_pasto = 7.0
-largo_raices = 26.0
-color_grieta = Color(0.04, 0.06, 0.08, 0.45)
-color_mota = Color(0.55, 0.65, 0.66, 0.22)
-piedra = true
-semilla = 31
-
-[node name="Plataforma2" type="StaticBody2D" parent="PlataformasF2" unique_id=28518161 groups=["plataforma_bajable"]]
-position = Vector2(1200, -160)
-
-[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma2" unique_id=1796630039]
-position = Vector2(0, 15)
-shape = SubResource("RectangleShape2D_plat")
-one_way_collision = true
-
-[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma2" unique_id=1682816025]
-visible = false
-color = Color(0.2, 0.18, 0.27, 1)
-polygon = PackedVector2Array(-130, 0, 130, 0, 118, 30, -118, 30)
-
-[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma2" unique_id=1931780502]
-visible = false
-color = Color(0.42, 0.3, 0.55, 1)
-polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
-
-[node name="Musgo" type="Node2D" parent="PlataformasF2/Plataforma2" unique_id=68260357]
-script = ExtResource("21_musgo")
-color_pasto = Color(0.2, 0.25, 0.29, 1)
-color_veta = Color(0.52, 0.6, 0.64, 1)
-color_raiz = Color(0.13, 0.16, 0.19, 1)
-alto_pasto = 7.0
-largo_raices = 26.0
-color_grieta = Color(0.04, 0.06, 0.08, 0.45)
-color_mota = Color(0.55, 0.65, 0.66, 0.22)
-piedra = true
-semilla = 32
-
 [node name="Plataforma3" type="StaticBody2D" parent="PlataformasF2" unique_id=401160871 groups=["plataforma_bajable"]]
-position = Vector2(-780, -330)
+position = Vector2(-800, -170)
 
 [node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma3" unique_id=467458288]
 position = Vector2(0, 15)
@@ -319,7 +249,7 @@ piedra = true
 semilla = 33
 
 [node name="Plataforma4" type="StaticBody2D" parent="PlataformasF2" unique_id=534324767 groups=["plataforma_bajable"]]
-position = Vector2(780, -330)
+position = Vector2(800, -170)
 
 [node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma4" unique_id=854076729]
 position = Vector2(0, 15)
@@ -347,66 +277,6 @@ color_grieta = Color(0.04, 0.06, 0.08, 0.45)
 color_mota = Color(0.55, 0.65, 0.66, 0.22)
 piedra = true
 semilla = 34
-
-[node name="Plataforma5" type="StaticBody2D" parent="PlataformasF2" unique_id=336592064 groups=["plataforma_bajable"]]
-position = Vector2(-1200, -500)
-
-[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma5" unique_id=256534834]
-position = Vector2(0, 15)
-shape = SubResource("RectangleShape2D_plat")
-one_way_collision = true
-
-[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma5" unique_id=1548952703]
-visible = false
-color = Color(0.2, 0.18, 0.27, 1)
-polygon = PackedVector2Array(-130, 0, 130, 0, 118, 30, -118, 30)
-
-[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma5" unique_id=277898939]
-visible = false
-color = Color(0.42, 0.3, 0.55, 1)
-polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
-
-[node name="Musgo" type="Node2D" parent="PlataformasF2/Plataforma5" unique_id=1506513934]
-script = ExtResource("21_musgo")
-color_pasto = Color(0.2, 0.25, 0.29, 1)
-color_veta = Color(0.52, 0.6, 0.64, 1)
-color_raiz = Color(0.13, 0.16, 0.19, 1)
-alto_pasto = 7.0
-largo_raices = 26.0
-color_grieta = Color(0.04, 0.06, 0.08, 0.45)
-color_mota = Color(0.55, 0.65, 0.66, 0.22)
-piedra = true
-semilla = 35
-
-[node name="Plataforma6" type="StaticBody2D" parent="PlataformasF2" unique_id=1215942289 groups=["plataforma_bajable"]]
-position = Vector2(1200, -500)
-
-[node name="Collision" type="CollisionShape2D" parent="PlataformasF2/Plataforma6" unique_id=1008105525]
-position = Vector2(0, 15)
-shape = SubResource("RectangleShape2D_plat")
-one_way_collision = true
-
-[node name="Visual" type="Polygon2D" parent="PlataformasF2/Plataforma6" unique_id=1999524486]
-visible = false
-color = Color(0.2, 0.18, 0.27, 1)
-polygon = PackedVector2Array(-130, 0, 130, 0, 118, 30, -118, 30)
-
-[node name="Linea" type="Polygon2D" parent="PlataformasF2/Plataforma6" unique_id=727028419]
-visible = false
-color = Color(0.42, 0.3, 0.55, 1)
-polygon = PackedVector2Array(-130, 0, 130, 0, 130, 10, -130, 10)
-
-[node name="Musgo" type="Node2D" parent="PlataformasF2/Plataforma6" unique_id=1208649913]
-script = ExtResource("21_musgo")
-color_pasto = Color(0.2, 0.25, 0.29, 1)
-color_veta = Color(0.52, 0.6, 0.64, 1)
-color_raiz = Color(0.13, 0.16, 0.19, 1)
-alto_pasto = 7.0
-largo_raices = 26.0
-color_grieta = Color(0.04, 0.06, 0.08, 0.45)
-color_mota = Color(0.55, 0.65, 0.66, 0.22)
-piedra = true
-semilla = 36
 
 [node name="Ojos" type="Node2D" parent="." unique_id=1588931262]
 
@@ -437,16 +307,16 @@ position = Vector2(-430, -500)
 position = Vector2(430, -500)
 
 [node name="Punto9" type="Marker2D" parent="PuntosOjos" unique_id=1292026820]
-position = Vector2(760, -720)
+position = Vector2(640, -720)
 
 [node name="Punto10" type="Marker2D" parent="PuntosOjos" unique_id=353944312]
-position = Vector2(-780, -720)
+position = Vector2(-640, -720)
 
 [node name="Punto11" type="Marker2D" parent="PuntosOjos" unique_id=569890497]
-position = Vector2(-860, -430)
+position = Vector2(-700, -430)
 
 [node name="Punto12" type="Marker2D" parent="PuntosOjos" unique_id=2143522009]
-position = Vector2(860, -430)
+position = Vector2(700, -430)
 
 [node name="Punto13" type="Marker2D" parent="PuntosOjos" unique_id=1480561651]
 position = Vector2(-560, -880)
@@ -457,10 +327,10 @@ position = Vector2(560, -880)
 [node name="PuntosOjosF2" type="Node2D" parent="." unique_id=398620381]
 
 [node name="Punto1" type="Marker2D" parent="PuntosOjosF2" unique_id=1301263797]
-position = Vector2(-1100, -150)
+position = Vector2(-900, -150)
 
 [node name="Punto2" type="Marker2D" parent="PuntosOjosF2" unique_id=1075936025]
-position = Vector2(1100, -150)
+position = Vector2(900, -150)
 
 [node name="Punto3" type="Marker2D" parent="PuntosOjosF2" unique_id=1162702631]
 position = Vector2(-480, -150)
@@ -475,19 +345,19 @@ position = Vector2(-850, -480)
 position = Vector2(850, -480)
 
 [node name="Punto7" type="Marker2D" parent="PuntosOjosF2" unique_id=263658266]
-position = Vector2(-1150, -700)
+position = Vector2(-900, -700)
 
 [node name="Punto8" type="Marker2D" parent="PuntosOjosF2" unique_id=1105492680]
-position = Vector2(1150, -700)
+position = Vector2(900, -700)
 
 [node name="Punto9" type="Marker2D" parent="PuntosOjosF2" unique_id=1059420695]
-position = Vector2(-450, -1200)
+position = Vector2(-450, -1100)
 
 [node name="Punto10" type="Marker2D" parent="PuntosOjosF2" unique_id=537802824]
-position = Vector2(450, -1200)
+position = Vector2(450, -1100)
 
 [node name="Punto11" type="Marker2D" parent="PuntosOjosF2" unique_id=886059624]
-position = Vector2(-1050, -1300)
+position = Vector2(-900, -1150)
 
 [node name="Punto12" type="Marker2D" parent="PuntosOjosF2" unique_id=1242723717]
-position = Vector2(1050, -1300)
+position = Vector2(900, -1150)

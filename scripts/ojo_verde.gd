@@ -35,9 +35,11 @@ const ORBE_VIDA_SCENE := preload("res://scenes/pickup_vida.tscn")
 @export var duracion_desaparecer := 0.35
 @export var sonido_cerrar: AudioStream = preload("res://assets/audio/sfx/gen/rompible_golpe.wav")
 @export var volumen_db := -6.0
+@export var sonido_aparecer: AudioStream = preload("res://assets/audio/sfx/gen/ojo_aparecer.wav")
 @export var sonido_rebote: AudioStream = preload("res://assets/audio/sfx/gen/rebote_coraza.wav")
 @export_range(0.0, 1.0, 0.01) var prob_vida := 0.3   ## chance de soltar un orbe de vida al cerrarlo
 @export var curacion_vida := 15                       ## cuánto cura ese orbe
+@export var altura_orbe := 80.0                       ## px sobre el piso donde queda flotando (los ojos altos lo dejan caer hasta acá)
 @export var color_murcielago := Color(0.62, 0.45, 0.9)   ## aro de los ojos altos: el sónico del Murciélago los cierra
 @export_group("Arte (ojos)")
 @export var textura_fondo: Texture2D                  ## ojo1: blanco del ojo (atrás)
@@ -120,6 +122,9 @@ func _abrir() -> void:
 		return
 	abierto = true
 	_poner_colision(true)
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null and sonido_aparecer != null:
+		audio.play_sfx(sonido_aparecer, volumen_db - 6.0, 0.15)
 	var p := get_tree().get_first_node_in_group("player")
 	if p is PhysicsBody2D:
 		(p as PhysicsBody2D).add_collision_exception_with(self)   # flota en el aire: no frena al jugador
@@ -174,9 +179,27 @@ func take_damage(_cantidad: int, _kb: float = 0.0, _dir: int = 1, _critico: bool
 func _soltar_vida() -> void:
 	var orbe: Node2D = ORBE_VIDA_SCENE.instantiate()
 	orbe.set("curacion", curacion_vida)
+	orbe.add_to_group("orbe_jefe")   # la Estrella los borra al reintentar
+	# El padre (OjosRaiz) está en el piso: el orbe cae hasta `altura_orbe`, fuera del pozo de la F2.
+	var piso := get_parent() as Node2D
+	var destino_pos := global_position
+	if piso != null:
+		destino_pos.y = maxf(global_position.y, piso.global_position.y - altura_orbe)
+		var jefe := get_tree().get_first_node_in_group("boss")
+		var foso = jefe.get("foso") if jefe != null else null
+		if foso != null and bool(foso.get("activo")):
+			var margen := float(jefe.get("lado_foso"))
+			var dx := destino_pos.x - piso.global_position.x
+			if absf(dx) < margen:
+				destino_pos.x = piso.global_position.x + (margen if dx >= 0.0 else -margen)
 	var destino: Node = get_tree().current_scene if get_tree().current_scene != null else get_tree().root   # nunca dentro de OjosRaiz
 	destino.add_child(orbe)
 	orbe.global_position = global_position
+	if DisplayServer.get_name() == "headless" or destino_pos.distance_to(global_position) < 4.0:
+		orbe.global_position = destino_pos
+		return
+	var tw := orbe.create_tween()
+	tw.tween_property(orbe, "global_position", destino_pos, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
 
 
 ## Cierra el párpado, se achica y se libera.

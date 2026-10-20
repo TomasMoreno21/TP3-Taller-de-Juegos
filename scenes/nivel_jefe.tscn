@@ -30,7 +30,7 @@ size = Vector2(3700, 200)
 size = Vector2(3700, 760)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_arena_jefe"]
-size = Vector2(1900, 1000)
+size = Vector2(1600, 1000)
 
 [node name="NivelJefe" type="Node2D" unique_id=157071022]
 script = ExtResource("6_niveljefe")
@@ -149,14 +149,6 @@ visible = false
 [node name="Decoracion" type="Node2D" parent="." unique_id=239755062]
 z_index = -5
 
-[node name="Estalagmita1" parent="Decoracion" unique_id=1610986715 instance=ExtResource("36_deco")]
-position = Vector2(300, 1000)
-tipo = 8
-escala = 3.4
-color_noche = Color(0.5, 0.7, 0.8, 1)
-sombra = false
-viento = false
-
 [node name="Hongos1" parent="Decoracion" unique_id=1763146811 instance=ExtResource("36_deco")]
 position = Vector2(900, 1000)
 tipo = 21
@@ -250,28 +242,6 @@ viento = false
 position = Vector2(4100, 1000)
 tipo = 20
 escala = 3.0
-
-[node name="Velas" parent="Decoracion" groups=["destruible_f2"] unique_id=1295040949 instance=ExtResource("36_deco")]
-position = Vector2(4518, 1000)
-tipo = 13
-escala = 2.8
-
-[node name="Huesos" parent="Decoracion" groups=["destruible_f2"] unique_id=1419961560 instance=ExtResource("36_deco")]
-position = Vector2(4520, 1000)
-tipo = 16
-escala = 2.8
-flip_h = true
-
-[node name="Brasero1" parent="Decoracion" groups=["destruible_f2"] unique_id=2081774165 instance=ExtResource("36_deco")]
-position = Vector2(4794, 1000)
-tipo = 12
-escala = 3.2
-
-[node name="Brasero2" parent="Decoracion" groups=["destruible_f2"] unique_id=143448641 instance=ExtResource("36_deco")]
-position = Vector2(5615, 1000)
-tipo = 12
-escala = 3.2
-flip_h = true
 
 [node name="DialogoIntro" parent="." unique_id=2086547178 instance=ExtResource("12_dialog")]
 position = Vector2(500, 900)

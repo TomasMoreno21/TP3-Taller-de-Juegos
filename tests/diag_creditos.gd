@@ -7,8 +7,9 @@ var _termino := false
 
 
 func _init() -> void:
-	var vic = load("res://scenes/victoria_jefe.tscn").instantiate()
-	_check(vic.get("escena_siguiente") == "res://scenes/creditos_final.tscn", "El cierre del jefe sigue con los créditos")
+	var vic = load("res://scenes/comic_final.tscn").instantiate()
+	_check(vic.get("escena_siguiente") == "res://scenes/creditos_final.tscn", "El cómic final sigue con los créditos")
+	_check(load("res://scripts/main_menu.gd").get_script_constant_map().get("SCENE_CREDITOS") == "res://scenes/creditos_final.tscn", "El botón Créditos del menú abre estos créditos")
 	vic.free()
 	var cr = load("res://scenes/creditos_final.tscn").instantiate()
 	cr.escena_siguiente = ""

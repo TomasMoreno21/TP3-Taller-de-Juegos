@@ -1,4 +1,5 @@
 extends CanvasLayer
+## Por defecto: destello → negro total → cómic final (`escena_siguiente`). Con `con_hijo_en_arena`, lo de abajo.
 ## Cierre del juego (lo agrega nivel_jefe.gd al morir el Arzobispo y pausa el árbol; esta escena
 ## corre igual con process_mode = ALWAYS). Secuencia: destello del estallido → el hijo aparece desde
 ## la luz → globos del Humano y el Amuleto (guion A, ver docs/sesiones/final.md) → corte a negro →
@@ -8,7 +9,8 @@ extends CanvasLayer
 
 signal terminada   ## la secuencia acabó (justo antes de cambiar de escena)
 
-@export_group("Guion")
+@export var con_hijo_en_arena := false   ## false = resplandor y negro total; el diálogo con el hijo es el cómic final (`escena_siguiente`)
+@export_group("Guion (solo con el hijo en la arena)")
 @export var lineas := PackedStringArray([
 	"[humano][susurro] Hijo…",
 	"El sello cede. Él está dentro, a salvo.",
@@ -40,7 +42,7 @@ signal terminada   ## la secuencia acabó (justo antes de cambiar de escena)
 @export var color_filete := Color(0.85, 0.72, 0.40)
 @export var largo_filete := 560.0
 @export_group("Después")
-@export_file("*.tscn") var escena_siguiente := "res://scenes/creditos_final.tscn"   ## créditos del final; vacío = no cambiar de escena (tests)
+@export_file("*.tscn") var escena_siguiente := "res://scenes/comic_final.tscn"   ## cómic final (y de ahí los créditos); vacío = no cambiar de escena (tests)
 
 var _luz := 0.0            ## intensidad de la luz del hijo (0..1)
 var _t := 0.0
@@ -124,6 +126,13 @@ func _correr() -> void:
 	t1.tween_property(flash, "color:a", 0.0, destello).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	t1.tween_property(velo, "color:a", oscurecer_mundo, destello * 1.5)
 	await _espera(destello * 0.6)
+	if not con_hijo_en_arena:
+		# Resplandor y la pantalla queda en negro: el diálogo con el hijo sigue en el cómic final.
+		var tn := _tween()
+		tn.tween_property(negro, "color:a", 1.0, fundido_negro).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		await _espera(fundido_negro + pausa_negro)
+		_terminar()
+		return
 	# 2) El hijo emerge de la luz.
 	var t2 := _tween()
 	t2.tween_property(self, "_luz", 1.0, aparicion_hijo).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
@@ -140,6 +149,10 @@ func _correr() -> void:
 	t3.tween_property(negro, "color:a", 1.0, fundido_negro).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await _espera(fundido_negro + pausa_negro)
 	await _mostrar_frase()
+	_terminar()
+
+
+func _terminar() -> void:
 	terminada.emit()
 	if escena_siguiente.is_empty():
 		return

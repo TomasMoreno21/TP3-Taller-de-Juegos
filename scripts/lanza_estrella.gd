@@ -19,6 +19,9 @@ var retraer := 0.3
 var ancho := 70.0
 var empuje := 260.0
 var color := Color(0.95, 0.35, 0.8)
+var sonido_aviso: AudioStream    # suena al empezar el aviso (lo fija la Estrella)
+var sonido_golpe: AudioStream    # suena al salir la lanza/rayo
+var volumen_db := -4.0
 
 var _t := 0.0
 var _golpeo := false
@@ -69,6 +72,7 @@ func _ready() -> void:
 	_punta.color = color
 	_punta.scale = Vector2(0.0, 1.0)
 	add_child(_punta)
+	_sonar(sonido_aviso)
 
 
 func _physics_process(delta: float) -> void:
@@ -88,6 +92,7 @@ func _physics_process(delta: float) -> void:
 		_linea.visible = false
 		_brillo.visible = false
 		_punta.scale = Vector2.ONE
+		_sonar(sonido_golpe)
 		var cam := get_viewport().get_camera_2d()
 		if cam != null and cam.has_method("shake"):
 			cam.shake(6.0, 0.15)
@@ -109,6 +114,12 @@ func _physics_process(delta: float) -> void:
 	_marca.color.a = maxf(0.5 * (1.0 - r), 0.0)
 	if r >= 1.0:
 		queue_free()
+
+
+func _sonar(stream: AudioStream) -> void:
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null and stream != null:
+		audio.play_sfx(stream, volumen_db, 0.08)
 
 
 ## Daña al jugador; el empuje se aleja del origen (así la guardia/parry de frente funciona).

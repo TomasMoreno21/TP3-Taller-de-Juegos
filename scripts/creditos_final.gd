@@ -9,8 +9,8 @@ signal terminada
 @export_group("Integrantes")
 @export var nombres := PackedStringArray(["Tomás Moreno", "Micaela Córdoba", "Franco Hereñú"])
 @export var institucion := "Estudiante de UNRaf"
-@export var roles := PackedStringArray(["Rol a definir", "Artista", "Rol a definir"])
-@export var contactos := PackedStringArray(["Contacto a completar", "Contacto a completar", "Contacto a completar"])
+@export var roles := PackedStringArray(["Game Design y Programación", "Artista", "Game Design y Programación"])
+@export var contactos := PackedStringArray(["Instagram: @tomasss_moreno", "Instagram: @miccacordoba_", "Instagram: @frann_here"])
 @export var formas := PackedInt32Array([3, 1, 2])   ## forma de cada uno (0 Humano, 1 Lobo, 2 Oso, 3 Murciélago)
 @export_group("Cierre")
 @export var titulo_cierre := "SPIRIT KEEPER"
