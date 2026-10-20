@@ -233,8 +233,7 @@ antesala_silencio = 0.3
 
 [node name="JefeEstrella" parent="Encounter/Enemies" parent_id_path=PackedInt32Array(1219823109, 223207692) index="0" unique_id=641933076 instance=ExtResource("7_jefe")]
 position = Vector2(0, 30)
-muerte_glitch = null
-sonido_glitch = null
+sonido_vibracion = null
 
 [node name="Punto1" parent="Encounter/Enemies/JefeEstrella/PuntosOjos" parent_id_path=PackedInt32Array(641933076, 282036340) index="0" unique_id=294438267]
 position = Vector2(-799, -284.4322)
@@ -268,7 +267,7 @@ shape = SubResource("RectangleShape2D_arena_jefe")
 position = Vector2(-5200, -969)
 
 [node name="CheckpointPreJefe" parent="." unique_id=576380468 instance=ExtResource("ck_1")]
-position = Vector2(3375, 933)
+position = Vector2(3080, 844)
 
 [node name="Hud" parent="." unique_id=2014128999 instance=ExtResource("8_hud")]
 visible = false

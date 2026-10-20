@@ -14,7 +14,7 @@
 [ext_resource type="PackedScene" uid="uid://byj8hsa3b1hpe" path="res://scenes/barrera_bosque.tscn" id="15_5uo66"]
 [ext_resource type="Script" uid="uid://2touvx3gobc5" path="res://scripts/herramienta_nivel.gd" id="16_herramienta"]
 [ext_resource type="Script" uid="uid://cui53h2x6gwlf" path="res://scripts/enemigos/enemigo.gd" id="17_roi11"]
-[ext_resource type="Texture2D" uid="uid://cd1d33r08ojaj" path="res://Sprites/Elementos/liana2.png" id="21_8xatx"]
+[ext_resource type="Texture2D" uid="uid://c2u0aw4rfo5k4" path="res://Sprites/Elementos/liana.png" id="21_8xatx"]
 [ext_resource type="PackedScene" path="res://scenes/salida_nivel.tscn" id="30_salida"]
 [ext_resource type="PackedScene" uid="uid://crau0k8d1s5l4" path="res://scenes/pickup.tscn" id="31_pick"]
 [ext_resource type="PackedScene" path="res://scenes/dialog_trigger.tscn" id="32_dtg"]
@@ -1563,7 +1563,7 @@ script = ExtResource("91_plano")
 duracion = 11.5
 zoom = 1.15
 seguir_jugador = true
-globo = PackedStringArray("[humano][susurro]Esta mañana me pidió que dejara la luz del pasillo prendida... y la apagué.", "No te culpes, Humano. Lo que buscan todavía no está completo: hay tiempo, aunque no mucho.", "[humano]Entonces vamos. Que me teman a mí, no a él.")
+globo = PackedStringArray("[humano][susurro]Le dije que se quedara a mi lado, y lo dejé solo un momento. Solo un momento... y se lo llevaron.", "No te culpes, Humano. Lo que buscan todavía no está completo: hay tiempo, aunque no mucho.", "[humano]Entonces vamos. Que me teman a mí, no a él.")
 retraso_globo = 0.4
 pulso = true
 pulso_en = 11.0

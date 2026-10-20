@@ -246,7 +246,7 @@ static var _tips_vistos: Dictionary = {}
 @export_group("")
 var _tajo_tw: Tween
 var _giro_x := 1.0   # -1 = el sprite mira hacia la espalda (segundo tajo del Remate)
-@export var punch_ataque_mult := 0.04  ## pop de escala del sprite al atacar (1 = como antes, 0 = sin pop)
+@export var punch_ataque_mult := 0.0 ## pop de escala del sprite al atacar (1 = como antes, 0 = sin pop)
 @export var shake_golpe_mult := 1.5     ## multiplicador del temblor de cámara al conectar un golpe
 @export var pose_ataque_mult := 2.0     ## multiplicador de la inclinación del sprite al golpear
 var _embestida_t := 0.0
@@ -1017,14 +1017,14 @@ func _handle_attack(delta: float) -> void:
 				or _current_attack_type == "special" \
 				or (_current_attack_type == "light" and _light_step >= forms[current_form].light_combo_steps) \
 				or (_current_attack_type == "heavy" and _heavy_step >= forms[current_form].heavy_combo_steps)
-			if not es_finisher and (_buffered_attack != "" or _attack_air_buffer_type != ""):
+			if not es_finisher and current_form != Form.OSO and (_buffered_attack != "" or _attack_air_buffer_type != ""):
 				# Chain casi inmediato (DMC5): en pasos intermedios el próximo golpe sale al instante.
 				_attack_timer = minf(_attack_timer, 0.03)
 			elif not _early_liberado:
 				_early_liberado = true
 		_buffer_durante_recuperacion()
 		# El golpe en cola completa un combo (p. ej. ligero + fuerte): sale en cuanto el anterior conectó o falló.
-		if _buffered_attack != "" and not airborne and (_hit_applied or _whiff_applied) and _attack_rec - _attack_timer >= combo_encadenar_min and not _buscar_combo(_seq + [_buffered_attack]).is_empty():
+		if _buffered_attack != "" and current_form != Form.OSO and not airborne and (_hit_applied or _whiff_applied) and _attack_rec - _attack_timer >= combo_encadenar_min and not _buscar_combo(_seq + [_buffered_attack]).is_empty():
 			_attack_timer = 0.0
 		if _attack_timer <= 0.0:
 			end_attack()
@@ -1411,7 +1411,7 @@ func iniciar_embestida(combo: Dictionary) -> void:
 		for e in get_tree().get_nodes_in_group("enemy"):
 			if e is PhysicsBody2D and (e.global_position.x - global_position.x) * facing > -150.0 				and absf(e.global_position.x - global_position.x) < dist + 400.0:
 				eximir_solape(e)   # atraviesa a los enemigos del camino (se libera solo al separarse)
-	stretch_y(combo.get("stretch_y", -0.05), dur)
+	stretch_y(combo.get("stretch_y", 0.0), dur)
 	_emitir_polvo(1.0)
 
 
@@ -2581,8 +2581,9 @@ func _iniciar_anim_ataque(anim: String, frame_ini: int = 0) -> void:
 	var fraccion := float(n - fi) / float(n)
 	_attack_anim_speed_scale = _duracion_anim(anim) * fraccion / maxf(_attack_timer, 0.01)
 	visual.play(anim)
-	if fi > 0:
-		visual.set_frame_and_progress(fi, 0.0)
+	# Siempre se fuerza el frame: play() con la misma anim ya sonando no la reinicia (spam de ataques).
+	visual.set_frame_and_progress(fi, 0.0)
+	_anclar_pies()   # frame_changed no salta si el frame no cambió (0 -> 0) y el sprite quedaba con el anclaje de la anim anterior
 	_planificar_anim_ataque(anim, fi)
 	visual.speed_scale = _velocidad_anim_ataque()
 

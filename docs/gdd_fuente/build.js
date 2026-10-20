@@ -19,39 +19,37 @@ function entry(sprite,sw,label,txt,extra=[]){
   return new TableRow({cantSplit:true,children:[left,right]});
 }
 const entries=(rows)=>new Table({width:{size:8640,type:WidthType.DXA},columnWidths:[1700,6940],borders:{top:none,bottom:none,left:none,right:none,insideHorizontal:none,insideVertical:none},rows});
+const cap=(t)=>P([r(t,{italics:true,size:18,color:GRAY})],{alignment:AlignmentType.CENTER,spacing:{before:0,after:200}});
 function gallery(items,w=178){
-  const cw=2880, cells=items.map(([f,cap])=>new TableCell({width:{size:cw,type:WidthType.DXA},borders:nb,margins:{top:40,bottom:40,left:40,right:40},children:[new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:20},children:[img(f,w)]}),new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:60},children:[r(cap,{italics:true,size:18,color:GRAY})]})]}));
-  return new Table({width:{size:8640,type:WidthType.DXA},columnWidths:[2880,2880,2880],borders:{top:none,bottom:none,left:none,right:none,insideHorizontal:none,insideVertical:none},rows:[new TableRow({cantSplit:true,children:cells})]});
+  const cw=Math.floor(8640/items.length), cells=items.map(([f,cap])=>new TableCell({width:{size:cw,type:WidthType.DXA},borders:nb,margins:{top:40,bottom:40,left:40,right:40},children:[new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:20},children:[img(f,w)]}),new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:60},children:[r(cap,{italics:true,size:18,color:GRAY})]})]}));
+  return new Table({width:{size:8640,type:WidthType.DXA},columnWidths:items.map(()=>cw),borders:{top:none,bottom:none,left:none,right:none,insideHorizontal:none,insideVertical:none},rows:[new TableRow({cantSplit:true,children:cells})]});
 }
 const c=[];
 // ---------- Portada
-c.push(new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:200,after:0},children:[img("banner.png",576)]}));
-for(let i=0;i<6;i++)c.push(E());
+c.push(new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:2600,after:600},children:[img("banner.png",576)]}));
 c.push(P([r("GDD (Game Design Document)",{color:GRAY})],{alignment:AlignmentType.CENTER,spacing:{after:0}}));
 c.push(P([r("Spirit Keeper",{color:GRAY})],{alignment:AlignmentType.CENTER,spacing:{after:0}}));
 c.push(E());c.push(E());
-c.push(P("Alumnos:",{alignment:AlignmentType.CENTER,spacing:{after:0}}));
+c.push(P("Alumnos:",{alignment:AlignmentType.CENTER,spacing:{before:1200,after:0}}));
 c.push(P("Córdoba, Micaela Alejandra - 47763620",{alignment:AlignmentType.CENTER,spacing:{after:0}}));
 c.push(P("Hereñú, Franco",{alignment:AlignmentType.CENTER,spacing:{after:0}}));
 c.push(P("Moreno, Tomás Matías - 47583852",{alignment:AlignmentType.CENTER,spacing:{after:0}}));
-c.push(E());c.push(E());
-c.push(P("Universidad Nacional de Rafaela (UNRaf)",{alignment:AlignmentType.CENTER,spacing:{after:0}}));
+c.push(P("Universidad Nacional de Rafaela (UNRaf)",{alignment:AlignmentType.CENTER,spacing:{before:900,after:0}}));
 c.push(P("Materia: Taller de Producción de Videojuegos 2",{alignment:AlignmentType.CENTER,spacing:{after:0}}));
 c.push(P("Docentes:",{alignment:AlignmentType.CENTER,spacing:{after:0}}));
 c.push(P("Nazzetta, Sebastián",{alignment:AlignmentType.CENTER,spacing:{after:0}}));
 c.push(P("Porello, Diego",{alignment:AlignmentType.CENTER,spacing:{after:0}}));
 // ---------- Índice
-c.push(H("Índice"));
-const idx=[["Diagrama de flujo",3],["Descripción, Resumen y Core loop",4],["Pilares de diseño",5],["Niveles y Narrativa",6],["Controles",7],["Gameplay",8],["Formas (personajes) y Enemigos",9],["Progresión y Energía",10],["Jefe final",11],["Sistema de dificultad progresiva",11],["Apartado Visual",12],["Efectos visuales (FX) y Audio",13],["Datos Adicionales",14],["Público objetivo",14]];
+c.push(H("Índice",true));
+const idx=[["Diagrama de flujo",3],["Descripción, Resumen y Core loop",4],["Pilares de diseño",5],["Niveles y Narrativa",5],["Controles",7],["Gameplay",7],["Formas (personajes) y Enemigos",8],["Progresión y Energía",9],["Jefe final",9],["Sistema de dificultad progresiva",10],["Apartado Visual",10],["Efectos visuales (FX) y Audio",11],["Datos Adicionales",11],["Público objetivo",11]];
 for(const [n,p] of idx){
   const dots=" "+"-".repeat(Math.max(6,66-Math.round(n.length*1.25)))+" ";
   c.push(new Paragraph({spacing:{after:0},children:[r(n,{bold:true,size:28}),r(dots+p,{size:28})]}));
-  c.push(new Paragraph({spacing:{after:0},children:[r("",{size:28})]}));
 }
 // ---------- Diagrama de flujo
-c.push(new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:0},children:[img("flujo.png",540)]}));
+c.push(new Paragraph({pageBreakBefore:true,alignment:AlignmentType.CENTER,spacing:{after:0},children:[img("flujo.png",540)]}));
 // ---------- Descripción
-c.push(H("Descripción"));
+c.push(H("Descripción",true));
 c.push(P("Spirit Keeper es un videojuego de acción y plataformas 2D con vista lateral, en el cual el jugador controla a un padre que se interna en un bosque corrupto para rescatar a su hijo, secuestrado por una secta. Un amuleto con espíritus guardianes le presta tres transformaciones (Lobo, Murciélago y Oso) y cada una cambia la forma de moverse, pelear y resolver obstáculos."));
 c.push(L("Género","Acción / Plataformas 2D (side-scroller)",{spacing:{after:0}}));
 c.push(L("Ambientación","Bosque corrupto, cuevas y guarida de una secta",{spacing:{after:0}}));
@@ -62,7 +60,7 @@ c.push(P("El jugador comienza como el Humano, una forma débil pero técnica (bl
 c.push(P("Transformarse consume energía, que se recarga recogiendo almas y venciendo enemigos. Con los fragmentos que junta sube de nivel y elige el combo de una de sus formas. El juego tiene un final: la pelea contra el Arzobispo, jefe de la secta, que exige usar todas las formas aprendidas para liberar al hijo."));
 // ---------- Core Loop
 c.push(H("Core Loop"));
-c.push(imgP("coreloop.png",330));
+c.push(imgP("coreloop.png",228));
 // ---------- Pilares de diseño
 c.push(H("Pilares de diseño",true));
 c.push(L("Cada forma importa","las formas no son skins: cambian el movimiento, el combate y qué obstáculos se pueden superar. La pregunta central es siempre qué forma conviene usar."));
@@ -71,8 +69,10 @@ c.push(L("Feedback","toda acción del jugador conlleva a su respectiva respuesta
 // ---------- Niveles y Narrativa
 c.push(H("Niveles y Narrativa"));
 c.push(L("Historia","un padre y su hijo pasaban la tarde juntos cuando unas voces extrañas llamaron al niño desde la espesura. El padre lo siguió dentro del bosque y quedó solo. Allí aparece el amuleto de los espíritus: “Humano… por fin alguien me encuentra. Juntos podremos salvarlo.” El juego abre con un cómic de seis viñetas que cuenta este comienzo."));
-c.push(L("Final","al vencer al Arzobispo el sello cede y el hijo emerge de la luz. Padre y Amuleto dialogan brevemente, corte a negro y aparece la frase final: “Lo que el bosque se llevó, el bosque lo devuelve.”"));
-c.push(L("Cinemáticas","el cómic de inicio, la intro de cada nivel, la cinemática de cada tótem (el sello viaja al jugador y aparece la tarjeta de la forma) y las del jefe (aparición y estallido final). Todas ocurren dentro del juego, sin cortar el ritmo."));
+c.push(imgP("comic1.png",380));c.push(cap("Cómic de inicio"));
+c.push(L("Final","al vencer al Arzobispo el sello cede y el hijo emerge de la luz. Padre y Amuleto dialogan brevemente, corte a negro y aparece la frase final: “Lo que el bosque se llevó, el bosque lo devuelve.” Antes de los créditos, un segundo cómic de seis viñetas muestra el estallido de la estrella, el reencuentro y la confesión del niño."));
+c.push(imgP("comic2.png",380));c.push(cap("Cómic final"));
+c.push(L("Cinemáticas","el cómic de inicio y el final, la intro de cada nivel, la cinemática de cada tótem (el sello viaja al jugador y aparece la tarjeta de la forma) y las del jefe (aparición y estallido final). Todas ocurren dentro del juego, sin cortar el ritmo."));
 c.push(P("El juego tiene 3 niveles y un nivel de jefe, todos lineales y con checkpoints:"));
 c.push(D("Nivel 1 - El Bosque","tutorial. Movimiento, combate, bloqueo y parry del Humano. Termina en una cueva donde está el tótem del Lobo; la salida es una zona de oscuridad con el nombre del siguiente nivel."));
 c.push(D("Nivel 2 - Las Cuevas","cueva natural. Se desbloquea el Murciélago (planeo, aleteo, picada y sónico). Barreras de cristal, pinchos, un derrumbe, enemigos voladores, fogatas y niebla de cueva."));
@@ -84,14 +84,17 @@ c.push(P("Cada nivel arranca con una intro in-game (diálogo Humano-Amuleto) y u
 // ---------- Controles
 c.push(H("Controles"));
 c.push(P("El juego está diseñado para PC y se controla con teclado o mando. Los controles son los mismos en todas las formas:"));
-c.push(D("Mover","A / D o flechas (mando: stick / cruz)."));
+c.push(D("Mover","A / D (mando: stick izquierdo)."));
+c.push(D("Cámara","flechas (mando: stick derecho)."));
 c.push(D("Saltar","Espacio (mando: A)."));
 c.push(D("Golpe / Golpe fuerte / Especial e interactuar","J / K / L (mando: X / Y / B)."));
 c.push(D("Bloquear y parry (Humano)","Shift (mando: LB), justo al recibir el golpe para hacer parry."));
-c.push(D("Aleteo y picada (Murciélago)","Espacio en el aire y S / flecha abajo en el aire."));
-c.push(D("Elegir forma","Q / E (mando: Select)."));
+c.push(D("Aleteo y picada (Murciélago)","Espacio en el aire y S en el aire (mando: A en el aire y stick hacia abajo)."));
+c.push(D("Elegir forma","Q / E (mando: LT o Select / RT)."));
 c.push(D("Transformar o volver a Humano","T (mando: RB)."));
-c.push(D("Transformar directo (teclas)","1 Humano / 2 Lobo / 3 Oso / 4 Murciélago."));
+c.push(D("Transformar directo","1 Humano / 2 Lobo / 3 Oso / 4 Murciélago (mando, cruceta: izquierda Oso, derecha Lobo, arriba Murciélago, abajo Humano)."));
+c.push(D("Adelantar diálogo","Enter (mando: L3)."));
+c.push(D("Omitir cinemática o intro","X, manteniéndola presionada."));
 c.push(D("Pausa","Esc (mando: Start)."));
 c.push(P("Combo: golpe ligero seguido de golpe fuerte (J, K). El juego guarda la segunda pulsación para que no se exija precisión extrema.",{spacing:{before:120}}));
 // ---------- Gameplay
@@ -129,12 +132,13 @@ c.push(L("Fragmentos","orbes repartidos por los niveles. Al acumular 8, 28, 34 y
 c.push(L("Energía","se gasta al transformarse (4 por segundo) y se recarga con almas de energía, enemigos derrotados y parrys exitosos."));
 // ---------- Jefe final
 c.push(H("Jefe final"));
-c.push(P("El Arzobispo es el líder de la secta, ya transformado: una estrella de ocho puntas con un ojo central, unida al piso por un tallo. Nunca se le pega al cuerpo directamente; hay que atacar sus puntas y su ojo en cada fase. Al derrotarlo, el niño sale de adentro de él."));
-c.push(D("Fase 1","aparecen llaves en el tallo; el Oso debe romper el nudo del tallo (golpe ≥ 24, 3 golpes) para bajar el ojo y poder dañarlo. El jefe lanza tajos con aviso que el Humano puede devolver con parry."));
-c.push(D("Fase 2","el piso se rompe y cae al foso; el Lobo cruza el pozo y el Murciélago alcanza el ojo alto. Aparecen torretas (ojos acorazados que solo rompe el Oso) y barridos de luz que hay que esquivar o parryear."));
-c.push(D("Fase 3","la estrella se arranca del tallo y se clava de punta; el Oso la arranca y los ojos caen con coraza (solo el Oso la rompe). Es el duelo directo, sin ojos flotantes."));
-c.push(P("Tiene 600 puntos de vida (200 por fase) y se corrompe al bajar de 66 % y de 33 %: más ataques, orbes más frecuentes y el latido acelera. Los orbes se pueden devolver con parry. Entre fases hay valles sin ataques para respirar.",{spacing:{before:120}}));
-c.push(P("Entrada: el jefe no se muestra de entrada; al llegar a la arena emerge desde atrás y abajo, temblando, entre polvo y piedras del techo. Muerte: estalla con grietas de luz y el hijo aparece desde adentro, mientras el padre (Humano) lo contiene."));
+c.push(entries([entry("s_jefe.png",110,"Arzobispo","vida 450 (150 por fase) - Líder de la secta, ya transformado: una estrella de siete puntas con un ojo central, unida al piso por un tallo. La cabeza nunca se rompe: la vida se lee en el ojo, que se llena de venas al recibir daño. Solo se lo daña cuando muestra el ojo, y cada fase pide una forma distinta. Al derrotarlo, el niño sale de adentro de él.")]));
+c.push(D("Fase 1","los ojos satélite disparan rayos con aviso, que el Humano puede devolver con parry. El Oso debe romper con un golpe fuerte el círculo del nudo del tallo para bajar el ojo central y poder dañarlo."));
+c.push(D("Fase 2","la sala se abre con plataformas a los lados y ojos flotantes por tandas a distintas alturas: el Lobo y el Humano alcanzan los bajos y el Murciélago los altos (su sónico los cierra). Las torretas acorazadas solo las rompe el Oso. Hay rayos finos y un rayo grueso que se esquiva o se devuelve con parry."));
+c.push(D("Fase 3","la estrella se arranca del tallo y se clava de punta; absorbe a tres cultistas y ataca en combos (picada, embestida, orbes y estalactitas). Al agotarse cierra el ojo tras un caparazón que solo el Oso rompe, y a veces el niño aparece como escudo: ahí el padre no debe atacar."));
+c.push(P("Cambia de fase al bajar de 66 % y de 33 % de vida: más ataques y el latido de la sala se acelera. Al cambiar de fase aparece un orbe de vida, y durante la pelea la energía se gasta mucho más lento (“el Amuleto arde”). Entre ataques hay valles para respirar.",{spacing:{before:120,after:200,line:276}}));
+c.push(P("Entrada: el jefe no se muestra de entrada; al llegar a la arena emerge desde atrás y abajo, temblando, entre polvo y piedras del techo. Muerte: estalla en grietas de luz, corte a blanco y negro y comienza el cómic final."));
+c.push(gallery([["boss1.png","El Arzobispo, fase 1"],["boss2.png","Fase 2: ojos y rayos"]],270));
 // ---------- Sistema de dificultad progresiva
 c.push(H("Sistema de dificultad progresiva"));
 c.push(P("La dificultad escala conforme se avanza en los niveles:"));
@@ -148,7 +152,7 @@ c.push(H("Apartado Visual"));
 c.push(P("Utilizamos un estilo 2D ilustrado, con colores planos y siluetas claras, para todos los elementos visuales del juego:"));
 c.push(D("Personajes","sprites animados cuadro a cuadro (reposo, correr, saltar, ataques y daño). Cada forma tiene un tamaño distinto para reforzar su identidad."));
 c.push(D("Fondos","parallax scrolling con capas por nivel (bosque, cueva natural y cueva profunda), más luciérnagas, niebla, rayos de luz y polvo de cueva."));
-c.push(D("Interfaz","menú principal, pausa, controles, opciones, créditos, derrota y victoria."));
+c.push(D("Interfaz","menú principal con el logo dibujado a mano y la luna, pausa, controles, opciones, créditos, derrota y victoria. Los cómics de inicio y final usan viñetas en blanco y negro con globos de texto."));
 c.push(D("HUD","arriba a la izquierda el retrato del Amuleto con la barra de vida (roja) y la de energía de transformación; el selector de formas, los fragmentos acumulados y una pila de golpes de combo aparecen cuando corresponde."));
 c.push(D("Textos","colores funcionales: verde para el bosque y lo vivo, azul y violeta para la cueva profunda, rojo para el peligro y el jefe."));
 c.push(gallery([["hud.png","HUD en partida"],["menu.png","Menú principal"],["g_ctrl.png","Pantalla de controles"]]));

@@ -1,7 +1,7 @@
 [gd_scene format=4 uid="uid://cddcm1b1r41q6"]
 
 [ext_resource type="PackedScene" path="res://scenes/plataforma_fragil_grande.tscn" id="33_ux8mh"]
-[ext_resource type="Texture2D" uid="uid://cd1d33r08ojaj" path="res://Sprites/Elementos/liana2.png" id="38_3lan6"]
+[ext_resource type="Texture2D" uid="uid://c2u0aw4rfo5k4" path="res://Sprites/Elementos/liana.png" id="38_3lan6"]
 [ext_resource type="PackedScene" path="res://scenes/atmosfera_nivel3.tscn" id="atm3"]
 [ext_resource type="PackedScene" uid="uid://byj8hsa3b1hpe" path="res://scenes/barrera_bosque.tscn" id="barrera"]
 [ext_resource type="Script" uid="uid://ev6br1e6r5g4" path="res://scripts/borde_miedo.gd" id="borde_miedo"]
@@ -836,7 +836,7 @@ script = ExtResource("plano_script")
 duracion = 12.0
 zoom = 1.15
 seguir_jugador = true
-globo = PackedStringArray("[susurro]¿Lo oís, Humano? No es mi corazón. Es el de la cueva, y late más fuerte con el miedo.", "[humano][susurro]Hoy iba a enseñarle a silbar como el búho... y ahora algo respira ahí abajo.", "[humano]Que se atragante. Voy a sacar a mi hijo de ahí. Abrime camino.")
+globo = PackedStringArray("[susurro]¿Lo oís, Humano? No es mi corazón. Es el de la cueva, y late más fuerte con el miedo.", "[humano][susurro]Le prometí que nada le iba a pasar... y ahora algo respira ahí abajo.", "[humano]Que se atragante. Voy a sacar a mi hijo de ahí. Abrime camino.")
 retraso_globo = 0.3
 pulso = true
 pulso_en = 11.0

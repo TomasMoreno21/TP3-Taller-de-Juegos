@@ -272,6 +272,7 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 @export var sfx_estalactita: AudioStream = preload("res://assets/audio/sfx/gen/jefe_estalactita_caida.wav")
 @export var sfx_rocas: AudioStream = preload("res://assets/audio/sfx/gen/jefe_rocas.wav")
 @export var sfx_muerte: AudioStream = preload("res://assets/audio/sfx/gen/jefe_muerte.wav")
+@export var sonido_vibracion: AudioStream = preload("res://assets/audio/sfx/gen/jefe_vibracion.wav")   ## vibración macabra durante el zoom lento de la aparición
 @export var sonido_glitch: AudioStream = preload("res://assets/audio/sfx/gen/jefe_glitch.wav")   ## suena (único sonido) durante el glitch de la muerte
 
 @export_group("Peso del golpe al ojo")
@@ -295,9 +296,13 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 
 @export_group("Aparición (estilo Cult of the Lamb)")
 @export var aparicion_cine := true          ## sube desde el suelo con temblor la primera vez
-@export var aparicion_temblor := 3.6        ## s de temblor creciente antes de salir
+@export var aparicion_temblor := 2.8        ## s de temblor creciente antes de salir
 @export var aparicion_subida := 1.5         ## s que tarda en salir del piso
 @export var aparicion_shake_max := 12.0
+@export var aparicion_calma := 1.3          ## s de silencio absoluto tras el temblor (el corazón se corta)
+@export var aparicion_acecho := 1.9         ## s en que algo asoma lento, en silencio, antes de explotar
+@export var aparicion_asomo := 0.4          ## 0..1: cuánto sube durante el acecho (0.4 = solo las puntas)
+@export var aparicion_acercamiento := 1.1   ## zoom lento de la cámara durante la espera (1 = sin)
 @export var sonido_aparicion: AudioStream = preload("res://assets/audio/sfx/gen/jefe_grito.wav")   ## grito al salir del piso
 @export var volumen_aparicion_db := 0.0
 @export_group("")
@@ -540,6 +545,7 @@ func _bucle() -> void:
 	_gen += 1
 	var gen := _gen
 	await _aparicion(gen)
+	_hud_visible(true)
 	if not _sigue(gen):
 		return
 	_energia_jefe(true)
@@ -2541,8 +2547,7 @@ func _energia_jefe(on: bool) -> void:
 ## ruge (el ojo se abre de golpe) y entran las barras con el nombre. Solo la primera vez.
 func _aparicion(gen: int) -> void:
 	if not aparicion_cine or _aparicion_vista:
-		_grito(volumen_aparicion_db - 6.0)
-		_cine_entrada()
+		_grito(volumen_aparicion_db - 6.0)   # reintento: el jefe ya está ahí, sin barras ni nombre
 		return
 	_aparicion_vista = true
 	_estado = "aparicion"
@@ -2560,12 +2565,27 @@ func _aparicion(gen: int) -> void:
 			p.set("cinematica_activa", false)
 		return
 	_silencio(true)
+	_hud_visible(false)   # cinemática limpia; se devuelve al terminar la aparición (en _bucle)
 	var cam := get_viewport().get_camera_2d()
+	var zona0 := get_tree().get_first_node_in_group("latido_jefe")
+	var frec0: float = zona0.get("frecuencia") if zona0 != null else 1.0
+	var escala_cam: float = cam.get("_escala_arena") if cam != null and "_escala_arena" in cam else 1.0
+	# Cine desde el primer segundo: barras + viñeta; el nombre llega recién cuando el jefe ya salió.
+	var retraso := aparicion_temblor + aparicion_calma + aparicion_acecho + aparicion_subida + 0.5
+	if intro_cine:
+		JefeCine.entrada(get_tree(), nombre_jefe, color_fase1, retraso + 4.4, retraso)
+	var dur_zoom := aparicion_temblor + aparicion_calma + aparicion_acecho
+	JefeCine.lente(get_tree(), dur_zoom)   # bordes negros que vibran mientras la cámara se acerca
+	_sfx(sonido_vibracion, -6.0)
+	if cam != null and cam.has_method("escala_arena"):
+		cam.escala_arena(escala_cam * aparicion_acercamiento, aparicion_temblor + aparicion_calma + aparicion_acecho)   # empuje lento hacia el suelo
 	var t := 0.0
 	while t < aparicion_temblor:
 		if gen != _gen:
 			return
 		var k := t / maxf(aparicion_temblor, 0.01)
+		if zona0 != null:
+			zona0.set("frecuencia", frec0 * (1.0 + 1.6 * k))   # el corazón se acelera
 		if cam != null and cam.has_method("shake"):
 			cam.shake(2.0 + k * aparicion_shake_max * 0.6, 0.3)
 		JuiceFx.escombros(get_tree(), global_position + Vector2(randf_range(-260.0, 260.0), -10.0), Color(0.42, 0.3, 0.55), 4 + int(k * 8.0), 0.8)
@@ -2574,9 +2594,28 @@ func _aparicion(gen: int) -> void:
 		t += 0.25
 	if gen != _gen:
 		return
+	# Calma: todo se detiene de golpe. Sin latido, sin polvo. Algo asoma despacio, en silencio.
+	if zona0 != null:
+		zona0.set("frecuencia", frec0)
+		if zona0.has_method("silenciar"):
+			zona0.silenciar(aparicion_calma + aparicion_acecho + 0.2)
+	await _esperar(aparicion_calma)
+	if gen != _gen:
+		return
 	cuerpo.visible = true
 	nudo.visible = nudo.mostrar_arte
 	cuerpo.position.y = profundidad_escondida
+	if DisplayServer.get_name() != "headless":
+		_tw_cuerpo = create_tween().set_parallel(true)
+		_tw_cuerpo.tween_property(cuerpo, "position:y", lerpf(profundidad_escondida, -_altura_reposo, aparicion_asomo), aparicion_acecho * 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_tw_cuerpo.tween_method(func(_v: float) -> void: _ajustar_tallo(), 0.0, 1.0, aparicion_acecho * 0.7)
+	await _esperar(aparicion_acecho)
+	if gen != _gen:
+		return
+	if cam != null and cam.has_method("escala_arena"):
+		cam.escala_arena(escala_cam, 0.35)   # la cámara retrocede de golpe
+	if zona0 != null and zona0.has_method("sobresaltar"):
+		zona0.sobresaltar(1.0)
 	_grito(volumen_aparicion_db)
 	JuiceFx.escombros(get_tree(), global_position + Vector2(0, -30), Color(0.42, 0.3, 0.55), 26, 1.5)
 	if cam != null and cam.has_method("shake"):
@@ -2599,10 +2638,9 @@ func _aparicion(gen: int) -> void:
 		tw.tween_property(cuerpo, "position:x", 7.0, 0.04)
 		tw.tween_property(cuerpo, "position:x", -7.0, 0.04)
 	tw.tween_property(cuerpo, "position:x", 0.0, 0.04)
-	await _esperar(1.0)
+	await _esperar(0.8)
 	_poner_ojo(0.0)
-	_cine_entrada()
-	await _esperar(intro_duracion * 0.6)
+	await _esperar(1.9)
 	_silencio(false)
 	if p != null and is_instance_valid(p):
 		p.set("cinematica_activa", false)
@@ -2613,6 +2651,12 @@ func _grito(volumen_db: float) -> void:
 	var audio := get_node_or_null("/root/AudioManager")
 	if audio != null and sonido_aparicion != null:
 		audio.play_sfx(sonido_aparicion, volumen_db)
+
+
+func _hud_visible(on: bool) -> void:
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud != null:
+		hud.set("visible", on)
 
 
 func _silencio(on: bool) -> void:
@@ -2635,12 +2679,6 @@ func _rugido(fuerza: float) -> void:
 	var cam := get_viewport().get_camera_2d()
 	if cam != null and cam.has_method("shake"):
 		cam.shake(fuerza, 0.35)
-
-
-func _cine_entrada() -> void:
-	if not intro_cine or DisplayServer.get_name() == "headless":
-		return
-	JefeCine.entrada(get_tree(), nombre_jefe, color_fase1, intro_duracion)
 
 
 func _morir() -> void:

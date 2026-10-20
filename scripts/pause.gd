@@ -139,6 +139,12 @@ func _fundido(entra: bool) -> void:
 				dim.visible = false)
 
 
+## Al cerrar un panel el foco quedó huérfano: se lo devuelve al botón elegido (feedback con mando).
+func _refocar() -> void:
+	if is_inside_tree():
+		botones[_indice].grab_focus.call_deferred()
+
+
 func _navegar(dir: int) -> void:
 	_ui("ui_mover")
 	_indice = (_indice + dir + botones.size()) % botones.size()
@@ -200,18 +206,21 @@ func _reiniciar_nivel() -> void:
 func _abrir_controles() -> void:
 	var c: CanvasLayer = (load(SCENE_CONTROLES) as PackedScene).instantiate()
 	_controls = c
+	c.tree_exited.connect(_refocar)
 	add_child(c)
 
 
 func _abrir_opciones() -> void:
 	var c: CanvasLayer = (load(SCENE_OPCIONES) as PackedScene).instantiate()
 	_controls = c
+	c.tree_exited.connect(_refocar)
 	add_child(c)
 
 
 func _abrir_ayuda() -> void:
 	var c: CanvasLayer = (load(SCENE_AYUDA) as GDScript).new()
 	_controls = c
+	c.tree_exited.connect(_refocar)
 	add_child(c)
 
 
@@ -220,6 +229,7 @@ func _abrir_modo_prueba() -> void:
 	c.en_juego = true
 	c.al_ejecutar = cerrar   # teletransportarse cierra la pausa
 	_controls = c
+	c.tree_exited.connect(_refocar)
 	add_child(c)
 
 

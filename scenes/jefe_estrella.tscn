@@ -167,7 +167,7 @@ z_index_detras = 0
 [node name="LosaCentral" type="StaticBody2D" parent="." unique_id=567625182]
 
 [node name="Collision" type="CollisionShape2D" parent="LosaCentral" unique_id=2018772081]
-position = Vector2(0, 100)
+position = Vector2(0, 101)
 shape = SubResource("RectangleShape2D_losa")
 
 [node name="Visual" type="Polygon2D" parent="LosaCentral" unique_id=616896970]

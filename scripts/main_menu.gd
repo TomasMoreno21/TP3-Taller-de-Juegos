@@ -70,6 +70,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		_on_boton_pressed(_indice)
 
 
+## Al cerrar un panel el foco quedó huérfano: se lo devuelve al botón elegido (feedback con mando).
+func _refocar() -> void:
+	if is_inside_tree():
+		botones[_indice].grab_focus.call_deferred()
+
+
 func _navegar(dir: int) -> void:
 	_ui("ui_mover")
 	_indice = (_indice + dir + botones.size()) % botones.size()
@@ -133,6 +139,7 @@ func _abrir_niveles() -> void:
 	var c: CanvasLayer = (load(SCENE_MODO_PRUEBA) as GDScript).new()
 	c.en_juego = false
 	_controls = c
+	c.tree_exited.connect(_refocar)
 	add_child(c)
 
 
@@ -148,6 +155,7 @@ func _abrir_controles() -> void:
 func _abrir_panel(ruta: String) -> void:
 	var c: CanvasLayer = (load(ruta) as PackedScene).instantiate()
 	_controls = c
+	c.tree_exited.connect(_refocar)
 	add_child(c)
 
 

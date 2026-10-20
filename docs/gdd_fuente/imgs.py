@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 import math, os, sys
-R = "C:/Users/Usuario/Documents/proyecto--ben-10/"
+R = "C:/Users/Usuario/Documents/TP3-Taller-de-Juegos/"
 OUT = os.path.dirname(os.path.abspath(__file__)) + "/"
 T = "C:/Windows/Fonts/times.ttf"; TB = "C:/Windows/Fonts/timesbd.ttf"
 BROWN = (139, 69, 19)
@@ -23,6 +23,7 @@ sprite(SP + "Jugador y Transformaciones/1oso quieto.png", "s_oso.png", 230)
 sprite(SP + "Jugador y Transformaciones/1murci volar.png", "s_murci.png", 200)
 sprite(SP + "Enemigos/enemigo gordo1.png", "s_cultista.png", 300)
 sprite(SP + "Enemigos/enemigo flaco1.png", "s_arquero.png", 300)
+sprite(SP + "Enemigos/jefe_cabeza1.png", "s_jefe.png", 300)
 
 # ---- fondos (miniaturas)
 def thumb(path, name, w=564, h=318):
@@ -37,16 +38,16 @@ thumb(SP + "Fondos/Cueva2/pared.png", "f_pared.png")
 # ---- banner de portada
 W, H = 1600, 360
 im = Image.new("RGBA", (W, H), (255, 255, 255, 0)); d = ImageDraw.Draw(im)
-fo = font(TB, 150)
-txt = "SPIRIT KEEPER"
-tw = d.textlength(txt, font=fo)
-d.text(((W - tw) / 2 + 6, 110 + 6), txt, font=fo, fill=(60, 30, 10))
-d.text(((W - tw) / 2, 110), txt, font=fo, fill=BROWN)
+# logo real del menú (Sprites/Menu/titulo), pasado de gris azulado a marrón para fondo blanco
+logo = Image.open(R + "Sprites/Menu/titulo/titulo-3.png").convert("RGBA")
+logo = Image.merge("RGBA", (*[Image.new("L", logo.size, c) for c in BROWN], logo.getchannel("A")))
+logo = logo.resize((1240, round(1240 * logo.height / logo.width)), Image.LANCZOS)
+im.paste(logo, ((W - logo.width) // 2, 130), logo)
 lobo = Image.open(OUT + "s_lobo.png"); lobo = lobo.resize((int(lobo.width * 0.55), int(lobo.height * 0.55)))
 mur = Image.open(OUT + "s_murci.png"); mur = mur.resize((int(mur.width * 0.7), int(mur.height * 0.7)))
-im.paste(lobo, (20, 110), lobo)
+im.paste(lobo, (10, 110), lobo)
 mr = Image.open(OUT + "s_oso.png"); mr = mr.resize((int(mr.width * 0.5), int(mr.height * 0.5)))
-im.paste(mur, (W - mur.width - 40, 110), mur)
+im.paste(mur, (W - mur.width - 10, 110), mur)
 im.save(OUT + "banner.png")
 
 # ---- diagrama de flujo (estilo del GDD original: cajas negras, flechas verde=ir / roja=volver)

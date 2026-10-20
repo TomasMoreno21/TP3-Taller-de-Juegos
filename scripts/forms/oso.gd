@@ -60,7 +60,7 @@ func _init() -> void:
 	jump_cut_multiplier = 0.55
 	camera_zoom = Vector2(0.83, 0.83)
 	turn_tilt_cam = 0.05
-	mult_recuperacion = 1.35
+	mult_recuperacion = 1.7
 	recovery_early_fraccion = 0.25
 	lunge_heavy = 36.0
 	melee_sticky = 0.0

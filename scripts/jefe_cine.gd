@@ -17,13 +17,30 @@ static func _tween(nodo: Node) -> Tween:
 	return tw
 
 
-## Barras de cine arriba y abajo + nombre del jefe con una línea que se abre.
-static func entrada(arbol: SceneTree, nombre: String, color: Color, duracion: float) -> void:
+## Barras de cine + viñeta oscura + nombre del jefe: las letras arrancan muy separadas y se van juntando
+## despacio (como algo que se acerca), con titileos de mal augurio, un resplandor rojo detrás y un rumor
+## grave de cámara. La línea inferior se abre al final.
+static func entrada(arbol: SceneTree, nombre: String, color: Color, duracion: float, retraso: float = 0.0) -> void:
 	if DisplayServer.get_name() == "headless" or arbol == null:
 		return
 	var capa := _capa(arbol, 9)
 	var tam := capa.get_viewport().get_visible_rect().size
 	var alto := tam.y * 0.17
+	var vineta := TextureRect.new()
+	var grad := Gradient.new()
+	grad.colors = PackedColorArray([Color(0, 0, 0, 0), Color(0, 0, 0, 0.78)])
+	grad.offsets = PackedFloat32Array([0.35, 1.0])
+	var tex := GradientTexture2D.new()
+	tex.gradient = grad
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(1.0, 0.5)
+	vineta.texture = tex
+	vineta.stretch_mode = TextureRect.STRETCH_SCALE
+	vineta.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vineta.size = tam
+	vineta.modulate.a = 0.0
+	capa.add_child(vineta)
 	var arriba := ColorRect.new()
 	var abajo := ColorRect.new()
 	for b in [arriba, abajo]:
@@ -33,38 +50,83 @@ static func entrada(arbol: SceneTree, nombre: String, color: Color, duracion: fl
 		capa.add_child(b)
 	arriba.position = Vector2(0, -alto)
 	abajo.position = Vector2(0, tam.y)
+	var fuente := FontVariation.new()
+	var serif := SystemFont.new()   # serifa solemne y eclesiástica; si no existe, cae a la fuente por defecto
+	serif.font_names = PackedStringArray(["Georgia", "Times New Roman", "serif"])
+	serif.font_weight = 700
+	fuente.base_font = serif
+	fuente.spacing_glyph = 90
+	var rojo := color.lerp(Color(0.75, 0.03, 0.05), 0.92)
+	var brillo := Label.new()   # resplandor rojo detrás del nombre
 	var titulo := Label.new()
-	titulo.text = nombre
-	titulo.add_theme_font_size_override("font_size", 96)
-	titulo.add_theme_color_override("font_color", Color(1, 1, 1))
-	titulo.add_theme_color_override("font_outline_color", color.darkened(0.5))
-	titulo.add_theme_constant_override("outline_size", 14)
-	titulo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	titulo.size = Vector2(tam.x, 130)
-	titulo.position = Vector2(0, tam.y * 0.66)
-	titulo.modulate.a = 0.0
-	capa.add_child(titulo)
+	for l: Label in [brillo, titulo]:
+		l.text = nombre
+		l.add_theme_font_override("font", fuente)
+		l.add_theme_font_size_override("font_size", 112)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.size = Vector2(tam.x, 140)
+		l.position = Vector2(0, tam.y * 0.64)
+		l.pivot_offset = l.size * 0.5
+		l.scale = Vector2(1.12, 1.12)
+		l.modulate.a = 0.0
+		capa.add_child(l)
+	titulo.add_theme_color_override("font_color", Color(0.96, 0.92, 0.9))
+	titulo.add_theme_color_override("font_outline_color", Color(0.12, 0.0, 0.02))
+	titulo.add_theme_constant_override("outline_size", 8)
+	brillo.add_theme_color_override("font_color", rojo)
+	brillo.add_theme_color_override("font_outline_color", rojo)
+	brillo.add_theme_constant_override("outline_size", 34)
 	var linea := ColorRect.new()
-	linea.color = color.lightened(0.3)
+	linea.color = rojo.lightened(0.25)
 	linea.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	linea.size = Vector2(tam.x * 0.5, 4)
-	linea.position = Vector2(tam.x * 0.25, tam.y * 0.66 + 128)
+	linea.size = Vector2(tam.x * 0.4, 3)
+	linea.position = Vector2(tam.x * 0.3, tam.y * 0.64 + 138)
 	linea.pivot_offset = linea.size * 0.5
 	linea.scale = Vector2(0.0, 1.0)
 	capa.add_child(linea)
+	var hold := maxf(duracion - 2.6 - retraso, 0.2)
 	var tw := _tween(capa)
 	tw.set_parallel(true)
-	tw.tween_property(arriba, "position:y", 0.0, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.tween_property(abajo, "position:y", tam.y - alto, 0.7).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tw.tween_property(titulo, "modulate:a", 1.0, 0.9).set_delay(0.6)
-	tw.tween_property(linea, "scale:x", 1.0, 1.0).set_delay(0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.chain().tween_interval(maxf(duracion - 1.9, 0.2))
+	tw.tween_property(vineta, "modulate:a", 1.0, 1.2)
+	tw.tween_property(arriba, "position:y", 0.0, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(abajo, "position:y", tam.y - alto, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	# titileos de mal augurio antes de que el nombre se fije
+	var fl := _tween(titulo)
+	fl.tween_interval(0.9 + retraso)
+	for a in [0.9, 0.0, 0.6, 0.0, 1.0]:
+		fl.tween_property(titulo, "modulate:a", a, 0.05)
+		fl.tween_interval(0.07)
+	tw.tween_property(brillo, "modulate:a", 0.55, 1.6).set_delay(1.0 + retraso)
+	tw.tween_property(titulo, "scale", Vector2.ONE, 2.4).set_delay(0.9 + retraso).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(brillo, "scale", Vector2.ONE, 2.4).set_delay(0.9 + retraso).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_method(func(v: float) -> void: fuente.spacing_glyph = int(v), 90.0, 12.0, 2.4).set_delay(0.9 + retraso).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tw.tween_property(linea, "scale:x", 1.0, 1.0).set_delay(1.8 + retraso).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	# rumor grave de la cámara mientras el nombre se acerca
+	for i in 4:
+		arbol.create_timer(0.9 + retraso + i * 0.6, true, false, true).timeout.connect(func() -> void:
+			var cam := arbol.root.get_viewport().get_camera_2d()
+			if cam != null and cam.has_method("shake"):
+				cam.shake(4.0 + i * 2.0, 0.5))
+	tw.chain().tween_interval(hold)
 	tw.chain().set_parallel(true)
-	tw.tween_property(arriba, "position:y", -alto, 0.7)
-	tw.tween_property(abajo, "position:y", tam.y, 0.7)
-	tw.tween_property(titulo, "modulate:a", 0.0, 0.7)
-	tw.tween_property(linea, "modulate:a", 0.0, 0.7)
+	tw.tween_property(arriba, "position:y", -alto, 0.8)
+	tw.tween_property(abajo, "position:y", tam.y, 0.8)
+	tw.tween_property(vineta, "modulate:a", 0.0, 0.8)
+	tw.tween_property(titulo, "modulate:a", 0.0, 0.8)
+	tw.tween_property(brillo, "modulate:a", 0.0, 0.8)
+	tw.tween_property(linea, "modulate:a", 0.0, 0.8)
 	tw.chain().tween_callback(capa.queue_free)
+
+
+## Lente oscuro: bordes negros que vibran y se cierran mientras la cámara se acerca (reloj real).
+static func lente(arbol: SceneTree, duracion: float) -> void:
+	if DisplayServer.get_name() == "headless" or arbol == null:
+		return
+	var capa := _capa(arbol, 8)
+	var l := LenteVibrante.new()
+	l.dur = duracion
+	l.tam = capa.get_viewport().get_visible_rect().size
+	capa.add_child(l)
 
 
 ## Grieta de luz que parte la pantalla (cambio de fase).
@@ -292,3 +354,38 @@ class GlitchMuerte extends Node:
 		_restaurar()
 		terminado.emit()
 		queue_free()
+
+
+class LenteVibrante extends TextureRect:
+	var dur := 6.0
+	var tam := Vector2(1920, 1080)
+	var _t0 := 0
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var g := Gradient.new()
+		g.colors = PackedColorArray([Color(0, 0, 0, 0), Color(0, 0, 0, 0.7), Color(0, 0, 0, 0.98)])
+		g.offsets = PackedFloat32Array([0.3, 0.65, 0.95])
+		var tx := GradientTexture2D.new()
+		tx.gradient = g
+		tx.fill = GradientTexture2D.FILL_RADIAL
+		tx.fill_from = Vector2(0.5, 0.5)
+		tx.fill_to = Vector2(1.0, 0.5)
+		texture = tx
+		stretch_mode = TextureRect.STRETCH_SCALE
+		size = tam * 1.35
+		position = -tam * 0.175
+		pivot_offset = size * 0.5
+		modulate.a = 0.0
+		_t0 = Time.get_ticks_msec()
+
+	func _process(_d: float) -> void:
+		var t := (Time.get_ticks_msec() - _t0) / 1000.0
+		if t >= dur:
+			get_parent().queue_free()
+			return
+		var k := t / dur
+		var amp := 7.0 + 32.0 * k
+		position = -tam * 0.175 + Vector2(randf_range(-1, 1), randf_range(-1, 1)) * amp
+		scale = Vector2.ONE * (1.0 - 0.16 * k + 0.025 * sin(t * 47.0) * (0.5 + k))   # se cierra y tiembla
+		modulate.a = minf(t / 0.8, 1.0) * minf((dur - t) / 0.25, 1.0) * (0.8 + 0.2 * sin(t * 26.0))
