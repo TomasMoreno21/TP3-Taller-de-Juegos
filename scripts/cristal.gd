@@ -23,6 +23,8 @@ var _base_y := 0.0
 var _offset := 0.0
 var _escala_base := Vector2.ONE   # escala de reposo (los golpes rápidos no la acumulan)
 var _tw_golpe: Tween
+var _facetas_listas := false
+var _brillo: Polygon2D   # destello que titila en la punta
 
 @onready var visual_root: Node2D = $Visual
 @onready var poly: Polygon2D = $Visual/Poly
@@ -42,10 +44,11 @@ func _ready() -> void:
 func _actualizar_visual() -> void:
 	if poly != null:
 		poly.color = cristal_color
-		poly.polygon = _diamante_poligono(16, 22)
+		poly.polygon = PackedVector2Array([Vector2(0, -30), Vector2(14, -14), Vector2(12, 16), Vector2(0, 28), Vector2(-12, 16), Vector2(-14, -14)])
+		_armar_facetas()
 	if halo != null:
 		halo.color = Color(cristal_color.r, cristal_color.g, cristal_color.b, 0.18)
-		halo.polygon = _diamante_poligono(22, 30)
+		halo.polygon = PackedVector2Array([Vector2(0, -42), Vector2(24, -12), Vector2(20, 22), Vector2(0, 40), Vector2(-20, 22), Vector2(-24, -12)])
 	if sprite != null and sprite.texture != null:
 		sprite.visible = true
 		if poly != null:
@@ -59,6 +62,35 @@ func _actualizar_visual() -> void:
 			poly.visible = true
 		if halo != null:
 			halo.visible = true
+
+
+## Caras del cristal: capas claras/oscuras semitransparentes sobre `poly` (siguen su color, incluso en el flash de golpe).
+func _armar_facetas() -> void:
+	if _facetas_listas or poly == null:
+		return
+	_facetas_listas = true
+	var caras := [
+		[[Vector2(0, -30), Vector2(-14, -14), Vector2(-12, 16), Vector2(0, 28)], Color(1, 1, 1, 0.20)],    # cara izquierda iluminada
+		[[Vector2(0, -30), Vector2(14, -14), Vector2(12, 16), Vector2(0, 28)], Color(0, 0, 0.1, 0.22)],     # cara derecha en sombra
+		[[Vector2(0, -30), Vector2(14, -14), Vector2(0, -6), Vector2(-14, -14)], Color(1, 1, 1, 0.30)],      # corona
+		[[Vector2(0, -6), Vector2(6, 4), Vector2(0, 20), Vector2(-6, 4)], Color(1, 1, 1, 0.34)],             # núcleo brillante
+	]
+	for c in caras:
+		var f := Polygon2D.new()
+		f.polygon = PackedVector2Array(c[0])
+		f.color = c[1]
+		poly.add_child(f)
+	var borde := Line2D.new()
+	borde.points = PackedVector2Array([Vector2(0, -30), Vector2(14, -14), Vector2(12, 16), Vector2(0, 28), Vector2(-12, 16), Vector2(-14, -14), Vector2(0, -30)])
+	borde.width = 1.6
+	borde.default_color = Color(cristal_color.r * 0.35, cristal_color.g * 0.25, cristal_color.b * 0.6, 0.9)
+	poly.add_child(borde)
+	_brillo = Polygon2D.new()
+	_brillo.polygon = PackedVector2Array([Vector2(-7, -18), Vector2(-2, -20), Vector2(0, -28), Vector2(2, -20), Vector2(7, -18), Vector2(2, -16), Vector2(0, -8), Vector2(-2, -16)])
+	_brillo.color = Color(1, 1, 1, 0.9)
+	_brillo.position = Vector2(-4, 2)
+	_brillo.scale = Vector2(0.55, 0.55)
+	poly.add_child(_brillo)
 
 
 func _process(_delta: float) -> void:
@@ -75,6 +107,8 @@ func _process(_delta: float) -> void:
 		var hs := 1.0 + sin(t * 0.9) * 0.08
 		halo.scale = Vector2(hs, hs)
 		halo.modulate.a = 0.16 + sin(t * 1.3) * 0.06
+	if _brillo != null:
+		_brillo.modulate.a = clampf(0.25 + 0.75 * pow(0.5 + 0.5 * sin(t * 2.3), 3.0), 0.0, 1.0)   # destello que titila
 	if sprite != null and sprite.visible:
 		sprite.modulate.a = visual_root.modulate.a
 

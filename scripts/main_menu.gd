@@ -19,8 +19,19 @@ var _controls: CanvasLayer
 ]
 
 
+@export var musica: AudioStream = preload("res://assets/audio/menu/dark_cavern_ambient_001.ogg")
+@export var musica_volumen_db: float = -18.0
+
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	if musica != null:
+		var mp := AudioStreamPlayer.new()
+		musica.loop = true
+		mp.stream = musica
+		mp.volume_db = musica_volumen_db
+		add_child(mp)
+		mp.play()
 	var modo_prueba := get_node_or_null("/root/ModoPrueba")
 	if modo_prueba == null or not modo_prueba.habilitado:   # versiÃ³n final: sin selector de nivel
 		botones.erase($UI/Menu/Options/Niveles)

@@ -140,7 +140,7 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 @export_group("Apariencia")
 @export var nombre_jefe := "EL ARZOBISPO"   ## nombre en las barras de cine ("" = solo barras)
 @export var intro_cine := true
-@export var intro_duracion := 2.6
+@export var intro_duracion := 4.6
 @export var giro_velocidad := 0.12          ## rad/s que gira la estrella en reposo
 @export var color_fase1 := Color(0.85, 0.25, 0.75)
 @export var color_fase2 := Color(0.6, 0.3, 0.9)
@@ -165,6 +165,7 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 		if Engine.is_editor_hint():
 			_refrescar_preview()
 @export var muerte_slowmo := 2.6
+@export var muerte_glitch := 2.4             ## s de caos (sonido cortado + jefe glitcheando) tras el golpe final
 @export_group("Ajuste F3 (editá con Previsualizar F3)")
 ## mueve el dibujo de la cabeza (Estrella) en la F3
 @export var estrella_f3_offset := Vector2.ZERO:
@@ -271,6 +272,7 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 @export var sfx_estalactita: AudioStream = preload("res://assets/audio/sfx/gen/jefe_estalactita_caida.wav")
 @export var sfx_rocas: AudioStream = preload("res://assets/audio/sfx/gen/jefe_rocas.wav")
 @export var sfx_muerte: AudioStream = preload("res://assets/audio/sfx/gen/jefe_muerte.wav")
+@export var sonido_glitch: AudioStream = preload("res://assets/audio/sfx/gen/jefe_glitch.wav")   ## suena (único sonido) durante el glitch de la muerte
 
 @export_group("Peso del golpe al ojo")
 @export var temblor_golpe_ojo := 3.0        ## px de temblor de cámara por golpe al ojo
@@ -293,8 +295,8 @@ const UV_REF := Vector2(939.0, 663.0)   ## tamaño del arte base de la cabeza: l
 
 @export_group("Aparición (estilo Cult of the Lamb)")
 @export var aparicion_cine := true          ## sube desde el suelo con temblor la primera vez
-@export var aparicion_temblor := 2.0        ## s de temblor creciente antes de salir
-@export var aparicion_subida := 0.6         ## s que tarda en salir del piso
+@export var aparicion_temblor := 3.6        ## s de temblor creciente antes de salir
+@export var aparicion_subida := 1.5         ## s que tarda en salir del piso
 @export var aparicion_shake_max := 12.0
 @export var sonido_aparicion: AudioStream = preload("res://assets/audio/sfx/gen/jefe_grito.wav")   ## grito al salir del piso
 @export var volumen_aparicion_db := 0.0
@@ -352,6 +354,7 @@ var _abierta_offset0 := Vector2.ZERO
 var _hurt_col0 := Vector2.ONE
 var _blanco_col0 := Vector2.ONE
 var _circulo_radio0 := 0.0
+var _plantillas: Array = []   # [[ [tipo, pos_global], ... ] x oleada] leídas de Oleada1/Oleada2
 var _sin_tallo := false       # F3: se arrancó del tallo
 var _x_base := 0.0            # x del cuerpo que respeta el temblor del aviso de cierre
 var _temblando := false
@@ -388,6 +391,17 @@ var _traidor: Node2D = null
 
 
 func _ready() -> void:
+	# Enemigos de las oleadas puestos a mano: se leen como plantillas y se borran (se invocan en su momento).
+	for n in ["Oleada1", "Oleada2"]:
+		var lista: Array = []
+		var nivel := get_tree().current_scene
+		var raiz := nivel.get_node_or_null(n) if nivel != null else null   # viven en la escena del nivel
+		if raiz != null:
+			for c in raiz.get_children():
+				lista.append([str(c.get("tipo")), (c as Node2D).global_position, c])
+				raiz.remove_child(c)   # queda como molde (fuera del árbol): se clona con sus propiedades del Inspector
+			raiz.queue_free()
+		_plantillas.append(lista)
 	if Engine.is_editor_hint():
 		_capturar_arte_base()
 		_capturar_transforms()
@@ -1369,24 +1383,30 @@ func _resurgir() -> void:
 ## Mientras está escondida no ataca: solo 2 oleadas de enemigos comunes (respiro y curación).
 func _interludio(gen: int) -> void:
 	_estado = "interludio"
-	await _oleada(gen, oleada1_cultistas, 0)
+	await _oleada(gen, 0, oleada1_cultistas, 0)
 	if not _sigue(gen):
 		return
 	await _esperar(pausa_entre_oleadas)
 	if not _sigue(gen):
 		return
-	await _oleada(gen, oleada2_cultistas, oleada2_arqueros)
+	await _oleada(gen, 1, oleada2_cultistas, oleada2_arqueros)
 
 
-func _oleada(gen: int, cultistas: int, arqueros: int) -> void:
+## Si `Oleada1`/`Oleada2` tienen enemigos puestos en el editor, esos mandan (tipo + posición); si no, los contadores.
+func _oleada(gen: int, idx: int, cultistas: int, arqueros: int) -> void:
 	var tipos: Array = []
-	for _i in cultistas:
-		tipos.append("cultista")
-	for _i in arqueros:
-		tipos.append("arquero")
+	var plant: Array = _plantillas[idx]
+	if plant.is_empty():
+		for _i in cultistas:
+			tipos.append("cultista")
+		for _i in arqueros:
+			tipos.append("arquero")
+	else:
+		for t in plant:
+			tipos.append(t[0])
 	_invocados_vivos = tipos.size()
 	for i in tipos.size():
-		_invocar(tipos[i], i)
+		_invocar(tipos[i], i, plant[i][1] if not plant.is_empty() else null, plant[i][2] if not plant.is_empty() else null)
 		if i < tipos.size() - 1:
 			await _esperar(escalonado_oleada)
 			if not _sigue(gen):
@@ -1397,15 +1417,18 @@ func _oleada(gen: int, cultistas: int, arqueros: int) -> void:
 
 
 ## Entran alternando costados, desde el borde visible menos `margen_spawn` (los topes del pozo no los dejan caer).
-func _invocar(tipo: String, i: int) -> void:
-	var e = ENEMY_SCENE.instantiate()
+func _invocar(tipo: String, i: int, pos_local = null, molde: Node = null) -> void:
+	var e = molde.duplicate() if molde != null else ENEMY_SCENE.instantiate()
 	e.set("tipo", tipo)
 	e.set("spawn_telegrafiado", true)
 	var lado := -1.0 if i % 2 == 0 else 1.0
 	var fila := floori(i / 2.0)
 	var x := global_position.x + lado * (_mitad_vista() - margen_spawn - fila * separacion_oleada)
 	var y := global_position.y - 150.0
-	if tipo == "arquero":
+	if pos_local != null:
+		x = pos_local.x
+		y = pos_local.y
+	elif tipo == "arquero":
 		# Los arqueros aparecen en la plataforma más alta de su lado y disparan desde arriba.
 		var alto := INF
 		for pl in plataformas_raiz.get_children():
@@ -1434,7 +1457,7 @@ func _on_invocado_muerto(e: Node) -> void:
 ## Anti soft-lock: un invocado que quedó fuera de la sala cuenta como muerto.
 func _revisar_limbo() -> void:
 	for e in _invocados:
-		if is_instance_valid(e) and not e.has_meta("contado") and (e as Node2D).global_position.y > global_position.y + 400.0:
+		if is_instance_valid(e) and not e.has_meta("contado") and ((e as Node2D).global_position.y > global_position.y + 400.0 or absf((e as Node2D).global_position.x - global_position.x) > _mitad_vista() * 2.0):
 			if e.has_method("matar_por_caida"):
 				e.matar_por_caida()
 			_on_invocado_muerto(e)
@@ -2530,7 +2553,7 @@ func _aparicion(gen: int) -> void:
 	var headless := DisplayServer.get_name() == "headless"
 	if headless:
 		cuerpo.visible = true
-		nudo.visible = true
+		nudo.visible = nudo.mostrar_arte
 		cuerpo.position.y = -_altura_reposo
 		_ajustar_tallo()
 		if p != null:
@@ -2552,7 +2575,7 @@ func _aparicion(gen: int) -> void:
 	if gen != _gen:
 		return
 	cuerpo.visible = true
-	nudo.visible = true
+	nudo.visible = nudo.mostrar_arte
 	cuerpo.position.y = profundidad_escondida
 	_grito(volumen_aparicion_db)
 	JuiceFx.escombros(get_tree(), global_position + Vector2(0, -30), Color(0.42, 0.3, 0.55), 26, 1.5)
@@ -2565,7 +2588,7 @@ func _aparicion(gen: int) -> void:
 		return
 	if cam != null and cam.has_method("punch"):
 		cam.punch(1.08)
-	_slowmo(0.35, 0.4)
+	_slowmo(0.25, 0.9)
 	var zona := get_tree().get_first_node_in_group("latido_jefe")
 	if zona != null:
 		zona.set("intensidad", latido_pico_aparicion)   # el corazón de la sala "golpea" al salir
@@ -2576,10 +2599,10 @@ func _aparicion(gen: int) -> void:
 		tw.tween_property(cuerpo, "position:x", 7.0, 0.04)
 		tw.tween_property(cuerpo, "position:x", -7.0, 0.04)
 	tw.tween_property(cuerpo, "position:x", 0.0, 0.04)
-	await _esperar(0.6)
+	await _esperar(1.0)
 	_poner_ojo(0.0)
 	_cine_entrada()
-	await _esperar(0.8)
+	await _esperar(intro_duracion * 0.6)
 	_silencio(false)
 	if p != null and is_instance_valid(p):
 		p.set("cinematica_activa", false)
@@ -2640,6 +2663,10 @@ func _morir() -> void:
 	_energia_jefe(false)
 	_ambiente_combate(false)
 	_rugido(14.0)
+	if DisplayServer.get_name() != "headless":
+		# Golpe final: silencio total y el jefe se "glitchea" y estalla en caos antes del destello.
+		_slowmo(muerte_glitch + 0.3, 0.12)
+		await JefeCine.glitch_muerte(get_tree(), self, cuerpo, cuerpo.global_position, color_fase3, muerte_glitch, sonido_glitch).terminado
 	_sfx(sfx_muerte, 3.0)
 	if DisplayServer.get_name() != "headless":
 		_slowmo(muerte_slowmo, muerte_slowmo_escala)

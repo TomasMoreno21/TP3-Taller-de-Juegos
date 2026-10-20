@@ -2,7 +2,6 @@
 
 [ext_resource type="Texture2D" uid="uid://dokcgtup1uv4g" path="res://Sprites/Enemigos/afk GORDO1.png" id="1_akdo1"]
 [ext_resource type="Texture2D" uid="uid://cog03u6oahhdr" path="res://Sprites/Enemigos/cam GORDO1.png" id="1_cam1"]
-[ext_resource type="Texture2D" uid="uid://kvieg5g388al" path="res://Sprites/Enemigos/enemigo gordo1.png" id="1_gordo"]
 [ext_resource type="Texture2D" uid="uid://dy1nl58talb7k" path="res://Sprites/Enemigos/afk GORDO2.png" id="2_akdo2"]
 [ext_resource type="Texture2D" uid="uid://cax6iyvah1ghi" path="res://Sprites/Enemigos/ataq ene GORDO1.png" id="2_atq1"]
 [ext_resource type="Texture2D" uid="uid://cqoi06k8gc21d" path="res://Sprites/Enemigos/cam GORDO2.png" id="2_cam2"]

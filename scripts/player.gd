@@ -556,6 +556,11 @@ func _limitar_a_camara() -> void:
 		velocity.y = maxf(velocity.y, 0.0)
 	global_position = Vector2(x, y)
 
+## ¿La `forma` (en `xf`) toca el CUERPO? Excluye las "Patas" invisibles (Murciélago/Lobo/Oso): los ataques de área no deben pegar en el aire bajo el cuerpo.
+func toca_cuerpo(forma: Shape2D, xf: Transform2D) -> bool:
+	return forma.collide(xf, collision_shape.shape, collision_shape.global_transform)
+
+
 ## Caja que ocupan hoy los colliders activos del jugador.
 func _rect_colliders() -> Rect2:
 	var rp := Rect2()
