@@ -19,6 +19,7 @@ extends Node2D
 signal salud_cambio(hp: int, max_hp: int)
 signal fase_cambio(fase: int)
 signal reiniciado   # la arena se reinició: el HUD apaga la barra del jefe
+signal activado     # arrancó la pelea (musica_jefe.gd)
 signal died
 
 const LANZA_SCENE := preload("res://scenes/lanza_estrella.tscn")
@@ -499,6 +500,7 @@ func activar() -> void:
 		return
 	_invocado = true
 	_activo = true
+	activado.emit()
 	var pj := _obtener_player()
 	if pj is PhysicsBody2D and blanco_sonico != null:
 		(pj as PhysicsBody2D).add_collision_exception_with(blanco_sonico)   # el blanco del sónico no es una pared

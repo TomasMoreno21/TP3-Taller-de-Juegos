@@ -15,6 +15,7 @@ signal terminada
 @export_group("Cierre")
 @export var titulo_cierre := "SPIRIT KEEPER"
 @export var texto_cierre := "Gracias por jugar"
+@export var creditos_musica := "Música del jefe: «(Blood) Stained Glass» de FoxSynergy (CC-BY 3.0)"   ## atribución obligatoria
 @export_group("Tiempos (s)")
 @export var entrada := 0.8
 @export var duracion_tarjeta := 4.0
@@ -71,7 +72,7 @@ func _secuencia() -> void:
 	nombre.text = titulo_cierre
 	linea_institucion.text = texto_cierre
 	rol.text = ""
-	contacto.text = ""
+	contacto.text = creditos_musica
 	await _mostrar_tarjeta()
 	terminada.emit()
 	_ir_al_menu()

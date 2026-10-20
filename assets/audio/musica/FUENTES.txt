@@ -1,0 +1,11 @@
+Música — fuentes y licencias
+============================
+
+jefe_vitral_sangre.ogg  (pelea final, nivel_jefe.tscn > MusicaJefe)
+  Título: (Blood) Stained Glass (v0.8)
+  Autor: FoxSynergy
+  Fuente: https://opengameart.org/content/blood-stained-glass
+  Licencia: CC-BY 3.0 (https://creativecommons.org/licenses/by/3.0/)
+  Atribución obligatoria: "Música: (Blood) Stained Glass por FoxSynergy (CC-BY 3.0)"
+    (en los créditos finales: creditos_final.gd > creditos_musica)
+  Cambios: convertido de MP3 a OGG Vorbis, sin metadatos.
