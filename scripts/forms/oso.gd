@@ -50,7 +50,7 @@ func _init() -> void:
 	camera_lookahead_mult = 0.65
 	lean_angulo = 2.0
 	salto_rot_grados = 3.0   # inclinación leve al subir/caer
-	hit_zoom = 1.05
+	hit_zoom = 1.08
 	accel = 1600.0
 	friction = 2100.0
 	accel_air_mult = 0.5
@@ -64,7 +64,9 @@ func _init() -> void:
 	recovery_early_fraccion = 0.25
 	lunge_heavy = 36.0
 	melee_sticky = 0.0
-	shake_golpe_combo = 24.0   # la Garra sacude la cámara más que el resto
+	shake_golpe_ligero = 14.0   # golpes pesados de verdad: el Oso sacude la cámara el doble que el resto
+	shake_golpe_pesado = 24.0
+	shake_golpe_combo = 30.0
 	combos = [
 		{"nombre": "Garra", "descripcion": "Avance de tanque: embiste con armadura y empuja a todos.", "secuencia": ["light", "heavy"], "dano": 40, "knockback": 360.0, "tamano": Vector2(288, 186), "rango": 198.0, "embestida_dist": 700.0, "embestida_dur": 0.7, "atraviesa": false, "invulnerable": false, "armadura": true},
 	]

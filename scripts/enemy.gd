@@ -67,6 +67,7 @@ const TELEGRAFIA := preload("res://scripts/telegrafia_enemigo.gd")
 @export var altura_flote := 560.0             # px que se eleva sobre el piso donde lo pusiste en el editor
 @export var flote_amplitud := 14.0             # vaivén vertical (px)
 @export var flote_velocidad := 1.8             # velocidad del vaivén (rad/s)
+var _tip_volador_dado := false
 @export var solo_proyectil := true             # flotante: el cuerpo a cuerpo rebota; solo daña el proyectil
 @export var aura_escena: PackedScene = preload("res://scenes/aura_mistica.tscn")
 @export_group("")
@@ -530,6 +531,11 @@ func _physics_process(delta: float) -> void:
 	_pose_stun_actualizar(delta)
 	if health <= 0:
 		return
+	if flotante and solo_proyectil and not _tip_volador_dado:
+		var jug := get_tree().get_first_node_in_group("player")
+		if jug != null and jug.global_position.distance_to(global_position) < 1100.0:
+			_tip_volador_dado = true   # una vez por enemigo; el jugador lo muestra una sola vez en total
+			jug._tip_una_vez("volador", "tip_volador")
 	# Guardia anti-NaN: una colisión degenerada con el jugador (bordes exactos)
 	# puede volver no-finito el velocity/posición en move_and_slide. Si pasa,
 	# se restaura la última posición válida en vez de volar al infinito.
@@ -879,6 +885,9 @@ func take_damage(cantidad: int, knockback: float = 0.0, dir: int = 1, critico: b
 	var es_proyectil := golpe_proyectil
 	golpe_proyectil = false
 	if flotante and solo_proyectil and not es_proyectil:
+		var jug := get_tree().get_first_node_in_group("player")
+		if jug != null and jug.has_method("avisar_volador_intocable"):
+			jug.avisar_volador_intocable()
 		_rebotar_golpe()
 		return
 	health -= cantidad

@@ -58,6 +58,7 @@
 [ext_resource type="PackedScene" path="res://scenes/nivel2_terreno.scn" id="terreno_n2"]
 [ext_resource type="Script" uid="uid://b2knw64qxpag6" path="res://scripts/titulo_nivel.gd" id="titulo_niv"]
 [ext_resource type="Script" uid="uid://cdwkgnab3s3bd" path="res://scripts/zona_sonido.gd" id="zsonido"]
+[ext_resource type="PackedScene" path="res://scenes/tutorial_paso.tscn" id="tutpaso"]
 
 [sub_resource type="Resource" id="Resource_h4t55"]
 script = ExtResource("17_roi11")
@@ -2861,3 +2862,40 @@ script = ExtResource("escala_grises")
 [node name="DialogoVolar" parent="." unique_id=507775750 instance=ExtResource("32_dtg")]
 position = Vector2(-5545, 6885)
 dialogo_id = "n3_volar"
+
+[node name="TutHumanoM" parent="." instance=ExtResource("tutpaso")]
+position = Vector2(600, -6000)
+paso_id = "tut_humano_n2"
+ignorar_hecho = true
+accion = 6
+paso_siguiente = NodePath("../TutMurci")
+
+[node name="TutMurci" parent="." instance=ExtResource("tutpaso")]
+position = Vector2(600, -6000)
+paso_id = "tut_murcielago"
+ignorar_hecho = true
+accion = 6
+paso_siguiente = NodePath("../TutAleteo")
+
+[node name="TutAleteo" parent="." instance=ExtResource("tutpaso")]
+position = Vector2(600, -6000)
+paso_id = "tut_aleteo"
+ignorar_hecho = true
+accion = 8
+forma_requerida = 3
+
+[node name="TutVolForma" parent="." instance=ExtResource("tutpaso")]
+position = Vector2(3654, 1752)
+paso_id = "tut_vol_forma"
+ignorar_hecho = true
+accion = 6
+forma_requerida = 3
+paso_siguiente = NodePath("../TutVolChillido")
+
+[node name="TutVolChillido" parent="." instance=ExtResource("tutpaso")]
+position = Vector2(3654, -6000)
+paso_id = "tut_vol_chillido"
+accion = 9
+forma_requerida = 3
+
+[connection signal="desbloqueada" from="UnlockMurcielago" to="TutHumanoM" method="activar_diferido"]

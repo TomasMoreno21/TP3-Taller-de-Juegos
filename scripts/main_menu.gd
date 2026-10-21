@@ -2,7 +2,6 @@ extends Control
 
 const SCENE_JUEGO := "res://scenes/comic_intro.tscn"   # intro en viÃ±etas; al terminar carga nivel1
 const SCENE_OPCIONES := "res://scenes/opciones.tscn"
-const SCENE_MODO_PRUEBA := "res://scripts/modo_prueba_panel.gd"   # panel armado por cÃ³digo
 
 @export var ojo_cuadros: Array[Texture2D] = [
 	preload("res://Sprites/Menu/ojo/entre1.png"),
@@ -53,7 +52,6 @@ var _controls: CanvasLayer
 	$UI/Menu/Options/Jugar,
 	$UI/Menu/Options/Opciones,
 	$UI/Menu/Options/Salir,
-	$UI/Niveles,
 ]
 
 
@@ -70,12 +68,6 @@ func _ready() -> void:
 		mp.volume_db = musica_volumen_db
 		add_child(mp)
 		mp.play()
-	var modo_prueba := get_node_or_null("/root/ModoPrueba")
-	if modo_prueba == null or not modo_prueba.habilitado:   # versiÃ³n final: sin selector de nivel
-		botones.erase($UI/Niveles)
-		$UI/Niveles.hide()
-	else:
-		_poner_version(modo_prueba.version_texto)
 	for i in botones.size():
 		botones[i].pressed.connect(_on_boton_pressed.bind(i))
 		botones[i].focus_entered.connect(_on_focus.bind(i))
@@ -149,38 +141,10 @@ func _on_boton_pressed(i: int) -> void:
 	match botones[i].name:
 		&"Jugar":
 			_jugar()
-		&"Niveles":
-			_abrir_niveles()
 		&"Opciones":
 			_abrir_panel(SCENE_OPCIONES)
 		&"Salir":
 			get_tree().quit()
-
-
-## VersiÃ³n de la prueba, abajo a la derecha: los reportes de los testers dicen de quÃ© build hablan.
-func _poner_version(texto: String) -> void:
-	var l := Label.new()
-	l.text = texto
-	l.add_theme_font_size_override("font_size", 18)
-	l.add_theme_color_override("font_color", Color(0.95, 0.85, 0.4, 0.8))
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	l.anchor_left = 1.0
-	l.anchor_right = 1.0
-	l.anchor_top = 1.0
-	l.anchor_bottom = 1.0
-	l.offset_left = -420.0
-	l.offset_right = -24.0
-	l.offset_top = -52.0
-	l.offset_bottom = -24.0
-	add_child(l)
-
-
-func _abrir_niveles() -> void:
-	var c: CanvasLayer = (load(SCENE_MODO_PRUEBA) as GDScript).new()
-	c.en_juego = false
-	_controls = c
-	c.tree_exited.connect(_refocar)
-	add_child(c)
 
 
 ## Jugar: el menú se apaga y la luna se cierra hasta quedar el párpado cerrado del ojo (el resto de la animación

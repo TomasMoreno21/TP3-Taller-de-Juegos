@@ -41,6 +41,7 @@
 [ext_resource type="PackedScene" uid="uid://bhxju6lap2tcq" path="res://scenes/unlock_forma.tscn" id="unlock"]
 [ext_resource type="PackedScene" uid="uid://dih4mbupyhdag" path="res://scenes/enredadera.tscn" id="vine"]
 [ext_resource type="Script" uid="uid://d3nihovco06v7" path="res://scripts/zona_latido.gd" id="zona_latido"]
+[ext_resource type="PackedScene" path="res://scenes/tutorial_paso.tscn" id="tutpaso"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tinte3"]
 shader = ExtResource("tinte")
@@ -1955,3 +1956,26 @@ script = ExtResource("escala_grises")
 
 [node name="GoteoTecho" type="Node2D" parent="." unique_id=2030551103]
 script = ExtResource("goteo_n3")
+
+[node name="TutHumanoO" parent="." instance=ExtResource("tutpaso")]
+position = Vector2(331, -6000)
+paso_id = "tut_humano_n3"
+ignorar_hecho = true
+accion = 6
+paso_siguiente = NodePath("../TutOso")
+
+[node name="TutOso" parent="." instance=ExtResource("tutpaso")]
+position = Vector2(331, -6000)
+paso_id = "tut_oso"
+ignorar_hecho = true
+accion = 6
+paso_siguiente = NodePath("../TutGarrotazo")
+
+[node name="TutGarrotazo" parent="." instance=ExtResource("tutpaso")]
+position = Vector2(331, -6000)
+paso_id = "tut_garrotazo"
+ignorar_hecho = true
+accion = 3
+forma_requerida = 2
+
+[connection signal="desbloqueada" from="UnlockOso" to="TutHumanoO" method="activar_diferido"]

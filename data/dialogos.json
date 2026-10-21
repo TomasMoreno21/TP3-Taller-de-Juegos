@@ -304,6 +304,7 @@
 		]
 	},
 	"tut_mover": {
+		"etiqueta": "Mover",
 		"hablante": "Amuleto",
 		"lineas": [
 			"Movete con {mover}"
@@ -311,6 +312,7 @@
 		"pista": "Avanzá, Humano: {mover}."
 	},
 	"tut_saltar": {
+		"etiqueta": "Saltar",
 		"hablante": "Amuleto",
 		"lineas": [
 			"Saltá con {jump}"
@@ -318,6 +320,7 @@
 		"pista": "Más impulso, Humano: {jump}."
 	},
 	"tut_ligero": {
+		"etiqueta": "Golpe",
 		"hablante": "Amuleto",
 		"lineas": [
 			"Golpe rápido: {attack}"
@@ -325,6 +328,7 @@
 		"pista": "Golpeá con decisión: {attack}."
 	},
 	"tut_fuerte": {
+		"etiqueta": "Golpe fuerte",
 		"hablante": "Amuleto",
 		"lineas": [
 			"Golpe fuerte: {heavy}"
@@ -332,11 +336,94 @@
 		"pista": "El golpe pesado rompe guardias: {heavy}."
 	},
 	"tut_bloqueo": {
+		"etiqueta": "Bloquear",
 		"hablante": "Amuleto",
 		"lineas": [
 			"Bloqueá con {block}"
 		],
 		"pista": "Cubrite cuando te ataquen: {block}."
+	},
+	"tut_salto_largo": {
+		"etiqueta": "Mantener = más alto",
+		"hablante": "Amuleto",
+		"lineas": [
+			"Mantené {jump}: más tiempo apretado, más alto saltás"
+		],
+		"pista": "Saltá y no sueltes {jump} hasta lo más alto."
+	},
+	"tut_humano": {
+		"etiqueta": "Humano",
+		"hablante": "Amuleto",
+		"lineas": [
+			"Volvé a Humano: {forma_abajo}"
+		],
+		"pista": "Humano es {forma_abajo}. Transformarse gasta energía."
+	},
+	"tut_lobo": {
+		"etiqueta": "Lobo",
+		"hablante": "Amuleto",
+		"lineas": [
+			"Lobo otra vez: {forma_derecha}"
+		],
+		"pista": "Lobo es {forma_derecha}. Pide 25 de energía."
+	},
+	"tut_doble_salto": {
+		"etiqueta": "Doble salto",
+		"hablante": "Amuleto",
+		"lineas": ["Doble salto: tocá {jump} dos veces"],
+		"pista": "Saltá y volvé a tocar {jump} en el aire.",
+		"cierre": "Transformado, la energía se drena. A cero, volvés a Humano."
+	},
+	"tut_humano_n2": {
+		"etiqueta": "Humano",
+		"hablante": "Amuleto",
+		"lineas": ["Volvé a Humano: {forma_abajo}"],
+		"pista": "Humano es {forma_abajo}. Transformarse gasta energía."
+	},
+	"tut_murcielago": {
+		"etiqueta": "Murciélago",
+		"hablante": "Amuleto",
+		"lineas": ["Murciélago otra vez: {forma_arriba}"],
+		"pista": "Murciélago es {forma_arriba}. Pide 25 de energía."
+	},
+	"tut_aleteo": {
+		"etiqueta": "Aletear",
+		"hablante": "Amuleto",
+		"lineas": ["Aleteá: tocá {jump} en el aire, las veces que quieras"],
+		"pista": "Saltá y seguí tocando {jump} para subir. Cada aleteo gasta energía.",
+		"cierre": "Mantené {jump} al caer para planear."
+	},
+	"tut_humano_n3": {
+		"etiqueta": "Humano",
+		"hablante": "Amuleto",
+		"lineas": ["Volvé a Humano: {forma_abajo}"],
+		"pista": "Humano es {forma_abajo}. Transformarse gasta energía."
+	},
+	"tut_oso": {
+		"etiqueta": "Oso",
+		"hablante": "Amuleto",
+		"lineas": ["Oso otra vez: {forma_izquierda}"],
+		"pista": "Oso es {forma_izquierda}. Pide 25 de energía."
+	},
+	"tut_garrotazo": {
+		"etiqueta": "Garrotazo",
+		"hablante": "Amuleto",
+		"lineas": ["Garrotazo: {heavy}"],
+		"pista": "Con el Oso, {heavy} da un garrotazo que rompe guardias.",
+		"cierre": "El garrotazo rompe lo que tus golpes rápidos no."
+	},
+	"tut_vol_forma": {
+		"etiqueta": "Murciélago",
+		"hablante": "Amuleto",
+		"lineas": ["Los voladores solo caen con el Murciélago: {forma_arriba}"],
+		"pista": "Murciélago es {forma_arriba}. Pide 25 de energía."
+	},
+	"tut_vol_chillido": {
+		"etiqueta": "Chillido",
+		"hablante": "Amuleto",
+		"lineas": ["Lanzá el chillido al volador: {special}"],
+		"pista": "Mirá hacia el volador y apretá {special}: el chillido lo persigue.",
+		"cierre": "Es la única forma de vencerlos. Acordate: Murciélago y {special}."
 	},
 	"n3_descenso": {
 		"tipo": "tip",
@@ -617,6 +704,21 @@
 		"hablante": "Amuleto",
 		"lineas": [
 			"Mantené {block} para bloquear. Apretalo justo antes del golpe y es un parry."
+		]
+	},
+	"tip_volador": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"Los voladores NO se golpean: solo los vence el chillido del Murciélago.",
+			"Transformate con {forma_arriba} y apretá {special} para lanzarlo."
+		]
+	},
+	"tip_volador_fallo": {
+		"tipo": "tip",
+		"hablante": "Amuleto",
+		"lineas": [
+			"¡Así no los alcanzás! A los voladores solo los vence el chillido del Murciélago: {forma_arriba} y {special}."
 		]
 	},
 	"tip_formas_recordar": {

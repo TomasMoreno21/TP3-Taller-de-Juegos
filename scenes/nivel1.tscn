@@ -1977,6 +1977,11 @@ semilla = 32
 [node name="Checkpoint4" parent="." unique_id=520744038 instance=ExtResource("27_46iir")]
 position = Vector2(26711, 2407)
 
+[node name="TutSaltoLargo" parent="." unique_id=1720342868 instance=ExtResource("64_tut")]
+position = Vector2(21768, 5767)
+paso_id = "tut_salto_largo"
+accion = 7
+
 [node name="Checkpoint4b" parent="." unique_id=1858692116 instance=ExtResource("27_46iir")]
 position = Vector2(18444, 5832)
 
@@ -2875,6 +2880,27 @@ position = Vector2(7516, 793)
 paso_id = "tut_bloqueo"
 accion = 4
 
+[node name="TutHumano" parent="." unique_id=655536784 instance=ExtResource("64_tut")]
+position = Vector2(25968, -6000)
+paso_id = "tut_humano"
+accion = 6
+paso_siguiente = NodePath("../TutLobo")
+ignorar_hecho = true
+
+[node name="TutLobo" parent="." unique_id=1139293152 instance=ExtResource("64_tut")]
+position = Vector2(25968, -6000)
+paso_id = "tut_lobo"
+accion = 6
+paso_siguiente = NodePath("../TutDobleSalto")
+ignorar_hecho = true
+
+[node name="TutDobleSalto" parent="." unique_id=1118893843 instance=ExtResource("64_tut")]
+position = Vector2(25968, -6000)
+paso_id = "tut_doble_salto"
+accion = 8
+forma_requerida = 1
+ignorar_hecho = true
+
 [node name="TituloNivel" type="CanvasLayer" parent="." unique_id=1761322483]
 script = ExtResource("titulo_niv")
 
@@ -3237,6 +3263,8 @@ script = ExtResource("escala_grises")
 
 [node name="TerrenoMundo" type="Node" parent="." unique_id=173523292]
 script = ExtResource("tmundo1")
+
+[connection signal="desbloqueada" from="UnlockLobo" to="TutHumano" method="activar_diferido"]
 
 [editable path="EncounterA"]
 [editable path="EncounterB"]

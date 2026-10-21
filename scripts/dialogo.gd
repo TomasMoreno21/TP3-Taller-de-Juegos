@@ -190,8 +190,18 @@ func mostrar(lineas: Array, hablante: String = "Amuleto", marcado: bool = false,
 
 
 ## Consejo corto, sin bloquear: globo chico. Se ignora si hay narrativa en curso.
-func mostrar_tip(lineas: Array, hablante: String = "Amuleto", guardar_en_ayuda: bool = true) -> void:
+## Pasos de tutorial en curso: mientras haya uno, los consejos sueltos esperan (los del propio paso van con `prioritario`).
+var pasos_activos := 0
+
+
+func mostrar_tip(lineas: Array, hablante: String = "Amuleto", guardar_en_ayuda: bool = true, prioritario: bool = false) -> void:
 	if hay_narrativa() or nivel_ayuda == 0:
+		return
+	if pasos_activos > 0 and not prioritario:
+		for w in _en_espera:
+			if not bool(w["narr"]) and w["lineas"] == lineas:
+				return
+		_en_espera.append({"narr": false, "lineas": lineas, "hablante": hablante, "guardar": guardar_en_ayuda, "t": _t})
 		return
 	if not _es_calma():
 		for w in _en_espera:
@@ -583,7 +593,7 @@ func _revisar_espera(delta: float) -> void:
 				if _charla_reciente() and not _en_espera.is_empty():
 					_en_espera.back()["t"] = w["t"]   # si volvió a esperar, conserva su antigüedad
 		elif _t - float(w["t"]) < seg_tip_vence:
-			mostrar_tip(w["lineas"], w["hablante"], bool(w["guardar"]))
+			mostrar_tip(w["lineas"], w["hablante"], bool(w["guardar"]))   # con un paso activo vuelve a esperar sin perder su antigüedad
 	# Si alguna charla venció sin mostrarse, quien la esperaba (tutoriales, cinemáticas) no debe quedar colgado.
 	if _fase == Fase.LIBRE and not hay_narrativa():
 		dialogo_terminado.emit()

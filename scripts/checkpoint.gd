@@ -8,8 +8,6 @@ signal activado
 
 @export var offset_respawn := Vector2(0, -60)
 @export_group("Modo prueba")
-@export var nombre_prueba := ""   ## nombre en la lista del modo prueba (vacío = el del nodo, con espacios)
-@export var orden_prueba := 0     ## posición en la lista del modo prueba (0 = automática: cadena por cercanía desde el inicio)
 @export_group("")
 @export var color_apagado := Color(0.45, 0.5, 0.62)
 @export var color_encendido := Color(0.35, 0.9, 0.6)

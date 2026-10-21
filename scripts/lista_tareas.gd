@@ -12,6 +12,7 @@ const TAM := 19
 
 enum Estado { PENDIENTE, ACTUAL, HECHA }
 
+@export var mostrar_tutorial := false   ## los pasos del tutorial (ids "tut_") se guardan igual pero no se dibujan: los muestra el cartel sobre el personaje
 var _items: Array[Dictionary] = []   # {id, texto, estado, total, cuenta, t_hecho}
 var _fuente: Font
 var _t := 0.0
@@ -193,6 +194,8 @@ func _draw() -> void:
 	if _fuente == null or _items.is_empty():
 		return
 	var it: Dictionary = _items[clampi(_idx_mostrado(), 0, _items.size() - 1)]
+	if not mostrar_tutorial and String(it["id"]).begins_with("tut_"):
+		return
 	var r := Rect2(Vector2.ZERO, size)
 	draw_rect(Rect2(r.position + Vector2(6, 6), r.size), Color(0, 0, 0, 0.8))
 	draw_rect(r, PAPEL)

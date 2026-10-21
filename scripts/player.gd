@@ -77,7 +77,7 @@ const HITSTOP_COMBO := 0.11
 @export var tag_bonus_mult := 1.5           # cambiar de forma a mitad de racha: el próximo golpe pega esto de más
 @export var tag_bonus_tiempo := 2.0         # cuánto dura ese bonus (s)
 @export var tag_energia := 8.0              # energía que da el cambio de forma dentro de una racha
-@export var flap_cooldown := 0.2          # s entre aleteos del Murciélago
+@export var flap_cooldown := 0.14         # s entre aleteos del Murciélago
 @export var aleteo := 1.0                    # ritmo del aleteo visual quieto/planeando (0 = alas quietas)
 @export_group("Cuerpo elástico")
 @export var resorte_rigidez := 420.0        # cuánto tira el cuerpo de vuelta a su forma (más alto = más rápido)
@@ -220,6 +220,7 @@ var _attack_anim_cola: Array[String] = []
 var _attack_anim_speed_scale := 1.0
 var _attack_frame_dur := PackedFloat32Array()   # tiempo planificado de cada frame de la animación de ataque en curso
 static var _tips_vistos: Dictionary = {}
+var _aviso_volador_ms := -100000
 @export var recordar_muertes := 3          ## muertes en la misma zona para que el Amuleto recuerde las transformaciones
 @export var recordar_radio := 1200.0       ## px: "misma zona"
 @export var recordar_y_max_n2 := 3500.0    ## el recordatorio solo corre en N1 y en N2 hasta esta y (mitad del descenso)
@@ -813,8 +814,10 @@ func _physics_process(delta: float) -> void:
 			dir_glide = 0.0
 		if dir_glide != 0.0:
 			var m := 1.75 if current_form == Form.MURCIELAGO else 1.1
-			var a := 1.6 if current_form == Form.MURCIELAGO else 0.6
+			var a := 2.2 if current_form == Form.MURCIELAGO else 0.6
 			velocity.x = move_toward(velocity.x, dir_glide * data.speed * m, data.accel * a * delta)
+		elif current_form == Form.MURCIELAGO:
+			velocity.x = move_toward(velocity.x, 0.0, data.friction * 0.8 * delta)   # soltar dirección frena: control preciso
 	var x_ini := global_position.x
 	var vx_antes := velocity.x
 	if is_on_floor() and not _trepando and absf(velocity.x) > 2.0:
@@ -918,6 +921,9 @@ func _physics_process(delta: float) -> void:
 		_jump_buffer -= delta
 		if is_on_floor() or _coyote_time > 0.0 or data.can_jump():
 			data.try_jump(self)
+			_jump_buffer = 0.0
+		elif data.flap_impulso > 0.0 and _flap_cd <= 0.0 and energia >= data.flap_costo:
+			_aletear(data)   # toque durante el cooldown del aleteo: sale apenas se libera, no se pierde
 			_jump_buffer = 0.0
 
 
@@ -1575,7 +1581,7 @@ func _hitstop_por_tipo() -> float:
 		_:
 			return 0.0
 	if current_form == Form.OSO:
-		dur *= 1.25
+		dur *= 1.6
 	elif current_form == Form.LOBO:
 		dur *= 0.85
 	return dur
@@ -1898,6 +1904,7 @@ func _aletear(data: Forma) -> void:
 		var vmax := data.speed * 1.75
 		velocity.x = move_toward(velocity.x, signf(dir_flap) * vmax, 180.0)
 	_emitir_polvo(0.35)
+	stretch_y(0.12, 0.12)   # golpe de ala visible en el cuerpo
 	_picada = false
 
 
@@ -2286,6 +2293,18 @@ func _tip_una_vez(clave: String, texto: String) -> void:
 	_mostrar_tip_ahora(clave, texto)
 
 
+## Golpe o onda que no puede tocar a un volador: recuerda cómo se lo daña (cada 4 s si insiste: no queda mudo).
+func avisar_volador_intocable() -> void:
+	var ahora := Time.get_ticks_msec()
+	if not tips_ayuda or ahora - _aviso_volador_ms < 4000 or DisplayServer.get_name() == "headless":
+		return
+	var dlg := get_node_or_null("/root/Dialogo")
+	if dlg == null or not dlg.has_method("mostrar_tip"):
+		return
+	_aviso_volador_ms = ahora
+	dlg.mostrar_tip(dlg.lineas_de("tip_volador_fallo"), "Amuleto", false)
+
+
 func _mostrar_tip_ahora(clave: String, texto: String) -> void:
 	var dlg := get_node_or_null("/root/Dialogo")
 	if dlg == null or not dlg.has_method("mostrar_tip"):
@@ -2299,6 +2318,9 @@ func _mostrar_tip_ahora(clave: String, texto: String) -> void:
 func en_calma() -> bool:
 	if not is_inside_tree():
 		return false
+	var dlg_calma := get_node_or_null("/root/Dialogo")
+	if dlg_calma != null and dlg_calma.pasos_activos > 0:
+		return false   # hay una tarea del tutorial en curso: los consejos esperan
 	if Time.get_ticks_msec() - _ultimo_dano_ms < 4000 or _attacking or blocking or not is_on_floor():
 		return false
 	for e in get_tree().get_nodes_in_group("enemy"):
@@ -2794,6 +2816,7 @@ func _update_animacion() -> void:
 	var sy := visual.scale.y if absf(visual.scale.y) > 0.01 else 1.0
 	_pend_off = Vector2(pies_px * sin(_rot_suelo_vis) / sx, -pies_px * (1.0 - cos(_rot_suelo_vis)) / sy)
 	visual.offset.x += _pend_off.x
+	_actualizar_ojos_pos()   # el offset cambia cada frame en pendientes: sin esto los ojos se despegan del cuerpo
 	# Polvo al correr (Oso más espaciado y pesado).
 	if polvo_correr_intervalo > 0.0 and is_on_floor() and not _attacking and absf(velocity.x) > data.speed * 0.6:
 		_polvo_paso_t -= dt
@@ -3080,6 +3103,8 @@ func onda_area(radio: float, dano: int, knockback: float, solo_atras: bool = fal
 		if "health" in n and int(n.health) <= 0:
 			continue
 		if n.get("flotante") == true and n.get("solo_proyectil") == true:
+			if absf(n.global_position.x - global_position.x) <= radio:
+				avisar_volador_intocable()
 			continue   # los voladores solo reciben proyectiles: la onda los rebotaba y empujaba al jugador
 		var dx: float = n.global_position.x - global_position.x
 		var dy: float = n.global_position.y - global_position.y

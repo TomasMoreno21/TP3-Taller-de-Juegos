@@ -62,6 +62,11 @@ func _init() -> void:
 
 	# --- ayuda guarda consejos
 	await create_timer(5.0).timeout
+	_check(dlg.pasos_activos > 0, "con un paso en curso se bloquean los consejos sueltos")
+	dlg.mostrar_tip(["Consejo retenido"])
+	await create_timer(0.2).timeout
+	_check(dlg.texto_actual() != "Consejo retenido", "un consejo suelto espera mientras hay un paso activo")
+	dlg.pasos_activos = 0   # el resto del test sigue sin pasos activos
 	dlg.mostrar_tip(["Un consejo de prueba"])
 	await create_timer(0.2).timeout
 	_check(prog.ayuda_vista.has("Un consejo de prueba"), "los consejos se guardan para releerlos")

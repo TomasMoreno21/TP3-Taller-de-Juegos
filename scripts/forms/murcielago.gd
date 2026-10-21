@@ -21,7 +21,7 @@ func _init() -> void:
 	dano_recibido_mult = 1.1
 	special_cost = 8.0
 	flap_impulso = 460.0
-	flap_costo = 6.0
+	flap_costo = 4.0
 	special_cooldown = 0.4
 	special_cooldown_combate = 0.6
 	color = Color(0.52, 0.4, 0.62)
@@ -41,7 +41,7 @@ func _init() -> void:
 	sprint_min_speed = 330.0
 	accel = 3600.0
 	friction = 2000.0
-	accel_air_mult = 0.95
+	accel_air_mult = 1.1
 	coyote_time = 0.16
 	jump_buffer_time = 0.18
 	jump_cut_multiplier = 0.20

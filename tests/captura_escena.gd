@@ -5,8 +5,6 @@ extends SceneTree
 
 func _initialize() -> void:
 	var a := OS.get_cmdline_user_args()
-	if root.has_node("ModoPrueba"):
-		root.get_node("ModoPrueba").set("habilitado", false)  # sin botones de prueba en las capturas
 	var n: Node = load(a[0]).instantiate()
 	if "cambiar_escena_al_terminar" in n:
 		n.cambiar_escena_al_terminar = false
