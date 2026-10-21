@@ -1,13 +1,26 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://d36ea7ux1xo7h"]
 
-[ext_resource type="Script" path="res://scripts/creditos_final.gd" id="1_cf"]
+[ext_resource type="Script" uid="uid://c2erjd60hfrc3" path="res://scripts/creditos_final.gd" id="1_cf"]
 [ext_resource type="PackedScene" path="res://scenes/form_icon.tscn" id="2_icon"]
+[ext_resource type="Script" uid="uid://dvs3515axf0d" path="res://scripts/anim_frames_ui.gd" id="3_anim"]
+[ext_resource type="Texture2D" uid="uid://c84sgyix8f1gx" path="res://Sprites/Menu/titulo/titulo-1.png" id="4_tit1"]
+[ext_resource type="Texture2D" uid="uid://cu0vmb6lhslbk" path="res://Sprites/Menu/titulo/titulo-2.png" id="5_tit2"]
+[ext_resource type="Texture2D" uid="uid://bgyhftey4y01w" path="res://Sprites/Menu/titulo/titulo-3.png" id="6_tit3"]
+[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/tomi1.png" id="7_tomi1"]
+[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/tomi2.png" id="8_tomi2"]
+[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/tomi3.png" id="9_tomi3"]
+[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/mica1.png" id="10_mica1"]
+[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/mica2.png" id="11_mica2"]
+[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/mica3.png" id="12_mica3"]
+[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/fran1.png" id="13_fran1"]
+[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/fran2.png" id="14_fran2"]
+[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/fran3.png" id="15_fran3"]
 
-[node name="CreditosFinal" type="CanvasLayer"]
+[node name="CreditosFinal" type="CanvasLayer" unique_id=1724235477]
 layer = 110
 script = ExtResource("1_cf")
 
-[node name="Negro" type="ColorRect" parent="."]
+[node name="Negro" type="ColorRect" parent="." unique_id=547897193]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -16,7 +29,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
-[node name="Centro" type="CenterContainer" parent="."]
+[node name="Centro" type="CenterContainer" parent="." unique_id=1676333016]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -24,51 +37,96 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Tarjeta" type="VBoxContainer" parent="Centro"]
+[node name="Tarjeta" type="VBoxContainer" parent="Centro" unique_id=548797842]
 layout_mode = 2
 theme_override_constants/separation = 14
 alignment = 1
 
-[node name="Icono" parent="Centro/Tarjeta" instance=ExtResource("2_icon")]
+[node name="Icono" parent="Centro/Tarjeta" unique_id=1085188586 instance=ExtResource("2_icon")]
 custom_minimum_size = Vector2(200, 200)
-layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="Nombre" type="Label" parent="Centro/Tarjeta"]
+[node name="Titulo" type="TextureRect" parent="Centro/Tarjeta" unique_id=635992130]
+custom_minimum_size = Vector2(880, 126)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("4_tit1")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("3_anim")
+frames = Array[Texture2D]([ExtResource("4_tit1"), ExtResource("5_tit2"), ExtResource("6_tit3")])
+
+[node name="NombreAnim0" type="TextureRect" parent="Centro/Tarjeta"]
+visible = false
+custom_minimum_size = Vector2(492, 88)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("7_tomi1")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("3_anim")
+frames = Array[Texture2D]([ExtResource("7_tomi1"), ExtResource("8_tomi2"), ExtResource("9_tomi3")])
+fps = 6.0
+
+[node name="NombreAnim1" type="TextureRect" parent="Centro/Tarjeta"]
+visible = false
+custom_minimum_size = Vector2(535, 87)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("10_mica1")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("3_anim")
+frames = Array[Texture2D]([ExtResource("10_mica1"), ExtResource("11_mica2"), ExtResource("12_mica3")])
+fps = 6.0
+
+[node name="NombreAnim2" type="TextureRect" parent="Centro/Tarjeta"]
+visible = false
+custom_minimum_size = Vector2(488, 84)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("13_fran1")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("3_anim")
+frames = Array[Texture2D]([ExtResource("13_fran1"), ExtResource("14_fran2"), ExtResource("15_fran3")])
+fps = 6.0
+
+[node name="Nombre" type="Label" parent="Centro/Tarjeta" unique_id=669054429]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.93, 0.85, 1)
 theme_override_font_sizes/font_size = 64
 text = "Nombre"
 horizontal_alignment = 1
 
-[node name="Filete" type="ColorRect" parent="Centro/Tarjeta"]
+[node name="Filete" type="ColorRect" parent="Centro/Tarjeta" unique_id=563887152]
 custom_minimum_size = Vector2(360, 3)
 layout_mode = 2
 size_flags_horizontal = 4
 color = Color(0.85, 0.72, 0.4, 1)
 
-[node name="Institucion" type="Label" parent="Centro/Tarjeta"]
+[node name="Institucion" type="Label" parent="Centro/Tarjeta" unique_id=10698543]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.93, 0.85, 1)
 theme_override_font_sizes/font_size = 34
 text = "Institución"
 horizontal_alignment = 1
 
-[node name="Rol" type="Label" parent="Centro/Tarjeta"]
+[node name="Rol" type="Label" parent="Centro/Tarjeta" unique_id=993928555]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.72, 0.4, 1)
 theme_override_font_sizes/font_size = 30
 text = "Rol"
 horizontal_alignment = 1
 
-[node name="Contacto" type="Label" parent="Centro/Tarjeta"]
+[node name="Contacto" type="Label" parent="Centro/Tarjeta" unique_id=998137534]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.68, 0.62, 1)
 theme_override_font_sizes/font_size = 26
 text = "Contacto"
 horizontal_alignment = 1
 
-[node name="Saltar" type="Label" parent="."]
+[node name="Saltar" type="Label" parent="." unique_id=818185902]
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0

@@ -38,9 +38,20 @@ var _player_musica: AudioStreamPlayer
 @onready var tarjeta: Control = $Centro/Tarjeta
 @onready var icono = $Centro/Tarjeta/Icono   # form_icon.gd
 @onready var nombre: Label = $Centro/Tarjeta/Nombre
+## Nombres animados en loop (anim_frames_ui.gd): el nodo `NombreAnim<i>` reemplaza al texto del integrante i.
+@onready var nombres_anim: Array[TextureRect] = _buscar_nombres_anim()
+@onready var filete: ColorRect = $Centro/Tarjeta/Filete
+@onready var titulo_anim: TextureRect = $Centro/Tarjeta/Titulo   # el título animado del menú (anim_frames_ui.gd)
 @onready var linea_institucion: Label = $Centro/Tarjeta/Institucion
 @onready var rol: Label = $Centro/Tarjeta/Rol
 @onready var contacto: Label = $Centro/Tarjeta/Contacto
+
+
+func _buscar_nombres_anim() -> Array[TextureRect]:
+	var r: Array[TextureRect] = []
+	for i in nombres.size():
+		r.append(get_node_or_null("Centro/Tarjeta/NombreAnim%d" % i) as TextureRect)
+	return r
 
 
 func _ready() -> void:
@@ -78,6 +89,12 @@ func _secuencia() -> void:
 	for i in nombres.size():
 		tarjeta_actual = i
 		icono.visible = true
+		titulo_anim.visible = false
+		filete.visible = true
+		for k in nombres_anim.size():
+			if nombres_anim[k] != null:
+				nombres_anim[k].visible = k == i
+		nombre.visible = i >= nombres_anim.size() or nombres_anim[i] == null
 		icono.forma = formas[i] if i < formas.size() else 0
 		nombre.text = nombres[i]
 		linea_institucion.text = institucion
@@ -88,7 +105,12 @@ func _secuencia() -> void:
 			return
 	tarjeta_actual = nombres.size()
 	icono.visible = false
-	nombre.text = titulo_cierre
+	for n in nombres_anim:
+		if n != null:
+			n.visible = false
+	nombre.visible = false   # en el cierre va el título animado del menú, no texto
+	titulo_anim.visible = true
+	filete.visible = false   # la línea de abajo no va con el título
 	linea_institucion.text = texto_cierre
 	rol.text = ""
 	contacto.text = creditos_musica
