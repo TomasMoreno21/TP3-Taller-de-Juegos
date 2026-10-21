@@ -6,15 +6,18 @@
 [ext_resource type="Texture2D" uid="uid://c84sgyix8f1gx" path="res://Sprites/Menu/titulo/titulo-1.png" id="4_tit1"]
 [ext_resource type="Texture2D" uid="uid://cu0vmb6lhslbk" path="res://Sprites/Menu/titulo/titulo-2.png" id="5_tit2"]
 [ext_resource type="Texture2D" uid="uid://bgyhftey4y01w" path="res://Sprites/Menu/titulo/titulo-3.png" id="6_tit3"]
-[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/tomi1.png" id="7_tomi1"]
-[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/tomi2.png" id="8_tomi2"]
-[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/tomi3.png" id="9_tomi3"]
-[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/mica1.png" id="10_mica1"]
-[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/mica2.png" id="11_mica2"]
-[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/mica3.png" id="12_mica3"]
-[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/fran1.png" id="13_fran1"]
-[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/fran2.png" id="14_fran2"]
-[ext_resource type="Texture2D" path="res://Sprites/Menu/creditos/fran3.png" id="15_fran3"]
+[ext_resource type="Texture2D" uid="uid://dhpxjn7dunfl1" path="res://Sprites/Menu/creditos/tomi1.png" id="7_tomi1"]
+[ext_resource type="Texture2D" uid="uid://duwbcx0oteidu" path="res://Sprites/Menu/creditos/tomi2.png" id="8_tomi2"]
+[ext_resource type="Texture2D" uid="uid://5hugwm11e23k" path="res://Sprites/Menu/creditos/tomi3.png" id="9_tomi3"]
+[ext_resource type="Texture2D" uid="uid://t1culhspqho4" path="res://Sprites/Menu/creditos/mica1.png" id="10_mica1"]
+[ext_resource type="Texture2D" uid="uid://c2thys2geng35" path="res://Sprites/Menu/creditos/mica2.png" id="11_mica2"]
+[ext_resource type="Texture2D" uid="uid://byn715hegyngd" path="res://Sprites/Menu/creditos/mica3.png" id="12_mica3"]
+[ext_resource type="Texture2D" uid="uid://chhqxpvce3ks8" path="res://Sprites/Menu/creditos/fran1.png" id="13_fran1"]
+[ext_resource type="Texture2D" uid="uid://bajd5jsx7jxr6" path="res://Sprites/Menu/creditos/fran2.png" id="14_fran2"]
+[ext_resource type="Texture2D" uid="uid://5xcq0541fgp" path="res://Sprites/Menu/creditos/fran3.png" id="15_fran3"]
+[ext_resource type="Texture2D" uid="uid://d2lnitn1os7h3" path="res://Sprites/Menu/creditos/gracias1.png" id="16_gra1"]
+[ext_resource type="Texture2D" uid="uid://cu5jw5dl0em51" path="res://Sprites/Menu/creditos/gracias2.png" id="17_gra2"]
+[ext_resource type="Texture2D" uid="uid://web5xexbv7ft" path="res://Sprites/Menu/creditos/gracias3.png" id="18_gra3"]
 
 [node name="CreditosFinal" type="CanvasLayer" unique_id=1724235477]
 layer = 110
@@ -56,7 +59,7 @@ stretch_mode = 5
 script = ExtResource("3_anim")
 frames = Array[Texture2D]([ExtResource("4_tit1"), ExtResource("5_tit2"), ExtResource("6_tit3")])
 
-[node name="NombreAnim0" type="TextureRect" parent="Centro/Tarjeta"]
+[node name="NombreAnim0" type="TextureRect" parent="Centro/Tarjeta" unique_id=1117019481]
 visible = false
 custom_minimum_size = Vector2(492, 88)
 layout_mode = 2
@@ -68,7 +71,7 @@ script = ExtResource("3_anim")
 frames = Array[Texture2D]([ExtResource("7_tomi1"), ExtResource("8_tomi2"), ExtResource("9_tomi3")])
 fps = 6.0
 
-[node name="NombreAnim1" type="TextureRect" parent="Centro/Tarjeta"]
+[node name="NombreAnim1" type="TextureRect" parent="Centro/Tarjeta" unique_id=1264009318]
 visible = false
 custom_minimum_size = Vector2(535, 87)
 layout_mode = 2
@@ -80,7 +83,7 @@ script = ExtResource("3_anim")
 frames = Array[Texture2D]([ExtResource("10_mica1"), ExtResource("11_mica2"), ExtResource("12_mica3")])
 fps = 6.0
 
-[node name="NombreAnim2" type="TextureRect" parent="Centro/Tarjeta"]
+[node name="NombreAnim2" type="TextureRect" parent="Centro/Tarjeta" unique_id=1764313859]
 visible = false
 custom_minimum_size = Vector2(488, 84)
 layout_mode = 2
@@ -111,6 +114,17 @@ theme_override_colors/font_color = Color(0.96, 0.93, 0.85, 1)
 theme_override_font_sizes/font_size = 34
 text = "Institución"
 horizontal_alignment = 1
+
+[node name="GraciasAnim" type="TextureRect" parent="Centro/Tarjeta" unique_id=1784822069]
+custom_minimum_size = Vector2(372, 39)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("16_gra1")
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("3_anim")
+frames = Array[Texture2D]([ExtResource("16_gra1"), ExtResource("17_gra2"), ExtResource("18_gra3")])
+fps = 6.0
 
 [node name="Rol" type="Label" parent="Centro/Tarjeta" unique_id=993928555]
 layout_mode = 2

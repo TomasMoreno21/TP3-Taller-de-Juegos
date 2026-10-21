@@ -15,6 +15,7 @@ signal terminada
 @export_group("Cierre")
 @export var titulo_cierre := "SPIRIT KEEPER"
 @export var texto_cierre := "Gracias por jugar"
+@export var separacion_cierre := 48   ## px entre el título y el "Gracias por jugar" (las tarjetas de integrantes usan 14)
 @export var creditos_musica := "Música del jefe: «(Blood) Stained Glass» de FoxSynergy (CC-BY 3.0)"   ## atribución obligatoria
 @export_group("Música")
 @export var musica: AudioStream = preload("res://assets/audio/musica/jefe_vitral_sangre.ogg")   ## tema del jefe
@@ -40,6 +41,7 @@ var _player_musica: AudioStreamPlayer
 @onready var nombre: Label = $Centro/Tarjeta/Nombre
 ## Nombres animados en loop (anim_frames_ui.gd): el nodo `NombreAnim<i>` reemplaza al texto del integrante i.
 @onready var nombres_anim: Array[TextureRect] = _buscar_nombres_anim()
+@onready var gracias_anim: TextureRect = $Centro/Tarjeta/GraciasAnim   # "Gracias por jugar" animado en loop
 @onready var filete: ColorRect = $Centro/Tarjeta/Filete
 @onready var titulo_anim: TextureRect = $Centro/Tarjeta/Titulo   # el título animado del menú (anim_frames_ui.gd)
 @onready var linea_institucion: Label = $Centro/Tarjeta/Institucion
@@ -91,6 +93,9 @@ func _secuencia() -> void:
 		icono.visible = true
 		titulo_anim.visible = false
 		filete.visible = true
+		gracias_anim.visible = false
+		tarjeta.add_theme_constant_override("separation", 14)
+		linea_institucion.visible = true
 		for k in nombres_anim.size():
 			if nombres_anim[k] != null:
 				nombres_anim[k].visible = k == i
@@ -110,6 +115,9 @@ func _secuencia() -> void:
 			n.visible = false
 	nombre.visible = false   # en el cierre va el título animado del menú, no texto
 	titulo_anim.visible = true
+	tarjeta.add_theme_constant_override("separation", separacion_cierre)
+	gracias_anim.visible = true   # en el cierre va la imagen animada, no el texto
+	linea_institucion.visible = false
 	filete.visible = false   # la línea de abajo no va con el título
 	linea_institucion.text = texto_cierre
 	rol.text = ""
