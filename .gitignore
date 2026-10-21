@@ -1,3 +1,7 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# Builds exportados (se publican como GitHub Release)
+*.exe
+*.pck
